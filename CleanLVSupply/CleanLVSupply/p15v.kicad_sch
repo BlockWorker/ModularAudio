@@ -2,7 +2,7 @@
 	(version 20231120)
 	(generator "eeschema")
 	(generator_version "8.0")
-	(uuid "14ac1c44-a9eb-4627-9bdb-99cbbc7b9b82")
+	(uuid "df239a47-032a-4bcc-822f-022ed009301a")
 	(paper "A4")
 	(lib_symbols
 		(symbol "BW_Active:TPS7A47"
@@ -2722,7 +2722,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0c7f4af2-bece-4567-98d1-724b0cb50a61")
-		(property "Reference" "C21"
+		(property "Reference" "C24"
 			(at 137.16 102.8699 0)
 			(effects
 				(font
@@ -2776,7 +2776,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C21")
+					(reference "C24")
 					(unit 1)
 				)
 			)
@@ -2860,7 +2860,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3a269ee5-1364-4036-8b6e-49f61bcc9405")
-		(property "Reference" "C24"
+		(property "Reference" "C25"
 			(at 172.72 102.8699 0)
 			(effects
 				(font
@@ -2914,7 +2914,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C24")
+					(reference "C25")
 					(unit 1)
 				)
 			)
@@ -3286,7 +3286,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "89bd31a6-2081-46e8-b39a-a5b63be04b97")
-		(property "Reference" "C23"
+		(property "Reference" "C29"
 			(at 156.21 109.6009 0)
 			(effects
 				(font
@@ -3340,7 +3340,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C23")
+					(reference "C29")
 					(unit 1)
 				)
 			)
@@ -3424,7 +3424,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "90f97f8f-aacb-4d66-a622-4c3acf356360")
-		(property "Reference" "R10"
+		(property "Reference" "R11"
 			(at 110.49 111.7599 0)
 			(effects
 				(font
@@ -3478,7 +3478,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "R10")
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -3494,7 +3494,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "97d441ba-18bd-4b2e-9074-49ec96780f13")
-		(property "Reference" "C25"
+		(property "Reference" "C26"
 			(at 190.5 102.8699 0)
 			(effects
 				(font
@@ -3548,7 +3548,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C25")
+					(reference "C26")
 					(unit 1)
 				)
 			)
@@ -3564,7 +3564,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "97fb5423-00d9-42ac-a3d6-c0f8756dcd95")
-		(property "Reference" "C26"
+		(property "Reference" "C30"
 			(at 203.2 110.4899 0)
 			(effects
 				(font
@@ -3618,7 +3618,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C26")
+					(reference "C30")
 					(unit 1)
 				)
 			)
@@ -3634,7 +3634,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a9e9535e-231f-4fe7-9172-50c9e6968418")
-		(property "Reference" "R11"
+		(property "Reference" "R10"
 			(at 154.94 95.2499 0)
 			(effects
 				(font
@@ -3688,7 +3688,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "R11")
+					(reference "R10")
 					(unit 1)
 				)
 			)
@@ -3829,7 +3829,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "cc1f3c99-de4b-44e9-9553-ebd7cfa9d60b")
-		(property "Reference" "C22"
+		(property "Reference" "C23"
 			(at 124.46 102.8699 0)
 			(effects
 				(font
@@ -3883,7 +3883,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C22")
+					(reference "C23")
 					(unit 1)
 				)
 			)
@@ -3969,7 +3969,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f7889e1a-0f7e-4b06-a7ce-d52aca40cc91")
-		(property "Reference" "C19"
+		(property "Reference" "C21"
 			(at 34.29 102.8699 0)
 			(effects
 				(font
@@ -4023,7 +4023,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C19")
+					(reference "C21")
 					(unit 1)
 				)
 			)
@@ -4039,7 +4039,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ff931a20-2a95-49ac-817e-83fbe7c0451e")
-		(property "Reference" "C29"
+		(property "Reference" "C22"
 			(at 52.07 102.8699 0)
 			(effects
 				(font
@@ -4093,7 +4093,7 @@
 		(instances
 			(project "CleanLVSupply"
 				(path "/4327ef59-ef76-48f2-90b1-1a9e4399cfc2/f3bbc2e7-9beb-4b47-822a-03b189fc8c9b"
-					(reference "C29")
+					(reference "C22")
 					(unit 1)
 				)
 			)
