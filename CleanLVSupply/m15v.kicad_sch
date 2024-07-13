@@ -3547,7 +3547,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10kΩ"
+		(property "Value" "10kΩLN"
 			(at 172.72 129.5399 0)
 			(effects
 				(font
@@ -4603,7 +4603,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "118kΩ"
+		(property "Value" "118kΩLN"
 			(at 172.72 142.2399 0)
 			(effects
 				(font
