@@ -382,6 +382,23 @@
     "subpart_first_id": 65,
     "subpart_id_separator": 0
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "9ca5e549-4577-422c-b8f3-d4e6ad408ec3",
+      "Root"
+    ],
+    [
+      "d2b42ea6-55ff-4972-b433-f15f9f1c7608",
+      "3.3V Supply"
+    ],
+    [
+      "e33c9ea4-c4a6-424a-9449-5d8551c54e3d",
+      "I-V Stage"
+    ],
+    [
+      "ee079862-ea8e-4560-9a6a-6f0a2816074e",
+      "Differential Amp"
+    ]
+  ],
   "text_variables": {}
 }

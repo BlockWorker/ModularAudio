@@ -1,0 +1,23 @@
+** Profile: "EVM_TESTBENCH-AVG"  [ F:\Temp\lm5123sim\LM5123-Q1_PSPICE_AVG\lm5123-q1_pspice_avg-pspicefiles\evm_testbench\avg.sim ] 
+
+** Creating circuit file "AVG.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm5123-q1_avg.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.AC DEC 1000 10 100k
+.OPTIONS STEPGMIN
+.OPTIONS ADVCONV
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 400
+.PROBE64 V(*) I(*) 
+.INC "..\EVM_TESTBENCH.net" 
+
+
+.END

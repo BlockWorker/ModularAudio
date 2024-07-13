@@ -1,0 +1,76 @@
+(ExpressProject "LMR54410F_PSPICE_TRANS"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "17.4-2019 S024 (3998392)  [12/6/2021]-[12/23/21]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\lmr54406fdbv_trans.olb"
+        (Type "Schematic Library")))
+    (Allegro Netlist Directory "allegro")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "59420")
+    (NoModify)
+    (File ".\LMR54406F_TRANS.DSN"
+      (Type "Schematic Design")
+      (DisplayName ".\LMR54406F_TRANS.DSN"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (Display_Online_DRC_Results "FALSE")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE")
+    (RootChangedForceReNetlist "x"))
+  (Folder "Layout")
+  (Folder "Outputs")
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\startup\trans.sim"
+        (DisplayName "STARTUP-trans")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\steady_state\trans.sim"
+        (DisplayName "STEADY_STATE-TRANS")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\ibb_startup\trans.sim"
+        (DisplayName "IBB_STARTUP-TRANS")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\ibb_steady_state\trans.sim"
+        (DisplayName "IBB_STEADY_STATE-TRANS")
+        (Type "PSpice Profile"))
+      (ActiveProfile ".\lmr54406f_trans-pspicefiles\startup\trans.sim"))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\LMR54406F_TRANS.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\LMR54406F_TRANS.lib"))))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (Folder "Logs")
+  (PartMRUSelector
+    (LMR54406FDBV_TRANS
+      (FullPartName "LMR54406FDBV_TRANS.Normal")
+      (LibraryName
+         "C:\BSR_PROJECTS\PART_NUMBERS\LMR54406F\LMR54410F_PSPICE_TRANS\LMR54406F_PSPICE_TRANS\LMR54406FDBV_TRANS.OLB")
+      (DeviceIndex "0"))
+    (LMR54410FDBV_TRANS
+      (FullPartName "LMR54410FDBV_TRANS.Normal")
+      (LibraryName
+         "C:\USERS\X0266583\DOWNLOADS\RELEASE_SHARE_2\RELEASE_SHARE\LMR54410FDBV_TRANS.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "C:\CADENCE\SPB_17.4\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0")))
+  (GlobalState
+    (FileView
+      (Path "Design Resources"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -1 -1 0 279 0 853"))
+      (Tab 0)))
+  (MPSSessionName "x0266583"))

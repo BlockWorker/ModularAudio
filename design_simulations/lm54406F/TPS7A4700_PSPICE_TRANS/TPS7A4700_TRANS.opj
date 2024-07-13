@@ -1,0 +1,198 @@
+(ExpressProject "TLV74118P_TRANS"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[01/16/18]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\tps7a4700_trans.olb"
+        (Type "Schematic Library")))
+    (NoModify)
+    (File ".\tps7a4700_trans.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (RootChangedForceReNetlist "x")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE")
+    (Netlist_TAB "4")
+    (PSPICE_Output_File "TPS7A4700_TRANS.LIB")
+    (PSPICE_View_Output "FALSE")
+    (PSPICE_Subcircuit_Format "TRUE")
+    (PSPICE_Do_DRC_Markers "FALSE")
+    (PSPICE_Hier_Format "FALSE")
+    (PSPICE_Hier_Descend "TRUE")
+    (PSPICE_Hier_DoNot_Descend "FALSE")
+    (PSPICE_Alt_Template "PSpiceTemplate")
+    (PSPICE_Make_Dot_Param_Global "FALSE")
+    (Hier_Subckt_Products "PSpice,PSpice,LVS")
+    (Hier_Subckt_Settings_PSpice_Subckt_Call
+       "X_<RefDes> <PinList> <SubcktName> PARAMS: <ParamList>")
+    (Hier_Subckt_Settings_PSpice_Subckt_Header
+       ".SUBCKT <SubcktName> <PinList> PARAMS: <ParamList>")
+    (Hier_Subckt_Settings_PSpice_Subckt_Trailer ".ENDS")
+    (Hier_Subckt_Settings_PSpice_Subckt_Call_Param "<Param>=<Value>")
+    (Hier_Subckt_Settings_PSpice_Subckt_Header_Param "<Param>=<Value>")
+    (Hier_Subckt_Settings_PSpice_Subckt_Param_Ref "{<Param>}")
+    (Hier_Subckt_Settings_PSpice_Global_Net_Prefix "$G_")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "59420"))
+  (Folder "Layout")
+  (Folder "Outputs"
+    (File
+       ".\tps7a4700_trans-pspicefiles\tps7a4700_startup\tps7a4700_startup.net"
+      (Type "Report")))
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\tps7a4700_trans-pspicefiles\tps7a4700_startup\trans.sim"
+        (DisplayName "TPS7A4700_STARTUP-TRANS")
+        (Type "PSpice Profile"))
+      (ActiveProfile
+         ".\tps7a4700_trans-pspicefiles\tps7a4700_startup\trans.sim"))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\tps7a4700_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\tps7a4700_trans.lib")))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User)))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (PartMRUSelector
+    (ZX
+      (FullPartName "ZX.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANL_MISC.OLB")
+      (DeviceIndex "0"))
+    (TPS7A4700
+      (FullPartName "TPS7A4700.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\PART_NUMBERS\TPS7A4700\ACTIVE_WORK_FPT\EXPERIMENTS\TPS7A4700_PSPICE_TRANS\TPS7A4700_TRANS.OLB")
+      (DeviceIndex "0"))
+    (14020
+      (FullPartName "14020.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\COUNTER.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (VPWL
+      (FullPartName "VPWL.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (PORTRIGHT-R
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (VDC
+      (FullPartName "VDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (PORTRIGHT-L
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (COMP_BASIC_GEN
+      (FullPartName "COMP_BASIC_GEN.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\MISC\LDO TRAINING\STANDARD MACRO OLB FILES\COMPARATOR_GEN.OLB")
+      (DeviceIndex "0"))
+    (14018
+      (FullPartName "14018.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\COUNTER.OLB")
+      (DeviceIndex "0"))
+    (PARAM
+      (FullPartName "PARAM.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SPECIAL.OLB")
+      (DeviceIndex "0"))
+    (INV_DELAY_BASIC_GEN
+      (FullPartName "INV_DELAY_BASIC_GEN.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\MISC\LDO TRAINING\STANDARD MACRO OLB FILES\GATES_GEN.OLB")
+      (DeviceIndex "0"))
+    (INV_BASIC_GEN
+      (FullPartName "INV_BASIC_GEN.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\MISC\LDO TRAINING\STANDARD MACRO OLB FILES\GATES_GEN.OLB")
+      (DeviceIndex "0"))
+    (R
+      (FullPartName "R.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (IDC
+      (FullPartName "IDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (IPULSE
+      (FullPartName "IPULSE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (C
+      (FullPartName "C.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (ABM
+      (FullPartName "ABM.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (EVALUE
+      (FullPartName "EVALUE.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (TLV74118P_TRANS
+      (FullPartName "TLV74118P_TRANS.Normal")
+      (LibraryName
+         "\\10.11.171.57\PART_NUMBERS\TLV74118P\ACTIVE_WORK_FPT\EXPERIMENTS\TLV74118P_PSPICE_TRANS\TLV74118P_TRANS.OLB")
+      (DeviceIndex "0"))
+    (TLV74118PDQN_TRANS
+      (FullPartName "TLV74118PDQN_TRANS.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\PART_NUMBERS\TLV74118P\ACTIVE_WORK_FPT\EXPERIMENTS\TLV74118P_PSPICE_TRANS\TLV74118PDQN_TRANS.OLB")
+      (DeviceIndex "0"))
+    (AND2_BASIC_GEN
+      (FullPartName "AND2_BASIC_GEN.Normal")
+      (LibraryName
+         "C:\FPT_WS\FPT_DS\MISC\LDO TRAINING\STANDARD MACRO OLB FILES\GATES_GEN.OLB")
+      (DeviceIndex "0"))
+    (VPULSE
+      (FullPartName "VPULSE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (G
+      (FullPartName "G.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (S
+      (FullPartName "S.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0")))
+  (LastUsedLibraryBrowseDirectory "C:\Cadence\SPB_16.2\tools\capture\library")
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\tps7a4700_trans.dsn")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\tps7a4700_trans.dsn"
+         "TPS7A4700_STARTUP")
+      (Path "Outputs")
+      (Select "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\tps7a4700_trans.dsn"
+         "TPS7A4700_STARTUP" "PAGE1"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 0 0 0 612 0 672"))
+      (Tab 0)))
+  (MPSSessionName "Alex")
+  (ISPCBBASICLICENSE "false")
+  (Folder "Logs"))

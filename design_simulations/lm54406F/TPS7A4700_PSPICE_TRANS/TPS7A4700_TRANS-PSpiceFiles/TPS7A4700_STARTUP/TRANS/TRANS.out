@@ -1,0 +1,165 @@
+
+**** 07/09/24 20:32:27 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS7A4700_STARTUP-TRANS"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "TRANS.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../tps7a4700_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 150m 0 1u 
+.OPTIONS ADVCONV
+.PROBE64 V(alias(*)) I(alias(*)) W(alias(*)) D(alias(*)) NOISE(alias(*)) 
+.INC "..\TPS7A4700_STARTUP.net" 
+
+
+
+**** INCLUDING TPS7A4700_STARTUP.net ****
+* source TPS7A4700_TRANS
+R_RLOAD         VOUT 0  {5/0.5} TC=0,0 
+C_C1         0 VOUT  50u  TC=0,0 
+C_C2         0 NR  10n  TC=0,0 
+C_C3         0 VIN  10u  TC=0,0 
+V_VIN         VIN 0  
++PULSE 0 6 50u 10u 10u 1 2
+V_VEN         EN 0  
++PULSE 0 6 50m 1u 1u 1 2
+X_U1         N308050 N308054 0 N308046 N308042 0 N308010 N308006 EN 0 NR VOUT
++  VIN VIN VOUT VOUT TPS7A4700_TRANS
+
+**** RESUMING TRANS.cir ****
+.END
+
+**** 07/09/24 20:32:27 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS7A4700_STARTUP-TRANS"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   EN)    0.0000  (   NR)    0.0000  (  VIN)    0.0000  ( VOUT)    0.0000      
+
+(N308006)    0.0000                   (N308010)    0.0000                       
+
+(N308042)    0.0000                   (N308046)    0.0000                       
+
+(N308050)    0.0000                   (N308054)    0.0000                       
+
+(X_U1.VXX)    0.0000                  (X_U1.VYY)    0.0000                      
+
+(X_U1.VZZ)    0.0000                  (X_U1.IREF)    0.0000                     
+
+(X_U1.LOAD)    0.0000                 (X_U1.ROUT)    0.0000                     
+
+(X_U1.VINT)    0.0000                 (X_U1.VREF)    0.0000                     
+
+(X_U1.ENSYS)    0.0000                (X_U1.EN_OK)    0.0000                    
+
+(X_U1.VOUT1)    0.0000                (X_U1.V_FBK)    0.0000                    
+
+(X_U1.EN_INT)    0.0000               (X_U1.VIN_OK)    0.0000                   
+
+(X_U1.X_X1.6)    0.0000               (X_U1.N430233)    0.0000                  
+
+(X_U1.N430319)    0.0000              (X_U1.N430499)    0.0000                  
+
+(X_U1.N430503)    0.0000              (X_U1.N431153)    0.0000                  
+
+(X_U1.N431299)    0.0000              (X_U1.N448013)    0.0000                  
+
+(X_U1.N523713)    0.0000              (X_U1.N672860)    0.0000                  
+
+(X_U1.N677016)    0.0000              (X_U1.N702559)    0.0000                  
+
+(X_U1.U1_DROP)     .2160              (X_U1.VIN_INT)    0.0000                  
+
+(X_U1.Vzz_INT)    0.0000              (X_U1.U1_EN_IH)    2.0000                 
+
+(X_U1.VREF_INT)    0.0000             (X_U1.U1_EN_HYS)    1.6000                
+
+(X_U1.X_U1_U16.1)    0.0000           (X_U1.X_U1_U17.1)    0.0000               
+
+(X_U1.U1_N16777354)    2.6700         (X_U1.U1_N16777400)    0.0000             
+
+(X_U1.U1_N16777525)    0.0000         (X_U1.U1_N16777579)    0.0000             
+
+(X_U1.U1_N16777592)    0.0000         (X_U1.U1_N16782898)     .1770             
+
+(X_U1.U1_N16796943)    0.0000         (X_U1.U1_N16803077)    1.0000             
+
+(X_U1.U1_PRE_EN_OK)    0.0000         (X_U1.X_U1_U16.INM1)    2.6700            
+
+(X_U1.X_U1_U16.INP1)    0.0000        (X_U1.X_U1_U16.INP2)    0.0000            
+
+(X_U1.X_U1_U17.INM1)    2.0000        (X_U1.X_U1_U17.INP1)    0.0000            
+
+(X_U1.X_U1_U17.INP2)    0.0000        (X_U1.X_U1_U15.YINT1)    0.0000           
+
+(X_U1.X_U1_U15.YINT2)    0.0000       (X_U1.X_U1_U15.YINT3)    0.0000           
+
+(X_U1.X_U1_U18.YINT1)    0.0000       (X_U1.X_U1_U18.YINT2)    0.0000           
+
+(X_U1.X_U1_U18.YINT3)    1.0000       
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_VIN        0.000E+00
+    V_VEN        0.000E+00
+    X_U1.V_Vload   0.000E+00
+    X_U1.V_U1_V5   0.000E+00
+    X_U1.V_U1_V6   0.000E+00
+    X_U1.V_U1_V3   0.000E+00
+    X_U1.V_U1_V4   0.000E+00
+    X_U1.X_X1.vsense   0.000E+00
+    X_U1.X_H2.VH_H2   0.000E+00
+    X_U1.X_F1.VF_F1   0.000E+00
+    X_U1.X_H3.VH_H3   0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+
+          JOB CONCLUDED
+
+**** 07/09/24 20:32:27 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS7A4700_STARTUP-TRANS"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =        9.95
+

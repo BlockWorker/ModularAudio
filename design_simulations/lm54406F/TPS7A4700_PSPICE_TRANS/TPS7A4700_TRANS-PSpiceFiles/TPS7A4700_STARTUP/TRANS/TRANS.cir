@@ -1,0 +1,20 @@
+** Profile: "TPS7A4700_STARTUP-TRANS"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS\tps7a4700_trans-pspicefiles\tps7a4700_startup\trans.sim ] 
+
+** Creating circuit file "TRANS.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../tps7a4700_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 150m 0 1u 
+.OPTIONS ADVCONV
+.PROBE64 V(alias(*)) I(alias(*)) W(alias(*)) D(alias(*)) NOISE(alias(*)) 
+.INC "..\TPS7A4700_STARTUP.net" 
+
+
+.END

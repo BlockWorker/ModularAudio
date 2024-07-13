@@ -1,0 +1,119 @@
+(ExpressProject "TPS7A3001_TRANS"
+  (ProjectVersion "19981106")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\tps7a3001_trans.olb"
+        (Type "Schematic Library")))
+    (NoModify)
+    (File "tps7a3001_trans.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (RootChangedForceReNetlist "x")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE"))
+  (Folder "Outputs")
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\tps7a3001_trans-pspicefiles\tps7a3001_startup\trans.sim"
+        (DisplayName "TPS7A3001_STARTUP-TRANS")
+        (Type "PSpice Profile"))
+      (ActiveProfile
+         ".\tps7a3001_trans-pspicefiles\tps7a3001_startup\trans.sim"))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\tps7a3001_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\tps7a3001_trans.lib")))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User)))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (PartMRUSelector
+    (TPS7A3001_TRANS
+      (FullPartName "TPS7A3001_TRANS.Normal")
+      (LibraryName
+         "C:\ELABKARMIC_WS\ELABKARMIC_DS\PART_NUMBERS\TPS7A3001\ACTIVE_WORK_KARMIC\PSPICE\TPS7A3001_PSPICE_TRANS\TPS7A3001_TRANS.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (GAIN
+      (FullPartName "GAIN.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (VDC
+      (FullPartName "VDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.0\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (VPULSE
+      (FullPartName "VPULSE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.0\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (S
+      (FullPartName "S.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (IDC
+      (FullPartName "IDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.0\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (ABM1
+      (FullPartName "ABM1.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (ABS
+      (FullPartName "ABS.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (PARAM
+      (FullPartName "PARAM.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.0\TOOLS\CAPTURE\LIBRARY\PSPICE\SPECIAL.OLB")
+      (DeviceIndex "0"))
+    (C
+      (FullPartName "C.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (R
+      (FullPartName "R.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (TPS7A4901_TRANS
+      (FullPartName "TPS7A4901_TRANS.Normal")
+      (LibraryName
+         "E:\WORK\LDO'S\TPS7A4901\ACTIVE_WORK_KARMIC\PSPICE\TPS7A4901_PSPICE_TRANS\TPS7A4901_TRANS.OLB")
+      (DeviceIndex "0"))
+    (ABM
+      (FullPartName "ABM.Normal")
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ABM.OLB")
+      (DeviceIndex "0"))
+    (TPS76301_TRANS
+      (FullPartName "TPS76301_TRANS.Normal")
+      (LibraryName
+         "D:\SHRIKANT\PSPICE\LDO\TPS76301\ACTIVE_WORK_KARMIC\PSPICE\TPS76301_PSPICE_TRANS\TPS76301_TRANS.OLB")
+      (DeviceIndex "0"))
+    (D_D
+      (FullPartName "D_D.Normal")
+      (LibraryName "E:\INTERNALLIBRARIES\ALL_OLB'S\DIODES.OLB")
+      (DeviceIndex "0")))
+  (MPSSessionName "x0193905")
+  (LastUsedLibraryBrowseDirectory
+     "E:\WORK\LDO'S\TPS7A4901\Active_Work_KarMic\PSPICE\TPS7A4901_PSPICE_TRANS")
+  (GlobalState
+    (FileView
+      (Path "Outputs"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -8 -30 0 200 0 406"))
+      (Tab 0))))

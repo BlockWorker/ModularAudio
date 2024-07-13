@@ -1,0 +1,339 @@
+
+**** 07/09/24 13:28:22 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Load_Transient-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_trans
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "TRAN.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_trans.lib" 
+.LIB "e:/users/alex/documents/electronics projects/modular audio/lm25576/tps7a3001_pspice_trans/tps7a3001_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 1.5m 0.2m 5n SKIPBP 
+.OPTIONS STEPGMIN
+.OPTIONS ADVCONV
+.OPTIONS ABSTOL= 5.0n
+.OPTIONS GMIN= 1.0E-10
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 1000
+.OPTIONS ITL4= 1000
+.OPTIONS RELTOL= 0.002
+.OPTIONS VNTOL= 10.0u
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\LM25576_Load_Transient.net" 
+
+
+
+**** INCLUDING LM25576_Load_Transient.net ****
+* source LM25576_TRANS
+C_CIN         VIN N618918  2u IC=18 TC=0,0 
+C_C5         N182744 COMP  1.2n  TC=0,0 
+R_R6         FB 0  1k TC=0,0 
+R_R3         0 RT  8.66k TC=0,0 
+R_RS         N181194 VIN  10m TC=0,0 
+R_R4         FB N182744  24.3k TC=0,0 
+I_Iload         OUT 0 DC 0Adc AC 0Aac
++PULSE 2 0.2 0.3m 25u 25u 0.8m 1
+R_RS3         0 N618918  3.2m TC=0,0 
+X_L1         SW OUT LDCR PARAMS:  L=15u  DCR=27m IC=2
+R_R5         OUT FB  3.09k TC=0,0 
+C_C10         OUT N617649  20.4u IC={STEADY*5} TC=0,0 
+R_RS1         0 N16789623  3.2m TC=0,0 
+C_C7         SW BST  0.022u  TC=0,0 
+C_C11         OUT 0  150u IC={STEADY*5} TC=0,0 
+D_D1         IS SW DIODE_D1 
+R_RS2         0 N617649  1.972m TC=0,0 
+C_C8         VCC 0  1.0E-7 IC={STEADY*7} TC=0,0 
+C_C4         SS 0  1e-8 IC={STEADY*1.225} TC=0,0 
+V_Vs         N181194 0 18Vdc
+C_C3         RAMP 0  1.5e-10  TC=0,0 
+C_CIN1         VIN N16789623  2u IC=18 TC=0,0 
+X_U1         VIN FB SW BST RT RAMP SYNC 0 IS SD VCC OUT SS COMP SW 0
++  LM25576_TRANS PARAMS: STEADY={STEADY}
+.PARAM  steady=1
+
+**** RESUMING TRAN.cir ****
+.END
+
+**** 07/09/24 13:28:22 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Load_Transient-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_trans
+
+
+ ****     Diode MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               DIODE_D1        _D              
+          IS   10.000000E-15   10.000000E-15 
+
+
+**** 07/09/24 13:28:22 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Load_Transient-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_trans
+
+
+ ****     BJT MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               _QMOD           _NPN            QP              
+               NPN             NPN             PNP             
+       LEVEL    1               1               1            
+          IS  100.000000E-18  100.000000E-18  100.000000E-18 
+          BF  100             100             100            
+          NF    1               1               1            
+          BR    1               1               1            
+          NR    1               1               1            
+         ISS    0               0               0            
+          RE    0               0               0            
+          RC    0               0               0            
+         CJE    0               0               0            
+         VJE     .75             .75             .75         
+         CJC    0               0               0            
+         VJC     .75             .75             .75         
+         MJC     .33             .33             .33         
+        XCJC    1               1               1            
+         CJS    0               0               0            
+         VJS     .75             .75             .75         
+          KF    0               0               0            
+          AF    1               1               1            
+          CN    2.42            2.42            2.2          
+           D     .87             .87             .52         
+
+
+WARNING(ORPSIM-16534): Using high values of ITL4 for Speed Level > 0 may increase total simulation job time.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  2.557E-06.
+         Time step =  208.4E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(VIN)                    =    -11.01V  \     18.00V
+    V(N618918)                =    -29.00V  \   -1.173mV
+    V(N16789623)              =    -29.00V  \   -1.173mV
+    V(SW)                     =   -1.717KV  \     17.84V
+    V(BST)                    =   -1.710KV  \     24.32V
+    V(RAMP)                   =    2.946mV  \    4.884mV
+    V(X_U1.U1_40)             =   -1.710KV  \     24.32V
+    V(X_U1.DRIVE)             =     3.419V  \     3.519V
+    V(X_U1.U1_29)             =    -11.01V  \     18.00V
+    V(X_U1.U1_35)             =   -1.617KV  \     24.22V
+    V(X_U1.PWM_INT)           =   478.66mV  \   451.28mV
+    V(X_U1.PWM)               =   478.66mV  \   451.28mV
+    V(X_U1.U3_51)             =  -643.85mV  \     7.460V
+    V(X_U1.U3_47)             =    -8.388V  \     7.819V
+    V(X_U1.U3_45)             =    -9.071V  \     7.187V
+    V(X_U1.VIN_INT)           =    -11.01V  \     18.00V
+    V(X_U1.U3_N379763)        =    -10.02V  \     6.467V
+    V(X_U1.TRACK)             =   478.66mV  \   451.28mV
+    V(X_U1.U2_N498608)        =   381.39mV  \   280.82mV
+    V(X_U1.U2_48)             =   381.39mV  \   280.82mV
+    V(X_U1.U4_6)              =  -796.72mV  \  -739.33mV
+    V(X_U1.U4_3)              =   -54.63mV  \  -171.05mV
+    V(X_U1.U1_64)             =     3.419V  \     3.519V
+    V(X_U1.X_U1_U53.1)        =   -1.483KV  \     17.93V
+    V(X_U1.X_U1_U53.2)        =   -1.617KV  \     24.22V
+    V(X_U1.X_U1_U53.3)        =   -1.622KV  \     17.84V
+    V(X_U1.X_U1_U53.12)       =   -133.68V  \     6.295V
+    V(X_U1.X_U1_U53.13)       =     4.811V  \     6.010V
+    V(X_U1.X_U1_U53.15)       =   278.81mV  \   284.64mV
+
+  These supply currents failed to converge:
+
+    I(X_U1.E_U1_BD)           =  -134.42MA  \    4.121mA
+    I(X_U1.E_U1_BERSD)        =  -307.96uA  \  -341.04uA
+    I(X_U1.E_U3_E1)           =   -1.228mA  \  -414.02uA
+    I(X_U1.E_U5_EUV)          =  -913.75uA  \  -911.58uA
+    I(X_U1.X_U1_U3.EB1)       =   -81.39mA  \    19.18mA
+    I(X_U1.X_U1_U1.EB1)       =   -81.39mA  \    19.18mA
+    I(X_U1.X_U1_U53.EGD)      =    902.45A  \    -12.03A
+    I(X_U1.X_U1_U51.EIP)      =   -10.25uA  \   -8.162uA
+    I(X_U1.X_U1_U51.EIN)      =   -3.929uA  \   -1.838uA
+    I(X_U1.X_U2_U6.EB1)       =    81.39mA  \   -19.18mA
+    I(X_U1.X_U4_U6.E1)        =    -16.07A  \    -16.00A
+    I(X_U1.X_U4_U1.E1)        =     32.68A  \     32.36A
+    I(X_L1.L1)                =     1.000A  \     1.002A
+    I(V_Vs)                   =   -2.901KA  \  -280.12mA
+    I(X_U1.V_U1_VSENSE)       =    21.03KA  \   984.56mA
+    I(X_U1.V_U3_V15)          =   -61.04uA  \    65.90uA
+    I(X_U1.V_U2_VREF5)        =    54.99uA  \   -90.02uA
+    I(X_U1.X_U1_U53.VFB)      =   -911.92A  \    1.701mA
+    I(X_U1.X_U1_U51.VOFP)     =    5.602uA  \    5.040uA
+    I(X_U1.X_U1_U51.VOFN)     =   -5.033uA  \   -4.960uA
+    I(X_U1.X_U1_U51.VIN)      =   634.07nA  \    50.41pA
+    I(X_U1.X_U1_U51.VIP)      =   -3.084uA  \   177.57pA
+    I(X_U1.X_U1_U51.VIPM)     =    47.36uA  \   -15.10nA
+    I(X_U1.X_U1_U51.VINM)     =    24.68uA  \   -15.40nA
+    I(X_U1.X_U1_U51.VOP)      =   -4.178uA  \   277.44pA
+    I(X_U1.X_U1_U51.HOPM)     =    47.36uA  \   -15.10nA
+    I(X_U1.X_U1_U51.HONM)     =   -24.68uA  \    15.40nA
+
+  These devices failed to converge:
+    D_D1      X_U1.D_U1_D1 X_U1.D_D5 X_U1.D_U3_D2 X_U1.D_U3_D3 X_U1.D_U3_D4 
+    X_U1.X_U1_U53.D1 X_U1.X_U1_U53.DDG X_U1.X_U1_U53.D2 X_U1.E_U3_E1 
+    X_U1.E_U4_ABM1 X_U1.X_U1_U53.M1 X_U1.Q_U3_Q6 
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    1.2244  (   IS)-8.583E-09  (   RT)     .0087  (   SS)    1.2249      
+
+(   SW)-1716.5000  (  BST)-1710.0000  (  OUT)    4.9925  (  VCC)    6.3248      
+
+(  VIN)  -11.0050  ( COMP)    1.3337  ( RAMP)     .0029  (X_U1.7)    5.0000     
+
+(X_U1.8)    4.3108 (N181194)   18.0000                   (N182744)    1.3432    
+
+(N617649)-234.1E-06                   (N618918)  -29.0040                       
+
+(X_U1.11)    1.2250                   (X_U1.12)    5.0000                       
+
+(X_U1.15)    5.0000                   (X_U1.38)    5.0000                       
+
+(X_U1.49)    5.0000                   (X_U1.52)    5.0000                       
+
+(X_U1.CLK)     .3000                  (X_U1.PWM)     .4787                      
+
+(X_U1.SDN)    5.0000                  (X_U1.VSD)    5.0000                      
+
+(N16789623)  -29.0040                 (X_L1.INT1)    5.0195                     
+
+(X_U1.CLK1)     .3000                 (X_U1.REF5)    5.0000                     
+
+(X_U1.SHDN)    5.0000                 (X_U1.STBY)    5.0000                     
+
+(X_U1.U1_5)    5.0000                 (X_U1.U1_Q)   10.0000                     
+
+(X_U1.U4_3)    -.0546                 (X_U1.U4_4)  -12.0000                     
+
+(X_U1.U4_5)   12.0000                 (X_U1.U4_6)    -.7967                     
+
+(X_U1.U4_7)    6.0000                 (X_U1.UVLO)    4.0862                     
+
+(X_U1.DRIVE)    3.4186                (X_U1.TRACK)     .4787                    
+
+(X_U1.U1_14)     .1000                (X_U1.U1_22) 41.15E-21                    
+
+(X_U1.U1_29)  -11.0050                (X_U1.U1_35)-1616.6000                    
+
+(X_U1.U1_40)-1710.0000                (X_U1.U1_42)    5.0000                    
+
+(X_U1.U1_63)    0.0000                (X_U1.U1_64)    3.4186                    
+
+(X_U1.U1_69)     .6337                (X_U1.U1_72)     .3000                    
+
+(X_U1.U2_48)     .3814                (X_U1.U3_45)   -9.0708                    
+
+(X_U1.U3_47)   -8.3877                (X_U1.U3_51)    -.6439                    
+
+(X_U1.U3_54)    6.3248                (X_U1.U5_46)    5.0000                    
+
+(X_U1.U5_57)     .5973                (X_U1.FB_INT)    1.2244                   
+
+(X_U1.SS_INT)    1.2249               (X_U1.STBYON)    5.0000                   
+
+(X_U1.U5_REF)    1.2436               (X_U1.PWM_INT)     .4787                  
+
+(X_U1.U3_BIAS)    7.1000              (X_U1.U5_VSDN)    0.0000                  
+
+(X_U1.VIN_INT)  -11.0050              (X_U1.SHDN_INT)    5.0000                 
+
+(X_U1.U3_VSD_1)    1.0000             (X_U1.U1_REF175)    2.1000                
+
+(X_U1.X_U1_U1.4)    3.5000            (X_U1.X_U1_U2.4)    0.0000                
+
+(X_U1.X_U1_U3.3)    3.5000            (X_U1.X_U1_U4.4)    0.0000                
+
+(X_U1.X_U1_U5.4)     .3000            (X_U1.X_U2_U6.3)     .3000                
+
+(X_U1.U1_N251285)     .6337           (X_U1.U2_N498608)     .3814               
+
+(X_U1.U3_N379763)  -10.0230           (X_U1.U4_N470217)     .3000               
+
+(X_U1.X_U1_U51.9)    1.3351           (X_U1.X_U1_U53.1)-1483.0000               
+
+(X_U1.X_U1_U53.2)-1616.6000           (X_U1.X_U1_U53.3)-1621.9000               
+
+(X_U1.U1_GATEUVLO)    5.0000          (X_U1.X_U1_U51.10)    1.2249              
+
+(X_U1.X_U1_U51.11)    1.2247          (X_U1.X_U1_U51.12)     .5040              
+
+(X_U1.X_U1_U51.13)     .5040          (X_U1.X_U1_U51.14)     .5040              
+
+(X_U1.X_U1_U51.15)    1.2242          (X_U1.X_U1_U51.16)    1.2244              
+
+(X_U1.X_U1_U51.17)    0.0000          (X_U1.X_U1_U51.18)    3.0000              
+
+(X_U1.X_U1_U51.19)    1.3351          (X_U1.X_U1_U51.21) -152.6500              
+
+(X_U1.X_U1_U51.22)  152.2800          (X_U1.X_U1_U51.23)    0.0000              
+
+(X_U1.X_U1_U51.24)     .8953          (X_U1.X_U1_U51.25)    4.1097              
+
+(X_U1.X_U1_U51.27) -150.0000          (X_U1.X_U1_U51.28)  155.0000              
+
+(X_U1.X_U1_U52.10)     .1000          (X_U1.X_U1_U52.20)   10.0000              
+
+(X_U1.X_U1_U53.12) -133.6800          (X_U1.X_U1_U53.13)    4.8111              
+
+(X_U1.X_U1_U53.14)    0.0000          (X_U1.X_U1_U53.15)     .2788          
+
+
+**** Interrupt ****
+
+The following unused Convergence options can be added to simulation:
+CSHUNT=1e-12
+DIODERS=1e-4
+DIODECJO=2e-12
+BJTCJ=1e-11
+JFETCJ=1e-12
+MOSCJ=1e-12
+AutoConverge
+
+          JOB ABORTED
+
+**** 07/09/24 13:28:22 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Load_Transient-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_trans
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =     8479.95
+

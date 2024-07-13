@@ -1,0 +1,191 @@
+
+**** 07/10/24 00:59:37 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\LMR54406F_PSPICE_TRANS\lmr54406f_
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "trans.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../LMR54406F_TRANS.lib" 
+.LIB "E:/Users/Alex/Documents/Electronics Projects/Modular Audio/lm54406F/tps7a4700_pspice_trans/tps7a4700_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 10m 0 20n 
+.OPTIONS ADVCONV
+.OPTIONS ABSTOL= 1n
+.OPTIONS ITL4= 20
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\STARTUP.net" 
+
+
+
+**** INCLUDING STARTUP.net ****
+* source LMR54406F_TRANS
+R_R3         FB VOUT  169k TC=0,0 
+V_V1         VIN 0  
++PULSE 0 13 10u 36u 
+R_Rload         VOUTL 0  {5/0.3} TC=0,0 
+R_R5         0 FB  22.1k  
+X_L1         SW VOUT LDCR PARAMS:  L=12u  DCR=100m IC=0
+C_C3         N16777788 SW  0.1u IC=0 
+C_C6         0 VOUT  100n  TC=0,0 
+X_C4         VOUT 0 CESR PARAMS:  C=20u  ESR=2m X=1  IC=0
+X_U1         N16777788 VIN FB 0 SW VIN LMR54406F_TRANS PARAMS: MODE=0
+X_C8         VIN 0 CESR PARAMS:  C=2u  ESR=3m X=1  IC=0
+X_C9         VIN 0 CESR PARAMS:  C=100n  ESR=20m X=1  IC=0
+C_C13         VINLIN N16783248  100n  TC=0,0 
+X_L2         VOUT VINLIN LDCR PARAMS:  L=1m  DCR=2.73 IC=0
+C_C17         VOUTL N16783242  33u  TC=0,0 
+R_RS8         N16783248 0  1m TC=0,0 
+R_RS10         N16783239 0  1m TC=0,0 
+C_C19         N16783274 0  20n  TC=0,0 
+R_R8         N16783254 0  3.3 TC=0,0 
+R_RS12         N16783245 0  10m TC=0,0 
+C_C14         VINLIN N16783251  10u  TC=0,0 
+C_C18         VOUTL N16783245  100u  TC=0,0 
+C_C16         VOUTL N16783239  100n  TC=0,0 
+X_U2          N16783374 N16783392 0 N16783377 N16783351 0 N16783263 N16783236
++  N16783349 0 N16783274 VOUTL VINLIN VINLIN VOUTL VOUTL TPS7A4700_TRANS
+R_RS9         N16783251 0  4m TC=0,0 
+R_RS11         N16783242 0  1.4m TC=0,0 
+C_C15         VINLIN N16783254  100u  TC=0,0 
+V_V2         N16783349 0  
++PULSE 0 7 3m 10u 10u 1 2
+
+**** RESUMING trans.cir ****
+.END
+
+**** 07/10/24 00:59:37 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\LMR54406F_PSPICE_TRANS\lmr54406f_
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB) 940.4E-15  (   SW)    2.2978  (  VIN)    0.0000  ( VOUT) 9.191E-12      
+
+(VOUTL)    0.0000  (VINLIN) 9.192E-15 (X_U2.VXX) 927.4E-21                      
+
+(X_U2.VYY) 3.736E-24                  (X_U2.VZZ) 3.736E-24                      
+
+(N16777788)    2.3506                 (N16783236)    0.0000                     
+
+(N16783239)    0.0000                 (N16783242)    0.0000                     
+
+(N16783245)    0.0000                 (N16783248)    0.0000                     
+
+(N16783251)    0.0000                 (N16783254)    0.0000                     
+
+(N16783263)    0.0000                 (N16783274)    0.0000                     
+
+(N16783349)    0.0000                 (N16783351)    0.0000                     
+
+(N16783374)    0.0000                 (N16783377)    0.0000                     
+
+(N16783392)    0.0000                 (X_U2.IREF)    0.0000                     
+
+(X_U2.LOAD)    0.0000                 (X_U2.ROUT)    0.0000                     
+
+(X_U2.VINT) 9.182E-21                 (X_U2.VREF)    0.0000                     
+
+(X_U2.ENSYS)    0.0000                (X_U2.EN_OK)    0.0000                    
+
+(X_U2.VOUT1)    0.0000                (X_U2.V_FBK)    0.0000                    
+
+(X_U2.EN_INT)    0.0000               (X_U2.VIN_OK)    0.0000                   
+
+(X_U2.X_X1.6) 3.736E-24               (X_U2.N430233) 3.736E-24                  
+
+(X_U2.N430319) 9.183E-15              (X_U2.N430499)    0.0000                  
+
+(X_U2.N430503)    0.0000              (X_U2.N431153) 3.644E-24                  
+
+(X_U2.N431299) 3.736E-24              (X_U2.N448013) 3.644E-24                  
+
+(X_U2.N523713) 927.4E-21              (X_U2.N672860)    0.0000                  
+
+(X_U2.N677016)    0.0000              (X_U2.N702559)    0.0000                  
+
+(X_U2.U1_DROP)     .2160              (X_U2.VIN_INT) 9.192E-15                  
+
+(X_U2.Vzz_INT) 3.736E-24              (X_U2.U1_EN_IH)    2.0000                 
+
+(X_U2.VREF_INT)    0.0000             (X_U2.U1_EN_HYS)    1.6000                
+
+(X_U2.X_U1_U16.1)    0.0000           (X_U2.X_U1_U17.1)    0.0000               
+
+(X_U2.U1_N16777354)    2.6700         (X_U2.U1_N16777400)    0.0000             
+
+(X_U2.U1_N16777525)    0.0000         (X_U2.U1_N16777579)    0.0000             
+
+(X_U2.U1_N16777592)    0.0000         (X_U2.U1_N16782898)     .1770             
+
+(X_U2.U1_N16796943)    0.0000         (X_U2.U1_N16803077)    1.0000             
+
+(X_U2.U1_PRE_EN_OK)    0.0000         (X_U2.X_U1_U16.INM1)    2.6700            
+
+(X_U2.X_U1_U16.INP1)    0.0000        (X_U2.X_U1_U16.INP2)    0.0000            
+
+(X_U2.X_U1_U17.INM1)    2.0000        (X_U2.X_U1_U17.INP1)    0.0000            
+
+(X_U2.X_U1_U17.INP2)    0.0000        
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_V1         2.640E+01
+    V_V2         0.000E+00
+    X_U2.V_Vload   0.000E+00
+    X_U2.V_U1_V5   0.000E+00
+    X_U2.V_U1_V6   0.000E+00
+    X_U2.V_U1_V3   0.000E+00
+    X_U2.V_U1_V4   0.000E+00
+    X_U2.X_X1.vsense   0.000E+00
+    X_U2.X_H2.VH_H2   0.000E+00
+    X_U2.X_F1.VF_F1   0.000E+00
+    X_U2.X_H3.VH_H3   0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+          JOB ABORTED
+
+**** 07/10/24 00:59:37 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\LMR54406F_PSPICE_TRANS\lmr54406f_
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =     3227.50
+

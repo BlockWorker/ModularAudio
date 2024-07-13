@@ -1,0 +1,21 @@
+** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\trans.sim ] 
+
+** Creating circuit file "trans.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm5123-q1_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 4ms 0 20n 
+.OPTIONS ADVCONV
+.OPTIONS ITL4= 50
+.PROBE64 V(*) I(*) 
+.INC "..\LM5123-Q1_STARTUP.net" 
+
+
+.END

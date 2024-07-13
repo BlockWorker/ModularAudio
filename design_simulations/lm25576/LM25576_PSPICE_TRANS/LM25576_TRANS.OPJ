@@ -1,0 +1,212 @@
+(ExpressProject "LM25576_TRANS"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/09/24]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\lm25576_trans.olb"
+        (Type "Schematic Library")))
+    (NoModify)
+    (File "lm25576_trans.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE")
+    (RootChangedForceReNetlist "x")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "59420"))
+  (Folder "Layout")
+  (Folder "Outputs"
+    (File
+       ".\lm25576_trans-pspicefiles\lm25576_inverting_regulator\lm25576_inverting_regulator.net"
+      (Type "Report"))
+    (File
+       ".\lm25576_trans-pspicefiles\lm25576_load_transient\lm25576_load_transient.net"
+      (Type "Report")))
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm25576_trans-pspicefiles\lm25576_startup_response\tran.sim"
+        (DisplayName "LM25576_Startup_Response-TRAN")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm25576_trans-pspicefiles\lm25776_steady_state\tran.sim"
+        (DisplayName "LM25776_Steady_State-TRAN")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm25576_trans-pspicefiles\lm25576_inverting_regulator\tran.sim"
+        (DisplayName "LM25576_Inverting_Regulator-TRAN")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm25576_trans-pspicefiles\lm25576_line_transient\tran.sim"
+        (DisplayName "LM25576_Line_Transient-TRAN")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm25576_trans-pspicefiles\lm25576_load_transient\tran.sim"
+        (DisplayName "LM25576_Load_Transient-TRAN")
+        (Type "PSpice Profile"))
+      (ActiveProfile
+         ".\lm25576_trans-pspicefiles\lm25576_inverting_regulator\tran.sim"))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\lm25576_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\lm25576_trans.lib"))
+      (File "..\tps7a3001_pspice_trans\tps7a3001_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName "..\tps7a3001_pspice_trans\tps7a3001_trans.lib")))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User)))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (PartMRUSelector
+    (IPULSE
+      (FullPartName "IPULSE.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (Dbreak
+      (FullPartName "Dbreak.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\BREAKOUT.OLB")
+      (DeviceIndex "0"))
+    (TPS7A3001_TRANS
+      (FullPartName "TPS7A3001_TRANS.Normal")
+      (LibraryName
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\LM25576\TPS7A3001_PSPICE_TRANS\TPS7A3001_TRANS.OLB")
+      (DeviceIndex "0"))
+    (LM25576_TRANS
+      (FullPartName "LM25576_TRANS.Normal")
+      (LibraryName
+         "D:\X0248648_DATA\PSPICE\IBB\LM25576\RELEASE_KARMIC\PSPICE\LM25576_PSPICE_TRANS\LM25576_TRANS.OLB")
+      (DeviceIndex "0"))
+    (NATIONALFET1AX8_LM25576
+      (FullPartName "NATIONALFET1AX8_LM25576.Normal")
+      (LibraryName
+         "D:\X0248648_DATA\PSPICE\IBB\LM25576\ACTIVE_WORK_KARMIC\PSPICE\LM25576_PSPICE_TRANS\LM25576_TRANS.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (C
+      (FullPartName "C.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (NATIONALFET1AX8_LM25575
+      (FullPartName "NATIONALFET1AX8_LM25575.Normal")
+      (LibraryName
+         "D:\X0248648_DATA\PSPICE\IBB\LM25575\ACTIVE_WORK_KARMIC\PSPICE\LM25575_PSPICE_TRANS\LM25575_TRANS.OLB")
+      (DeviceIndex "0"))
+    (PARAM
+      (FullPartName "PARAM.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\SPECIAL.OLB")
+      (DeviceIndex "0"))
+    (GVALUE
+      (FullPartName "GVALUE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ABM.OLB")
+      (DeviceIndex "0"))
+    (LM25574_TRANS
+      (FullPartName "LM25574_TRANS.Normal")
+      (LibraryName
+         "D:\X0211415_DATA\PSPICE\BUCK-BOOST\LM25574\ACTIVE_WORK_KARMIC\PSPICE\LM25574_PSPICE_TRANS\LM25574_TRANS.OLB")
+      (DeviceIndex "0"))
+    (S
+      (FullPartName "S.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (EVALUE
+      (FullPartName "EVALUE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ABM.OLB")
+      (DeviceIndex "0"))
+    (VPULSE
+      (FullPartName "VPULSE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (VDC
+      (FullPartName "VDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (E
+      (FullPartName "E.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (NATIONALFET1AX8_LM5574
+      (FullPartName "NATIONALFET1AX8_LM5574.Normal")
+      (LibraryName
+         "D:\X0211415_DATA\PSPICE\BUCK\LM25574\LM5574_PSPICE_TRANS_03JAN2017\NATIONALFET1AX8_LM5574.OLB")
+      (DeviceIndex "0"))
+    (COUT
+      (FullPartName "COUT.Normal")
+      (LibraryName
+         "D:\X0248648_DATA\PSPICE\BUCK\LM5574\LM5574_PSPICE_TRANS\EXTRA.OLB")
+      (DeviceIndex "0"))
+    (R
+      (FullPartName "R.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (F
+      (FullPartName "F.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (IDC
+      (FullPartName "IDC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (ABM1
+      (FullPartName "ABM1.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ABM.OLB")
+      (DeviceIndex "0"))
+    (PORTBOTH-L
+      (LibraryName "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (GTABLE
+      (FullPartName "GTABLE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\DEMO\ABM.OLB")
+      (DeviceIndex "0"))
+    (CLK_GEN
+      (FullPartName "CLK_GEN.Normal")
+      (LibraryName "D:\X0248648_DATA\PSPICE\BUCK\LM5574\EXTRA.OLB")
+      (DeviceIndex "0")))
+  (MPSSessionName "Alex")
+  (LastUsedLibraryBrowseDirectory
+     "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\TPS7A3001_PSPICE_TRANS")
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Outputs")
+      (Path "PSpice Resources")
+      (Path "PSpice Resources" "Model Libraries")
+      (Path "PSpice Resources" "Simulation Profiles")
+      (Select "Design Resources"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 0 0 0 200 0 150"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -1 -1 5 1721 24 873")
+        (Scroll "855 0")
+        (Zoom "100")
+        (Occurrence "/"))
+      (Path
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\LM25576\LM25576_PSPICE_TRANS\LM25576_TRANS.DSN")
+      (Schematic "LM25576_Inverting_Regulator")
+      (Page "PAGE1")))
+  (Folder "Logs"))

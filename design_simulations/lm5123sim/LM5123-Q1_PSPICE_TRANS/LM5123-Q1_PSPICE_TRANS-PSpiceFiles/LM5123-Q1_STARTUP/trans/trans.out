@@ -1,0 +1,175 @@
+
+**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "trans.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm5123-q1_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 4ms 0 20n 
+.OPTIONS ADVCONV
+.OPTIONS ITL4= 50
+.PROBE64 V(*) I(*) 
+.INC "..\LM5123-Q1_STARTUP.net" 
+
+
+
+**** INCLUDING LM5123-Q1_STARTUP.net ****
+* source LM5123-Q1_PSPICE_TRANS
+V_V1         CSP 0  
++PWL 0 0 50u 11 4m 11 
+C_C22         HB SW  5n IC=0 TC=0,0 
+R_R19         0 TRK  30k TC=0,0 
+R_RLoad         0 VLOAD  {53.5/6} TC=0,0 
+R_R7         CSP CSN  1.5m TC=0,0 
+R_R16         UVLO CSP  77k TC=0,0 
+C_C20         0 SS  10n IC=0 TC=0,0 
+C_C16         N36337 VLOAD  1m IC=-53 TC=0,0 
+C_C19         0 N37329  200p IC=0 TC=0,0 
+X_S10    LO 0 SW 0 LM5123-Q1_STARTUP_S10 
+R_R8         0 N36337  1m TC=0,0 
+C_C18         0 COMP  1p IC=0 TC=0,0 
+X_S11    HO SW VLOAD SW LM5123-Q1_STARTUP_S11 
+V_V2         N41902 0 5V
+D_D4         0 SW D_0p7 
+D_D5         SW VLOAD D_0p7 
+R_R15         N37329 COMP  750k TC=0,0 
+R_R18         TRK VREF  10 TC=0,0 
+R_R20         N00155 N41902  9k TC=0,0 
+C_C21         0 VCC  1u IC=0 TC=0,0 
+R_R17         0 UVLO  9.6k TC=0,0 
+X_U1         CSP COMP CSN CSP HB HO LO VCC N00155 SS SW TRK UVLO VCC VCC VLOAD
++  VREF 0 0 LM5123-Q1_TRANS PARAMS: FSW=2000k
+X_L1    CSN SW LM5123-Q1_STARTUP_L1 
+
+.subckt LM5123-Q1_STARTUP_S10 1 2 3 4  
+S_S10         3 4 1 2 _S10
+RS_S10         1 2 1G
+.MODEL         _S10 VSWITCH Roff=1e9 Ron=4m Voff=0.5 Von=1
+.ends LM5123-Q1_STARTUP_S10
+
+.subckt LM5123-Q1_STARTUP_S11 1 2 3 4  
+S_S11         3 4 1 2 _S11
+RS_S11         1 2 1G
+.MODEL         _S11 VSWITCH Roff=1e9 Ron=4m Voff=0.5 Von=1
+.ends LM5123-Q1_STARTUP_S11
+
+.subckt LM5123-Q1_STARTUP_L1 1 2  
+L_L1         1 _SR L_L1 820n  
+.model         L_L1 IND L=1    IL1=-0.004 IL2=0 
+RRDC_L1         _SR 2 0.0023   
+.ends LM5123-Q1_STARTUP_L1
+
+**** RESUMING trans.cir ****
+.END
+
+**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+
+
+ ****     Inductor MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_L1.L_L1       
+           L    1            
+         IL1   -4.000000E-03 
+
+
+**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+
+
+ ****     Voltage Controlled Switch MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_S10._S10      X_S11._S11      
+         RON    4.000000E-03    4.000000E-03 
+        ROFF    1.000000E+09    1.000000E+09 
+         VON    1               1            
+        VOFF     .5              .5          
+
+
+**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB) 201.7E-12  (   HO) 201.7E-12  (   LO) 114.3E-18  (   SS) 486.5E-15      
+
+(   SW) 201.7E-12  (  CSN) 79.63E-12  (  CSP)    0.0000  (  TRK)    0.0000      
+
+(  VCC) 28.57E-09  ( COMP)-2.963E-09  ( UVLO)    -.0679  ( VREF)    0.0000      
+
+(VLOAD)   52.9820  (N00155)     .0495 (N36337)    -.0059 (N37329)-7.901E-18     
+
+(N41902)    5.0000 (X_L1._SR) 79.63E-12                  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_V1        -8.282E-07
+    V_V2        -5.501E-04
+
+    TOTAL POWER DISSIPATION   2.75E-03  WATTS
+
+Reducing minimum delta to make the circuit converge.
+
+
+          JOB CONCLUDED
+
+**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =     5280.34
+

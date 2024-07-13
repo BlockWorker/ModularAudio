@@ -1,0 +1,29 @@
+** Profile: "LM25576_Load_Transient-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_trans\lm25576_trans-pspicefiles\lm25576_load_transient\tran.sim ] 
+
+** Creating circuit file "TRAN.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_trans.lib" 
+.LIB "e:/users/alex/documents/electronics projects/modular audio/lm25576/tps7a3001_pspice_trans/tps7a3001_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 1.5m 0.2m 5n SKIPBP 
+.OPTIONS STEPGMIN
+.OPTIONS ADVCONV
+.OPTIONS ABSTOL= 5.0n
+.OPTIONS GMIN= 1.0E-10
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 1000
+.OPTIONS ITL4= 1000
+.OPTIONS RELTOL= 0.002
+.OPTIONS VNTOL= 10.0u
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\LM25576_Load_Transient.net" 
+
+
+.END

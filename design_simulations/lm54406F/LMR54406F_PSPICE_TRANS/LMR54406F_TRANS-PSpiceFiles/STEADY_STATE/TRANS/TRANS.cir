@@ -1,0 +1,23 @@
+** Profile: "STEADY_STATE-TRANS"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\LMR54406F_PSPICE_TRANS\lmr54406f_trans-pspicefiles\steady_state\trans.sim ] 
+
+** Creating circuit file "TRANS.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../LMR54406F_TRANS.lib" 
+.LIB "E:/Users/Alex/Documents/Electronics Projects/Modular Audio/lm54406F/tps7a4700_pspice_trans/tps7a4700_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 6.5m 0 20n 
+.OPTIONS ADVCONV
+.OPTIONS ABSTOL= 1n
+.OPTIONS ITL4= 20
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\STEADY_STATE.net" 
+
+
+.END

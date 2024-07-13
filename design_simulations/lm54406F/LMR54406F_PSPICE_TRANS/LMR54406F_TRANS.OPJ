@@ -1,0 +1,112 @@
+(ExpressProject "LMR54410F_PSPICE_TRANS"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/10/24]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\lmr54406fdbv_trans.olb"
+        (Type "Schematic Library")))
+    (Allegro Netlist Directory "allegro")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "59420")
+    (NoModify)
+    (File ".\LMR54406F_TRANS.DSN"
+      (Type "Schematic Design")
+      (DisplayName ".\LMR54406F_TRANS.DSN"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (Display_Online_DRC_Results "FALSE")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE")
+    (RootChangedForceReNetlist "x"))
+  (Folder "Layout")
+  (Folder "Outputs"
+    (File ".\lmr54406f_trans-pspicefiles\startup\startup.net"
+      (Type "Report"))
+    (File ".\lmr54406f_trans-pspicefiles\steady_state\steady_state.net"
+      (Type "Report")))
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\startup\trans.sim"
+        (DisplayName "STARTUP-trans")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\steady_state\trans.sim"
+        (DisplayName "STEADY_STATE-TRANS")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\ibb_startup\trans.sim"
+        (DisplayName "IBB_STARTUP-TRANS")
+        (Type "PSpice Profile"))
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lmr54406f_trans-pspicefiles\ibb_steady_state\trans.sim"
+        (DisplayName "IBB_STEADY_STATE-TRANS")
+        (Type "PSpice Profile"))
+      (ActiveProfile ".\lmr54406f_trans-pspicefiles\startup\trans.sim"))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\LMR54406F_TRANS.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\LMR54406F_TRANS.lib"))
+      (File "..\tps7a4700_pspice_trans\tps7a4700_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName "..\tps7a4700_pspice_trans\tps7a4700_trans.lib"))))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (Folder "Logs")
+  (PartMRUSelector
+    (TPS7A4700
+      (FullPartName "TPS7A4700.Normal")
+      (LibraryName
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\LM54406F\TPS7A4700_PSPICE_TRANS\TPS7A4700_TRANS.OLB")
+      (DeviceIndex "0"))
+    (IPULSE
+      (FullPartName "IPULSE.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (LMR54406FDBV_TRANS
+      (FullPartName "LMR54406FDBV_TRANS.Normal")
+      (LibraryName
+         "C:\BSR_PROJECTS\PART_NUMBERS\LMR54406F\LMR54410F_PSPICE_TRANS\LMR54406F_PSPICE_TRANS\LMR54406FDBV_TRANS.OLB")
+      (DeviceIndex "0"))
+    (LMR54410FDBV_TRANS
+      (FullPartName "LMR54410FDBV_TRANS.Normal")
+      (LibraryName
+         "C:\USERS\X0266583\DOWNLOADS\RELEASE_SHARE_2\RELEASE_SHARE\LMR54410FDBV_TRANS.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "C:\CADENCE\SPB_17.4\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0")))
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Outputs")
+      (Path "PSpice Resources")
+      (Path "PSpice Resources" "Model Libraries")
+      (Path "PSpice Resources" "Simulation Profiles")
+      (Select "PSpice Resources" "Simulation Profiles"
+         "e:\users\alex\documents\electronics projects\modular audio\lm54406f\lmr54406f_pspice_trans\lmr54406f_trans-pspicefiles\steady_state\trans.sim"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -1 -1 0 153 0 832"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 5 24 5 1721 24 873")
+        (Scroll "915 7")
+        (Zoom "100")
+        (Occurrence "/"))
+      (Path
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\LM54406F\LMR54406F_PSPICE_TRANS\LMR54406F_TRANS.DSN")
+      (Schematic "STARTUP")
+      (Page "PAGE1")))
+  (MPSSessionName "Alex")
+  (LastUsedLibraryBrowseDirectory
+     "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm54406F\TPS7A4700_PSPICE_TRANS"))

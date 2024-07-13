@@ -1,0 +1,168 @@
+
+**** 07/09/24 13:36:56 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Inverting_Regulator-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "TRAN.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_trans.lib" 
+.LIB "e:/users/alex/documents/electronics projects/modular audio/lm25576/tps7a3001_pspice_trans/tps7a3001_trans.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 60m 0 5n SKIPBP 
+.OPTIONS STEPGMIN
+.OPTIONS ADVCONV
+.OPTIONS ABSTOL= 5.0n
+.OPTIONS GMIN= 1.0E-10
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 1000
+.OPTIONS ITL4= 1000
+.OPTIONS RELTOL= 0.002
+.OPTIONS VNTOL= 10.0u
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\LM25576_Inverting_Regulator.net" 
+
+
+
+**** INCLUDING LM25576_Inverting_Regulator.net ****
+* source LM25576_TRANS
+C_C5         N16784648 COMP  330p  TC=0,0 
+X_L1         SW 0 LDCR PARAMS:  L=33u  DCR=85m IC=0
+R_R5         0 FB  21.2k TC=0,0 
+C_C4         SS AGND  10n IC={STEADY*1.225} TC=0,0 
+C_C2         0 N16780391  1u IC={STEADY * 16} TC=0,0 
+R_RS5         N16780391 AGND  11m TC=0,0 
+R_R4         FB N16784648  80.6k TC=0,0 
+C_C7         SW BST  0.022u  TC=0,0 
+R_R3         AGND RT  3.09k TC=0,0 
+C_C3         RAMP AGND  330p  TC=0,0 
+R_RS         N16784849 VIN  10m TC=0,0 
+D_D1         IS SW DIODE_D1 
+R_R6         FB AGND  1.65k TC=0,0 
+C_C8         VCC AGND  1u IC={STEADY*7} TC=0,0 
+V_Vs         N16784849 0  
++PULSE 11 13 30m 10u 10u 10m 2
+R_Rload         0 VOUTL  150k TC=0,0 
+C_C9         VIN N16778867  1u  TC=0,0 
+R_RS3         N16778867 0  17m TC=0,0 
+C_C6         0 N16785166  150u IC={STEADY * 16} TC=0,0 
+C_C10         VIN N16781778  100n  TC=0,0 
+R_RS4         N16781778 0  280m TC=0,0 
+X_U1         VIN FB SW BST RT RAMP SYNC AGND IS SD VCC 0 SS COMP SW AGND
++  LM25576_TRANS PARAMS: STEADY={STEADY}
+C_C11         VIN N16783832  1u  TC=0,0 
+R_RS7         N16785166 AGND  100m TC=0,0 
+R_RS6         N16783832 AGND  5m TC=0,0 
+R_R7         RAMP VCC  118k TC=0,0 
+C_C12         FB COMP  6.8p  TC=0,0 
+X_L2         AGND VINLIN LDCR PARAMS:  L=1m  DCR=4.1 IC=0
+R_RS8         N16787956 VINLIN  1m TC=0,0 
+R_RS9         N16787992 VINLIN  4m TC=0,0 
+C_C13         0 N16787956  100n IC={STEADY * 15} TC=0,0 
+C_C14         0 N16787992  10u IC={STEADY * 15} TC=0,0 
+C_C15         0 N16787989  100u IC={STEADY * 15} TC=0,0 
+R_R8         N16787989 VINLIN  3.3 TC=0,0 
+X_U2          0 VINLIN N16788501 VINLIN N16789198 N16788294 N16789201 VOUTL 0
++  TPS7A3001_TRANS
+C_C16         0 N16788294  10n IC=1.17 TC=0,0 
+C_C17         N16788501 VOUTL  10n  TC=0,0 
+R_R9         N16788501 VOUTL  118k TC=0,0 
+R_R10         0 N16788501  10k TC=0,0 
+R_RS10         N16788654 VOUTL  4m TC=0,0 
+C_C18         0 N16788654  10u IC={STEADY * 15} TC=0,0 
+I_I1         0 VOUTL DC 0Adc AC 0Aac
++PULSE 1m 200m 20m 10u 10u 30m 2
+.PARAM  steady=0
+
+**** RESUMING TRAN.cir ****
+.END
+
+**** 07/09/24 13:36:56 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Inverting_Regulator-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_
+
+
+ ****     Diode MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               DIODE_D1        _D              
+          IS   10.000000E-15   10.000000E-15 
+
+
+**** 07/09/24 13:36:56 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Inverting_Regulator-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_
+
+
+ ****     BJT MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               _QMOD           _NPN            QP              
+               NPN             NPN             PNP             
+       LEVEL    1               1               1            
+          IS  100.000000E-18  100.000000E-18  100.000000E-18 
+          BF  100             100             100            
+          NF    1               1               1            
+          BR    1               1               1            
+          NR    1               1               1            
+         ISS    0               0               0            
+          RE    0               0               0            
+          RC    0               0               0            
+         CJE    0               0               0            
+         VJE     .75             .75             .75         
+         CJC    0               0               0            
+         VJC     .75             .75             .75         
+         MJC     .33             .33             .33         
+        XCJC    1               1               1            
+         CJS    0               0               0            
+         VJS     .75             .75             .75         
+          KF    0               0               0            
+          AF    1               1               1            
+          CN    2.42            2.42            2.2          
+           D     .87             .87             .52         
+
+
+WARNING(ORPSIM-16534): Using high values of ITL4 for Speed Level > 0 may increase total simulation job time.
+
+
+          JOB CONCLUDED
+
+**** 07/09/24 13:36:56 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM25576_Inverting_Regulator-TRAN"  [ e:\users\alex\documents\electronics projects\modular audio\lm25576\lm25576_pspice_
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =     4238.52
+

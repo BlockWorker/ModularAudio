@@ -1,0 +1,21 @@
+** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_AVG-pspicefiles\bode\ac.sim ] 
+
+** Creating circuit file "ac.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_avg.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.AC DEC 100 1 200000
+.OP
+.OPTIONS ADVCONV
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\Bode.net" 
+
+
+.END

@@ -1,0 +1,91 @@
+(ExpressProject "LM5123-Q1_PSPICE_TRANS"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/06/24]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\lm5123-q1_trans.olb"
+        (Type "Schematic Library")))
+    (NoModify)
+    (File "lm5123-q1_pspice_trans.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (RootChangedForceReNetlist "x")
+    (PSPICE_Regenerate_Netlist_Flag "TRUE")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "61215")
+    (Board_sim_option "VHDL_flow"))
+  (Folder "Layout")
+  (Folder "Outputs"
+    (File
+       ".\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\lm5123-q1_startup.net"
+      (Type "Report")))
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\trans.sim"
+        (DisplayName "LM5123-Q1_STARTUP-trans")
+        (Type "PSpice Profile"))
+      (ActiveProfile
+         ".\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\trans.sim"))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\lm5123-q1_trans.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\lm5123-q1_trans.lib")))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User)))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (PartMRUSelector
+    (VDC
+      (FullPartName "VDC.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (L
+      (FullPartName "L.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\TCLSCRIPTS\CAPPSPICEMODELAPP\INDUCTOR\HYBRID\SUPPORTFILES\INDUCTOR.OLB")
+      (DeviceIndex "0"))
+    (B82477P4821M000
+      (FullPartName "B82477P4821M000.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\EPCOS_B82477.OLB")
+      (DeviceIndex "0"))
+    (LM5123-Q1_TRANS
+      (FullPartName "LM5123-Q1_TRANS.Normal")
+      (LibraryName
+         "C:\USERS\A0486404\TI DRIVE\MYFILES\MODELING\LM5123\TRANSIENT\V2_PACKAGE\PACKAGE1\LM5123-Q1_PSPICE_TRANS\LM5123-Q1_TRANS.OLB")
+      (DeviceIndex "0"))
+    (VPWL
+      (FullPartName "VPWL.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName "D:\ORCAD10.5_15.7\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (VPULSE
+      (FullPartName "VPULSE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (INV_BASIC_GEN
+      (FullPartName "INV_BASIC_GEN.Normal")
+      (LibraryName
+         "Z:\TEMPLATES\PSPICE_TEMPLATES\LIB_AND_OLB_FILES\GATES_GEN.OLB")
+      (DeviceIndex "0")))
+  (MPSSessionName "Alex")
+  (GlobalState
+    (FileView
+      (Select "Design Resources"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -1 -1 0 1871 0 745"))
+      (Tab 0)))
+  (Folder "Logs"))

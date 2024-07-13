@@ -1,0 +1,214 @@
+
+**** 07/09/24 03:06:48 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_AVG-pspicefil
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "ac.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_avg.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.AC DEC 100 1 200000
+.OP
+.OPTIONS ADVCONV
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\Bode.net" 
+
+
+
+**** INCLUDING Bode.net ****
+* source LM25576_AVG
+V_VIN         N14371304 0 {VIN}
+R_RS         N14371304 VIN  10m TC=0,0 
+X_CO         0 OUTN COUT
+L_Linj         0 N14382874  1k  
+X_L         N14373156 0 LDCR PARAMS:  L={L}  DCR=85m
+C_Cinj         N143822010 N14382874  1k  TC=0,0 
+V_Vinj         N143822010 OUTN DC 0Vdc AC 1Vac 
+R_Rfbtop         N14382521 N14382874  {Rfbtop} TC=0,0 
+R_Rfbbot         OUTN N14382521  {Rfbbot} TC=0,0 
+R_R4         N14383054 N14382521  80.6k TC=0,0 
+C_C5         N14383084 N14383054  330p  TC=0,0 
+R_Rload         OUTN 0  85 TC=0,0 
+X_C1         VIN 0 CESR PARAMS: C=1u ESR=17m
+R_Rt         OUTN N14385124  3.09k TC=0,0 
+X_U1         VIN N14382521 N14373156 N14385124 N14383084 OUTN LM25576_AVG
++  PARAMS: FSW={FSW} RFBTOP={Rfbtop} RFBBOT={Rfbbot} VIN={VIN} L={L}
+C_C6         N14383084 N14382521  6.8p  TC=0,0 
+X_C7         VIN OUTN CESR PARAMS: C=1u ESR=5m
+.NODESET         V([VIN ])=1.225
+.PARAM  vin=11 l=33u rfbbot=1.65k rfbtop=21k fsw=1000k
+
+**** RESUMING ac.cir ****
+.END
+
+INFO(ORPSIM-16573): AC analysis does not support expression evaluation at each frequency. ABM devices with non-linear operations will be evaluated only at bias point.
+
+**** 07/09/24 03:06:48 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_AVG-pspicefil
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(  VIN)   11.0000  ( OUTN)  -16.6640  (X_CO.1)  -16.6640 (X_CO.3)    0.0000     
+
+(X_CO.5)  -16.6640 (X_CO.7)    0.0000 (X_CO.10)    0.0000                       
+
+(X_CO.13)    0.0000                   (X_CO.26)    0.0000                       
+
+(X_CO.28)    0.0000                   (X_CO.29)    0.0000                       
+
+(X_L.INT1)     .0171                  (X_U1.Ref)  -15.4390                      
+
+(N14371304)   11.0000                 (N14373156)     .0171                     
+
+(N14382521)  -15.4470                 (N14382874)    0.0000                     
+
+(N14383054)  -15.4470                 (N14383084)   27.7520                     
+
+(N14385124)  -16.6630                 (X_C1.INT1)    0.0000                     
+
+(X_C7.INT1)  -16.6640                 (X_U1.X1.D)  -16.6640                     
+
+(N143822010)  -16.6640                (X_U1.X1.Dx) -142.9800                    
+
+(X_U1.X1.IL)     .2006                (X_U1.X1.Ip)   16.6640                    
+
+(X_U1.X1.Iv)  -16.6640                (X_U1.X1.Vc)   22.7970                    
+
+(X_U1.X1.Vo)     .1523                (X_U1.X2.10)  -15.4470                    
+
+(X_U1.X2.11)    -.0087                (X_U1.X2.12)    -.0087                    
+
+(X_U1.X2.13)    -.0087                (X_U1.X2.14)   27.7520                    
+
+(X_U1.X1.ILs)     .2006               (X_U1.X1.Ipx)   33.3280                   
+
+(X_U1.X1.Ivx) 4.172E-06               (X_U1.X1.Vin)    7.9736                   
+
+(X_U1.Vsupply)  -11.6640              (X_U1.X1.VLIM)   24.8520                  
+
+(X_U1.X1.Vswx)     .0171              (X_U1.X1.Vinsw)   -8.7070                 
+
+(X_U1.X1.Vinvo)   -8.8423             
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_VIN       -3.833E-03
+    V_Vinj       0.000E+00
+    X_U1.Vref    1.501E-06
+    X_U1.Vsupply  -5.000E-04
+    X_U1.X1.VIL1   2.006E-01
+    X_U1.X2.VOFST  -4.334E-08
+
+    TOTAL POWER DISSIPATION   4.47E-02  WATTS
+
+
+**** 07/09/24 03:06:48 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_AVG-pspicefil
+
+
+ ****     OPERATING POINT INFORMATION      TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+
+
+
+**** VOLTAGE-CONTROLLED CURRENT SOURCES
+
+
+NAME         X_U1.X1.G_B1            X_U1.X1.G_B4            X_U1.X2.GA
+I-SOURCE     3.833E-03               2.006E-01               3.700E-01
+
+
+**** VOLTAGE-CONTROLLED VOLTAGE SOURCES
+
+
+NAME         X_U1.X1.E_Beff          X_U1.X1.E_Bvout       
+V-SOURCE     3.026E+00               1.682E+01            
+I-SOURCE     3.833E-03               0.000E+00            
+
+NAME         X_U1.X1.E_B2x           X_U1.X1.E_B2          
+V-SOURCE     4.999E+01               3.333E+01            
+I-SOURCE     0.000E+00               0.000E+00            
+
+NAME         X_U1.X1.E_B3x           X_U1.X1.E_B3          
+V-SOURCE     1.666E+01               4.172E-06            
+I-SOURCE     0.000E+00               0.000E+00            
+
+NAME         X_U1.X1.E_B5x           X_U1.X1.E_B5          
+V-SOURCE    -1.263E+02               0.000E+00            
+I-SOURCE     0.000E+00               0.000E+00            
+
+NAME         X_U1.X1.E_B6            X_U1.X1.E_B7          
+V-SOURCE     7.957E+00               7.821E+00            
+I-SOURCE     0.000E+00               0.000E+00            
+
+NAME         X_U1.X1.E_B8            X_U1.X1.E_Bramp       
+V-SOURCE     1.686E+01               2.055E+00            
+I-SOURCE     0.000E+00               0.000E+00            
+
+NAME         X_U1.X1.E_Blim          X_U1.X2.EA  X_U1.X1.X_A1.ES_XFER  
+V-SOURCE     2.900E+00              -8.668E-03   2.006E-01            
+I-SOURCE     0.000E+00              -3.219E-20   0.000E+00            
+
+
+**** DIODES
+
+
+NAME         X_U1.X1.D1            
+MODEL        X_U1.X1.mur105rl      
+ID          -9.83E-09             
+VD          -7.96E+00             
+REQ          1.00E+12             
+CAP          1.92E-11             
+
+          JOB CONCLUDED
+
+**** 07/09/24 03:06:48 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_AVG-pspicefil
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =         .03
+
