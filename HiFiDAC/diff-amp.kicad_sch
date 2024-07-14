@@ -2,7 +2,7 @@
 	(version 20231120)
 	(generator "eeschema")
 	(generator_version "8.0")
-	(uuid "64c2ee0c-6042-45f8-9699-e044e5b1a063")
+	(uuid "7f466d30-2736-404a-bad4-4ad0d271025d")
 	(paper "A4")
 	(lib_symbols
 		(symbol "BW_Active:OPA1612"
