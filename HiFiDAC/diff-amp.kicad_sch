@@ -907,10 +907,10 @@
 		(uuid "25ae7c6c-0824-49fa-ae44-253be71b412e")
 	)
 	(junction
-		(at 121.92 76.2)
+		(at 121.92 133.35)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "43428418-217b-47cf-ac39-2b1251e9024f")
+		(uuid "3260f909-8105-410f-aeaa-96e607b5db6b")
 	)
 	(junction
 		(at 214.63 102.87)
@@ -931,6 +931,12 @@
 		(uuid "7192ac2e-8341-4b6c-89bb-bc53031e55e8")
 	)
 	(junction
+		(at 121.92 76.2)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "775a6f09-8090-411d-bd21-292deedce31b")
+	)
+	(junction
 		(at 93.98 128.27)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -949,26 +955,10 @@
 		(uuid "af878240-118d-41a3-a9ae-6e9e80a20cd6")
 	)
 	(junction
-		(at 121.92 133.35)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "dbdfcd17-21c9-4230-b8ef-d92db92ba9a5")
-	)
-	(junction
 		(at 93.98 81.28)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "e5c3f11e-f737-4efc-999e-b034695c6f7f")
-	)
-	(wire
-		(pts
-			(xy 99.06 73.66) (xy 93.98 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "008ad05a-4de7-420b-85b8-0566be6d90b9")
 	)
 	(wire
 		(pts
@@ -992,16 +982,6 @@
 	)
 	(wire
 		(pts
-			(xy 121.92 76.2) (xy 116.84 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "07c4e0f5-0f02-4c38-ab01-10281f6136aa")
-	)
-	(wire
-		(pts
 			(xy 62.23 138.43) (xy 81.28 138.43)
 		)
 		(stroke
@@ -1019,16 +999,6 @@
 			(type default)
 		)
 		(uuid "0e3a074f-e6a0-46dd-beb7-8142a9e294c9")
-	)
-	(wire
-		(pts
-			(xy 93.98 135.89) (xy 99.06 135.89)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "14be6888-791d-4a0d-9d92-02a55c7d3689")
 	)
 	(wire
 		(pts
@@ -1082,6 +1052,16 @@
 	)
 	(wire
 		(pts
+			(xy 93.98 130.81) (xy 99.06 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3def8bb1-cc93-42fa-8d1a-bfbb8590490a")
+	)
+	(wire
+		(pts
 			(xy 111.76 60.96) (xy 121.92 60.96)
 		)
 		(stroke
@@ -1092,6 +1072,16 @@
 	)
 	(wire
 		(pts
+			(xy 116.84 76.2) (xy 121.92 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "444a8be7-3caf-4ec0-9f1d-d4b8a8155f06")
+	)
+	(wire
+		(pts
 			(xy 93.98 148.59) (xy 93.98 151.13)
 		)
 		(stroke
@@ -1099,16 +1089,6 @@
 			(type default)
 		)
 		(uuid "45fad031-e153-404a-b72e-e193d424177a")
-	)
-	(wire
-		(pts
-			(xy 99.06 130.81) (xy 93.98 130.81)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4ce6349b-6cdd-4ef4-b938-32cac3301cf8")
 	)
 	(wire
 		(pts
@@ -1222,6 +1202,16 @@
 	)
 	(wire
 		(pts
+			(xy 93.98 135.89) (xy 99.06 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9af3fd3f-eaa9-4b90-a0c5-1c064d5b44e6")
+	)
+	(wire
+		(pts
 			(xy 217.17 97.79) (xy 217.17 102.87)
 		)
 		(stroke
@@ -1229,16 +1219,6 @@
 			(type default)
 		)
 		(uuid "9c5d5b33-0a70-4de6-a639-1c050a30ab42")
-	)
-	(wire
-		(pts
-			(xy 93.98 78.74) (xy 99.06 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a1ca2c60-f5b7-4b01-8143-2fc750a24972")
 	)
 	(wire
 		(pts
@@ -1282,6 +1262,16 @@
 	)
 	(wire
 		(pts
+			(xy 93.98 78.74) (xy 99.06 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "beddc857-f2f4-402f-a180-399942e2ab3d")
+	)
+	(wire
+		(pts
 			(xy 214.63 102.87) (xy 217.17 102.87)
 		)
 		(stroke
@@ -1302,6 +1292,16 @@
 	)
 	(wire
 		(pts
+			(xy 116.84 133.35) (xy 121.92 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c9816e42-9d20-4426-8474-c404769fab8a")
+	)
+	(wire
+		(pts
 			(xy 121.92 118.11) (xy 121.92 133.35)
 		)
 		(stroke
@@ -1309,6 +1309,16 @@
 			(type default)
 		)
 		(uuid "cd05fad8-b19e-47c4-b89e-678c459f5cad")
+	)
+	(wire
+		(pts
+			(xy 93.98 73.66) (xy 99.06 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ce4c1372-cf5b-4339-b70b-575b87e565d4")
 	)
 	(wire
 		(pts
@@ -1409,16 +1419,6 @@
 			(type default)
 		)
 		(uuid "eae46cc8-7305-42c5-adac-7551d4d9e3f3")
-	)
-	(wire
-		(pts
-			(xy 121.92 133.35) (xy 116.84 133.35)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f1dddda2-10a9-4d4e-971b-cf6e29443343")
 	)
 	(wire
 		(pts
@@ -2112,7 +2112,7 @@
 	)
 	(symbol
 		(lib_id "BW_Active:OPA1612")
-		(at 106.68 133.35 0)
+		(at 106.68 76.2 0)
 		(unit 2)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2121,7 +2121,7 @@
 		(fields_autoplaced yes)
 		(uuid "a4566c66-85f9-4e30-98a1-db8571d38bb8")
 		(property "Reference" "U7"
-			(at 107.95 121.92 0)
+			(at 107.95 64.77 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2129,7 +2129,7 @@
 			)
 		)
 		(property "Value" "OPA1612"
-			(at 107.95 124.46 0)
+			(at 107.95 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2137,7 +2137,7 @@
 			)
 		)
 		(property "Footprint" "Package_SON:WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm"
-			(at 106.68 133.35 0)
+			(at 106.68 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2146,7 +2146,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/opa1612.pdf"
-			(at 106.68 133.35 0)
+			(at 106.68 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2155,7 +2155,7 @@
 			)
 		)
 		(property "Description" "High-performance Dual Audio OpAmp"
-			(at 106.68 133.35 0)
+			(at 106.68 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2526,31 +2526,31 @@
 			)
 		)
 		(pin "3"
-			(uuid "194cc7b5-c97d-4c02-ab19-274a761653ae")
+			(uuid "194cc7b5-c97d-4c02-ab19-274a761653af")
 		)
 		(pin "6"
-			(uuid "9bdca284-a65b-40d4-a1a0-236d4e28ac8c")
+			(uuid "9bdca284-a65b-40d4-a1a0-236d4e28ac8d")
 		)
 		(pin "8"
-			(uuid "90135ba5-465b-4c97-8fd6-fd3de6c7e121")
+			(uuid "90135ba5-465b-4c97-8fd6-fd3de6c7e122")
 		)
 		(pin "5"
-			(uuid "9c1741dc-1cd9-4051-80e9-1b065989363f")
+			(uuid "9c1741dc-1cd9-4051-80e9-1b0659893640")
 		)
 		(pin "7"
-			(uuid "c9d4ca06-56ba-474d-aaaa-e630ce8a094c")
+			(uuid "c9d4ca06-56ba-474d-aaaa-e630ce8a094d")
 		)
 		(pin "2"
-			(uuid "e1009291-7d55-4bbf-920e-15caa2a283a5")
+			(uuid "e1009291-7d55-4bbf-920e-15caa2a283a6")
 		)
 		(pin "1"
-			(uuid "0b6d88b1-9ac4-48b2-aba1-0276e73410d3")
+			(uuid "0b6d88b1-9ac4-48b2-aba1-0276e73410d4")
 		)
 		(pin "9"
-			(uuid "46c8b44d-afc3-4f94-855a-902827552ce7")
+			(uuid "46c8b44d-afc3-4f94-855a-902827552ce8")
 		)
 		(pin "4"
-			(uuid "b6aa0c3b-1b06-4a12-9827-38f49e87b507")
+			(uuid "b6aa0c3b-1b06-4a12-9827-38f49e87b508")
 		)
 		(instances
 			(project ""
@@ -2633,7 +2633,7 @@
 	)
 	(symbol
 		(lib_id "BW_Active:OPA1612")
-		(at 106.68 76.2 0)
+		(at 106.68 133.35 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2642,7 +2642,7 @@
 		(fields_autoplaced yes)
 		(uuid "e6d8078e-238d-4f05-b830-cf5b0cc858c5")
 		(property "Reference" "U7"
-			(at 107.95 64.77 0)
+			(at 107.95 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2650,7 +2650,7 @@
 			)
 		)
 		(property "Value" "OPA1612"
-			(at 107.95 67.31 0)
+			(at 107.95 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2658,7 +2658,7 @@
 			)
 		)
 		(property "Footprint" "Package_SON:WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm"
-			(at 106.68 76.2 0)
+			(at 106.68 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2667,7 +2667,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/opa1612.pdf"
-			(at 106.68 76.2 0)
+			(at 106.68 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2676,7 +2676,7 @@
 			)
 		)
 		(property "Description" "High-performance Dual Audio OpAmp"
-			(at 106.68 76.2 0)
+			(at 106.68 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2685,31 +2685,31 @@
 			)
 		)
 		(pin "3"
-			(uuid "194cc7b5-c97d-4c02-ab19-274a761653ae")
+			(uuid "194cc7b5-c97d-4c02-ab19-274a761653b0")
 		)
 		(pin "6"
-			(uuid "9bdca284-a65b-40d4-a1a0-236d4e28ac8c")
+			(uuid "9bdca284-a65b-40d4-a1a0-236d4e28ac8e")
 		)
 		(pin "8"
-			(uuid "90135ba5-465b-4c97-8fd6-fd3de6c7e121")
+			(uuid "90135ba5-465b-4c97-8fd6-fd3de6c7e123")
 		)
 		(pin "5"
-			(uuid "9c1741dc-1cd9-4051-80e9-1b065989363f")
+			(uuid "9c1741dc-1cd9-4051-80e9-1b0659893641")
 		)
 		(pin "7"
-			(uuid "c9d4ca06-56ba-474d-aaaa-e630ce8a094c")
+			(uuid "c9d4ca06-56ba-474d-aaaa-e630ce8a094e")
 		)
 		(pin "2"
-			(uuid "e1009291-7d55-4bbf-920e-15caa2a283a5")
+			(uuid "e1009291-7d55-4bbf-920e-15caa2a283a7")
 		)
 		(pin "1"
-			(uuid "0b6d88b1-9ac4-48b2-aba1-0276e73410d3")
+			(uuid "0b6d88b1-9ac4-48b2-aba1-0276e73410d5")
 		)
 		(pin "9"
-			(uuid "46c8b44d-afc3-4f94-855a-902827552ce7")
+			(uuid "46c8b44d-afc3-4f94-855a-902827552ce9")
 		)
 		(pin "4"
-			(uuid "b6aa0c3b-1b06-4a12-9827-38f49e87b507")
+			(uuid "b6aa0c3b-1b06-4a12-9827-38f49e87b509")
 		)
 		(instances
 			(project ""
