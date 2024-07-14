@@ -2,7 +2,7 @@
 	(version 20231120)
 	(generator "eeschema")
 	(generator_version "8.0")
-	(uuid "6b765fbc-badc-4b8e-827d-92bff05e94a8")
+	(uuid "2e517409-378b-4fc1-b6cf-a542f483ae5e")
 	(paper "A4")
 	(lib_symbols
 		(symbol "Device:C"
@@ -1063,7 +1063,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1b1c7915-a69c-4a5b-a5ef-69261f8ed4d0")
-		(property "Reference" "R1"
+		(property "Reference" "R21"
 			(at 180.34 88.8999 0)
 			(effects
 				(font
@@ -1081,7 +1081,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 178.816 90.424 90)
 			(effects
 				(font
@@ -1117,7 +1117,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "R1")
+					(reference "R21")
 					(unit 1)
 				)
 			)
@@ -1133,7 +1133,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3d27adfb-5c5c-42b2-b0c1-306d8581610a")
-		(property "Reference" "C3"
+		(property "Reference" "C18"
 			(at 105.41 99.0599 0)
 			(effects
 				(font
@@ -1151,7 +1151,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 102.5652 104.14 0)
 			(effects
 				(font
@@ -1187,7 +1187,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "C3")
+					(reference "C18")
 					(unit 1)
 				)
 			)
@@ -1203,7 +1203,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7026a41e-5437-423b-86d1-98b84a17e026")
-		(property "Reference" "C4"
+		(property "Reference" "C17"
 			(at 201.93 97.7899 0)
 			(effects
 				(font
@@ -1221,7 +1221,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 199.0852 102.87 0)
 			(effects
 				(font
@@ -1257,7 +1257,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "C4")
+					(reference "C17")
 					(unit 1)
 				)
 			)
@@ -1273,7 +1273,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "856fbcf9-d36e-406e-9ec1-2b34cdfec789")
-		(property "Reference" "R2"
+		(property "Reference" "R22"
 			(at 180.34 106.6799 0)
 			(effects
 				(font
@@ -1291,7 +1291,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 178.816 108.204 90)
 			(effects
 				(font
@@ -1327,7 +1327,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "R2")
+					(reference "R22")
 					(unit 1)
 				)
 			)
@@ -1343,7 +1343,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "96aa45bb-1406-4f8a-a6d0-739ab303c237")
-		(property "Reference" "C2"
+		(property "Reference" "C19"
 			(at 125.73 109.2199 0)
 			(effects
 				(font
@@ -1361,7 +1361,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 122.8852 114.3 0)
 			(effects
 				(font
@@ -1397,7 +1397,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "C2")
+					(reference "C19")
 					(unit 1)
 				)
 			)
@@ -1413,7 +1413,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bd23b9bc-5e52-4b0f-9276-95369b2ad8fc")
-		(property "Reference" "C1"
+		(property "Reference" "C16"
 			(at 165.1 88.8999 0)
 			(effects
 				(font
@@ -1431,7 +1431,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 162.2552 93.98 0)
 			(effects
 				(font
@@ -1467,7 +1467,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "C1")
+					(reference "C16")
 					(unit 1)
 				)
 			)
@@ -1483,7 +1483,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d8dbdda6-3c04-4600-baf0-af70d9c69fd2")
-		(property "Reference" "U1"
+		(property "Reference" "U2"
 			(at 143.51 86.36 0)
 			(effects
 				(font
@@ -1562,7 +1562,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/d2b42ea6-55ff-4972-b433-f15f9f1c7608"
-					(reference "U1")
+					(reference "U2")
 					(unit 1)
 				)
 			)

@@ -2,7 +2,7 @@
 	(version 20231120)
 	(generator "eeschema")
 	(generator_version "8.0")
-	(uuid "7f466d30-2736-404a-bad4-4ad0d271025d")
+	(uuid "06cc2a9b-e1b6-44d5-867f-07d4d2c2c8ee")
 	(paper "A4")
 	(lib_symbols
 		(symbol "BW_Active:OPA1612"
@@ -1512,7 +1512,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0cbe341f-299b-4e6a-8203-7019499ea90f")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR040"
 			(at 209.55 80.01 0)
 			(effects
 				(font
@@ -1562,7 +1562,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR020")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -1578,7 +1578,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0dcf0219-d4e9-4bfd-8c56-153fc425a0be")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR043"
 			(at 209.55 100.33 0)
 			(effects
 				(font
@@ -1628,7 +1628,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR021")
+					(reference "#PWR043")
 					(unit 1)
 				)
 			)
@@ -1644,7 +1644,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "269c4d48-65d7-49e2-9bfa-948b94411e98")
-		(property "Reference" "R29"
+		(property "Reference" "R49"
 			(at 85.09 132.08 90)
 			(effects
 				(font
@@ -1660,7 +1660,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 84.836 139.446 90)
 			(effects
 				(font
@@ -1696,7 +1696,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R29")
+					(reference "R49")
 					(unit 1)
 				)
 			)
@@ -1712,7 +1712,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "32047d42-fe81-4692-bf8a-2424ec0d5336")
-		(property "Reference" "R30"
+		(property "Reference" "R50"
 			(at 96.52 143.5099 0)
 			(effects
 				(font
@@ -1730,7 +1730,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 94.996 145.034 90)
 			(effects
 				(font
@@ -1766,7 +1766,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R30")
+					(reference "R50")
 					(unit 1)
 				)
 			)
@@ -1782,7 +1782,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "36fd3fa1-f3ed-45b6-ab50-edbee802333f")
-		(property "Reference" "R27"
+		(property "Reference" "R47"
 			(at 107.95 111.76 90)
 			(effects
 				(font
@@ -1798,7 +1798,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 107.696 119.126 90)
 			(effects
 				(font
@@ -1834,7 +1834,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R27")
+					(reference "R47")
 					(unit 1)
 				)
 			)
@@ -1850,7 +1850,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "557261a9-0606-4f29-a531-57d562b3b6c3")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR044"
 			(at 93.98 157.48 0)
 			(effects
 				(font
@@ -1900,7 +1900,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR019")
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -1916,7 +1916,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5ddf0858-1379-4de4-bb64-4b2e0f17537c")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR042"
 			(at 93.98 100.33 0)
 			(effects
 				(font
@@ -1966,7 +1966,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR018")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -1982,7 +1982,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6d279415-0027-4765-85cc-1fbba1492706")
-		(property "Reference" "R24"
+		(property "Reference" "R43"
 			(at 107.95 54.61 90)
 			(effects
 				(font
@@ -1998,7 +1998,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 107.696 61.976 90)
 			(effects
 				(font
@@ -2034,7 +2034,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R24")
+					(reference "R43")
 					(unit 1)
 				)
 			)
@@ -2050,7 +2050,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9280a6b7-a414-4d84-bb5a-132b43637e31")
-		(property "Reference" "R26"
+		(property "Reference" "R46"
 			(at 96.52 86.3599 0)
 			(effects
 				(font
@@ -2068,7 +2068,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 94.996 87.884 90)
 			(effects
 				(font
@@ -2104,7 +2104,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R26")
+					(reference "R46")
 					(unit 1)
 				)
 			)
@@ -2136,7 +2136,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SON:WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm"
 			(at 106.68 133.35 0)
 			(effects
 				(font
@@ -2209,7 +2209,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b0b1e7f7-0be6-49a0-bcbe-f46a7d95532b")
-		(property "Reference" "R23"
+		(property "Reference" "R44"
 			(at 85.09 64.77 90)
 			(effects
 				(font
@@ -2225,7 +2225,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 84.836 72.136 90)
 			(effects
 				(font
@@ -2261,7 +2261,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R23")
+					(reference "R44")
 					(unit 1)
 				)
 			)
@@ -2277,7 +2277,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bb6687af-e882-4290-8a27-353130b5a60d")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR041"
 			(at 243.84 90.17 0)
 			(effects
 				(font
@@ -2328,7 +2328,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR017")
+					(reference "#PWR041")
 					(unit 1)
 				)
 			)
@@ -2344,7 +2344,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bfd4bf55-1bd7-459b-a4d5-e14cab13d005")
-		(property "Reference" "R25"
+		(property "Reference" "R45"
 			(at 85.09 74.93 90)
 			(effects
 				(font
@@ -2360,7 +2360,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 84.836 82.296 90)
 			(effects
 				(font
@@ -2396,7 +2396,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R25")
+					(reference "R45")
 					(unit 1)
 				)
 			)
@@ -2412,7 +2412,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c0c12cad-b907-4836-8ebb-fae82a0fe658")
-		(property "Reference" "R28"
+		(property "Reference" "R48"
 			(at 85.09 121.92 90)
 			(effects
 				(font
@@ -2428,7 +2428,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 84.836 129.286 90)
 			(effects
 				(font
@@ -2464,7 +2464,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R28")
+					(reference "R48")
 					(unit 1)
 				)
 			)
@@ -2498,7 +2498,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SON:WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm"
 			(at 217.17 90.17 0)
 			(effects
 				(font
@@ -2571,7 +2571,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d839b7a0-e7bf-4702-bbf0-29748be40b22")
-		(property "Reference" "C25"
+		(property "Reference" "C40"
 			(at 236.22 83.8199 0)
 			(effects
 				(font
@@ -2589,7 +2589,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "BW_PassiveMechanical:C_0704_1810Metric"
 			(at 231.4448 81.28 0)
 			(effects
 				(font
@@ -2625,7 +2625,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "C25")
+					(reference "C40")
 					(unit 1)
 				)
 			)
@@ -2657,7 +2657,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SON:WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm"
 			(at 106.68 76.2 0)
 			(effects
 				(font
@@ -2730,7 +2730,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e9854a75-bc08-4a18-9766-c828ef479fab")
-		(property "Reference" "C26"
+		(property "Reference" "C41"
 			(at 236.22 93.9799 0)
 			(effects
 				(font
@@ -2748,7 +2748,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "BW_PassiveMechanical:C_0704_1810Metric"
 			(at 231.4448 91.44 0)
 			(effects
 				(font
@@ -2784,7 +2784,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "C26")
+					(reference "C41")
 					(unit 1)
 				)
 			)
