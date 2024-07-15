@@ -1512,7 +1512,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0cbe341f-299b-4e6a-8203-7019499ea90f")
-		(property "Reference" "#PWR040"
+		(property "Reference" "#PWR041"
 			(at 209.55 80.01 0)
 			(effects
 				(font
@@ -1562,7 +1562,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR040")
+					(reference "#PWR041")
 					(unit 1)
 				)
 			)
@@ -1578,7 +1578,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0dcf0219-d4e9-4bfd-8c56-153fc425a0be")
-		(property "Reference" "#PWR043"
+		(property "Reference" "#PWR044"
 			(at 209.55 100.33 0)
 			(effects
 				(font
@@ -1628,7 +1628,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR043")
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -1644,7 +1644,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "269c4d48-65d7-49e2-9bfa-948b94411e98")
-		(property "Reference" "R49"
+		(property "Reference" "R43"
 			(at 85.09 132.08 90)
 			(effects
 				(font
@@ -1696,7 +1696,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R49")
+					(reference "R43")
 					(unit 1)
 				)
 			)
@@ -1712,7 +1712,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "32047d42-fe81-4692-bf8a-2424ec0d5336")
-		(property "Reference" "R50"
+		(property "Reference" "R44"
 			(at 96.52 143.5099 0)
 			(effects
 				(font
@@ -1766,7 +1766,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R50")
+					(reference "R44")
 					(unit 1)
 				)
 			)
@@ -1782,7 +1782,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "36fd3fa1-f3ed-45b6-ab50-edbee802333f")
-		(property "Reference" "R47"
+		(property "Reference" "R41"
 			(at 107.95 111.76 90)
 			(effects
 				(font
@@ -1834,7 +1834,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R47")
+					(reference "R41")
 					(unit 1)
 				)
 			)
@@ -1850,7 +1850,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "557261a9-0606-4f29-a531-57d562b3b6c3")
-		(property "Reference" "#PWR044"
+		(property "Reference" "#PWR045"
 			(at 93.98 157.48 0)
 			(effects
 				(font
@@ -1900,7 +1900,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR044")
+					(reference "#PWR045")
 					(unit 1)
 				)
 			)
@@ -1916,7 +1916,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5ddf0858-1379-4de4-bb64-4b2e0f17537c")
-		(property "Reference" "#PWR042"
+		(property "Reference" "#PWR043"
 			(at 93.98 100.33 0)
 			(effects
 				(font
@@ -1966,7 +1966,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR042")
+					(reference "#PWR043")
 					(unit 1)
 				)
 			)
@@ -1982,7 +1982,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6d279415-0027-4765-85cc-1fbba1492706")
-		(property "Reference" "R43"
+		(property "Reference" "R37"
 			(at 107.95 54.61 90)
 			(effects
 				(font
@@ -2034,7 +2034,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R43")
+					(reference "R37")
 					(unit 1)
 				)
 			)
@@ -2050,7 +2050,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9280a6b7-a414-4d84-bb5a-132b43637e31")
-		(property "Reference" "R46"
+		(property "Reference" "R40"
 			(at 96.52 86.3599 0)
 			(effects
 				(font
@@ -2104,7 +2104,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R46")
+					(reference "R40")
 					(unit 1)
 				)
 			)
@@ -2120,7 +2120,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a4566c66-85f9-4e30-98a1-db8571d38bb8")
-		(property "Reference" "U7"
+		(property "Reference" "U8"
 			(at 107.95 64.77 0)
 			(effects
 				(font
@@ -2193,7 +2193,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "U7")
+					(reference "U8")
 					(unit 2)
 				)
 			)
@@ -2209,7 +2209,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b0b1e7f7-0be6-49a0-bcbe-f46a7d95532b")
-		(property "Reference" "R44"
+		(property "Reference" "R38"
 			(at 85.09 64.77 90)
 			(effects
 				(font
@@ -2261,7 +2261,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R44")
+					(reference "R38")
 					(unit 1)
 				)
 			)
@@ -2277,7 +2277,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bb6687af-e882-4290-8a27-353130b5a60d")
-		(property "Reference" "#PWR041"
+		(property "Reference" "#PWR042"
 			(at 243.84 90.17 0)
 			(effects
 				(font
@@ -2328,7 +2328,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "#PWR041")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -2344,7 +2344,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bfd4bf55-1bd7-459b-a4d5-e14cab13d005")
-		(property "Reference" "R45"
+		(property "Reference" "R39"
 			(at 85.09 74.93 90)
 			(effects
 				(font
@@ -2396,7 +2396,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R45")
+					(reference "R39")
 					(unit 1)
 				)
 			)
@@ -2412,7 +2412,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c0c12cad-b907-4836-8ebb-fae82a0fe658")
-		(property "Reference" "R48"
+		(property "Reference" "R42"
 			(at 85.09 121.92 90)
 			(effects
 				(font
@@ -2464,7 +2464,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "R48")
+					(reference "R42")
 					(unit 1)
 				)
 			)
@@ -2480,7 +2480,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c7e7aa57-8a86-44ae-b7d6-cb8774a14117")
-		(property "Reference" "U7"
+		(property "Reference" "U8"
 			(at 220.98 88.8999 0)
 			(effects
 				(font
@@ -2555,7 +2555,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "U7")
+					(reference "U8")
 					(unit 3)
 				)
 			)
@@ -2571,7 +2571,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d839b7a0-e7bf-4702-bbf0-29748be40b22")
-		(property "Reference" "C40"
+		(property "Reference" "C43"
 			(at 236.22 83.8199 0)
 			(effects
 				(font
@@ -2625,7 +2625,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "C40")
+					(reference "C43")
 					(unit 1)
 				)
 			)
@@ -2641,7 +2641,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e6d8078e-238d-4f05-b830-cf5b0cc858c5")
-		(property "Reference" "U7"
+		(property "Reference" "U8"
 			(at 107.95 121.92 0)
 			(effects
 				(font
@@ -2714,7 +2714,7 @@
 		(instances
 			(project ""
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "U7")
+					(reference "U8")
 					(unit 1)
 				)
 			)
@@ -2730,7 +2730,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e9854a75-bc08-4a18-9766-c828ef479fab")
-		(property "Reference" "C41"
+		(property "Reference" "C44"
 			(at 236.22 93.9799 0)
 			(effects
 				(font
@@ -2784,7 +2784,7 @@
 		(instances
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3/ee079862-ea8e-4560-9a6a-6f0a2816074e"
-					(reference "C41")
+					(reference "C44")
 					(unit 1)
 				)
 			)
