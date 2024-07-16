@@ -1508,7 +1508,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "47µF 25V 750mΩ"
+		(property "Value" "100µF 10V 450mΩ"
 			(at 85.09 100.7109 0)
 			(effects
 				(font

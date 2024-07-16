@@ -2697,7 +2697,7 @@
 		(uuid "1c4ae6ec-cdb1-4076-9720-35b10b0a2c6e")
 	)
 	(junction
-		(at 35.56 43.18)
+		(at 34.29 43.18)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "26a4f916-c042-4021-a11b-adcb8460d48c")
@@ -2817,7 +2817,7 @@
 		(uuid "6e448250-0a9e-4e34-90b3-45dc21520e1f")
 	)
 	(junction
-		(at 63.5 43.18)
+		(at 62.23 43.18)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "70a1f318-7875-40bd-adc9-ae54785badbc")
@@ -2835,7 +2835,7 @@
 		(uuid "76c24de4-055c-4743-aa6e-497b48824dce")
 	)
 	(junction
-		(at 63.5 27.94)
+		(at 62.23 27.94)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "7f238fe3-7ace-457e-860e-d04890316c7f")
@@ -2976,7 +2976,7 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 27.94) (xy 63.5 27.94)
+			(xy 58.42 27.94) (xy 62.23 27.94)
 		)
 		(stroke
 			(width 0)
@@ -3176,7 +3176,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 27.94) (xy 40.64 27.94)
+			(xy 34.29 27.94) (xy 39.37 27.94)
 		)
 		(stroke
 			(width 0)
@@ -3346,7 +3346,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 31.75) (xy 40.64 31.75)
+			(xy 34.29 31.75) (xy 39.37 31.75)
 		)
 		(stroke
 			(width 0)
@@ -3466,7 +3466,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 39.37) (xy 63.5 43.18)
+			(xy 62.23 39.37) (xy 62.23 43.18)
 		)
 		(stroke
 			(width 0)
@@ -3686,7 +3686,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 43.18) (xy 35.56 31.75)
+			(xy 34.29 43.18) (xy 34.29 31.75)
 		)
 		(stroke
 			(width 0)
@@ -3756,7 +3756,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 22.86) (xy 35.56 27.94)
+			(xy 34.29 22.86) (xy 34.29 27.94)
 		)
 		(stroke
 			(width 0)
@@ -4196,7 +4196,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 43.18) (xy 63.5 43.18)
+			(xy 34.29 43.18) (xy 62.23 43.18)
 		)
 		(stroke
 			(width 0)
@@ -4456,7 +4456,7 @@
 	)
 	(wire
 		(pts
-			(xy 35.56 44.45) (xy 35.56 43.18)
+			(xy 34.29 44.45) (xy 34.29 43.18)
 		)
 		(stroke
 			(width 0)
@@ -4796,7 +4796,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 43.18) (xy 87.63 43.18)
+			(xy 62.23 43.18) (xy 87.63 43.18)
 		)
 		(stroke
 			(width 0)
@@ -4816,7 +4816,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 27.94) (xy 87.63 27.94)
+			(xy 62.23 27.94) (xy 87.63 27.94)
 		)
 		(stroke
 			(width 0)
@@ -4866,7 +4866,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 27.94) (xy 63.5 31.75)
+			(xy 62.23 27.94) (xy 62.23 31.75)
 		)
 		(stroke
 			(width 0)
@@ -6176,7 +6176,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 35.56 44.45 0)
+		(at 34.29 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6185,7 +6185,7 @@
 		(fields_autoplaced yes)
 		(uuid "2e6749bd-4197-4837-b542-62ed5d32113f")
 		(property "Reference" "#PWR04"
-			(at 35.56 50.8 0)
+			(at 34.29 50.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6194,7 +6194,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 35.56 49.53 0)
+			(at 34.29 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6202,7 +6202,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 35.56 44.45 0)
+			(at 34.29 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6211,7 +6211,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 35.56 44.45 0)
+			(at 34.29 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6220,7 +6220,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 35.56 44.45 0)
+			(at 34.29 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6376,7 +6376,7 @@
 	)
 	(symbol
 		(lib_id "Device:C_Polarized")
-		(at 63.5 35.56 0)
+		(at 62.23 35.56 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6385,7 +6385,7 @@
 		(fields_autoplaced yes)
 		(uuid "3755f537-8e3f-4b0c-b8f9-b9b7433fdbd4")
 		(property "Reference" "C1"
-			(at 67.31 33.4009 0)
+			(at 66.04 33.4009 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6393,8 +6393,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "47µF 25V 750mΩ"
-			(at 67.31 35.9409 0)
+		(property "Value" "100µF 10V 450mΩ"
+			(at 66.04 35.9409 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6403,7 +6403,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
-			(at 64.4652 39.37 0)
+			(at 63.1952 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6412,7 +6412,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 63.5 35.56 0)
+			(at 62.23 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6421,7 +6421,7 @@
 			)
 		)
 		(property "Description" "Polarized capacitor"
-			(at 63.5 35.56 0)
+			(at 62.23 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7604,7 +7604,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 35.56 22.86 0)
+		(at 34.29 22.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7613,7 +7613,7 @@
 		(fields_autoplaced yes)
 		(uuid "9251f3df-5364-472d-8af2-b68ae0ac14c4")
 		(property "Reference" "#PWR01"
-			(at 35.56 26.67 0)
+			(at 34.29 26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7622,7 +7622,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 35.56 17.78 0)
+			(at 34.29 17.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7630,7 +7630,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 35.56 22.86 0)
+			(at 34.29 22.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7639,7 +7639,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 35.56 22.86 0)
+			(at 34.29 22.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7648,7 +7648,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 35.56 22.86 0)
+			(at 34.29 22.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9977,7 +9977,7 @@
 		)
 	)
 	(sheet
-		(at 40.64 25.4)
+		(at 39.37 25.4)
 		(size 19.05 8.89)
 		(fields_autoplaced yes)
 		(stroke
@@ -9989,7 +9989,7 @@
 		)
 		(uuid "d2b42ea6-55ff-4972-b433-f15f9f1c7608")
 		(property "Sheetname" "3.3V Supply"
-			(at 40.64 24.6884 0)
+			(at 39.37 24.6884 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9998,7 +9998,7 @@
 			)
 		)
 		(property "Sheetfile" "3.3v.kicad_sch"
-			(at 40.64 34.8746 0)
+			(at 39.37 34.8746 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10007,7 +10007,7 @@
 			)
 		)
 		(pin "5V" input
-			(at 40.64 27.94 180)
+			(at 39.37 27.94 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10017,7 +10017,7 @@
 			(uuid "03fedbd5-89a5-4d29-bd68-dcae2b5dad71")
 		)
 		(pin "GND" input
-			(at 40.64 31.75 180)
+			(at 39.37 31.75 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10027,7 +10027,7 @@
 			(uuid "566bea11-57ea-4261-ba3c-4a2cc570fa99")
 		)
 		(pin "3.3V" output
-			(at 59.69 27.94 0)
+			(at 58.42 27.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
