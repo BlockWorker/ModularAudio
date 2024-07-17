@@ -24309,7 +24309,7 @@
 		(descr "SMD capacitor, aluminum electrolytic, Panasonic, 5.0x5.8mm")
 		(tags "capacitor electrolytic")
 		(property "Reference" "C15"
-			(at -4.4 -2 0)
+			(at 4.5 -2.1 0)
 			(layer "B.SilkS")
 			(uuid "05f1853b-0baf-406a-8b8c-4febd57c4990")
 			(effects

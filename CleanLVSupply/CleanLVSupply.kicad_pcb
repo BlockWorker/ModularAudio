@@ -20353,7 +20353,7 @@
 		(descr "Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "capacitor")
 		(property "Reference" "C42"
-			(at 0 1.43 0)
+			(at -0.8 1.5 0)
 			(layer "B.SilkS")
 			(uuid "3cc976ef-a27e-4e61-9750-817eb08280f6")
 			(effects
@@ -21011,7 +21011,7 @@
 		(descr "Texas RGW0020A VQFN, 20 Pin (https://www.ti.com/lit/ds/symlink/tps7a47.pdf#page=29), generated with kicad-footprint-generator ipc_noLead_generator.py")
 		(tags "Texas VQFN NoLead")
 		(property "Reference" "U4"
-			(at 0 -3.9 0)
+			(at -1.6 -3.8 0)
 			(layer "B.SilkS")
 			(uuid "1db5f26f-ea5a-425e-addc-104e16861287")
 			(effects
@@ -27620,6 +27620,28 @@
 				(xyz 0 0 0)
 			)
 		)
+	)
+	(gr_line
+		(start 159.923661 96.900478)
+		(end 160.723661 96.500478)
+		(stroke
+			(width 0.3)
+			(type default)
+		)
+		(layer "F.Cu")
+		(net 42)
+		(uuid "0e4dc008-f23f-47ca-b742-eb4ca05749e1")
+	)
+	(gr_line
+		(start 159.815105 99.847562)
+		(end 160.815105 100.347562)
+		(stroke
+			(width 0.3)
+			(type default)
+		)
+		(layer "F.Cu")
+		(net 42)
+		(uuid "324dce35-c11b-4845-973f-2da03344cd62")
 	)
 	(gr_poly
 		(pts
