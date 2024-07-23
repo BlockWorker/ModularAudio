@@ -1,6 +1,6 @@
 (ExpressProject "LM5123-Q1_PSPICE_AVG"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/05/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/21/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -25,7 +25,7 @@
     (PSPICE_Alt_Template "PSpiceTemplate")
     (PSPICE_DoNot_Show_WarningDlg "TRUE")
     (DOCKED "TRUE")
-    (DOCKING_POSITION "61215"))
+    (DOCKING_POSITION "59419"))
   (Folder "Layout")
   (Folder "Outputs"
     (File ".\lm5123-q1_pspice_avg-pspicefiles\evm_testbench\evm_testbench.net"
@@ -40,7 +40,8 @@
     (Folder "Model Libraries"
       (Sort User)
       (File ".\lm5123-q1_avg.lib"
-        (Type "Schematic Library")))
+        (Type "PSpiceLibrary")
+        (DisplayName ".\lm5123-q1_avg.lib")))
     (Folder "Stimulus Files"
       (Sort User))
     (Folder "Include Files"
@@ -88,11 +89,27 @@
   (ISPCBBASICLICENSE "false")
   (GlobalState
     (FileView
-      (Select "Design Resources"))
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_AVG\lm5123-q1_pspice_avg.dsn")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_AVG\lm5123-q1_pspice_avg.dsn"
+         "EVM_TESTBENCH"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -1 -1 0 1871 0 745"))
-      (Tab 0)))
+        (Placement "44 0 1 -1 -1 -1 -1 0 153 0 732"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 5 24 5 1721 24 773")
+        (Scroll "234 240")
+        (Zoom "100")
+        (Occurrence "/"))
+      (Path
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\LM5123SIM\LM5123-Q1_PSPICE_AVG\LM5123-Q1_PSPICE_AVG.DSN")
+      (Schematic "EVM_TESTBENCH")
+      (Page "PAGE1")))
   (Folder "Logs"))

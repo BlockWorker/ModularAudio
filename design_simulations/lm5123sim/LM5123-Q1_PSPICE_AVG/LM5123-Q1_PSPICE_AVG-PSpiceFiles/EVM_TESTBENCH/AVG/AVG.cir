@@ -1,4 +1,4 @@
-** Profile: "EVM_TESTBENCH-AVG"  [ F:\Temp\lm5123sim\LM5123-Q1_PSPICE_AVG\lm5123-q1_pspice_avg-pspicefiles\evm_testbench\avg.sim ] 
+** Profile: "EVM_TESTBENCH-AVG"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_AVG\lm5123-q1_pspice_avg-pspicefiles\evm_testbench\avg.sim ] 
 
 ** Creating circuit file "AVG.cir" 
 ** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
@@ -11,7 +11,7 @@
 .lib "nom.lib" 
 
 *Analysis directives: 
-.AC DEC 1000 10 100k
+.AC DEC 1000 10 1MEG
 .OPTIONS STEPGMIN
 .OPTIONS ADVCONV
 .OPTIONS ITL1= 1000

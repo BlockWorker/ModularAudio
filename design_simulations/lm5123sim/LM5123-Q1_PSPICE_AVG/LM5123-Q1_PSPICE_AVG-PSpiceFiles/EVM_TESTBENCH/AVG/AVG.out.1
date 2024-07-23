@@ -1,0 +1,61 @@
+
+**** 07/21/24 18:32:16 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "EVM_TESTBENCH-AVG"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "AVG.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm5123-q1_avg.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.AC DEC 1000 10 1M
+----------------$
+ERROR(ORPSIM-16103): Invalid value
+.OPTIONS STEPGMIN
+.OPTIONS ADVCONV
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 400
+.PROBE64 V(*) I(*) 
+.INC "..\EVM_TESTBENCH.net" 
+
+
+
+**** INCLUDING EVM_TESTBENCH.net ****
+* source LM5123-Q1_PSPICE_AVG
+C_COUT         N310227 0  1120u  TC=0,0 
+L_L2         N303849 SW  {L}  
+C_C25         COMP 0  33p  TC=0,0 
+R_RESR         VLOAD N310227  13.5m TC=0,0 
+R_RSENSE         VIN N303849  {RS} TC=0,0 
+R_R25         TRACK 0  27k TC=0,0 
+C_C20         N16773936 N299689  100Meg  TC=0,0 
+R_R24         VREF TRACK  3.3k TC=0,0 
+C_COUT2         VLOAD 0  1u  TC=0,0 
+L_L1         N16773936 VLOAD  100Meg  
+V_VSUPPLY         VIN 0 11
+R_RLOAD         VLOAD 0  {53.5/6} TC=0,0 
+R_R17         COMP N307172  200k TC=0,0 
+V_V4         N299689 0  AC 1 0
+C_C24         N307172 0  1.5n  TC=0,0 
+X_U1         COMP N303849 VIN 0 SW TRACK VLOAD N16773936 VREF VIN LM5123-Q1_AVG
++  PARAMS:  L=1.5u FS=1000k RS=1.5m
+.PARAM  rs=1.5m l=1.5u
+
+**** RESUMING AVG.cir ****
+.END
+

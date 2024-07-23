@@ -3,7 +3,7 @@
 @Settings: 2 1
 @General:
 ProfileName= "AVG" 
-ProfileFile= "AVG.sim" 
+ProfileFile= "avg.sim" 
 Connectivity= "EVM_TESTBENCH.net" 
 NetlistFile= "AVG.cir" 
 DataFile= "AVG.dat" 
@@ -26,7 +26,7 @@ Notes=
 +2 0 0
 +0 "1000" 
 +1 "10" 
-+2 "100k" 
++2 "1MEG" 
 +3 "" 
 +4 "" 
 +5 "" 
@@ -109,7 +109,7 @@ SaveFile 0 ""
 +7 "" 
 @End Analysis
 @Analysis: 11 1
-+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 
++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 
 + ITL1 "1000"
 + ITL2 "400"
 + 0 0 0 0 0 0 0 0 0
@@ -132,7 +132,7 @@ SaveFile 0 ""
 @Analysis: 17 0
 +0 "-1" 
 +1 "-1" 
-+2 "-1" 
++2 "0" 
 +3 "-1" 
 +4 "1" 
 @End Analysis
@@ -143,6 +143,8 @@ SaveFile 0 ""
 +3 "1" 
 +4 "2" 
 +5 "" 
++6 "false" 
++7 "5" 
 @End Analysis
 @Analysis: 19 0
 +0 "0" 

@@ -1,7 +1,7 @@
 
-**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
 
 
  ****     CIRCUIT DESCRIPTION
@@ -23,7 +23,7 @@
 .lib "nom.lib" 
 
 *Analysis directives: 
-.TRAN  0 4ms 0 20n 
+.TRAN  0 8m 0 20n 
 .OPTIONS ADVCONV
 .OPTIONS ITL4= 50
 .PROBE64 V(*) I(*) 
@@ -36,28 +36,36 @@
 V_V1         CSP 0  
 +PWL 0 0 50u 11 4m 11 
 C_C22         HB SW  5n IC=0 TC=0,0 
-R_R19         0 TRK  30k TC=0,0 
-R_RLoad         0 VLOAD  {53.5/6} TC=0,0 
 R_R7         CSP CSN  1.5m TC=0,0 
 R_R16         UVLO CSP  77k TC=0,0 
-C_C20         0 SS  10n IC=0 TC=0,0 
-C_C16         N36337 VLOAD  1m IC=-53 TC=0,0 
-C_C19         0 N37329  200p IC=0 TC=0,0 
+C_C20         0 SS  10n IC=-0.7 TC=0,0 
+C_C16         N36337 VLOAD  560u IC=-51 TC=0,0 
+C_C19         0 N37329  1.5n IC=0 TC=0,0 
 X_S10    LO 0 SW 0 LM5123-Q1_STARTUP_S10 
-R_R8         0 N36337  1m TC=0,0 
-C_C18         0 COMP  1p IC=0 TC=0,0 
+R_R8         0 N36337  27m TC=0,0 
+C_C18         0 COMP  33p IC=0 TC=0,0 
 X_S11    HO SW VLOAD SW LM5123-Q1_STARTUP_S11 
 V_V2         N41902 0 5V
 D_D4         0 SW D_0p7 
 D_D5         SW VLOAD D_0p7 
-R_R15         N37329 COMP  750k TC=0,0 
-R_R18         TRK VREF  10 TC=0,0 
+R_R15         N37329 COMP  200k TC=0,0 
+R_R18         0 VREF  35k TC=0,0 
 R_R20         N00155 N41902  9k TC=0,0 
 C_C21         0 VCC  1u IC=0 TC=0,0 
 R_R17         0 UVLO  9.6k TC=0,0 
-X_U1         CSP COMP CSN CSP HB HO LO VCC N00155 SS SW TRK UVLO VCC VCC VLOAD
-+  VREF 0 0 LM5123-Q1_TRANS PARAMS: FSW=2000k
+X_U1         CSP COMP CSN CSP HB HO LO VCC N00155 SS SW N16778147 UVLO VCC VCC
++  VLOAD VREF 0 0 LM5123-Q1_TRANS PARAMS: FSW=1000k
 X_L1    CSN SW LM5123-Q1_STARTUP_L1 
+V_V3         N16778147 0 892m
+R_R21         0 N16779187  27m TC=0,0 
+C_C23         N16779187 VLOAD  560u IC=-51 TC=0,0 
+R_R22         0 N16780036  2m TC=0,0 
+C_C24         N16780036 VLOAD  10u IC=-51 TC=0,0 
+V_V4         N16781499 0  
++PULSE 0 12 2m 10u 10u 3m 2
+R_RL1         0 VLOAD  {53.5/0.2} TC=0,0 
+R_RL2         N16783904 VLOAD  {53.5/6} TC=0,0 
+X_M2         N16783904 N16781499 0 SUB85N10-10
 
 .subckt LM5123-Q1_STARTUP_S10 1 2 3 4  
 S_S10         3 4 1 2 _S10
@@ -72,7 +80,7 @@ RS_S11         1 2 1G
 .ends LM5123-Q1_STARTUP_S11
 
 .subckt LM5123-Q1_STARTUP_L1 1 2  
-L_L1         1 _SR L_L1 820n  
+L_L1         1 _SR L_L1 1.5u  
 .model         L_L1 IND L=1    IL1=-0.004 IL2=0 
 RRDC_L1         _SR 2 0.0023   
 .ends LM5123-Q1_STARTUP_L1
@@ -80,9 +88,103 @@ RRDC_L1         _SR 2 0.0023
 **** RESUMING trans.cir ****
 .END
 
-**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
+
+
+ ****     Diode MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.DBD        
+          IS    1.000000E-12 
+          BV   75.5          
+          RS     .1          
+          TT   38.000000E-09 
+         CJO    2.050000E-09 
+          VJ     .38         
+           M     .35         
+
+
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
+
+
+ ****     MOSFET MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.NMOS       X_M2.PMOS       
+               NMOS            PMOS            
+       LEVEL    3               3            
+         TPG                   -1            
+           L  100.000000E-06  100.000000E-06 
+           W  100.000000E-06  100.000000E-06 
+         VTO    3.73596        -1.763386     
+          KP    8.500000E-06   29.598380E-06 
+       GAMMA    4.25941         1.044645     
+         PHI     .829294         .683891     
+      LAMBDA    0               0            
+          RS  600.000000E-06                 
+          IS    0              10.000000E-15 
+          JS    0               0            
+          PB     .8              .8          
+        PBSW     .8              .8          
+          CJ    1.174603E-03  288.078100E-06 
+        CJSW    0               0            
+        CGSO    0               0            
+        CGDO    0               0            
+        CGBO    0               0            
+        NSUB  133.000000E+15    8.000000E+15 
+         NFS  800.000000E+09                 
+         TOX   70.000000E-09   70.000000E-09 
+          XJ  500.000000E-09    0            
+          UO  650                            
+       UCRIT   10.000000E+03   10.000000E+03 
+       DELTA     .1                          
+         ETA  100.000000E-06                 
+      DIOMOD    1               1            
+         VFB    0               0            
+        LETA    0               0            
+        WETA    0               0            
+          U0    0               0            
+        TEMP    0               0            
+         VDD    5               5            
+       XPART    0               0            
+
+
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
+
+
+ ****     Resistor MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.RTEMP      
+           R    1            
+         TC1    7.000000E-03 
+         TC2    5.500000E-06 
+
+
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
 
 
  ****     Inductor MODEL PARAMETERS
@@ -98,9 +200,9 @@ RRDC_L1         _SR 2 0.0023
          IL1   -4.000000E-03 
 
 
-**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
 
 
  ****     Voltage Controlled Switch MODEL PARAMETERS
@@ -118,9 +220,9 @@ RRDC_L1         _SR 2 0.0023
         VOFF     .5              .5          
 
 
-**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
 
 
  ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
@@ -133,15 +235,19 @@ RRDC_L1         _SR 2 0.0023
  NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
 
 
-(   HB) 201.7E-12  (   HO) 201.7E-12  (   LO) 114.3E-18  (   SS) 486.5E-15      
+(   HB) 194.2E-12  (   HO) 194.2E-12  (   LO) 114.3E-18  (   SS)     .7000      
 
-(   SW) 201.7E-12  (  CSN) 79.63E-12  (  CSP)    0.0000  (  TRK)    0.0000      
+(   SW) 194.2E-12  (  CSN) 76.65E-12  (  CSP)    0.0000  (  VCC) 28.57E-09      
 
-(  VCC) 28.57E-09  ( COMP)-2.963E-09  ( UVLO)    -.0679  ( VREF)    0.0000      
+( COMP) 160.0E-09  ( UVLO)    -.0679  ( VREF)    0.0000  (VLOAD)   50.9990      
 
-(VLOAD)   52.9820  (N00155)     .0495 (N36337)    -.0059 (N37329)-7.901E-18     
+(N00155)     .0495 (N36337)-556.5E-06 (N37329) 1.600E-15 (N41902)    5.0000     
 
-(N41902)    5.0000 (X_L1._SR) 79.63E-12                  
+(X_M2.3)   50.9990 (X_L1._SR) 76.65E-12                  (N16778147)     .8920  
+
+(N16779187)-556.5E-06                 (N16780036)-298.9E-06                     
+
+(N16781499)    0.0000                 (N16783904)   50.9990                 
 
 
 
@@ -149,8 +255,10 @@ RRDC_L1         _SR 2 0.0023
     VOLTAGE SOURCE CURRENTS
     NAME         CURRENT
 
-    V_V1        -8.282E-07
+    V_V1        -8.302E-07
     V_V2        -5.501E-04
+    V_V3        -9.139E-13
+    V_V4         0.000E+00
 
     TOTAL POWER DISSIPATION   2.75E-03  WATTS
 
@@ -159,9 +267,9 @@ Reducing minimum delta to make the circuit converge.
 
           JOB CONCLUDED
 
-**** 07/06/24 17:35:53 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 07/22/24 13:20:33 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ f:\temp\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_start
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
 
 
  ****     JOB STATISTICS SUMMARY
@@ -171,5 +279,5 @@ Reducing minimum delta to make the circuit converge.
 
 
 
-  Total job time (using Solver 1)   =     5280.34
+  Total job time (using Solver 1)   =     4562.98
 

@@ -1,6 +1,6 @@
 (ExpressProject "LM5123-Q1_PSPICE_TRANS"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/06/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/22/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -12,9 +12,9 @@
     (BuildFileAddedOrDeleted "x")
     (CompileFileAddedOrDeleted "x")
     (RootChangedForceReNetlist "x")
-    (PSPICE_Regenerate_Netlist_Flag "TRUE")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE")
     (DOCKED "TRUE")
-    (DOCKING_POSITION "61215")
+    (DOCKING_POSITION "59420")
     (Board_sim_option "VHDL_flow"))
   (Folder "Layout")
   (Folder "Outputs"
@@ -40,6 +40,41 @@
       (Sort User)))
   (DefaultLibraryBrowseDirectory "library\PSpice")
   (PartMRUSelector
+    (SUB85N10-10
+      (FullPartName "SUB85N10-10.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SILICONIX.OLB")
+      (DeviceIndex "0"))
+    (power_Mbreakn
+      (FullPartName "power_Mbreakn.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\BREAKOUT.OLB")
+      (DeviceIndex "0"))
+    (SUB85N08-08
+      (FullPartName "SUB85N08-08.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SILICONIX.OLB")
+      (DeviceIndex "0"))
+    (Sbreak
+      (FullPartName "Sbreak.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\BREAKOUT.OLB")
+      (DeviceIndex "0"))
+    (POT
+      (FullPartName "POT.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\BREAKOUT.OLB")
+      (DeviceIndex "0"))
+    (VPULSE
+      (FullPartName "VPULSE.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (IPULSE
+      (FullPartName "IPULSE.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
     (VDC
       (FullPartName "VDC.Normal")
       (LibraryName
@@ -68,11 +103,6 @@
     (0
       (LibraryName "D:\ORCAD10.5_15.7\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
       (DeviceIndex "0"))
-    (VPULSE
-      (FullPartName "VPULSE.Normal")
-      (LibraryName
-         "C:\CADENCE\SPB_16.2\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
-      (DeviceIndex "0"))
     (INV_BASIC_GEN
       (FullPartName "INV_BASIC_GEN.Normal")
       (LibraryName
@@ -81,11 +111,17 @@
   (MPSSessionName "Alex")
   (GlobalState
     (FileView
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_TRANS\lm5123-q1_pspice_trans.dsn")
+      (Path "Design Resources"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_TRANS\lm5123-q1_pspice_trans.dsn"
+         "LM5123-Q1_STARTUP")
       (Select "Design Resources"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -1 -1 0 1871 0 745"))
+        (Placement "44 0 1 -1 -1 -1 -1 0 200 0 873"))
       (Tab 0)))
   (Folder "Logs"))
