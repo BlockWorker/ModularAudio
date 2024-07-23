@@ -1,0 +1,2 @@
+USB Audio class code adapted from https://github.com/har-in-air/STM32F411_USB_AUDIO_DAC.
+Corresponding license is attached.
