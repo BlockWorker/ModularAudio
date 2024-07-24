@@ -1,4 +1,4 @@
-** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5123-Q1_PSPICE_TRANS\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\trans.sim ] 
+** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_pspice_trans-pspicefiles\lm5123-q1_startup\trans.sim ] 
 
 ** Creating circuit file "trans.cir" 
 ** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
@@ -11,7 +11,7 @@
 .lib "nom.lib" 
 
 *Analysis directives: 
-.TRAN  0 8m 0 20n 
+.TRAN  0 10m 0 20n 
 .OPTIONS ADVCONV
 .OPTIONS ITL4= 50
 .PROBE64 V(*) I(*) 
