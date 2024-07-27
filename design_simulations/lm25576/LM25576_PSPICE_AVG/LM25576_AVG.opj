@@ -1,6 +1,6 @@
 (ExpressProject "LM25576_AVG"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/09/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/27/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -39,19 +39,19 @@
     (FileView
       (Path "Design Resources")
       (Path "Design Resources"
-         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn")
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn")
       (Path "Design Resources"
-         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn"
          "Bode")
       (Path "Outputs")
       (Select "Design Resources"
-         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn"
+         "E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm25576\LM25576_PSPICE_AVG\LM25576_avg.dsn"
          "Bode" "PAGE1"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -4 -23 0 200 0 732"))
+        (Placement "44 0 1 -1 -1 -4 -23 0 200 0 850"))
       (Tab 0)))
   (PartMRUSelector
     (LM25576_AVG

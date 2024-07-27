@@ -1,6 +1,6 @@
 (ExpressProject "LM25576_TRANS"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/09/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/27/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -201,12 +201,12 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -1 -1 5 1721 24 873")
-        (Scroll "855 0")
+        (Placement "44 0 1 -1 -1 5 24 5 1252 24 891")
+        (Scroll "829 0")
         (Zoom "100")
         (Occurrence "/"))
       (Path
-         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\LM25576\LM25576_PSPICE_TRANS\LM25576_TRANS.DSN")
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\LM25576\LM25576_PSPICE_TRANS\LM25576_TRANS.DSN")
       (Schematic "LM25576_Inverting_Regulator")
       (Page "PAGE1")))
   (Folder "Logs"))

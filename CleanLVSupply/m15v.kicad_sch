@@ -4539,7 +4539,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "3.09kΩ"
+		(property "Value" "8.2kΩ"
 			(at 127 80.0099 0)
 			(effects
 				(font

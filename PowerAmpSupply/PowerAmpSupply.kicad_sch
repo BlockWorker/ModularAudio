@@ -5233,6 +5233,16 @@
 		)
 		(uuid "0a9a4c81-658d-44fa-9f42-87b02c913bbf")
 	)
+	(text "thermal sensing todo!"
+		(exclude_from_sim no)
+		(at 344.424 143.002 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "3b885319-e34d-4f39-b2fa-9187f7e29e8b")
+	)
 	(text "switch snubber?"
 		(exclude_from_sim no)
 		(at 341.884 155.448 0)
@@ -5330,6 +5340,17 @@
 			(justify right bottom)
 		)
 		(uuid "96ee7610-6250-4912-96fc-4945f78d5537")
+	)
+	(label "SW"
+		(at 322.58 111.76 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ce2e8a5d-9e29-472f-887f-ad6f32fb0c26")
 	)
 	(symbol
 		(lib_id "Device:FerriteBead_Small")

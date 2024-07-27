@@ -1,0 +1,176 @@
+
+**** 07/27/24 13:56:43 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "Bode-ac"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm25576\LM25576_PSPICE_AVG\LM
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "ac.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../lm25576_avg.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "nom.lib" 
+
+*Analysis directives: 
+.AC DEC 100 1 200000
+.OP
+.OPTIONS ADVCONV
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\Bode.net" 
+
+
+
+**** INCLUDING Bode.net ****
+* source LM25576_AVG
+V_VIN         N14371304 0 {VIN}
+R_RS         N14371304 VIN  10m TC=0,0 
+X_CO         0 OUTN COUT
+L_Linj         0 N14382874  1k  
+X_L         N14373156 0 LDCR PARAMS:  L={L}  DCR=85m
+C_Cinj         N143822010 N14382874  1k  TC=0,0 
+V_Vinj         N143822010 OUTN DC 0Vdc AC 1Vac 
+R_Rfbtop         N14382521 N14382874  {Rfbtop} TC=0,0 
+R_Rfbbot         OUTN N14382521  {Rfbbot} TC=0,0 
+R_R4         N14383054 N14382521  80.6k TC=0,0 
+C_C5         N14383084 N14383054  330p  TC=0,0 
+R_Rload         OUTN 0  1k TC=0,0 
+X_C1         VIN 0 CESR PARAMS: C=1u ESR=17m
+R_Rt         OUTN N14385124  3.09k TC=0,0 
+X_U1         VIN N14382521 N14373156 N14385124 N14383084 OUTN LM25576_AVG
++  PARAMS: FSW={FSW} RFBTOP={Rfbtop} RFBBOT={Rfbbot} VIN={VIN} L={L}
+C_C6         N14383084 N14382521  6.8p  TC=0,0 
+X_C7         VIN OUTN CESR PARAMS: C=1u ESR=5m
+.NODESET         V([VIN ])=1.225
+.PARAM  vin=11 l=33u rfbbot=1.65k rfbtop=21k fsw=600k
+
+**** RESUMING ac.cir ****
+.END
+
+INFO(ORPSIM-16573): AC analysis does not support expression evaluation at each frequency. ABM devices with non-linear operations will be evaluated only at bias point.
+
+Starting pseudo-transient algorithm.
+
+INFO(ORPSIM-16594): To improve Pseudotransient Convergence and Performance, set following options to relax stabilization criteria for capacitor currents and inductor voltages: PTRANABSTOL=1e-5, PTRANVNTOL=1e-4
+
+ERROR -- Convergence problem in bias point calculation
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(  VIN)     .0526  ( OUTN)     .0013  (X_CO.1)     .0013 (X_CO.3) 2.145E-06     
+
+(X_CO.5)     .0013 (X_CO.7)     .0012 (X_CO.10) 843.2E-06                       
+
+(X_CO.13) 138.3E-06                   (X_CO.26)     .0013                       
+
+(X_CO.28)     .0013                   (X_CO.29)     .0013                       
+
+(X_L.INT1) 13.03E-09                  (X_U1.Ref)     .0072                      
+
+(N14371304)     .0527                 (N14373156) 158.2E-09                     
+
+(N14382521)     .0013                 (N14382874)     .0013                     
+
+(N14383054) 766.8E-06                 (N14383084) 389.1E-06                     
+
+(N14385124)     .0013                 (X_C1.INT1) 37.52E-06                     
+
+(X_C7.INT1)     .0013                 (X_U1.X1.D)     .0013                     
+
+(N143822010)     .0013                (X_U1.X1.Dx)     .0013                    
+
+(X_U1.X1.IL)     .0015                (X_U1.X1.Ip)     .0013                    
+
+(X_U1.X1.Iv)     .0013                (X_U1.X1.Vc)    -.0135                    
+
+(X_U1.X1.Vo)     .0818                (X_U1.X2.10)     .0013                    
+
+(X_U1.X2.11)-27.91E-06                (X_U1.X2.12)-27.63E-06                    
+
+(X_U1.X2.13)-25.36E-06                (X_U1.X2.14) 389.1E-06                    
+
+(X_U1.X1.ILs) 7.101E-06               (X_U1.X1.Ipx)     .0012                   
+
+(X_U1.X1.Ivx)     .0013               (X_U1.X1.Vin)     .0526                   
+
+(X_U1.Vsupply)     .0252              (X_U1.X1.VLIM)    -.0135                  
+
+(X_U1.X1.Vswx) 158.2E-09              (X_U1.X1.Vinsw)     .0016                 
+
+(X_U1.X1.Vinvo)     .0012             
+
+
+  These voltages failed to converge:
+
+    V(VIN)                    =    52.06mV  \    52.61mV
+    V(N14382874)              = 216.84e-21V  \    1.303mV
+    V(N143822010)             =    7.289fV  \    1.303mV
+    V(OUTN)                   =    7.289fV  \    1.303mV
+    V(N14385124)              =    7.289fV  \    1.303mV
+    V(X_CO.3)                 =   -1.301mV  \    2.145uV
+    V(X_CO.1)                 =    7.289fV  \    1.303mV
+    V(X_CO.5)                 =    7.289fV  \    1.303mV
+    V(X_CO.26)                =   -61.85nV  \    1.303mV
+    V(X_CO.7)                 =   -59.90uV  \    1.243mV
+    V(X_CO.10)                =  -459.92uV  \   843.21uV
+    V(X_CO.13)                =   -1.165mV  \   138.33uV
+    V(X_CO.28)                =  -618.27nV  \    1.303mV
+    V(X_CO.29)                =   -6.165uV  \    1.297mV
+    V(N14373156)              =   -3.577mV  \   158.23nV
+    V(X_L.INT1)               =   -3.577mV  \    13.03nV
+    V(X_C1.INT1)              =  -506.07uV  \    37.52uV
+    V(X_U1.Ref)               =    5.863mV  \    7.167mV
+    V(X_U1.Vsupply)           =    23.93mV  \    25.24mV
+    V(X_C7.INT1)              =   769.44uV  \    1.314mV
+    V(X_U1.X1.Vin)            =    46.37mV  \    52.58mV
+    V(X_U1.X1.Vo)             =     16.82V  \    81.79mV
+    V(X_U1.X1.Ipx)            =    -4.581V  \    1.174mV
+    V(X_U1.X1.Vc)             =    -2.291V  \   -13.49mV
+    V(X_U1.X1.Vinsw)          =    49.94mV  \    1.555mV
+    V(X_U1.X1.D)              =    -2.127V  \    1.309mV
+    V(X_U1.X1.Ip)             =    -4.581V  \    1.309mV
+    V(X_U1.X1.Ivx)            =    -4.581V  \    1.310mV
+    V(X_U1.X1.Iv)             =    -4.581V  \    1.309mV
+    V(X_U1.X1.Vswx)           =   -3.577mV  \   158.23nV
+    V(X_U1.X1.ILs)            =   -42.08mV  \    7.101uV
+    V(X_U1.X1.IL)             =   -42.08mV  \    1.484mV
+    V(X_U1.X1.Dx)             =    -2.127V  \    1.277mV
+    V(X_U1.X1.Vinvo)          =    -16.77V  \    1.164mV
+    V(X_U1.X1.VLIM)           =    -2.900V  \   -13.49mV
+    V(X_U1.X2.11)             =   -21.67uV  \   -27.91uV
+
+  These supply currents failed to converge:
+
+    I(X_U1.X1.E_Beff)         =   -65.41mA  \   122.60nA
+    I(X_U1.X2.EA)             =   -1.191nA  \    55.63pA
+    I(L_Linj)                 =    -1.432A  \   -15.69pA
+    I(X_CO.L8)                =     1.301A  \   -2.145mA
+    I(X_CO.L12)               =     1.301A  \   -2.145mA
+    I(X_L.L1)                 =   -42.08mA  \   153.27nA
+    I(X_U1.X2.L)              =   143.61nA  \   -6.971nA
+    I(V_VIN)                  =   -58.71mA  \   -4.335mA
+    I(V_Vinj)                 =    -1.432A  \         0A
+    I(X_U1.Vref)              =   357.24uA  \  -465.35nA
+    I(X_U1.Vsupply)           =   -2.393uA  \         0A
+    I(X_U1.X1.VIL1)           =   -42.08mA  \   153.27nA
+    I(X_U1.X2.VOFST)          =   -22.64nA  \   -29.15nA
+
+  These devices failed to converge:
+    X_U1.X1.E_B2x X_U1.X1.E_B2 X_U1.X1.E_B3 X_U1.X1.E_B5x X_U1.X1.E_B5 
+    X_U1.X1.E_B8 X_U1.X1.E_Bramp X_U1.X1.G_B1 
+
+**** Interrupt ****
