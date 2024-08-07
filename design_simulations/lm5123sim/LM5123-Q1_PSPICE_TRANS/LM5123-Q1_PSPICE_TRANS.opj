@@ -1,6 +1,6 @@
 (ExpressProject "LM5123-Q1_PSPICE_TRANS"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[08/05/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[08/07/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -134,9 +134,9 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 5 24 5 1310 24 891")
-        (Scroll "425 280")
-        (Zoom "144")
+        (Placement "44 0 1 -1 -1 5 24 5 1346 24 891")
+        (Scroll "697 0")
+        (Zoom "72")
         (Occurrence "/"))
       (Path
          "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\LM5123SIM\LM5123-Q1_PSPICE_TRANS\LM5123-Q1_PSPICE_TRANS.DSN")

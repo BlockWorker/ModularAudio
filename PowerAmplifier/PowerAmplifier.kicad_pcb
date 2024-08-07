@@ -14133,14 +14133,14 @@
 			)
 		)
 	)
-	(footprint "BW_PassiveMechanical:ATS-FPX035035035-90-C1-R0_NoMounts"
+	(footprint "BW_PassiveMechanical:ATS-xPX035035035_NoMounts"
 		(layer "F.Cu")
 		(uuid "6eda9659-1985-432b-987e-320802c39d77")
 		(at 109.875 100)
 		(property "Reference" "HS1"
-			(at 0 0 0)
+			(at 0 -12.9 0)
 			(layer "F.Fab")
-			(uuid "2f2c1350-8c34-445e-8f5e-24683a975410")
+			(uuid "7ed1b3b8-17e4-41cf-929b-1608090ed335")
 			(effects
 				(font
 					(size 1 1)
@@ -14148,10 +14148,10 @@
 				)
 			)
 		)
-		(property "Value" "ATS-FPX035035035-90-C1-R0_NoMounts"
+		(property "Value" "ATS-xPX035035035_NoMounts"
 			(at 0 0 0)
 			(layer "F.Fab")
-			(uuid "cc1732b9-bf7a-46b1-89cd-4ed7f0f0b0ee")
+			(uuid "eaec852b-4fad-4e46-8162-072f290aee66")
 			(effects
 				(font
 					(size 1 1)
@@ -14159,11 +14159,11 @@
 				)
 			)
 		)
-		(property "Footprint" "BW_PassiveMechanical:ATS-FPX035035035-90-C1-R0_NoMounts"
+		(property "Footprint" "BW_PassiveMechanical:ATS-xPX035035035_NoMounts"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "57d3488d-f0ab-490b-8848-94dadbf717f0")
+			(uuid "cbcecd06-ba74-49c2-afe3-3b37d8bece99")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14175,7 +14175,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "106697b1-b6e0-45ad-9b1b-1f3bdd6c09db")
+			(uuid "cff62963-7248-4d07-9097-a9977774d5e8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14187,7 +14187,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "19727002-9e3b-46f2-b8a3-41b5d5951932")
+			(uuid "eb152028-52d5-4c1f-8bca-a07bee4c64d7")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14203,7 +14203,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "e5c01101-2227-4896-b47c-efd2063da45d")
+			(uuid "aaa5aaf5-bfa1-4886-8b62-8de48f60a5c6")
 		)
 		(fp_line
 			(start -17.5 -17.5)
@@ -14213,7 +14213,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "4e98ccef-1573-4720-8329-5be242eebac1")
+			(uuid "ef3b3475-e1ec-4803-98d1-3361865f1f1a")
 		)
 		(fp_line
 			(start -17.5 11.843)
@@ -14223,7 +14223,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "ee492d25-3835-4ad4-a394-8b16d17816f1")
+			(uuid "6e0ad715-0983-46ac-9b5b-b008e3b99015")
 		)
 		(fp_line
 			(start -11.843 17.5)
@@ -14233,7 +14233,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "f17427a2-ed3e-4f94-bf04-fea2c3601cb0")
+			(uuid "40381704-4c6e-4e33-97ce-1846d19d73cb")
 		)
 		(fp_line
 			(start 11.843 -17.5)
@@ -14243,7 +14243,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "1dc3a611-5bed-4917-aa0d-f46327252159")
+			(uuid "3f0e5b0d-834a-4a02-8ecf-2c0bc192b551")
 		)
 		(fp_line
 			(start 17.5 -11.843)
@@ -14253,7 +14253,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "c2b7457f-257a-4e3e-a9d1-be40f3d14e88")
+			(uuid "21d55784-14fb-44bb-8ecb-c9a230557214")
 		)
 		(fp_line
 			(start 17.5 17.5)
@@ -14263,7 +14263,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "c4e27d88-0268-4c0c-8224-f45bf5f016b9")
+			(uuid "2cdfbde4-e7c3-46a7-a422-a638cd1dd55e")
 		)
 		(fp_line
 			(start 22.828 -17.172)
@@ -14273,7 +14273,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "99075d7c-1ed4-4c04-9ee2-f32df86a0b2d")
+			(uuid "81c0acc8-207f-4217-ae04-00288477ae1b")
 		)
 		(fp_arc
 			(start -17.172 22.828)
@@ -14284,7 +14284,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "bb37edb6-91a9-43cc-9969-174e5b376ed8")
+			(uuid "bc6d1fd4-213d-4ca0-9d34-6fe5b0cd6112")
 		)
 		(fp_arc
 			(start 17.172 -22.828)
@@ -14295,7 +14295,7 @@
 				(type solid)
 			)
 			(layer "F.Fab")
-			(uuid "c495c82a-c670-4ed7-acba-2bdbea4fda3b")
+			(uuid "9b6cdd0b-a852-4930-8d9f-c52ba7166a4a")
 		)
 		(fp_circle
 			(center -20 20)
@@ -14306,7 +14306,7 @@
 			)
 			(fill none)
 			(layer "F.Fab")
-			(uuid "ded778e4-7083-4acb-9d15-0c38f7824299")
+			(uuid "b7176abf-7899-40e7-9e69-c666563af908")
 		)
 		(fp_circle
 			(center 20 -20)
@@ -14317,19 +14317,7 @@
 			)
 			(fill none)
 			(layer "F.Fab")
-			(uuid "c09df5fb-a760-4110-a201-afa82adaa2bf")
-		)
-		(model "E:/Users/Alex/Documents/KiCad/8.0/3dmodels/ATS-FPX-90-CX-R0_FUSED.STEP"
-			(opacity 0.6000)
-			(offset
-				(xyz 0 0 3)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz -90 0 0)
-			)
+			(uuid "be154a77-ce01-430f-8951-b3eda969159e")
 		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
