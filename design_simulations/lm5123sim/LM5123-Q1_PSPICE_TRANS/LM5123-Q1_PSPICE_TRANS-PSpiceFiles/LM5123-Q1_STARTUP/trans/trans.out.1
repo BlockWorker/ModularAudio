@@ -1,7 +1,7 @@
 
-**** 07/21/24 22:49:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
- ** Profile: "LM5123-Q1_STARTUP-trans"  [ E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\lm5123sim\LM5
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
 
  ****     CIRCUIT DESCRIPTION
@@ -23,7 +23,7 @@
 .lib "nom.lib" 
 
 *Analysis directives: 
-.TRAN  0 8m 0 20n 
+.TRAN  0 6m 0 20n 
 .OPTIONS ADVCONV
 .OPTIONS ITL4= 50
 .PROBE64 V(*) I(*) 
@@ -33,22 +33,22 @@
 
 **** INCLUDING LM5123-Q1_STARTUP.net ****
 * source LM5123-Q1_PSPICE_TRANS
-V_V1         CSP 0  
-+PWL 0 0 50u 11 4m 11 
+V_V1         N16788432 0  
++PWL 0 0 50u 11 8m 11 
 C_C22         HB SW  5n IC=0 TC=0,0 
 R_R7         CSP CSN  1.5m TC=0,0 
 R_R16         UVLO CSP  77k TC=0,0 
 C_C20         0 SS  10n IC=-0.7 TC=0,0 
-C_C16         N36337 VLOAD  560u IC=-51.5 TC=0,0 
+C_C16         N36337 VLOAD  {2*1m} IC={-V_INIT} TC=0,0 
 C_C19         0 N37329  1.5n IC=0 TC=0,0 
 X_S10    LO 0 SW 0 LM5123-Q1_STARTUP_S10 
-R_R8         0 N36337  27m TC=0,0 
-C_C18         0 COMP  33p IC=0 TC=0,0 
+R_R8         0 N36337  {20m/2} TC=0,0 
+C_C18         0 COMP  22p IC=0 TC=0,0 
 X_S11    HO SW VLOAD SW LM5123-Q1_STARTUP_S11 
 V_V2         N41902 0 5V
 D_D4         0 SW D_0p7 
 D_D5         SW VLOAD D_0p7 
-R_R15         N37329 COMP  200k TC=0,0 
+R_R15         N37329 COMP  220k TC=0,0 
 R_R18         0 VREF  35k TC=0,0 
 R_R20         N00155 N41902  9k TC=0,0 
 C_C21         0 VCC  1u IC=0 TC=0,0 
@@ -56,20 +56,600 @@ R_R17         0 UVLO  9.6k TC=0,0
 X_U1         CSP COMP CSN CSP HB HO LO VCC N00155 SS SW N16778147 UVLO VCC VCC
 +  VLOAD VREF 0 0 LM5123-Q1_TRANS PARAMS: FSW=1000k
 X_L1    CSN SW LM5123-Q1_STARTUP_L1 
-V_V3         N16778147 0 892m
-R_R21         0 N16779187  27m TC=0,0 
-C_C23         N16779187 VLOAD  560u IC=-51.5 TC=0,0 
-R_R22         0 N16780036  2m TC=0,0 
-C_C24         N16780036 VLOAD  10u IC=-51.5 TC=0,0 
+R_R21         0 N16779187  {20m/2} TC=0,0 
+C_C23         N16779187 N16787103  {2*1m} IC={-V_INIT} TC=0,0 
+R_R22         0 N16780036  {2m/20} TC=0,0 
+C_C24         N16780036 VLOAD  {20*2.3u} IC={-V_INIT} TC=0,0 
 V_V4         N16781499 0  
-+PULSE 0 12 2m 10u 10u 3m 2
-X_S13    LM5123-Q1_STARTUP_S13 
--------------------------------$
-ERROR(ORPSIM-16503): Missing subcircuit name
-R_RL1         0 VLOAD  {53.5/0.1} TC=0,0 
-R_RL2         0 N16782759  {53.5/6} TC=0,0 
-M_M1         VLOAD N16781499 N16782759 N16782759 power_Mbreakn           
++PULSE 0 12 1m 10u 10u 2m 2
+R_RL1         0 VLOAD  {53.5/0.01} TC=0,0 
+R_RL2         N16783904 VLOAD  {53.5/6} TC=0,0 
+X_M2         N16783904 N16781499 0 SUB85N10-10
+V_V5         N16778147 0  
++PWL 0 892m 2m 892m 5m 892m 6m 892m 9m 892m 10m 892m 
+L_L2         VLOAD N16787103  100n  TC=0,0 
+C_C25         N16787814 CSP  1u  TC=0,0 
+R_R23         0 N16787814  30m TC=0,0 
+R_R24         0 N16788000  10m TC=0,0 
+C_C26         N16788000 CSP  30u  TC=0,0 
+R_R25         0 N16788108  10m TC=0,0 
+C_C27         N16788108 CSP  1u  TC=0,0 
+R_R26         N16788432 N16788435  30m TC=0,0 
+L_L3         N16788435 CSP  100n  TC=0,0 
+.PARAM  v_init=53
+
+.subckt LM5123-Q1_STARTUP_S10 1 2 3 4  
+S_S10         3 4 1 2 _S10
+RS_S10         1 2 1G
+.MODEL         _S10 VSWITCH Roff=1e9 Ron=4m Voff=0.5 Von=1
+.ends LM5123-Q1_STARTUP_S10
+
+.subckt LM5123-Q1_STARTUP_S11 1 2 3 4  
+S_S11         3 4 1 2 _S11
+RS_S11         1 2 1G
+.MODEL         _S11 VSWITCH Roff=1e9 Ron=4m Voff=0.5 Von=1
+.ends LM5123-Q1_STARTUP_S11
+
+.subckt LM5123-Q1_STARTUP_L1 1 2  
+L_L1         1 _SR L_L1 1.5u  
+.model         L_L1 IND L=1    IL1=-0.004 IL2=0 
+RRDC_L1         _SR 2 0.0023   
+.ends LM5123-Q1_STARTUP_L1
 
 **** RESUMING trans.cir ****
 .END
 
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     Diode MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.DBD        
+          IS    1.000000E-12 
+          BV   75.5          
+          RS     .1          
+          TT   38.000000E-09 
+         CJO    2.050000E-09 
+          VJ     .38         
+           M     .35         
+
+
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     MOSFET MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.NMOS       X_M2.PMOS       
+               NMOS            PMOS            
+       LEVEL    3               3            
+         TPG                   -1            
+           L  100.000000E-06  100.000000E-06 
+           W  100.000000E-06  100.000000E-06 
+         VTO    3.73596        -1.763386     
+          KP    8.500000E-06   29.598380E-06 
+       GAMMA    4.25941         1.044645     
+         PHI     .829294         .683891     
+      LAMBDA    0               0            
+          RS  600.000000E-06                 
+          IS    0              10.000000E-15 
+          JS    0               0            
+          PB     .8              .8          
+        PBSW     .8              .8          
+          CJ    1.174603E-03  288.078100E-06 
+        CJSW    0               0            
+        CGSO    0               0            
+        CGDO    0               0            
+        CGBO    0               0            
+        NSUB  133.000000E+15    8.000000E+15 
+         NFS  800.000000E+09                 
+         TOX   70.000000E-09   70.000000E-09 
+          XJ  500.000000E-09    0            
+          UO  650                            
+       UCRIT   10.000000E+03   10.000000E+03 
+       DELTA     .1                          
+         ETA  100.000000E-06                 
+      DIOMOD    1               1            
+         VFB    0               0            
+        LETA    0               0            
+        WETA    0               0            
+          U0    0               0            
+        TEMP    0               0            
+         VDD    5               5            
+       XPART    0               0            
+
+
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     Resistor MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_M2.RTEMP      
+           R    1            
+         TC1    7.000000E-03 
+         TC2    5.500000E-06 
+
+
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     Inductor MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_L1.L_L1       
+           L    1            
+         IL1   -4.000000E-03 
+
+
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     Voltage Controlled Switch MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               X_S10._S10      X_S11._S11      
+         RON    4.000000E-03    4.000000E-03 
+        ROFF    1.000000E+09    1.000000E+09 
+         VON    1               1            
+        VOFF     .5              .5          
+
+
+**** 08/05/24 19:59:28 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)-24.64E-09  (   HO)-24.64E-09  (   LO) 114.3E-18  (   SS)     .7000      
+
+(   SW)-24.64E-09  (  CSN)-24.76E-09  (  CSP)-24.84E-09  (  VCC) 28.57E-09      
+
+( COMP) 160.0E-09  ( UVLO)    -.0679  ( VREF)    0.0000  (VLOAD)   53.0000      
+
+(N00155)     .0495 (N36337)-12.84E-06 (N37329) 1.455E-15 (N41902)    5.0000     
+
+(X_M2.3)   53.0000 (X_L1._SR)-24.76E-09                  (N16778147)     .8920  
+
+(N16779187)-12.84E-06                 (N16780036)-733.9E-09                     
+
+(N16781499)    0.0000                 (N16783904)   53.0000                     
+
+(N16787103)   53.0000                 (N16787814)    0.0000                     
+
+(N16788000)    0.0000                 (N16788108)    0.0000                     
+
+(N16788432)    0.0000                 (N16788435)-24.84E-09                     
+
+(X_U1.X_U1_U24.YINT)    1.0000        
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_V1        -8.282E-07
+    V_V2        -5.501E-04
+    V_V4         0.000E+00
+    V_V5        -9.139E-13
+
+    TOTAL POWER DISSIPATION   2.75E-03  WATTS
+
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  750.9E-06.
+         Time step =  996.1E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(N36337)                 =   131.33uV  \   -1.320mV
+    V(N16779187)              =   -16.54mV  \    3.288mV
+    V(N16780036)              =    1.432mV  \   -20.02uV
+    V(N16787814)              =   -4.557mV  \   -4.495mV
+    V(N16788000)              =   -26.77mV  \   -26.71mV
+    V(N16788108)              =   -1.603mV  \   -1.541mV
+
+  These supply currents failed to converge:
+
+    I(X_U1.E_U1_E8)           =  -116.42pA  \   170.53fA
+    I(X_U1.E_U1_E15)          =    34.33nA  \    58.52nA
+    I(V_V2)                   =    6.494nA  \   -4.952nA
+    I(V_V4)                   =   -12.44mA  \   -12.60mA
+    I(X_U1.V_U1_V76)          =    6.020uA  \    1.135nA
+    I(X_U1.V_U1_V93)          =  -116.42pA  \   170.53fA
+    I(X_U1.X_U1_U1148.V1)     =   732.88fA  \    2.453pA
+
+  These devices failed to converge:
+    D_D4      X_U1.D_U1_D69 X_U1.X_U1_U6.d1 
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)    5.0333  (   HO)     .0743  (   LO)     .9392  (   SS)    1.9533      
+
+(   SW)     .0743  (  CSN)   10.8620  (  CSP)   10.8720  (  VCC)    4.9920      
+
+( COMP)     .7912  ( UVLO)    1.2052  ( VREF)    1.0000  (VLOAD)   53.4600      
+
+(N00155)    5.0001 (N36337) 131.3E-06 (N37329)     .7668 (N41902)    5.0000     
+
+(X_M2.3)   53.4940 (X_L1._SR)     .0890                  (N16778147)     .8920  
+
+(N16779187)    -.0165                 (N16780036)     .0014                     
+
+(N16781499)    0.0000                 (N16783904)   53.4940                     
+
+(N16787103)   53.4430                 (N16787814)    -.0046                     
+
+(N16788000)    -.0268                 (N16788108)    -.0016                     
+
+(N16788432)   11.0000                 (N16788435)   10.8980                     
+
+(X_U1.X_U1_U24.YINT)     .9993        
+
+
+**** Interrupt ****
+**** Param: RELTOL = 0.001
+**** Param: ABSTOL = 1e-12
+**** Param: VNTOL = 1e-06
+**** Param: GMIN = 1e-12
+**** Param: TSTOP = 0.006
+**** Param: TMAX = 2e-08
+**** Param: ITL1 = 150
+**** Param: ITL2 = 20
+**** Param: ITL4 = 100
+**** Param: AutoConverge = 0
+**** Param: AutoConverge.ITL1 = 1000
+**** Param: AutoConverge.ITL2 = 1000
+**** Param: AutoConverge.ITL4 = 1000
+**** Param: AutoConverge.RELTOL = 0.05
+**** Param: AutoConverge.ABSTOL = 0.001
+**** Param: AutoConverge.VNTOL = 0.001
+**** Param: AutoConverge.PIVTOL = 1e-10
+**** Param: ADVCONV = 1
+**** Param: Current_Simulation = 3
+**** Param: METHOD = 0
+**** Param: TRTOL = 7
+**** Param: STEPGMIN = 0
+**** Param: GMINSTEPS = 0
+**** Param: ITL6 = 0
+**** Param: NOSTEPDEP = 0
+**** Param: PTRANSTEP = 0
+**** Param: GMINSRC = 0
+**** Param: PSEUDOTRAN = 0
+**** Param: NOSTEPSRC = 0
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  750.9E-06.
+         Time step =  996.1E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(N36337)                 =   131.33uV  \   -1.339mV
+    V(N16779187)              =   -16.54mV  \    5.545mV
+    V(N16780036)              =    1.432mV  \   -38.36uV
+    V(N16787814)              =   -4.780mV  \   -4.490mV
+    V(N16788000)              =   -26.99mV  \   -26.70mV
+    V(N16788108)              =   -1.826mV  \   -1.536mV
+
+  These supply currents failed to converge:
+
+    I(X_U1.E_U1_E8)           =   116.42pA  \         0A
+    I(X_U1.E_U1_E15)          =    34.33nA  \    58.83nA
+    I(V_V2)                   =    8.583nA  \   -4.949nA
+    I(V_V4)                   =   -12.23mA  \   -12.40mA
+    I(X_U1.V_U1_V76)          =    3.338uA  \    14.90nA
+    I(X_U1.V_U1_V109)         =   227.51pA  \   212.53pA
+    I(X_U1.V_U1_V93)          =   116.42pA  \         0A
+
+  These devices failed to converge:
+    X_U1.D_U1_D75 
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)    5.2115  (   HO)     .2526  (   LO)     .9090  (   SS)    1.9533      
+
+(   SW)     .2526  (  CSN)   10.8620  (  CSP)   10.8710  (  VCC)    4.9920      
+
+( COMP)     .7912  ( UVLO)    1.2051  ( VREF)    1.0000  (VLOAD)   53.4600      
+
+(N00155)    5.0001 (N36337) 131.3E-06 (N37329)     .7668 (N41902)    5.0000     
+
+(X_M2.3)   53.4940 (X_L1._SR)     .2673                  (N16778147)     .8920  
+
+(N16779187)    -.0165                 (N16780036)     .0014                     
+
+(N16781499)    0.0000                 (N16783904)   53.4940                     
+
+(N16787103)   53.4430                 (N16787814)    -.0048                     
+
+(N16788000)    -.0270                 (N16788108)    -.0018                     
+
+(N16788432)   11.0000                 (N16788435)   10.8980                     
+
+(X_U1.X_U1_U24.YINT)     .9993        
+
+
+**** Interrupt ****
+**** Param: RELTOL = 0.001
+**** Param: ABSTOL = 1e-12
+**** Param: VNTOL = 1e-06
+**** Param: GMIN = 1e-12
+**** Param: TSTOP = 0.006
+**** Param: TMAX = 1e-08
+**** Param: ITL1 = 150
+**** Param: ITL2 = 20
+**** Param: ITL4 = 100
+**** Param: AutoConverge = 0
+**** Param: AutoConverge.ITL1 = 1000
+**** Param: AutoConverge.ITL2 = 1000
+**** Param: AutoConverge.ITL4 = 1000
+**** Param: AutoConverge.RELTOL = 0.05
+**** Param: AutoConverge.ABSTOL = 0.001
+**** Param: AutoConverge.VNTOL = 0.001
+**** Param: AutoConverge.PIVTOL = 1e-10
+**** Param: ADVCONV = 1
+**** Param: Current_Simulation = 3
+**** Param: METHOD = 0
+**** Param: TRTOL = 7
+**** Param: STEPGMIN = 0
+**** Param: GMINSTEPS = 0
+**** Param: ITL6 = 0
+**** Param: NOSTEPDEP = 0
+**** Param: PTRANSTEP = 0
+**** Param: GMINSRC = 0
+**** Param: PSEUDOTRAN = 0
+**** Param: NOSTEPSRC = 0
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  750.9E-06.
+         Time step =  996.1E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(N16787814)              =   -4.478mV  \   -4.506mV
+    V(N16788000)              =   -26.69mV  \   -26.72mV
+    V(N16788108)              =   -1.524mV  \   -1.552mV
+
+  These supply currents failed to converge:
+
+    I(V_V2)                   =   -4.949nA  \   -4.685nA
+    I(X_U1.V_U1_V76)          =  -327.83nA  \   238.42nA
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)    5.2115  (   HO)     .2526  (   LO)     .9090  (   SS)    1.9533      
+
+(   SW)     .2526  (  CSN)   10.8620  (  CSP)   10.8720  (  VCC)    4.9920      
+
+( COMP)     .7912  ( UVLO)    1.2052  ( VREF)    1.0000  (VLOAD)   53.4580      
+
+(N00155)    5.0000 (N36337)    -.0011 (N37329)     .7668 (N41902)    5.0000     
+
+(X_M2.3)   53.4940 (X_L1._SR)     .2673                  (N16778147)     .8920  
+
+(N16779187)     .0035                 (N16780036) 176.0E-06                     
+
+(N16781499)    0.0000                 (N16783904)   53.4940                     
+
+(N16787103)   53.4630                 (N16787814)    -.0045                     
+
+(N16788000)    -.0267                 (N16788108)    -.0015                     
+
+(N16788432)   11.0000                 (N16788435)   10.8980                     
+
+(X_U1.X_U1_U24.YINT)     .9993        
+
+
+**** Interrupt ****
+**** Param: RELTOL = 0.001
+**** Param: ABSTOL = 1e-12
+**** Param: VNTOL = 1e-06
+**** Param: GMIN = 1e-12
+**** Param: TSTOP = 0.006
+**** Param: TMAX = 5e-09
+**** Param: ITL1 = 150
+**** Param: ITL2 = 20
+**** Param: ITL4 = 100
+**** Param: AutoConverge = 0
+**** Param: AutoConverge.ITL1 = 1000
+**** Param: AutoConverge.ITL2 = 1000
+**** Param: AutoConverge.ITL4 = 1000
+**** Param: AutoConverge.RELTOL = 0.05
+**** Param: AutoConverge.ABSTOL = 0.001
+**** Param: AutoConverge.VNTOL = 0.001
+**** Param: AutoConverge.PIVTOL = 1e-10
+**** Param: ADVCONV = 1
+**** Param: Current_Simulation = 3
+**** Param: METHOD = 0
+**** Param: TRTOL = 7
+**** Param: STEPGMIN = 0
+**** Param: GMINSTEPS = 0
+**** Param: ITL6 = 0
+**** Param: NOSTEPDEP = 0
+**** Param: PTRANSTEP = 0
+**** Param: GMINSRC = 0
+**** Param: PSEUDOTRAN = 0
+**** Param: NOSTEPSRC = 0
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  750.9E-06.
+         Time step =  996.1E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(N16787814)              =   -4.478mV  \   -4.506mV
+    V(N16788000)              =   -26.69mV  \   -26.72mV
+    V(N16788108)              =   -1.524mV  \   -1.552mV
+
+  These supply currents failed to converge:
+
+    I(V_V2)                   =   -4.949nA  \   -4.685nA
+    I(X_U1.V_U1_V76)          =  -327.83nA  \   238.42nA
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)    5.2115  (   HO)     .2526  (   LO)     .9090  (   SS)    1.9533      
+
+(   SW)     .2526  (  CSN)   10.8620  (  CSP)   10.8720  (  VCC)    4.9920      
+
+( COMP)     .7912  ( UVLO)    1.2052  ( VREF)    1.0000  (VLOAD)   53.4580      
+
+(N00155)    5.0000 (N36337)    -.0011 (N37329)     .7668 (N41902)    5.0000     
+
+(X_M2.3)   53.4940 (X_L1._SR)     .2673                  (N16778147)     .8920  
+
+(N16779187)     .0035                 (N16780036) 176.0E-06                     
+
+(N16781499)    0.0000                 (N16783904)   53.4940                     
+
+(N16787103)   53.4630                 (N16787814)    -.0045                     
+
+(N16788000)    -.0267                 (N16788108)    -.0015                     
+
+(N16788432)   11.0000                 (N16788435)   10.8980                     
+
+(X_U1.X_U1_U24.YINT)     .9993        
+
+
+**** Interrupt ****
+**** Param: RELTOL = 0.001
+**** Param: ABSTOL = 1e-12
+**** Param: VNTOL = 1e-06
+**** Param: GMIN = 1e-12
+**** Param: TSTOP = 0.006
+**** Param: TMAX = 2e-08
+**** Param: ITL1 = 150
+**** Param: ITL2 = 20
+**** Param: ITL4 = 100
+**** Param: AutoConverge = 0
+**** Param: AutoConverge.ITL1 = 1000
+**** Param: AutoConverge.ITL2 = 1000
+**** Param: AutoConverge.ITL4 = 1000
+**** Param: AutoConverge.RELTOL = 0.05
+**** Param: AutoConverge.ABSTOL = 0.001
+**** Param: AutoConverge.VNTOL = 0.001
+**** Param: AutoConverge.PIVTOL = 1e-10
+**** Param: ADVCONV = 1
+**** Param: Current_Simulation = 3
+**** Param: METHOD = 0
+**** Param: TRTOL = 7
+**** Param: STEPGMIN = 0
+**** Param: GMINSTEPS = 0
+**** Param: ITL6 = 0
+**** Param: NOSTEPDEP = 0
+**** Param: PTRANSTEP = 0
+**** Param: GMINSRC = 0
+**** Param: PSEUDOTRAN = 0
+**** Param: NOSTEPSRC = 0
+
+ERROR(ORPSIM-15138): Convergence problem in Transient Analysis at Time =  750.9E-06.
+         Time step =  996.1E-21, minimum allowable step size =  1.000E-18
+
+  These voltages failed to converge:
+
+    V(N16787814)              =   -4.478mV  \   -4.506mV
+    V(N16788000)              =   -26.69mV  \   -26.72mV
+    V(N16788108)              =   -1.524mV  \   -1.552mV
+
+  These supply currents failed to converge:
+
+    I(V_V2)                   =   -4.949nA  \   -4.685nA
+    I(X_U1.V_U1_V76)          =  -327.83nA  \   238.42nA
+
+
+
+  Last node voltages tried were:
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   HB)    5.2115  (   HO)     .2526  (   LO)     .9090  (   SS)    1.9533      
+
+(   SW)     .2526  (  CSN)   10.8620  (  CSP)   10.8720  (  VCC)    4.9920      
+
+( COMP)     .7912  ( UVLO)    1.2052  ( VREF)    1.0000  (VLOAD)   53.4580      
+
+(N00155)    5.0000 (N36337)    -.0011 (N37329)     .7668 (N41902)    5.0000     
+
+(X_M2.3)   53.4940 (X_L1._SR)     .2673                  (N16778147)     .8920  
+
+(N16779187)     .0035                 (N16780036) 176.0E-06                     
+
+(N16781499)    0.0000                 (N16783904)   53.4940                     
+
+(N16787103)   53.4630                 (N16787814)    -.0045                     
+
+(N16788000)    -.0267                 (N16788108)    -.0015                     
+
+(N16788432)   11.0000                 (N16788435)   10.8980                     
+
+(X_U1.X_U1_U24.YINT)     .9993        
+
+
+**** Interrupt ****

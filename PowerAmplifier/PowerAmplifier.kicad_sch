@@ -4965,6 +4965,16 @@
 	)
 	(wire
 		(pts
+			(xy 439.42 287.02) (xy 444.5 287.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "149579df-24e4-4b2f-bdb9-b1ced9ad3ab2")
+	)
+	(wire
+		(pts
 			(xy 337.82 173.99) (xy 336.55 173.99)
 		)
 		(stroke
@@ -7885,7 +7895,7 @@
 	)
 	(wire
 		(pts
-			(xy 430.53 299.72) (xy 430.53 306.07)
+			(xy 427.99 299.72) (xy 427.99 306.07)
 		)
 		(stroke
 			(width 0)
@@ -7975,7 +7985,7 @@
 	)
 	(wire
 		(pts
-			(xy 426.72 299.72) (xy 426.72 306.07)
+			(xy 424.18 299.72) (xy 424.18 306.07)
 		)
 		(stroke
 			(width 0)
@@ -8285,7 +8295,7 @@
 	)
 	(wire
 		(pts
-			(xy 434.34 299.72) (xy 434.34 306.07)
+			(xy 431.8 299.72) (xy 431.8 306.07)
 		)
 		(stroke
 			(width 0)
@@ -8523,9 +8533,9 @@
 		)
 		(uuid "fffe3ceb-532a-48a9-bb01-f883c1f78432")
 	)
-	(text "V_ADJ = 1.25V\nStart (6V) at thermistor ~3k = 55°C\nMax (12V) at thermistor ~1k = 87°C"
+	(text "V_ADJ = 1.25V\nStart (6V) at thermistor ~3.4k = 50°C\nMax (12V) at thermistor ~1.5k = 72°C\nIncrease bottom series resistor to shift temps up"
 		(exclude_from_sim no)
-		(at 170.942 351.028 0)
+		(at 171.196 351.79 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8633,7 +8643,7 @@
 		(uuid "5867ba36-a3c8-43e8-8f91-4e2c2e425f09")
 	)
 	(label "~{CLIP_OTW}"
-		(at 430.53 306.07 270)
+		(at 427.99 306.07 270)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -8754,7 +8764,7 @@
 		(uuid "90410e92-d141-4880-b4ee-99d8a2192147")
 	)
 	(label "~{RESET}"
-		(at 434.34 306.07 270)
+		(at 431.8 306.07 270)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -8787,7 +8797,7 @@
 		(uuid "bfdc1afb-d8ca-419d-aa33-757c4462ba5f")
 	)
 	(label "~{FAULT}"
-		(at 426.72 306.07 270)
+		(at 424.18 306.07 270)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -10855,6 +10865,73 @@
 			(project "PowerAmplifier"
 				(path "/98e31663-11f4-4a7e-ae88-851a6ca7c9bc"
 					(reference "C10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VDD")
+		(at 444.5 287.02 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "370728f4-8852-4847-8ea9-b30c98751df9")
+		(property "Reference" "#PWR056"
+			(at 440.69 287.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PVDD"
+			(at 448.31 287.0199 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 444.5 287.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 444.5 287.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VDD\""
+			(at 444.5 287.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "00fd80dd-eba7-4410-bb3c-eb73e6503d96")
+		)
+		(instances
+			(project "PowerAmplifier"
+				(path "/98e31663-11f4-4a7e-ae88-851a6ca7c9bc"
+					(reference "#PWR056")
 					(unit 1)
 				)
 			)
@@ -15505,7 +15582,7 @@
 				)
 			)
 		)
-		(property "Value" "470Ω"
+		(property "Value" "0Ω"
 			(at 168.91 332.74 90)
 			(effects
 				(font
@@ -17893,7 +17970,7 @@
 			(uuid "616b5b45-aa2f-4e81-9f0e-d0618e2cd0fa")
 		)
 		(pin "~{FAULT}" input
-			(at 426.72 299.72 270)
+			(at 424.18 299.72 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17903,7 +17980,7 @@
 			(uuid "44973a30-654a-450c-b6ba-e125815f64df")
 		)
 		(pin "~{CLIP_OTW}" input
-			(at 430.53 299.72 270)
+			(at 427.99 299.72 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17913,7 +17990,7 @@
 			(uuid "af11a907-679f-4762-be2e-ede3cec6a81b")
 		)
 		(pin "~{RESET}" bidirectional
-			(at 434.34 299.72 270)
+			(at 431.8 299.72 270)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17991,6 +18068,16 @@
 				(justify right)
 			)
 			(uuid "187db9df-ce22-4e89-a197-dd8e1a39e047")
+		)
+		(pin "V_PVDD" input
+			(at 439.42 287.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "0afefdc5-368b-44bc-9ea1-e96d31e0889b")
 		)
 		(instances
 			(project "PowerAmplifier"

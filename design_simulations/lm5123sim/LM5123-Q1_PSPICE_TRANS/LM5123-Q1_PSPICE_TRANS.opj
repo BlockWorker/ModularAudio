@@ -1,6 +1,6 @@
 (ExpressProject "LM5123-Q1_PSPICE_TRANS"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[07/24/24]")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[08/05/24]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -40,6 +40,16 @@
       (Sort User)))
   (DefaultLibraryBrowseDirectory "library\PSpice")
   (PartMRUSelector
+    (PARAM
+      (FullPartName "PARAM.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SPECIAL.OLB")
+      (DeviceIndex "0"))
+    (L
+      (FullPartName "L.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
     (SUB85N10-10
       (FullPartName "SUB85N10-10.Normal")
       (LibraryName
@@ -79,11 +89,6 @@
       (FullPartName "VDC.Normal")
       (LibraryName
          "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
-      (DeviceIndex "0"))
-    (L
-      (FullPartName "L.Normal")
-      (LibraryName
-         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\TCLSCRIPTS\CAPPSPICEMODELAPP\INDUCTOR\HYBRID\SUPPORTFILES\INDUCTOR.OLB")
       (DeviceIndex "0"))
     (B82477P4821M000
       (FullPartName "B82477P4821M000.Normal")
@@ -129,12 +134,14 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 5 24 5 1339 24 891")
-        (Scroll "216 28")
-        (Zoom "72")
+        (Placement "44 0 1 -1 -1 5 24 5 1310 24 891")
+        (Scroll "425 280")
+        (Zoom "144")
         (Occurrence "/"))
       (Path
          "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\LM5123SIM\LM5123-Q1_PSPICE_TRANS\LM5123-Q1_PSPICE_TRANS.DSN")
       (Schematic "LM5123-Q1_STARTUP")
       (Page "PAGE1")))
-  (Folder "Logs"))
+  (Folder "Logs")
+  (LastUsedLibraryBrowseDirectory
+     "C:\Program Files\Cadence\OrCADX_23.1\tools\capture\library\pspice"))

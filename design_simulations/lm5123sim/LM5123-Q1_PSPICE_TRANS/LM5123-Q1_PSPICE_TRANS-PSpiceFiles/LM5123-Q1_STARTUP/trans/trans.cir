@@ -11,7 +11,7 @@
 .lib "nom.lib" 
 
 *Analysis directives: 
-.TRAN  0 10m 0 20n 
+.TRAN  0 6m 0 20n 
 .OPTIONS ADVCONV
 .OPTIONS ITL4= 50
 .PROBE64 V(*) I(*) 
