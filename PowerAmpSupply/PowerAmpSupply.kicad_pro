@@ -48,7 +48,7 @@
         "silk_text_thickness": 0.15,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.2
+          "min_clearance": 0.0
         }
       },
       "diff_pair_dimensions": [
@@ -533,10 +533,11 @@
       "/SW": "HV",
       "/VOUT": "HV",
       "Net-(C16-Pad2)": "HV",
-      "Net-(C17-Pad2)": "HV",
+      "Net-(C18-Pad2)": "HV",
       "Net-(Q1-G)": "HV",
       "Net-(Q2-B)": "HV",
       "Net-(Q2-E)": "HV",
+      "Net-(R10-Pad2)": "HV",
       "Net-(R8-Pad1)": "HV",
       "Net-(U1-HB)": "HV"
     },

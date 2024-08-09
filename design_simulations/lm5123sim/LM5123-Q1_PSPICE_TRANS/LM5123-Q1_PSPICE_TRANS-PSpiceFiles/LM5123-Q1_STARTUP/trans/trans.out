@@ -1,5 +1,5 @@
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -39,10 +39,10 @@ C_C22         HB SW  5n IC=0 TC=0,0
 R_R7         CSP CSN  1.5m TC=0,0 
 R_R16         UVLO CSP  77k TC=0,0 
 C_C20         0 SS  10n IC=-0.7 TC=0,0 
-C_C16         N36337 N36233  {2*1m} IC={-V_INIT} TC=0,0 
+C_C16         N36337 N36233  {3*1m} IC={-V_INIT} TC=0,0 
 C_C19         0 N37329  1.5n IC=0 TC=0,0 
 X_S10    LO 0 SW 0 LM5123-Q1_STARTUP_S10 
-R_R8         0 N36337  {20m/2} TC=0,0 
+R_R8         0 N36337  {20m/3} TC=0,0 
 C_C18         0 COMP  22p IC=0 TC=0,0 
 X_S11    HO SW N36233 SW LM5123-Q1_STARTUP_S11 
 V_V2         N41902 0 5V
@@ -61,8 +61,8 @@ C_C23         N16779187 VLOAD  {100u} IC={-V_INIT} TC=0,0
 R_R22         0 N16780036  {2m/20} TC=0,0 
 C_C24         N16780036 N36233  {20*2.3u} IC={-V_INIT} TC=0,0 
 V_V4         N16781499 0  
-+PULSE 0 12 1.5m 10u 10u 2m 2
-R_RL1         0 VLOAD  {53.5/0.2} TC=0,0 
++PULSE 0 12 1 10u 10u 2m 2
+R_RL1         0 VLOAD  {53.5/6} TC=0,0 
 R_RL2         N16783904 VLOAD  {53.5/6} TC=0,0 
 X_M2         N16783904 N16781499 0 SUB85N10-10
 V_V5         N16778147 0  
@@ -77,7 +77,11 @@ C_C27         N16788108 CSP  1u  TC=0,0
 R_R26         N16788432 N16788435  30m TC=0,0 
 L_L3         N16788435 CSP  100n  TC=0,0 
 R_R27         N16789416 VLOAD  30m TC=0,0 
-.PARAM  v_init=52
+C_C28         N16791136 N36233  405n IC={-V_INIT} TC=0,0 
+R_R28         0 N16791136  5m TC=0,0 
+R_R29         0 N16791345  25m TC=0,0 
+C_C29         N16791345 N36233  45n IC={-V_INIT} TC=0,0 
+.PARAM  v_init=53
 
 .subckt LM5123-Q1_STARTUP_S10 1 2 3 4  
 S_S10         3 4 1 2 _S10
@@ -100,7 +104,7 @@ RRDC_L1         _SR 2 0.0023
 **** RESUMING trans.cir ****
 .END
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -123,7 +127,7 @@ RRDC_L1         _SR 2 0.0023
            M     .35         
 
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -175,7 +179,7 @@ RRDC_L1         _SR 2 0.0023
        XPART    0               0            
 
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -194,7 +198,7 @@ RRDC_L1         _SR 2 0.0023
          TC2    5.500000E-06 
 
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -212,7 +216,7 @@ RRDC_L1         _SR 2 0.0023
          IL1   -4.000000E-03 
 
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -232,7 +236,7 @@ RRDC_L1         _SR 2 0.0023
         VOFF     .5              .5          
 
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -247,31 +251,29 @@ RRDC_L1         _SR 2 0.0023
  NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
 
 
-(   HB)-24.68E-09  (   HO)-24.68E-09  (   LO) 114.3E-18  (   SS)     .7000      
+(   HB)-24.64E-09  (   HO)-24.64E-09  (   LO) 114.3E-18  (   SS)     .7000      
 
-(   SW)-24.68E-09  (  CSN)-24.80E-09  (  CSP)-24.87E-09  (  VCC) 28.57E-09      
+(   SW)-24.64E-09  (  CSN)-24.76E-09  (  CSP)-24.84E-09  (  VCC) 28.57E-09      
 
-( COMP) 160.0E-09  ( UVLO)    -.0679  ( VREF)    0.0000  (VLOAD)   51.9980      
+( COMP) 160.0E-09  ( UVLO)    -.0679  ( VREF)    0.0000  (VLOAD)   52.9480      
 
-(N00155)     .0495 (N36233)   52.0000 (N36337)-79.34E-06 (N37329) 1.455E-15     
+(N00155)     .0495 (N36233)   52.9980 (N36337)    -.0016 (N37329) 1.455E-15     
 
-(N41902)    5.0000 (X_M2.3)   51.9980 (X_L1._SR)-24.80E-09                      
+(N41902)    5.0000 (X_M2.3)   52.9480 (X_L1._SR)-24.76E-09                      
 
-(N16778147)     .8920                 (N16779187)    -.0014                     
+(N16778147)     .8920                 (N16779187)    -.0429                     
 
-(N16780036)-4.534E-06                 (N16781499)    0.0000                     
+(N16780036)-101.6E-06                 (N16781499)    0.0000                     
 
-(N16783904)   51.9980                 (N16787814)    0.0000                     
+(N16783904)   52.9480                 (N16787814)    0.0000                     
 
 (N16788000)    0.0000                 (N16788108)    0.0000                     
 
-(N16788432)    0.0000                 (N16788435)-24.87E-09                     
+(N16788432)    0.0000                 (N16788435)-24.84E-09                     
 
-(N16789416)   52.0000                 (X_U1.U1_TON)    0.0000                   
+(N16789416)   52.9980                 (N16791136)    -.0015                     
 
-(X_U1.U1_TOFF)    1.0000              (X_U1.U1_N16765970)    1.0000             
-
-(X_U1.U1_PGOOD_GATE)    1.0000        
+(N16791345)    -.0020                 
 
 
 
@@ -279,17 +281,22 @@ RRDC_L1         _SR 2 0.0023
     VOLTAGE SOURCE CURRENTS
     NAME         CURRENT
 
-    V_V1        -8.292E-07
+    V_V1        -8.282E-07
     V_V2        -5.501E-04
     V_V4         0.000E+00
     V_V5        -9.139E-13
 
     TOTAL POWER DISSIPATION   2.75E-03  WATTS
 
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
 
-          JOB ABORTED
+
+          JOB CONCLUDED
 
-**** 08/07/24 18:20:50 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -301,5 +308,5 @@ RRDC_L1         _SR 2 0.0023
 
 
 
-  Total job time (using Solver 1)   =      850.78
+  Total job time (using Solver 1)   =     3869.66
 
