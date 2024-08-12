@@ -1,0 +1,72 @@
+Circuit: * E:\Users\Alex\Documents\Electronics Projects\Modular Audio\design_simulations\PowerAmpSupply inrush limit\InrushLimit.asc
+
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+Gmin = 0.115292
+Gmin = 0.0123794
+Gmin = 0.00132923
+Gmin = 0.000142725
+vernier = 0.5
+Gmin = 2.39452e-05
+vernier = 0.25
+vernier = 0.125
+vernier = 0.0625
+vernier = 0.03125
+vernier = 0.015625
+vernier = 0.0078125
+vernier = 0.00390625
+vernier = 0.00195312
+vernier = 0.000976562
+vernier = 0.000488281
+Gmin = 2.39452e-05
+Gmin = 0
+Gmin stepping failed
+
+Starting source stepping with srcstepmethod=0
+Could not converge to DC with sources off!
+Starting source stepping with srcstepmethod=1
+Could not converge to DC with sources off!
+Pseudo Transient succeeded in finding the operating point at 394.324 ms.
+Changing Tseed to 4.88281e-08
+Changing Tseed to 4.88281e-10
+Heightened Def Con from 0.000153284 to 0.000153284
+Heightened Def Con from 0.000276653 to 0.000276653
+Heightened Def Con from 0.000299178 to 0.00029918
+Heightened Def Con from 0.00030133 to 0.00030133
+Heightened Def Con from 0.000320757 to 0.000320757
+Heightened Def Con from 0.000327331 to 0.000327331
+Heightened Def Con from 0.000333514 +to 0.000333515
+Heightened Def Con from 0.000351903 to 0.000351903
+Heightened Def Con from 0.000386172 to 0.000386174
+Heightened Def Con from 0.000396196 to 0.000396197
+Heightened Def Con from 0.000397342 +to 0.000397343
+Heightened Def Con from 0.000418552 to 0.000418552
+Heightened Def Con from 0.000447504 to 0.000447504
+Heightened Def Con from 0.000455044 to 0.000455046
+Heightened Def Con from 0.000571609 to 0.00057161
+Heightened Def Con from 0.00068108 to 0.000681082
+Heightened Def Con from 0.000682231 to 0.000682232
+Heightened Def Con from 0.000686536 to 0.000686538
+Heightened Def Con from 0.000697406 to 0.000697409
+Heightened Def Con from 0.000706654 to 0.000706656
+
+Date: Mon Aug 12 01:08:44 2024
+Total elapsed time: 30.901 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 4972983
+traniter = 4969232
+tranpoints = 1519828
+accept = 1110258
+rejected = 409601
+matrix size = 90
+fillins = 89
+solver = Normal
+Avg thread counts: 1.0/1.0/1.0/1.0
+Matrix Compiler1: 8.32 KB object code size  0.9/0.4/[0.3]
+Matrix Compiler2: 7.90 KB object code size  0.3/0.7/[0.3]
+

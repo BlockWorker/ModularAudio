@@ -481,7 +481,9 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [],
+    "pinned_footprint_libs": [
+      "BW_Logo"
+    ],
     "pinned_symbol_libs": []
   },
   "meta": {
@@ -534,6 +536,7 @@
       "/VOUT": "HV",
       "Net-(C16-Pad2)": "HV",
       "Net-(C18-Pad2)": "HV",
+      "Net-(J6-Pin_1)": "HV",
       "Net-(Q1-G)": "HV",
       "Net-(Q2-B)": "HV",
       "Net-(Q2-E)": "HV",

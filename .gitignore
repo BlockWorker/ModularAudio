@@ -31,3 +31,4 @@ fp-info-cache
 *.csv
 
 design_simulations/**/*.dat
+design_simulations/**/*.raw
