@@ -534,9 +534,9 @@
     "netclass_assignments": {
       "/SW": "HV",
       "/VOUT": "HV",
+      "/VOUT_FUSED": "HV",
       "Net-(C16-Pad2)": "HV",
       "Net-(C18-Pad2)": "HV",
-      "Net-(J6-Pin_1)": "HV",
       "Net-(Q1-G)": "HV",
       "Net-(Q2-B)": "HV",
       "Net-(Q2-E)": "HV",
@@ -663,6 +663,10 @@
     [
       "0a72794d-1523-4663-bba1-d343a4f95121",
       "Root"
+    ],
+    [
+      "c21f141f-d91a-4582-a5fd-52a221547883",
+      "Inrush Limit"
     ]
   ],
   "text_variables": {}

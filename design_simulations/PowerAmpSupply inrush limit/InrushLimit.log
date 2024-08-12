@@ -7,20 +7,18 @@ Gmin = 1.07374
 Gmin = 0.115292
 Gmin = 0.0123794
 Gmin = 0.00132923
-Gmin = 0.000142725
 vernier = 0.5
-Gmin = 2.39452e-05
 vernier = 0.25
 vernier = 0.125
 vernier = 0.0625
 vernier = 0.03125
 vernier = 0.015625
 vernier = 0.0078125
+Gmin = 0.000850706
 vernier = 0.00390625
 vernier = 0.00195312
 vernier = 0.000976562
 vernier = 0.000488281
-Gmin = 2.39452e-05
 Gmin = 0
 Gmin stepping failed
 
@@ -28,45 +26,67 @@ Starting source stepping with srcstepmethod=0
 Could not converge to DC with sources off!
 Starting source stepping with srcstepmethod=1
 Could not converge to DC with sources off!
-Pseudo Transient succeeded in finding the operating point at 394.324 ms.
+Pseudo Transient succeeded in finding the operating point at 12.0427 s.
 Changing Tseed to 4.88281e-08
 Changing Tseed to 4.88281e-10
-Heightened Def Con from 0.000153284 to 0.000153284
-Heightened Def Con from 0.000276653 to 0.000276653
-Heightened Def Con from 0.000299178 to 0.00029918
-Heightened Def Con from 0.00030133 to 0.00030133
-Heightened Def Con from 0.000320757 to 0.000320757
-Heightened Def Con from 0.000327331 to 0.000327331
-Heightened Def Con from 0.000333514 +to 0.000333515
-Heightened Def Con from 0.000351903 to 0.000351903
-Heightened Def Con from 0.000386172 to 0.000386174
-Heightened Def Con from 0.000396196 to 0.000396197
-Heightened Def Con from 0.000397342 +to 0.000397343
-Heightened Def Con from 0.000418552 to 0.000418552
-Heightened Def Con from 0.000447504 to 0.000447504
-Heightened Def Con from 0.000455044 to 0.000455046
-Heightened Def Con from 0.000571609 to 0.00057161
-Heightened Def Con from 0.00068108 to 0.000681082
-Heightened Def Con from 0.000682231 to 0.000682232
-Heightened Def Con from 0.000686536 to 0.000686538
-Heightened Def Con from 0.000697406 to 0.000697409
-Heightened Def Con from 0.000706654 to 0.000706656
+Heightened Def Con from 0.000221963 to 0.000221968
+Heightened Def Con from 0.000279055 to 0.000279057
+Heightened Def Con from 0.000402041 to 0.000402041
+Heightened Def Con from 0.000402041 to 0.000402043
+Heightened Def Con from 0.000415901 to 0.000415901
+Heightened Def Con from 0.000419369 to 0.000419369
+Heightened Def Con from 0.000420514 to 0.000420515
+Heightened Def Con from 0.000431137 to 0.000431137
+Heightened Def Con from 0.000451066 to 0.000451066
+Heightened Def Con from 0.000451066 to 0.000451068
+Heightened Def Con from 0.00050386 to 0.000503862
+Heightened Def Con from 0.000539725 to 0.000539727
+Heightened Def Con from 0.00055141 to 0.00055141
+Heightened Def Con from 0.000564216 +to 0.000564216
+Heightened Def Con from 0.000599336 to 0.000599338
+Heightened Def Con from 0.000635159 to 0.000635159
+Heightened Def Con from 0.000646669 to 0.000646671
+Heightened Def Con from 0.000666792 to 0.000666792
+Heightened Def Con from 0.00068246 to 0.00068246
+Heightened Def Con from 0.000759037 to 0.000759037
+Heightened Def Con from 0.000770299 to 0.000770301
+Heightened Def Con from 0.0186224 to 0.0186224
+Heightened Def Con from 0.0190814 to 0.0190814
+Heightened Def Con from 0.019353 to 0.019353
+Heightened Def Con from 0.0195122 to 0.0195122
+Heightened Def Con from 0.0197718 to 0.0197718
+Heightened Def Con from 0.0199053 to 0.0199053
+Heightened Def Con from 0.0199271 to 0.0199271
+Heightened Def Con from 0.0199399 to 0.0199399
+Heightened Def Con from 0.0199669 to 0.0199669
+Heightened Def Con from 0.019989 to 0.019989
+Heightened Def Con from 0.0200232 to 0.0200232
+Heightened Def Con from 0.0200778 to 0.0200778
+Heightened Def Con from 0.0201188 to 0.0201188
+Heightened Def Con from 0.0302573 to 0.0302573
+Heightened Def Con from 0.0487922 to 0.0487922
+Heightened Def Con from 0.0491427 to 0.0491427
+Heightened Def Con from 0.0496759 to 0.0496759
+Heightened Def Con from 0.0497833 to 0.0497833
+Heightened Def Con from 0.0498118 to 0.0498118
+Heightened Def Con from 0.0499229 to 0.0499229
+Heightened Def Con from 0.0499579 to 0.0499579
 
-Date: Mon Aug 12 01:08:44 2024
-Total elapsed time: 30.901 seconds.
+Date: Mon Aug 12 14:58:21 2024
+Total elapsed time: 189.317 seconds.
 
 tnom = 27
 temp = 27
 method = modified trap
-totiter = 4972983
-traniter = 4969232
-tranpoints = 1519828
-accept = 1110258
-rejected = 409601
-matrix size = 90
-fillins = 89
+totiter = 34359121
+traniter = 34355340
+tranpoints = 6629400
+accept = 5001331
+rejected = 1628119
+matrix size = 93
+fillins = 76
 solver = Normal
 Avg thread counts: 1.0/1.0/1.0/1.0
-Matrix Compiler1: 8.32 KB object code size  0.9/0.4/[0.3]
-Matrix Compiler2: 7.90 KB object code size  0.3/0.7/[0.3]
+Matrix Compiler1: 8.07 KB object code size  1.1/0.4/[0.3]
+Matrix Compiler2: 7.92 KB object code size  0.5/0.8/[0.4]
 
