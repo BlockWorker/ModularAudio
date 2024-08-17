@@ -15243,6 +15243,18 @@
 			(layer "F.Fab")
 			(uuid "be154a77-ce01-430f-8951-b3eda969159e")
 		)
+		(model "${KICAD_USER_3DMODEL_DIR}/ATS-FPX-90-CX-R0_FUSED.STEP"
+			(opacity 0.5500)
+			(offset
+				(xyz 0 0 4)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -90 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "F.Cu")
