@@ -1,76 +1,76 @@
-Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other list
-1;L2;L_Pulse_PG2110HLT;1;100nH;;;x;;
-2;F1;Fuse_Schurter_MSB;1;6.3A;;;x;;
-3;U5;MSOP-10-1EP_3x3mm_P0.5mm_EP1.68x1.88mm;1;LTC3290;;;x;;
-4;R31,R20;R_0603_1608Metric;2;10kΩ;;;;x;
-5;R30;R_0603_1608Metric;1;100kΩ;;;;x;
-6;R29;R_0603_1608Metric;1;2kΩ;;;;x;
-7;R28;R_0603_1608Metric;1;22Ω;;;x;;
-8;R27;R_0603_1608Metric;1;1MΩ;;;;x;
-9;R26;R_0603_1608Metric;1;7.5kΩ;;;;x;
-10;R25;R_0603_1608Metric;1;13kΩ;;;;;x
-11;R24;R_0603_1608Metric;1;330kΩ;;;;;x
-12;R23;R_0603_1608Metric;1;100Ω;;;;x;
-13;Q6;SOT-563;1;CMLDM7002AJ;;;x;;
-14;Q5;PowerPAK_SO-8_Single;1;SiR500DP;;;x;;
-15;D6;D_SOD-323_HandSoldering;1;SS0840WS;;;;x;
-16;D5;D_SOD-123;1;BZT52C12;;;;x;
-17;D4,D3;D_SOD-123;2;BZT52C10;;;x;;
-18;C47;C_0603_1608Metric;1;1µF;;;;x;
-19;C46,C12,C14;C_0603_1608Metric;3;4.7µF;;;;x;
-20;C45;C_1210_3225Metric;1;10µF 75V x2;;;x;;
-21;C44,C42,C40,C4,C1;C_0603_1608Metric;5;0.1µF;;;;x;
-22;C43,C10,C11;C_0805_2012Metric;3;1µF 50Vl;;;;x;
-23;C41,C39;C_1206_3216Metric;2;10µF 50V;;;x;x!;
-24;R18;R_0603_1608Metric;1;110kΩ;;;x;;
-25;R10,R9;R_1206_3216Metric;2;?Ω;;;x(1,3.3,10,22,47,100);;
-26;R5,R3,R22,R21;R_0603_1608Metric;4;0Ω;;;;x;
-27;R6;R_0603_1608Metric;1;8.87kΩ;;;x;;
-28;C16;C_0603_1608Metric;1;0.47µF;;;x;;
-29;C2;C_0603_1608Metric;1;0pF;;;;x;
-30;REF**;Heatspreader_PowerAmpSupply;1;Heatspreader_PowerAmpSupply;;;tbd;;
-31;U1;VQFN-20-1EP_3.5x3.5mm_P0.5mm_EP2.05x2.05mm;1;LM5123-Q1;;;x;;
-32;TH1;R_0402_1005Metric_Pad0.72x0.64mm_HandSolder;1;10kΩ 4250B;;;x;;
-33;J2,J1;HolePad_2.5mm_3.5mm;2;VIN_BRIDGE;;;;x;
-34;Q1,Q3;EPC2306;2;EPC2306;;;x;;
-35;C3,C13,C38,C5;C_0603_1608Metric;4;0.1µF 100V;;;x;;
-36;M1;Amphenol_MINITEK_0.8_2P_V_BoardEdge;1;12V 6Vstart <100mA;;;x;x;
-37;R11;R_0603_1608Metric;1;220kΩ;;;x;;
-38;C19;C_0603_1608Metric;1;1.5nF;;;x;;
-39;R12;R_0603_1608Metric;1;33kΩ;;;;x;
-40;R1,R2;R_0612_1632Metric;2;3mΩ 2W;;;x;;
-41;R14;R_0603_1608Metric;1;13.3kΩ;;;;x;
-42;J6;TE_644749-2;1;VOUT;;;x;;
-43;C15;C_0603_1608Metric;1;470pF;;;x;;
-44;J7;PinHeader_1x01_P2.54mm_Vertical;1;VTRK_EXT;;;;x;
-45;R8,R7;R_0603_1608Metric;2;1Ω;;;x+3.3;;
-46;C37;C_1206_3216Metric;1;2.2µF 100Vl;;;x;;
-47;C28,C26,C27;CP_Radial_D16.0mm_P7.50mm;3;1mF 80V;;;x;;
-48;FB1,FB2;L_0402_1005Metric_Pad0.77x0.64mm_HandSolder;2;Shunt?;;;x(10+60);;
-49;C7;CP_Radial_D10.0mm_P5.00mm;1;1mF 35V;;;x;;
-50;HS;ATS-xPX035035035_NoMounts;1;ATS-xPX035035035_NoMounts;;;x(L+R);;
-51;Q4,Q2;HUSON-3-1EP_2x2mm_P1.3mm_EP1.1x1.6mm;2;PNP;;;x;;
-52;J5;TE_2042274_Solder;1;VIN;;;x;;
-53;L1;L_Vishay_IHLP-6767;1;1.5µH;;;x;;
-54;R4;R_0603_1608Metric;1;76.8kΩ;;;x;;
-55;D2;LED_0805_2012Metric;1;PGOOD;;;;x;
-56;U4;TI_QFN-FCMOD-HR;1;TPSM365R3;;;x;;
-57;C35;C_0603_1608Metric;1;22pF;;;;;x
-58;D1;TO-277B;1;MBR12U100L;;;x;;
-59;R13;R_0603_1608Metric;1;21kΩ;;;;x;
-60;J3,J4;HolePad_2.5mm_3.5mm;2;GND_BRIDGE;;;;x;
-61;C17;C_0603_1608Metric;1;33pF;;;x;;
-62;C18;C_0603_1608Metric;1;?pF 100+V;;;;x;
-63;C6;C_0805_2012Metric;1;2.2µF 100V;;;x;;
-64;TP1;TestPoint_Pad_D1.5mm;1;SW;;;;x;
-65;C33,C23,C29,C24,C34,C30,C25,C22,C31,C21,C32,C20;C_1210_3225Metric;12;10µF 100V x2;;;x;;
-66;C9,C8;C_1210_3225Metric;2;22µF 25V;;;x;;
-67;TP3;TestPoint_Pad_D1.5mm;1;LO;;;;x;
-68;Logo;BW_Logo_7.5x4.8mm;1;BW_Logo_7.5x4.8mm;;;;x;
-69;R15,R16;R_0603_1608Metric;2;28kΩ 0.1%;;;x;;
-70;U3;SOT-23-5;1;AP2202-ADJ;;;x;;
-71;U2;SOT-23;1;NCP51460;;;x;;
-72;R17;R_0603_1608Metric;1;10.5kΩ 0.1%;;;x;;
-73;TP2;TestPoint_Pad_D1.5mm;1;HO;;;;x;
-74;C36;C_0805_2012Metric;1;10µF 25V;;;;x;
-75;R19;R_0603_1608Metric;1;23.2kΩ;;;;x;
+Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have
+1;L2;L_Pulse_PG2110HLT;1;100nH;;;v;
+2;F1;Fuse_Schurter_MSB;1;6.3A;;;v;
+3;U5;MSOP-10-1EP_3x3mm_P0.5mm_EP1.68x1.88mm;1;LTC3290;;;v;
+4;R31,R20;R_0603_1608Metric;2;10kΩ;;;;v
+5;R30;R_0603_1608Metric;1;100kΩ;;;;v
+6;R29;R_0603_1608Metric;1;2kΩ;;;;v
+7;R28;R_0603_1608Metric;1;22Ω;;;v;
+8;R27;R_0603_1608Metric;1;1MΩ;;;;v
+9;R26;R_0603_1608Metric;1;7.5kΩ;;;;v
+10;R25;R_0603_1608Metric;1;13kΩ;;;v;
+11;R24;R_0603_1608Metric;1;330kΩ;;;v;
+12;R23;R_0603_1608Metric;1;100Ω;;;;v
+13;Q6;SOT-563;1;CMLDM7002AJ;;;v;
+14;Q5;PowerPAK_SO-8_Single;1;SiR500DP;;;v;
+15;D6;D_SOD-323_HandSoldering;1;SS0840WS;;;;v
+16;D5;D_SOD-123;1;BZT52C12;;;;v
+17;D4,D3;D_SOD-123;2;BZT52C10;;;v;
+18;C47;C_0603_1608Metric;1;1µF;;;;v
+19;C46,C12,C14;C_0603_1608Metric;3;4.7µF;;;;v
+20;C45;C_1210_3225Metric;1;10µF 75V x2;;;v;
+21;C44,C42,C40,C4,C1;C_0603_1608Metric;5;0.1µF;;;;v
+22;C43,C10,C11;C_0805_2012Metric;3;1µF 50Vl;;;;v
+23;C41,C39;C_1206_3216Metric;2;10µF 50V;;;v;v
+24;R18;R_0603_1608Metric;1;110kΩ;;;v;
+25;R10,R9;R_1206_3216Metric;2;?Ω;;;v(1,3.3,10,22,47,100);
+26;R5,R3,R22,R21;R_0603_1608Metric;4;0Ω;;;;v
+27;R6;R_0603_1608Metric;1;8.87kΩ;;;v;
+28;C16;C_0603_1608Metric;1;0.47µF;;;;v
+29;C2;C_0603_1608Metric;1;0pF;;;;v
+30;REF**;Heatspreader_PowerAmpSupply;1;Heatspreader_PowerAmpSupply;;;;x(on the way)
+31;U1;VQFN-20-1EP_3.5x3.5mm_P0.5mm_EP2.05x2.05mm;1;LM5123-Q1;;;v;
+32;TH1;R_0402_1005Metric_Pad0.72x0.64mm_HandSolder;1;10kΩ 4250B;;;v;
+33;J2,J1;HolePad_2.5mm_3.5mm;2;VIN_BRIDGE;;;;v
+34;Q1,Q3;EPC2306;2;EPC2306;;;v;
+35;C3,C13,C38,C5;C_0603_1608Metric;4;0.1µF 100V;;;v;
+36;M1;Amphenol_MINITEK_0.8_2P_V_BoardEdge;1;12V 6Vstart <100mA;;;v;v
+37;R11;R_0603_1608Metric;1;220kΩ;;;v;
+38;C19;C_0603_1608Metric;1;1.5nF;;;v;
+39;R12;R_0603_1608Metric;1;33kΩ;;;;v
+40;R1,R2;R_0612_1632Metric;2;3mΩ 2W;;;v;
+41;R14;R_0603_1608Metric;1;13.3kΩ;;;;v
+42;J6;TE_644749-2;1;VOUT;;;v;
+43;C15;C_0603_1608Metric;1;470pF;;;v;
+44;J7;PinHeader_1x01_P2.54mm_Vertical;1;VTRK_EXT;;;;v
+45;R8,R7;R_0603_1608Metric;2;1Ω;;;v+3.3;
+46;C37;C_1206_3216Metric;1;2.2µF 100Vl;;;v;
+47;C28,C26,C27;CP_Radial_D16.0mm_P7.50mm;3;1mF 80V;;;v;
+48;FB1,FB2;L_0402_1005Metric_Pad0.77x0.64mm_HandSolder;2;Shunt?;;;v(10+60);
+49;C7;CP_Radial_D10.0mm_P5.00mm;1;1mF 35V;;;v;
+50;HS;ATS-xPX035035035_NoMounts;1;ATS-xPX035035035_NoMounts;;;v(L+R);
+51;Q4,Q2;HUSON-3-1EP_2x2mm_P1.3mm_EP1.1x1.6mm;2;PNP;;;v;
+52;J5;TE_2042274_Solder;1;VIN;;;v;
+53;L1;L_Vishay_IHLP-6767;1;1.5µH;;;v;
+54;R4;R_0603_1608Metric;1;76.8kΩ;;;v;
+55;D2;LED_0805_2012Metric;1;PGOOD;;;;v
+56;U4;TI_QFN-FCMOD-HR;1;TPSM365R3;;;v;
+57;C35;C_0603_1608Metric;1;22pF;;;v;
+58;D1;TO-277B;1;MBR12U100L;;;v;
+59;R13;R_0603_1608Metric;1;21kΩ;;;;v
+60;J3,J4;HolePad_2.5mm_3.5mm;2;GND_BRIDGE;;;;v
+61;C17;C_0603_1608Metric;1;33pF;;;v;
+62;C18;C_0603_1608Metric;1;?pF 100+V;;;;v
+63;C6;C_0805_2012Metric;1;2.2µF 100V;;;v;
+64;TP1;TestPoint_Pad_D1.5mm;1;SW;;;;v
+65;C33,C23,C29,C24,C34,C30,C25,C22,C31,C21,C32,C20;C_1210_3225Metric;12;10µF 100V x2;;;v;
+66;C9,C8;C_1210_3225Metric;2;22µF 25V;;;v;
+67;TP3;TestPoint_Pad_D1.5mm;1;LO;;;;v
+68;Logo;BW_Logo_7.5x4.8mm;1;BW_Logo_7.5x4.8mm;;;;v
+69;R15,R16;R_0603_1608Metric;2;28kΩ 0.1%;;;v;
+70;U3;SOT-23-5;1;AP2202-ADJ;;;v;
+71;U2;SOT-23;1;NCP51460;;;v;
+72;R17;R_0603_1608Metric;1;10.5kΩ 0.1%;;;v;
+73;TP2;TestPoint_Pad_D1.5mm;1;HO;;;;v
+74;C36;C_0805_2012Metric;1;10µF 25V;;;;v
+75;R19;R_0603_1608Metric;1;23.2kΩ;;;;v
