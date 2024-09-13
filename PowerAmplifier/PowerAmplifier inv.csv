@@ -51,7 +51,7 @@ Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other 
 50;C62;C_1206_3216Metric;1;68µF 6.3V;;;x;;
 51;TP9;TP_0603_1608Metric_Fused;1;I2C_SCL;;;;x;
 52;TP7;TP_0603_1608Metric_Fused;1;I2C_~{INT};;;;x;
-53;J15;PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right;1;SWD;;;x;;
+53;J15;PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right;1;SWD;;;x;;pins
 54;TP3;TP_0603_1608Metric_Fused;1;OUT_C;;;;x;
 55;C60;C_1206_3216Metric;1;10µF 50V;;;;x;
 56;R28,R27;R_0603_1608Metric;2;0Ω;;;;x;

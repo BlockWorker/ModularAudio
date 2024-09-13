@@ -99,6 +99,10 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  RetargetInit(&huart1);
+
+  printf("Controller init complete\n");
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -164,8 +168,8 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x40000A0B;
-  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.Timing = 0x00802D3B;
+  hi2c1.Init.OwnAddress1 = 58;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;
@@ -219,13 +223,13 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -313,23 +317,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DAC_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO1_Pin GPIO5_Pin GPIO6_Pin */
-  GPIO_InitStruct.Pin = GPIO1_Pin|GPIO5_Pin|GPIO6_Pin;
+  /*Configure GPIO pin : GPIO1_Pin */
+  GPIO_InitStruct.Pin = GPIO1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIO1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : GPIO2_Pin GPIO3_Pin GPIO4_Pin */
   GPIO_InitStruct.Pin = GPIO2_Pin|GPIO3_Pin|GPIO4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : GPIO7_Pin */
-  GPIO_InitStruct.Pin = GPIO7_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIO7_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : I2C_INT_N_Pin */
   GPIO_InitStruct.Pin = I2C_INT_N_Pin;

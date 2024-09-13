@@ -67,12 +67,6 @@ void Error_Handler(void);
 #define GPIO3_GPIO_Port GPIOB
 #define GPIO4_Pin GPIO_PIN_2
 #define GPIO4_GPIO_Port GPIOB
-#define GPIO5_Pin GPIO_PIN_8
-#define GPIO5_GPIO_Port GPIOA
-#define GPIO6_Pin GPIO_PIN_9
-#define GPIO6_GPIO_Port GPIOA
-#define GPIO7_Pin GPIO_PIN_6
-#define GPIO7_GPIO_Port GPIOC
 #define I2C_INT_N_Pin GPIO_PIN_8
 #define I2C_INT_N_GPIO_Port GPIOB
 

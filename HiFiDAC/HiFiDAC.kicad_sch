@@ -4254,6 +4254,18 @@
 		(uuid "0197af5c-3a7f-406b-8d28-fa412fa0634c")
 	)
 	(junction
+		(at 134.62 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0938d1e2-8a15-4322-9dc7-7173659c54ff")
+	)
+	(junction
+		(at 137.16 77.47)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1b3c9ff8-1560-4637-acfd-72af23073068")
+	)
+	(junction
 		(at 207.01 46.99)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4294,6 +4306,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "4d6a86a2-da4d-421a-9e0d-468ba6e51c14")
+	)
+	(junction
+		(at 139.7 82.55)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4ef4b85f-5a82-42e0-9c3a-054fb9d43a41")
 	)
 	(junction
 		(at 227.33 36.83)
@@ -4354,6 +4372,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8c580ea8-2672-4f22-9e42-5b78a8679e15")
+	)
+	(junction
+		(at 142.24 87.63)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "992e2daf-4f3d-4987-8487-fc1ccdf410a1")
 	)
 	(junction
 		(at 57.15 44.45)
@@ -4947,6 +4971,16 @@
 	)
 	(wire
 		(pts
+			(xy 137.16 77.47) (xy 137.16 74.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "40a856f1-770e-46a3-8c17-236bf693df4b")
+	)
+	(wire
+		(pts
 			(xy 142.24 80.01) (xy 177.8 80.01)
 		)
 		(stroke
@@ -5074,6 +5108,16 @@
 			(type default)
 		)
 		(uuid "54e4057d-5493-405e-b775-e65ec5814c39")
+	)
+	(wire
+		(pts
+			(xy 142.24 87.63) (xy 142.24 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55a0160c-8579-455e-ad6f-4f140c02dc98")
 	)
 	(wire
 		(pts
@@ -5477,7 +5521,7 @@
 	)
 	(wire
 		(pts
-			(xy 137.16 97.79) (xy 137.16 74.93)
+			(xy 137.16 97.79) (xy 137.16 77.47)
 		)
 		(stroke
 			(width 0)
@@ -5787,7 +5831,7 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 107.95) (xy 142.24 80.01)
+			(xy 142.24 107.95) (xy 142.24 87.63)
 		)
 		(stroke
 			(width 0)
@@ -5927,7 +5971,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 102.87) (xy 139.7 77.47)
+			(xy 139.7 102.87) (xy 139.7 82.55)
 		)
 		(stroke
 			(width 0)
@@ -6204,6 +6248,16 @@
 			(type default)
 		)
 		(uuid "d5748f9e-5f5b-4913-82f1-b0296e26139b")
+	)
+	(wire
+		(pts
+			(xy 139.7 82.55) (xy 139.7 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d97736f6-aafb-42f9-84be-db66e63758b6")
 	)
 	(wire
 		(pts
@@ -6790,6 +6844,74 @@
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
 					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint_Small")
+		(at 142.24 87.63 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "08157484-c2cd-4b55-83ef-bbb44a3f050d")
+		(property "Reference" "TP9"
+			(at 140.97 86.3599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MISO"
+			(at 140.97 88.8999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:TP_0603_1608Metric_Fused"
+			(at 137.16 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 137.16 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 142.24 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "931a4f8c-81d0-4abc-8862-ea4def051709")
+		)
+		(instances
+			(project "HiFiDAC"
+				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
+					(reference "TP9")
 					(unit 1)
 				)
 			)
@@ -8190,6 +8312,74 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector:TestPoint_Small")
+		(at 139.7 82.55 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5d6f2aab-26a3-4f35-a095-30baf6b2f74b")
+		(property "Reference" "TP8"
+			(at 138.43 81.2799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SS"
+			(at 138.43 83.8199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:TP_0603_1608Metric_Fused"
+			(at 134.62 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 134.62 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 139.7 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8ebdaef8-fe73-475c-ad39-2b6027897286")
+		)
+		(instances
+			(project "HiFiDAC"
+				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
+					(reference "TP8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Polarized_Small")
 		(at 77.47 167.64 0)
 		(unit 1)
@@ -9074,6 +9264,74 @@
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
 					(reference "#PWR013")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint_Small")
+		(at 134.62 72.39 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a420b7c9-e022-4e0c-a6fe-d45a90522a17")
+		(property "Reference" "TP6"
+			(at 133.35 71.1199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SCLK"
+			(at 133.35 73.6599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:TP_0603_1608Metric_Fused"
+			(at 129.54 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 129.54 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 134.62 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "76809852-45a9-4e32-841d-617c2b3116ac")
+		)
+		(instances
+			(project "HiFiDAC"
+				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
+					(reference "TP6")
 					(unit 1)
 				)
 			)
@@ -10612,6 +10870,74 @@
 			(project "HiFiDAC"
 				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
 					(reference "C14")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint_Small")
+		(at 137.16 77.47 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f5a4408a-e937-45b8-b001-00806077730f")
+		(property "Reference" "TP7"
+			(at 135.89 76.1999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MOSI"
+			(at 135.89 78.7399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:TP_0603_1608Metric_Fused"
+			(at 132.08 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 132.08 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 137.16 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6e002b82-ef24-4a0a-bda7-31cf5ea62ad5")
+		)
+		(instances
+			(project "HiFiDAC"
+				(path "/9ca5e549-4577-422c-b8f3-d4e6ad408ec3"
+					(reference "TP7")
 					(unit 1)
 				)
 			)

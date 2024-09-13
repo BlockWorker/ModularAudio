@@ -1,40 +1,51 @@
-Id;Designator;Footprint;Quantity;Designation;Supplier and ref;Added;Have
-1;REF**;BW_Logo_5x3.2mm;1;BW_Logo_5x3.2mm;;;v
-2;U9;QSOP-16_3.9x4.9mm_P0.635mm;1;MAX14431C/F;;v;
-3;U1;Oscillator_SMD_Kyocera_KC2520Z-4Pin_2.5x2.0mm;1;KC2520K24.5760;;v;
-4;R53,R52,R49;R_0603_1608Metric;3;1kΩ;;;v
-5;R51,R50;R_0603_1608Metric;2;33kΩ;;;v
-6;R48,R4,R3;R_0603_1608Metric;3;0Ω;;;v
-7;R47,R46,R45;R_0603_1608Metric;3;27Ω;;v;
-8;J7;Amphenol_MINITEK_0.8_4P_V;1;CTRL;;;v
-9;J6;Amphenol_MINITEK_0.8_6P_V;1;I2S;;v;
-10;FB3,FB2,FB1;L_0603_1608Metric;3;MPZ1608B471ATA00;;v;
-11;C52,C49,C46,C45,C12;C_0603_1608Metric;5;0.1µF;;;v
-12;C51;C_0805_2012Metric;1;10µF 25V;;;v
-13;C50,C20,C1;CP_Elec_6.3x7.7;3;100µF 10V 450mΩ;;v;
-14;C48,C47;C_0603_1608Metric;2;1µF;;;v
-15;C13;C_0603_1608Metric;1;10nF;;;v
-16;C2,C21,C19;C_0805_2012Metric;3;10µF 50Vs;;;v
-17;J1;Amphenol_MINITEK_0.8_4P_V;1;SE;;;v
-18;U8,U7,U6,U5,U4;WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm;5;OPA1612;;v;
-19;U3;Texas_S-PDSO-N10_EP1.2x2mm;1;TPS7A90;;v;
-20;U2;SSOP-28_5.3x10.2mm_P0.65mm;1;PCM1794A;;v;
-21;R44,R43,R42,R41,R40,R39,R38,R37,R32,R27,R22,R17;R_0805_2012Metric;12;1kΩRS;;v;
-22;R36,R34,R31,R29,R26,R24,R21,R19;R_0805_2012Metric;8;330ΩRS;;v;
-23;R35,R30,R25,R20;R_0805_2012Metric;4;470ΩRS;;v;
-24;R33,R28,R23,R18;R_0805_2012Metric;4;4.7kΩRS;;v;
-25;R16;R_0603_1608Metric;1;1kΩLN;;v;
-26;R15;R_0603_1608Metric;1;3.12kΩLN;;v;
-27;R14,R13,R12,R11,R10;R_0603_1608Metric;5;10kΩ;;;v
-28;R9;R_0603_1608Metric;1;10kΩLN;;;v
-29;R8,R7,R6,R5,R2,R1;R_0805_2012Metric;6;100ΩRS;;v;
-30;J5;Amphenol_MINITEK_0.8_4P_V;1;+-15V;;;v
-31;J4;Amphenol_MINITEK_0.8_2P_V;1;5V;;;v
-32;J3;Amphenol_MINITEK_0.8_2P_V;1;RDIFF;;;v
-33;J2;Amphenol_MINITEK_0.8_2P_V;1;LDIFF;;;v
-34;C44,C43,C36,C35,C34,C33,C31,C30,C27,C26,C16,C9,C8,C7,C3;C_0704_1810Metric;15;0.1µF C0G;;v;
-35;C42,C41,C39,C38,C32,C29,C25,C24;C_0603_1608Metric;8;2.7nF C0G;;v;
-36;C40,C37,C28,C23;C_0603_1608Metric;4;2.2nF C0G;;v;
-37;C22;C_0603_1608Metric;1;1µF 25V;;;v
-38;C18;C_0603_1608Metric;1;10nF C0G;;;v
-39;C17,C15,C14,C11,C10,C6,C5,C4;CP_Elec_5x5.8;8;47µF 20V;;v;
+"Id";"Designator";"Footprint";"Quantity";"Designation";"Supplier and ref";
+1;"TP9";"TP_0603_1608Metric_Fused";1;"MISO";;;
+2;"TP8";"TP_0603_1608Metric_Fused";1;"SS";;;
+3;"TP7";"TP_0603_1608Metric_Fused";1;"MOSI";;;
+4;"TP6";"TP_0603_1608Metric_Fused";1;"SCLK";;;
+5;"C44,C38,C48,C33";"C_0603_1608Metric";4;"1nF C0G";;;
+6;"R18,R19,R26,R27";"R_0805_2012Metric";4;"4.7kΩRS";;;
+7;"R9,R7";"R_0603_1608Metric";2;"3.12kΩLN";;;
+8;"R22,R30,R15,R23";"R_0805_2012Metric";4;"22kΩRS";;;
+9;"U2";"QFN-32-1EP_5x5mm_P0.5mm_EP3.2x3.2mm";1;"ES9039Q2M";;;
+10;"J6";"Amphenol_MINITEK_WTB_1.25_5P_V";1;"I2C";;;
+11;"C47,C36,C45,C34";"C_0603_1608Metric";4;"10nF C0G";;;
+12;"C35,C46";"C_0603_1608Metric";2;"33pF C0G";;;
+13;"C12,C28";"CP_Radial_D6.3mm_P2.50mm";2;"100µF 10V";;;
+14;"R20,R28,R17,R25";"R_0805_2012Metric";4;"100ΩRS";;;
+15;"U7,U6";"WSON-8-1EP_3x3mm_P0.5mm_EP1.2x2mm";2;"OPA1612";;;
+16;"C4,C3,C5,C6,C24,C19,C2";"C_0603_1608Metric";7;"1µF 25V";;;
+17;"R24,R16,R29,R21";"R_0805_2012Metric";4;"3.3kΩRS";;;
+18;"R4,R5";"R_0603_1608Metric";2;"27Ω";;;
+19;"J7";"Amphenol_MINITEK_WTB_1.25_4P_V";1;"PWR";;;
+20;"C15,C20,C10,C11,C25,C7,C29";"C_0603_1608Metric";7;"0.1µF";;;
+21;"C43,C41,C37,C40";"C_0704_1810Metric";4;"0.1µF C0G";;;
+22;"C18,C23";"CP_Radial_D5.0mm_P2.00mm";2;"220µF 6.3V";;;
+23;"C22,C16,C17,C21";"C_0805_2012Metric";4;"10µF 50Vs";;;
+24;"R1";"R_0603_1608Metric";1;"2.2Ω";;;
+25;"C1,C26,C27,C30,C31";"C_0805_2012Metric";5;"10µF 25V";;;
+26;"J4";"Amphenol_MINITEK_0.8_2P_V";1;"DIFF_2";;;
+27;"R8,R10";"R_0603_1608Metric";2;"1kΩLN";;;
+28;"J3";"Amphenol_MINITEK_0.8_2P_V";1;"DIFF_1";;;
+29;"J1";"Amphenol_MINITEK_0.8_4P_V";1;"SE";;;
+30;"J5";"PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right";1;"SWD";;;
+31;"R3";"R_0603_1608Metric";1;"10Ω";;;
+32;"J2";"Amphenol_MINITEK_WTB_1.25_5P_V";1;"I2S";;;
+33;"U4";"QFN-20-1EP_4x4mm_P0.5mm_EP2.7x2.7mm";1;"TPS7A87";;;
+34;"C39,C42";"C_1206_3216Metric";2;"10µF 50V";;;
+35;"TP4";"TP_0603_1608Metric_Fused";1;"DEBUG_UART_RX";;;
+36;"C14,C13";"CP_Elec_6.3x5.9";2;"100µF 25V";;;
+37;"C8";"C_0603_1608Metric";1;"10nF";;;
+38;"U3";"QFN-32-1EP_5x5mm_P0.5mm_EP3.45x3.45mm";1;"STM32C031K6Ux";;;
+39;"TP3";"TP_0603_1608Metric_Fused";1;"I2C_SDA";;;
+40;"U1";"Oscillator_SMD_Kyocera_KC2520Z-4Pin_2.5x2.0mm";1;"KC2520K24.5760";;;
+41;"R11,R13";"R_0603_1608Metric";2;"49.9kΩ";;;
+42;"R2";"R_0603_1608Metric";1;"0Ω";;;
+43;"C32";"CP_Elec_6.3x7.7";1;"100µF 10V 450mΩ";;;
+44;"TP5";"TP_0603_1608Metric_Fused";1;"I2C_SCL";;;
+45;"R12,R14,R6";"R_0603_1608Metric";3;"10kΩ";;;
+46;"U5";"WSON-10-1EP_2x2mm_P0.4mm_EP0.9x1.5mm";1;"TLV75101";;;
+47;"TP1";"TP_0603_1608Metric_Fused";1;"DEBUG_UART_TX";;;
+48;"FB1";"L_0603_1608Metric";1;"MPZ1608B471ATA00";;;
+49;"TP2";"TP_0603_1608Metric_Fused";1;"I2C_~{INT}";;;
+50;"C9";"C_0603_1608Metric";1;"4.7µF";;;
