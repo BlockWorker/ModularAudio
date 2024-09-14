@@ -9677,7 +9677,7 @@
 				)
 			)
 		)
-		(property "Value" "AP2202-ADJ"
+		(property "Value" "TPS7A2401"
 			(at 163.83 225.552 0)
 			(effects
 				(font
@@ -14338,7 +14338,7 @@
 				)
 			)
 		)
-		(property "Value" "1Ω"
+		(property "Value" "3.3Ω"
 			(at 302.26 86.36 90)
 			(effects
 				(font
@@ -16752,7 +16752,7 @@
 				)
 			)
 		)
-		(property "Value" "1Ω"
+		(property "Value" "3.3Ω"
 			(at 343.916 86.614 90)
 			(effects
 				(font

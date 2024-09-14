@@ -14696,7 +14696,7 @@
 				)
 			)
 		)
-		(property "Value" "AP2202-ADJ"
+		(property "Value" "TPS7A2401"
 			(at 151.13 316.992 0)
 			(effects
 				(font
