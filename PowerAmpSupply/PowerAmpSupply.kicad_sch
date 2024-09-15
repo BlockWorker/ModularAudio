@@ -2035,23 +2035,23 @@
 				)
 			)
 		)
-		(symbol "Connector:TestPoint_Small"
+		(symbol "Connector:Conn_Coaxial_Small"
 			(pin_numbers hide)
 			(pin_names
-				(offset 0.762) hide)
+				(offset 1.016) hide)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "TP"
-				(at 0 3.81 0)
+			(property "Reference" "J"
+				(at 0.254 3.048 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Value" "TestPoint_Small"
-				(at 0 2.032 0)
+			(property "Value" "Conn_Coaxial_Small"
+				(at 0 -3.81 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2059,7 +2059,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at 5.08 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2068,15 +2068,6 @@
 				)
 			)
 			(property "Datasheet" "~"
-				(at 5.08 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "test point"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2085,7 +2076,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "test point tp"
+			(property "Description" "small coaxial connector (BNC, SMA, SMB, SMC, Cinch/RCA, LEMO, ...)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2094,7 +2085,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "Pin* Test*"
+			(property "ki_keywords" "BNC SMA SMB SMC LEMO coaxial connector CINCH RCA MCX MMCX U.FL UMRF"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2103,10 +2094,20 @@
 					(hide yes)
 				)
 			)
-			(symbol "TestPoint_Small_0_1"
-				(circle
-					(center 0 0)
-					(radius 0.508)
+			(property "ki_fp_filters" "*BNC* *SMA* *SMB* *SMC* *Cinch* *LEMO* *UMRF* *MCX* *U.FL*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_Coaxial_Small_0_1"
+				(polyline
+					(pts
+						(xy -2.54 0) (xy -0.508 0)
+					)
 					(stroke
 						(width 0)
 						(type default)
@@ -2115,12 +2116,47 @@
 						(type none)
 					)
 				)
+				(circle
+					(center 0 0)
+					(radius 0.508)
+					(stroke
+						(width 0.2032)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
 			)
-			(symbol "TestPoint_Small_1_1"
+			(symbol "Conn_Coaxial_Small_1_1"
+				(arc
+					(start -1.1916 -0.6311)
+					(mid 0.327 -1.3081)
+					(end 1.3484 0.0039)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 1.3484 -0.0039)
+					(mid 0.327 1.3081)
+					(end -1.1916 0.6311)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
 				(pin passive line
-					(at 0 0 90)
-					(length 0)
-					(name "1"
+					(at -2.54 0 0)
+					(length 1.27)
+					(name "In"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2128,6 +2164,24 @@
 						)
 					)
 					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 0 180)
+					(length 1.27)
+					(name "Ext"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -5117,12 +5171,6 @@
 		(uuid "0077cc0e-26d8-40c9-a5a5-01997771a92f")
 	)
 	(junction
-		(at 326.39 88.9)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0329e197-b7cc-4e91-96a4-60e43750f3cb")
-	)
-	(junction
 		(at 163.83 246.38)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5241,6 +5289,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2e2688f5-5e8d-4c0e-af30-4b2a7d39134c")
+	)
+	(junction
+		(at 353.06 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "39a549a8-27da-450c-a003-d090c1016f43")
 	)
 	(junction
 		(at 204.47 198.12)
@@ -5363,12 +5417,6 @@
 		(uuid "6f649676-05fa-4789-8dc2-718917e63e55")
 	)
 	(junction
-		(at 353.06 67.31)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "6f7d8246-b665-4790-b964-9232f7c1fca7")
-	)
-	(junction
 		(at 60.96 118.11)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5433,6 +5481,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "899bf5f3-12ae-466d-bb08-5a491d081d19")
+	)
+	(junction
+		(at 325.12 88.9)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8c577d4a-ab49-4d43-a7d2-848efb914116")
 	)
 	(junction
 		(at 26.67 54.61)
@@ -6048,16 +6102,6 @@
 	)
 	(wire
 		(pts
-			(xy 353.06 67.31) (xy 353.06 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1488072c-ae4b-44e4-a80e-53f02207af0a")
-	)
-	(wire
-		(pts
 			(xy 184.15 229.87) (xy 184.15 231.14)
 		)
 		(stroke
@@ -6085,6 +6129,16 @@
 			(type default)
 		)
 		(uuid "1640251e-f66f-41b5-87c9-9a72f0c2fa99")
+	)
+	(wire
+		(pts
+			(xy 353.06 69.85) (xy 355.6 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "16f8192a-daeb-45a7-a5c8-48f08f43bd0f")
 	)
 	(wire
 		(pts
@@ -6255,16 +6309,6 @@
 			(type default)
 		)
 		(uuid "2567b156-1946-42e8-8d11-57499933497e")
-	)
-	(wire
-		(pts
-			(xy 326.39 88.9) (xy 326.39 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "263cf443-0c6e-4a06-8ca8-460a67b00a4e")
 	)
 	(wire
 		(pts
@@ -6508,6 +6552,16 @@
 	)
 	(wire
 		(pts
+			(xy 325.12 88.9) (xy 325.12 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "380a6902-4cb7-41b6-aeb1-bb2c14199ad8")
+	)
+	(wire
+		(pts
 			(xy 297.18 88.9) (xy 299.72 88.9)
 		)
 		(stroke
@@ -6615,16 +6669,6 @@
 			(type default)
 		)
 		(uuid "42b2e9f3-1eae-4a4d-a256-c9db33d1c65d")
-	)
-	(wire
-		(pts
-			(xy 326.39 88.9) (xy 328.93 88.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "43200c92-7293-4869-a691-2a5cd930bbb8")
 	)
 	(wire
 		(pts
@@ -6785,6 +6829,16 @@
 			(type default)
 		)
 		(uuid "4d1d3606-3d62-437c-8e49-6275127a4d24")
+	)
+	(wire
+		(pts
+			(xy 325.12 96.52) (xy 325.12 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4d7d76f4-c43e-4fb0-a18f-eaa5e70622d0")
 	)
 	(wire
 		(pts
@@ -7128,16 +7182,6 @@
 	)
 	(wire
 		(pts
-			(xy 328.93 50.8) (xy 328.93 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6660fa4d-b72e-4540-a7a7-bf02ad69db49")
-	)
-	(wire
-		(pts
 			(xy 200.66 240.03) (xy 200.66 241.3)
 		)
 		(stroke
@@ -7175,6 +7219,16 @@
 			(type default)
 		)
 		(uuid "68a92cab-1de3-4254-8f20-bd8c591df4cc")
+	)
+	(wire
+		(pts
+			(xy 328.93 38.1) (xy 328.93 39.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "68db1d47-ba36-44ff-b1ed-d89fac01e46d")
 	)
 	(wire
 		(pts
@@ -7285,6 +7339,16 @@
 			(type default)
 		)
 		(uuid "6d78715f-b922-44bd-a739-6300263b587d")
+	)
+	(wire
+		(pts
+			(xy 325.12 104.14) (xy 325.12 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6dcdadc7-55ea-4958-80e5-e125a6049c59")
 	)
 	(wire
 		(pts
@@ -7568,7 +7632,7 @@
 	)
 	(wire
 		(pts
-			(xy 353.06 73.66) (xy 353.06 67.31)
+			(xy 353.06 62.23) (xy 353.06 69.85)
 		)
 		(stroke
 			(width 0)
@@ -7788,16 +7852,6 @@
 	)
 	(wire
 		(pts
-			(xy 353.06 67.31) (xy 356.87 67.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9219a4a7-1ff0-4c78-8ce7-8444c724bcd7")
-	)
-	(wire
-		(pts
 			(xy 34.29 227.33) (xy 34.29 229.87)
 		)
 		(stroke
@@ -7875,6 +7929,16 @@
 			(type default)
 		)
 		(uuid "979dfe6f-9306-4874-9f06-62d0fb2126e9")
+	)
+	(wire
+		(pts
+			(xy 325.12 88.9) (xy 328.93 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "98d41cb9-1cf5-4380-9692-b7568a389d8f")
 	)
 	(wire
 		(pts
@@ -7968,7 +8032,7 @@
 	)
 	(wire
 		(pts
-			(xy 321.31 88.9) (xy 326.39 88.9)
+			(xy 321.31 88.9) (xy 325.12 88.9)
 		)
 		(stroke
 			(width 0)
@@ -8018,6 +8082,16 @@
 	)
 	(wire
 		(pts
+			(xy 360.68 69.85) (xy 361.95 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a7e9c0d0-dca3-4fb7-8a51-73280a3c40c6")
+	)
+	(wire
+		(pts
 			(xy 359.41 118.11) (xy 368.3 118.11)
 		)
 		(stroke
@@ -8048,6 +8122,16 @@
 	)
 	(wire
 		(pts
+			(xy 328.93 44.45) (xy 328.93 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aa4d7b83-2825-4d00-bd5a-d0d08c43a7b5")
+	)
+	(wire
+		(pts
 			(xy 138.43 241.3) (xy 138.43 246.38)
 		)
 		(stroke
@@ -8065,6 +8149,16 @@
 			(type default)
 		)
 		(uuid "abcc57ff-1817-468d-abc7-2a6440a9c9c3")
+	)
+	(wire
+		(pts
+			(xy 361.95 69.85) (xy 361.95 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ac6d22d6-154d-41de-89f7-5166a717b2ea")
 	)
 	(wire
 		(pts
@@ -8485,6 +8579,16 @@
 			(type default)
 		)
 		(uuid "d04ce7cd-560f-4e34-8aac-55451a4d1576")
+	)
+	(wire
+		(pts
+			(xy 361.95 62.23) (xy 361.95 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d17c45ab-e4f7-4d62-b8d6-368cb8c0868a")
 	)
 	(wire
 		(pts
@@ -8948,6 +9052,16 @@
 	)
 	(wire
 		(pts
+			(xy 353.06 69.85) (xy 353.06 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ef727e8e-d3c9-49c4-86bc-e3f2818e77ee")
+	)
+	(wire
+		(pts
 			(xy 336.55 118.11) (xy 359.41 118.11)
 		)
 		(stroke
@@ -9125,6 +9239,16 @@
 			(type default)
 		)
 		(uuid "fc65c157-ed34-4a60-a504-92f6a12e79ed")
+	)
+	(wire
+		(pts
+			(xy 328.93 52.07) (xy 328.93 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fcadab7d-12bd-4b5f-8302-f366a93f45ea")
 	)
 	(wire
 		(pts
@@ -11198,6 +11322,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R_Small_US")
+		(at 328.93 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "47e30a80-2973-43dc-816d-a6c5e94ed6e7")
+		(property "Reference" "R33"
+			(at 331.47 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "50Ω"
+			(at 331.47 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+			(at 328.93 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 328.93 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small US symbol"
+			(at 328.93 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ecb1f7e9-bea4-4ce6-a8df-77aef98d1d72")
+		)
+		(pin "2"
+			(uuid "1be2ecb3-6bd4-4e92-92f5-5088ac3e8d0e")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "R33")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "BW_Active:EPC2306")
 		(at 353.06 57.15 270)
 		(mirror x)
@@ -11278,73 +11472,6 @@
 			(project ""
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "Q1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint_Small")
-		(at 326.39 91.44 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "520486be-f5d8-420c-ae99-208910b91afd")
-		(property "Reference" "TP3"
-			(at 327.66 90.1699 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "LO"
-			(at 327.66 92.7099 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
-			(at 331.47 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 331.47 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 326.39 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "456e9e6f-0059-4fc9-b96e-3fee4a271774")
-		)
-		(instances
-			(project "PowerAmpSupply"
-				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
-					(reference "TP3")
 					(unit 1)
 				)
 			)
@@ -12349,73 +12476,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:TestPoint_Small")
-		(at 356.87 67.31 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "7389909f-1b2c-4dd4-bd28-a6983088abb0")
-		(property "Reference" "TP2"
-			(at 358.14 66.0399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "HO"
-			(at 358.14 68.5799 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
-			(at 361.95 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 361.95 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 356.87 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "b38017bb-479b-45c6-8624-c5ef31dd8e28")
-		)
-		(instances
-			(project "PowerAmpSupply"
-				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
-					(reference "TP2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector:Conn_01x01_Socket")
 		(at 326.39 123.19 180)
 		(unit 1)
@@ -12477,6 +12537,72 @@
 			(project "PowerAmpSupply"
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "J4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDPWR")
+		(at 361.95 62.23 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "74aec0fa-977e-40e6-8df2-c032c9a28e27")
+		(property "Reference" "#PWR020"
+			(at 361.95 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDPWR"
+			(at 362.077 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 361.95 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 361.95 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDPWR\" , global ground"
+			(at 361.95 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e1b70d39-4006-4953-9c05-4d8e82cec352")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -14045,6 +14171,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R_Small_US")
+		(at 325.12 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9c7bec94-ceeb-4d1f-b9b0-fb0fe7bfec3d")
+		(property "Reference" "R34"
+			(at 327.66 92.7099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "50Ω"
+			(at 327.66 95.2499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+			(at 325.12 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 325.12 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small US symbol"
+			(at 325.12 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7988e5f3-fb84-4a40-94fe-066b96e19860")
+		)
+		(pin "2"
+			(uuid "bd62f6dd-2213-4eb4-a897-235d8973fe9e")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "R34")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Polarized")
 		(at 214.63 148.59 0)
 		(unit 1)
@@ -14383,6 +14579,72 @@
 			(project "PowerAmpSupply"
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "R8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDPWR")
+		(at 325.12 105.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a0703909-6b69-4c71-8e1b-4d936799a6eb")
+		(property "Reference" "#PWR019"
+			(at 325.12 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDPWR"
+			(at 324.993 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 325.12 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 325.12 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDPWR\" , global ground"
+			(at 325.12 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "064d002d-b346-4d7f-970e-9ad5e6638739")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -14872,6 +15134,146 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector:Conn_Coaxial_Small")
+		(at 328.93 41.91 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b3937240-78d8-4781-af50-30963ee6ee79")
+		(property "Reference" "J10"
+			(at 331.47 41.1594 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "SW"
+			(at 331.47 43.6994 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "BW_Connectors:TE_CONMHF1-SMD"
+			(at 328.93 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 328.93 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "small coaxial connector (BNC, SMA, SMB, SMC, Cinch/RCA, LEMO, ...)"
+			(at 328.93 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e73aa311-7042-456f-996e-3d6e83061a1f")
+		)
+		(pin "2"
+			(uuid "b0a9d4ee-7b41-46e6-90fc-00a0ed971c79")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "J10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_Coaxial_Small")
+		(at 325.12 101.6 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b4b9f819-0340-4696-b350-017c728e637d")
+		(property "Reference" "J8"
+			(at 327.66 99.8103 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "LO"
+			(at 327.66 102.3503 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "BW_Connectors:TE_CONMHF1-SMD"
+			(at 325.12 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 325.12 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "small coaxial connector (BNC, SMA, SMB, SMC, Cinch/RCA, LEMO, ...)"
+			(at 325.12 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c5968c25-f61e-4739-92e5-abc0b682c937")
+		)
+		(pin "2"
+			(uuid "f2491593-3b72-4949-b326-bf19db6affa9")
+		)
+		(instances
+			(project ""
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "J8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R_US")
 		(at 285.75 45.72 90)
 		(unit 1)
@@ -15074,6 +15476,72 @@
 			(project "PowerAmpSupply"
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "C37")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDPWR")
+		(at 328.93 38.1 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b9dfbd5d-998e-40cf-8eba-163e23c01d88")
+		(property "Reference" "#PWR021"
+			(at 328.93 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDPWR"
+			(at 329.057 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 328.93 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 328.93 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDPWR\" , global ground"
+			(at 328.93 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "50ea35ff-564e-4f9e-b3a7-ee139d6b6d2d")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -15355,73 +15823,6 @@
 			(project "PowerAmpSupply"
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "Q3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint_Small")
-		(at 328.93 50.8 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c796fd7b-b511-4c4f-b877-83be5d217380")
-		(property "Reference" "TP1"
-			(at 330.2 49.5299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "SW"
-			(at 330.2 52.0699 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
-			(at 334.01 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 334.01 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 328.93 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "8f629608-3ed3-485f-9707-e27630df8c1f")
-		)
-		(instances
-			(project ""
-				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
-					(reference "TP1")
 					(unit 1)
 				)
 			)
@@ -15841,6 +16242,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector:Conn_Coaxial_Small")
+		(at 361.95 66.04 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "daa7338c-8d2d-4e37-bb63-0983cdd584d0")
+		(property "Reference" "J9"
+			(at 364.49 65.2894 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "HO"
+			(at 364.49 67.8294 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "BW_Connectors:TE_CONMHF1-SMD"
+			(at 361.95 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 361.95 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "small coaxial connector (BNC, SMA, SMB, SMC, Cinch/RCA, LEMO, ...)"
+			(at 361.95 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "afab454b-1f9e-4e5c-9e36-0c300dcd1b52")
+		)
+		(pin "2"
+			(uuid "20b7c657-d9fe-43ee-9758-0eb1289b2774")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "J9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector:Conn_01x01_Socket")
 		(at 35.56 49.53 0)
 		(unit 1)
@@ -15972,6 +16443,74 @@
 			(project "PowerAmpSupply"
 				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
 					(reference "C31")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small_US")
+		(at 358.14 69.85 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e0cff49a-6f91-4c8f-a141-761f87cf0214")
+		(property "Reference" "R32"
+			(at 358.14 64.77 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "50Ω"
+			(at 358.14 67.31 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+			(at 358.14 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 358.14 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small US symbol"
+			(at 358.14 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f5000cc8-830e-4c37-9238-93e0cd517f33")
+		)
+		(pin "2"
+			(uuid "d4e8b889-a99b-4f4d-b97d-7df82f2ff873")
+		)
+		(instances
+			(project "PowerAmpSupply"
+				(path "/0a72794d-1523-4663-bba1-d343a4f95121"
+					(reference "R32")
 					(unit 1)
 				)
 			)
