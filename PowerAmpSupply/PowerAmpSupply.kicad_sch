@@ -9310,7 +9310,7 @@
 		)
 		(uuid "69b56442-ce06-45e0-a69f-b3641dac4704")
 	)
-	(text "Tracking voltage\n1.1V - 3.3V\nVOUT = 16.364 * VTRK_EXT"
+	(text "Tracking voltage\n0 - 3.3V\nVOUT = 10.873 * VTRK_EXT + 17.918V"
 		(exclude_from_sim no)
 		(at 213.36 175.26 0)
 		(effects
@@ -10209,7 +10209,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "188a3bc8-bc22-487a-aca2-19677cc2a716")
 		(property "Reference" "R15"
@@ -10221,7 +10221,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "28kΩ 0.1%"
+		(property "Value" "84.5kΩ 0.1%"
 			(at 198.12 193.0399 0)
 			(effects
 				(font
@@ -12139,7 +12139,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6baa5e7d-ed81-4a28-93b8-fb08fcafe19d")
 		(property "Reference" "U2"
@@ -13177,7 +13177,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "28kΩ 0.1%"
+		(property "Value" "42.2kΩ 0.1%"
 			(at 215.9 193.0399 0)
 			(effects
 				(font

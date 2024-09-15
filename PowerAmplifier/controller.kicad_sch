@@ -8436,9 +8436,9 @@
 		)
 		(uuid "ff5ddbb3-b158-4a8b-b858-4cf6cd9e22a7")
 	)
-	(text "Actually around +3.4V to make sure\nit's above the +3.3V supply"
+	(text "Actually around +3.55V\nfor headroom"
 		(exclude_from_sim no)
-		(at 217.678 368.554 0)
+		(at 211.328 367.03 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -14404,7 +14404,7 @@
 				)
 			)
 		)
-		(property "Value" "24.3kΩ"
+		(property "Value" "26.1kΩ"
 			(at 186.69 368.3 90)
 			(effects
 				(font

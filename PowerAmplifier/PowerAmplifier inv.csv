@@ -60,7 +60,7 @@ Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other 
 59;REF**;BW_Logo_10x6.4mm;1;BW_Logo_10x6.4mm;;;;x;
 60;U10;TI_QFN-FCMOD;1;TPSM861252;;;x;;
 61;C56,C65;C_0603_1608Metric;2;10nF;;;;x;
-62;R44;R_0603_1608Metric;1;24.3kΩ;;;;x;
+62;R44;R_0603_1608Metric;1;26.1kΩ;;;x;;
 63;C5;CP_Radial_D8.0mm_P3.50mm;1;470µF 16V;;;x;;
 64;U2;SOT-23-5;1;TPS7A2401;;;x(+1 supply);;
 65;U3;TSSOP-14_4.4x5mm_P0.65mm;1;TLV4387;;;x;;
