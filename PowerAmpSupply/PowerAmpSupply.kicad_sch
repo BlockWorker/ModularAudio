@@ -9602,6 +9602,29 @@
 	(netclass_flag ""
 		(length 2.54)
 		(shape round)
+		(at 361.95 69.85 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "82159867-4ffd-41a6-b88f-f100e4af9edc")
+		(property "Netclass" "HV"
+			(at 362.6485 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
+	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
 		(at 359.41 95.25 270)
 		(fields_autoplaced yes)
 		(effects
@@ -9705,6 +9728,29 @@
 		(uuid "fc6567ff-4ea6-4398-82f3-3066ea4a1cc7")
 		(property "Netclass" "HV"
 			(at 355.6 80.5815 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
+	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
+		(at 328.93 45.72 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "fea6543f-3b22-4c44-961d-52d531d79357")
+		(property "Netclass" "HV"
+			(at 326.39 45.0215 90)
 			(effects
 				(font
 					(size 1.27 1.27)

@@ -537,6 +537,8 @@
       "/VOUT_FUSED": "HV",
       "Net-(C16-Pad2)": "HV",
       "Net-(C18-Pad2)": "HV",
+      "Net-(J10-In)": "HV",
+      "Net-(J9-In)": "HV",
       "Net-(Q1-G)": "HV",
       "Net-(Q2-B)": "HV",
       "Net-(Q2-E)": "HV",

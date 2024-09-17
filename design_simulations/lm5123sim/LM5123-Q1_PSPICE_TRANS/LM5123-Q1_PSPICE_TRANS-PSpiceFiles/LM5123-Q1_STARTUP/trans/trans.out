@@ -1,5 +1,5 @@
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -34,7 +34,7 @@
 **** INCLUDING LM5123-Q1_STARTUP.net ****
 * source LM5123-Q1_PSPICE_TRANS
 V_V1         N16788432 0  
-+PWL 0 0 50u 11 8m 11 
++PWL 0 0 50u 24 8m 24 
 C_C22         HB SW  5n IC=0 TC=0,0 
 R_R7         CSP CSN  1.5m TC=0,0 
 R_R16         UVLO CSP  77k TC=0,0 
@@ -104,7 +104,7 @@ RRDC_L1         _SR 2 0.0023
 **** RESUMING trans.cir ****
 .END
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -127,7 +127,7 @@ RRDC_L1         _SR 2 0.0023
            M     .35         
 
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -179,7 +179,7 @@ RRDC_L1         _SR 2 0.0023
        XPART    0               0            
 
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -198,7 +198,7 @@ RRDC_L1         _SR 2 0.0023
          TC2    5.500000E-06 
 
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -216,7 +216,7 @@ RRDC_L1         _SR 2 0.0023
          IL1   -4.000000E-03 
 
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -236,7 +236,7 @@ RRDC_L1         _SR 2 0.0023
         VOFF     .5              .5          
 
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -290,13 +290,10 @@ RRDC_L1         _SR 2 0.0023
 
 Reducing minimum delta to make the circuit converge.
 Reducing minimum delta to make the circuit converge.
-Reducing minimum delta to make the circuit converge.
-Reducing minimum delta to make the circuit converge.
 
-
-          JOB CONCLUDED
+          JOB ABORTED
 
-**** 08/09/24 01:30:21 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 09/17/24 23:26:59 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "LM5123-Q1_STARTUP-trans"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5
 
@@ -308,5 +305,5 @@ Reducing minimum delta to make the circuit converge.
 
 
 
-  Total job time (using Solver 1)   =     3869.66
+  Total job time (using Solver 1)   =      406.41
 
