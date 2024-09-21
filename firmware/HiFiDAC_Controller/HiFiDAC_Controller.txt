@@ -1,0 +1,98 @@
+Configuration	HiFiDAC_Controller
+STM32CubeMX 	6.8.1
+Date	09/22/2024
+MCU	STM32C031K6Ux
+
+
+
+PERIPHERALS	MODES	FUNCTIONS	PINS
+DEBUG	Serial Wire	DEBUG_SWCLK	PA14-BOOT0
+DEBUG	Serial Wire	DEBUG_SWDIO	PA13
+I2C1	I2C	I2C1_SCL	PB6
+I2C1	I2C	I2C1_SDA	PB7
+SPI1	Full-Duplex Master	SPI1_MISO	PA6
+SPI1	Full-Duplex Master	SPI1_MOSI	PA2
+SPI1	Full-Duplex Master	SPI1_SCK	PA1
+SPI1	Hardware NSS Output Signal	SPI1_NSS	PA4
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART1	Asynchronous	USART1_RX	PA10
+USART1	Asynchronous	USART1_TX	PC14-OSCX_IN (PC14)
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC14-OSCX_IN (PC14)	USART1_TX	
+8	PA1	SPI1_SCK	
+9	PA2	SPI1_MOSI	
+10	PA3	GPIO_Output	DAC_EN
+11	PA4	SPI1_NSS	
+13	PA6	SPI1_MISO	
+14	PA7	GPIO_Input	GPIO1
+15	PB0	GPIO_Input	GPIO2
+16	PB1	GPIO_Input	GPIO3
+17	PB2	GPIO_Input	GPIO4
+21	PA10	USART1_RX	
+24	PA13	DEBUG_SWDIO	
+25	PA14-BOOT0	DEBUG_SWCLK	
+30	PB6	I2C1_SCL	
+31	PB7	I2C1_SDA	
+32	PB8	GPIO_Output	I2C_INT_N
+PERIPHERALS	MODES	FUNCTIONS	PINS
+DEBUG	Serial Wire	DEBUG_SWCLK	PA14-BOOT0
+DEBUG	Serial Wire	DEBUG_SWDIO	PA13
+I2C1	I2C	I2C1_SCL	PB6
+I2C1	I2C	I2C1_SDA	PB7
+SPI1	Full-Duplex Master	SPI1_MISO	PA6
+SPI1	Full-Duplex Master	SPI1_MOSI	PA2
+SPI1	Full-Duplex Master	SPI1_SCK	PA1
+SPI1	Hardware NSS Output Signal	SPI1_NSS	PA4
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART1	Asynchronous	USART1_RX	PA10
+USART1	Asynchronous	USART1_TX	PC14-OSCX_IN (PC14)
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC14-OSCX_IN (PC14)	USART1_TX	
+8	PA1	SPI1_SCK	
+9	PA2	SPI1_MOSI	
+10	PA3	GPIO_Output	DAC_EN
+11	PA4	SPI1_NSS	
+13	PA6	SPI1_MISO	
+14	PA7	GPIO_Input	GPIO1
+15	PB0	GPIO_Input	GPIO2
+16	PB1	GPIO_Input	GPIO3
+17	PB2	GPIO_Input	GPIO4
+21	PA10	USART1_RX	
+24	PA13	DEBUG_SWDIO	
+25	PA14-BOOT0	DEBUG_SWCLK	
+30	PB6	I2C1_SCL	
+31	PB7	I2C1_SDA	
+32	PB8	GPIO_Output	I2C_INT_N
+
+
+
+SOFTWARE PROJECT
+
+Project Settings : 
+Project Name : HiFiDAC_Controller
+Project Folder : E:\Users\Alex\Documents\Electronics Projects\Modular Audio\firmware\HiFiDAC_Controller
+Toolchain / IDE : STM32CubeIDE
+Firmware Package Name and Version : STM32Cube FW_C0 V1.0.1
+
+
+Code Generation Settings : 
+STM32Cube MCU packages and embedded software packs : Copy only the necessary library files
+Generate peripheral initialization as a pair of '.c/.h' files per peripheral : No
+Backup previously generated files when re-generating : No
+Delete previously generated files when not re-generated : Yes
+Set all free pins as analog (to optimize the power consumption) : No
+
+
+Toolchains Settings : 
+Compiler Optimizations : 
+
+
+
+
+

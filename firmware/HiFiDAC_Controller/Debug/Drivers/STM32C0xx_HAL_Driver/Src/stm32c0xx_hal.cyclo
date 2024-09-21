@@ -1,10 +1,8 @@
-stm32c0xx_ll_system.h:422:22:LL_SYSCFG_ConfigPinMux	1
-stm32c0xx_ll_system.h:432:26:LL_SYSCFG_GetConfigPinMux	1
-stm32c0xx_hal.c:139:19:HAL_Init	2
-stm32c0xx_hal.c:176:19:HAL_DeInit	1
 stm32c0xx_hal.c:202:13:HAL_MspInit	1
 stm32c0xx_hal.c:213:13:HAL_MspDeInit	1
+stm32c0xx_hal.c:176:19:HAL_DeInit	1
 stm32c0xx_hal.c:236:26:HAL_InitTick	4
+stm32c0xx_hal.c:139:19:HAL_Init	2
 stm32c0xx_hal.c:303:13:HAL_IncTick	1
 stm32c0xx_hal.c:314:17:HAL_GetTick	1
 stm32c0xx_hal.c:323:10:HAL_GetTickPrio	1

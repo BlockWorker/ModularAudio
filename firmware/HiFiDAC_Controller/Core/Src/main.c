@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "retarget.h"
+#include "dac_control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,7 +103,25 @@ int main(void)
 
   RetargetInit(&huart1);
 
+  HAL_Delay(1000);
+
+#ifdef DEBUG
   printf("Controller init complete\n");
+#endif
+
+  HAL_Delay(10);
+
+#ifdef DEBUG
+  printf("Enabling DAC...\n");
+#endif
+
+  HAL_GPIO_WritePin(DAC_EN_GPIO_Port, DAC_EN_Pin, GPIO_PIN_SET);
+
+  HAL_Delay(10);
+
+  if (DAC_CheckChipID() != HAL_OK) {
+      Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
