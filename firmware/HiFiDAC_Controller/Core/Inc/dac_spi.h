@@ -11,6 +11,9 @@
 #include "main.h"
 
 
+#define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
+
+
 typedef enum {
   REG_SYSTEM_CONFIG = 0x00,
   REG_SYS_MODE_CONFIG = 0x01,
@@ -88,24 +91,20 @@ typedef enum {
 /**
  * Write data to DAC register
  */
-HAL_StatusTypeDef DAC_SPI_Write(DAC_SPI_Register reg, uint8_t* data, uint8_t size);
-/**
- * Write data to DAC register and confirm using read-back
- */
-HAL_StatusTypeDef DAC_SPI_WriteConfirm(DAC_SPI_Register reg, uint8_t* data, uint8_t size);
-/**
- * Read data from DAC register
- */
-HAL_StatusTypeDef DAC_SPI_Read(DAC_SPI_Register reg, uint8_t* data, uint8_t size);
-
 HAL_StatusTypeDef DAC_SPI_Write8(DAC_SPI_Register reg, uint8_t data);
 HAL_StatusTypeDef DAC_SPI_Write16(DAC_SPI_Register reg, uint16_t data);
 HAL_StatusTypeDef DAC_SPI_Write24(DAC_SPI_Register reg, uint32_t data);
 
+/**
+ * Write data to DAC register and confirm using read-back
+ */
 HAL_StatusTypeDef DAC_SPI_WriteConfirm8(DAC_SPI_Register reg, uint8_t data);
 HAL_StatusTypeDef DAC_SPI_WriteConfirm16(DAC_SPI_Register reg, uint16_t data);
 HAL_StatusTypeDef DAC_SPI_WriteConfirm24(DAC_SPI_Register reg, uint32_t data);
 
+/**
+ * Read data from DAC register
+ */
 HAL_StatusTypeDef DAC_SPI_Read8(DAC_SPI_Register reg, uint8_t* data);
 HAL_StatusTypeDef DAC_SPI_Read16(DAC_SPI_Register reg, uint16_t* data);
 HAL_StatusTypeDef DAC_SPI_Read24(DAC_SPI_Register reg, uint32_t* data);

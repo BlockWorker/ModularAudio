@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "retarget.h"
 #include "dac_control.h"
+#include "dac_spi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -109,6 +110,8 @@ int main(void)
   printf("Controller init complete\n");
 #endif
 
+  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
+
   HAL_Delay(10);
 
 #ifdef DEBUG
@@ -120,8 +123,34 @@ int main(void)
   HAL_Delay(10);
 
   if (DAC_CheckChipID() != HAL_OK) {
-      Error_Handler();
+#ifdef DEBUG
+    printf("ERROR: INCORRECT DAC CHIP ID\n");
+#endif
+    Error_Handler();
   }
+
+  HAL_Delay(10);
+
+  if (DAC_Initialize() != HAL_OK) {
+#ifdef DEBUG
+    printf("ERROR: DAC INIT FAILED\n");
+#endif
+    Error_Handler();
+  }
+
+#ifdef DEBUG
+  if (HAL_GPIO_ReadPin(GPIO1_GPIO_Port, GPIO1_Pin) == GPIO_PIN_SET) {
+    printf("Automute initially muted\n");
+  } else {
+    printf("Automute initially unmuted\n");
+  }
+
+  if (HAL_GPIO_ReadPin(GPIO2_GPIO_Port, GPIO2_Pin) == GPIO_PIN_SET) {
+    printf("SRC initially locked\n");
+  } else {
+    printf("SRC initially not locked\n");
+  }
+#endif
 
   /* USER CODE END 2 */
 
@@ -134,6 +163,32 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+#ifdef DEBUG
+  switch (GPIO_Pin) {
+    case GPIO1_Pin:
+      printf("Automute muted\n");
+      break;
+    case GPIO2_Pin:
+      printf("SRC locked\n");
+      break;
+  }
+#endif
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+#ifdef DEBUG
+  switch (GPIO_Pin) {
+    case GPIO1_Pin:
+      printf("Automute unmuted\n");
+      break;
+    case GPIO2_Pin:
+      printf("SRC lock lost\n");
+      break;
+  }
+#endif
 }
 
 /**
@@ -242,7 +297,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -328,23 +383,32 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(DAC_EN_GPIO_Port, DAC_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(I2C_INT_N_GPIO_Port, I2C_INT_N_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : DAC_EN_Pin */
-  GPIO_InitStruct.Pin = DAC_EN_Pin;
+  /*Configure GPIO pins : DAC_EN_Pin SPI1_NSS_Pin */
+  GPIO_InitStruct.Pin = DAC_EN_Pin|SPI1_NSS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DAC_EN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPIO1_Pin */
   GPIO_InitStruct.Pin = GPIO1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIO1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO2_Pin GPIO3_Pin GPIO4_Pin */
-  GPIO_InitStruct.Pin = GPIO2_Pin|GPIO3_Pin|GPIO4_Pin;
+  /*Configure GPIO pin : GPIO2_Pin */
+  GPIO_InitStruct.Pin = GPIO2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIO2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO3_Pin GPIO4_Pin */
+  GPIO_InitStruct.Pin = GPIO3_Pin|GPIO4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -355,6 +419,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(I2C_INT_N_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

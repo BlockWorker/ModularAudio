@@ -63,10 +63,14 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define DAC_EN_Pin GPIO_PIN_3
 #define DAC_EN_GPIO_Port GPIOA
+#define SPI1_NSS_Pin GPIO_PIN_4
+#define SPI1_NSS_GPIO_Port GPIOA
 #define GPIO1_Pin GPIO_PIN_7
 #define GPIO1_GPIO_Port GPIOA
+#define GPIO1_EXTI_IRQn EXTI4_15_IRQn
 #define GPIO2_Pin GPIO_PIN_0
 #define GPIO2_GPIO_Port GPIOB
+#define GPIO2_EXTI_IRQn EXTI0_1_IRQn
 #define GPIO3_Pin GPIO_PIN_1
 #define GPIO3_GPIO_Port GPIOB
 #define GPIO4_Pin GPIO_PIN_2

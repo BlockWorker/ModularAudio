@@ -1,3 +1,4 @@
+"./Core/Src/dac_control.o"
 "./Core/Src/dac_spi.o"
 "./Core/Src/main.o"
 "./Core/Src/retarget.o"
