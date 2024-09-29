@@ -33,4 +33,4 @@ fp-info-cache
 
 design_simulations/**/*.dat
 design_simulations/**/*.raw
-design_simulations/**/~$*
+~$*

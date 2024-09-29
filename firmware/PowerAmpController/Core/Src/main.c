@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "retarget.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,6 +117,14 @@ int main(void)
   MX_I2C3_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  RetargetInit(&huart3);
+
+  HAL_Delay(1000);
+
+#ifdef DEBUG
+  printf("Controller init complete\n");
+#endif
 
   /* USER CODE END 2 */
 
@@ -612,7 +621,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, I2C3_INT_N_Pin|AMP_RESET_N_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(I2C3_INT_N_GPIO_Port, I2C3_INT_N_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(AMP_RESET_N_GPIO_Port, AMP_RESET_N_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : I2C3_INT_N_Pin AMP_RESET_N_Pin */
   GPIO_InitStruct.Pin = I2C3_INT_N_Pin|AMP_RESET_N_Pin;

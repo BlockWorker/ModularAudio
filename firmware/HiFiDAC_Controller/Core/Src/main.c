@@ -165,32 +165,6 @@ int main(void)
   /* USER CODE END 3 */
 }
 
-void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
-#ifdef DEBUG
-  switch (GPIO_Pin) {
-    case GPIO1_Pin:
-      printf("Automute muted\n");
-      break;
-    case GPIO2_Pin:
-      printf("SRC locked\n");
-      break;
-  }
-#endif
-}
-
-void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
-#ifdef DEBUG
-  switch (GPIO_Pin) {
-    case GPIO1_Pin:
-      printf("Automute unmuted\n");
-      break;
-    case GPIO2_Pin:
-      printf("SRC lock lost\n");
-      break;
-  }
-#endif
-}
-
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -415,7 +389,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : I2C_INT_N_Pin */
   GPIO_InitStruct.Pin = I2C_INT_N_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(I2C_INT_N_GPIO_Port, &GPIO_InitStruct);
