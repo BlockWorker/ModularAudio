@@ -57,6 +57,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PWR_SWITCH_Pin GPIO_PIN_14
+#define PWR_SWITCH_GPIO_Port GPIOC
+#define PWR_SWITCH_EXTI_IRQn EXTI4_15_IRQn
 #define I2C_INT_N_Pin GPIO_PIN_9
 #define I2C_INT_N_GPIO_Port GPIOA
 #define BMS_ALERT_N_Pin GPIO_PIN_5
