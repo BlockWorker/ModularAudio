@@ -3049,16 +3049,22 @@
 		(uuid "22be871d-4a09-4a30-87ba-c5c4e49420b6")
 	)
 	(junction
-		(at 222.25 120.65)
+		(at 223.52 120.65)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "288e21f0-24e3-4685-a8bb-d189ca0e4140")
+		(uuid "2f075e51-5199-457e-833f-c830d6568b78")
 	)
 	(junction
 		(at 236.22 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3f2f5893-26b4-417e-b0dc-0310b643c814")
+	)
+	(junction
+		(at 261.62 105.41)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "43a6b9d9-bc88-4442-8ad3-1478e87d5a4c")
 	)
 	(junction
 		(at 173.99 128.27)
@@ -3133,10 +3139,16 @@
 		(uuid "7ae2d3bd-8391-417a-a602-d61e2d3e1470")
 	)
 	(junction
+		(at 261.62 107.95)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7afb132c-f481-4ae0-b61f-9e2e8ec47e6c")
+	)
+	(junction
 		(at 53.34 64.77)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "7bb0ce6c-92a2-4f78-ad33-79e6249a65d3")
+		(uuid "7d11724a-18ae-42d9-b4f6-de5d2c56770b")
 	)
 	(junction
 		(at 184.15 107.95)
@@ -3151,16 +3163,22 @@
 		(uuid "82939fb1-a075-4ba4-a54c-b8ff92f2b056")
 	)
 	(junction
-		(at 228.6 107.95)
+		(at 261.62 102.87)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "89901740-593a-4823-87bc-93c255488ae4")
+		(uuid "880c4db2-56ff-4053-b6fb-0ecbf33700bc")
 	)
 	(junction
 		(at 173.99 138.43)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8ec4e67b-4a92-4e95-b12a-d9913f6cff43")
+	)
+	(junction
+		(at 223.52 107.95)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "9204d5ab-ec6c-43cd-b9fa-9f850d223ca9")
 	)
 	(junction
 		(at 130.81 118.11)
@@ -3235,12 +3253,6 @@
 		(uuid "c837e765-8cb1-4fdb-9bda-b91ba2c81c55")
 	)
 	(junction
-		(at 222.25 107.95)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "c99bf636-a261-4a39-8aa8-25c29301d5eb")
-	)
-	(junction
 		(at 204.47 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3259,12 +3271,6 @@
 		(uuid "e535b4e6-4934-47df-b794-5dce67c0c8ab")
 	)
 	(junction
-		(at 228.6 120.65)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e5dbdf68-7e17-41d6-b847-a9b4ef98e056")
-	)
-	(junction
 		(at 54.61 158.75)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3277,20 +3283,8 @@
 		(uuid "ff762052-13d1-4aa6-aa13-01dec3c35e09")
 	)
 	(no_connect
-		(at 264.16 100.33)
-		(uuid "37d5a98e-6afb-41ad-803a-51176c12fe5a")
-	)
-	(no_connect
 		(at 264.16 59.69)
 		(uuid "c683f6c3-05aa-4bf2-8e7c-a379413bb9c3")
-	)
-	(no_connect
-		(at 264.16 105.41)
-		(uuid "cbd75aea-d0e6-4ada-a787-e3bc7da2fb61")
-	)
-	(no_connect
-		(at 264.16 102.87)
-		(uuid "d141f27b-e986-4487-b394-17ef5dc225ff")
 	)
 	(no_connect
 		(at 264.16 62.23)
@@ -3359,6 +3353,16 @@
 			(type default)
 		)
 		(uuid "0a4c5920-bf83-4ba5-b4ac-16527338e039")
+	)
+	(wire
+		(pts
+			(xy 264.16 100.33) (xy 261.62 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f4c733e-d5f2-4fbd-857a-47025127d5be")
 	)
 	(wire
 		(pts
@@ -3442,7 +3446,7 @@
 	)
 	(wire
 		(pts
-			(xy 251.46 107.95) (xy 264.16 107.95)
+			(xy 251.46 107.95) (xy 261.62 107.95)
 		)
 		(stroke
 			(width 0)
@@ -3489,16 +3493,6 @@
 			(type default)
 		)
 		(uuid "1eae466e-c1b5-4dd2-992e-86294bc98911")
-	)
-	(wire
-		(pts
-			(xy 222.25 120.65) (xy 228.6 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1ece99f9-3e7a-405f-a9a6-fdc6b3c23cac")
 	)
 	(wire
 		(pts
@@ -3582,16 +3576,6 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 120.65) (xy 245.11 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2c8737cf-8158-4187-9c5a-54d848936cb7")
-	)
-	(wire
-		(pts
 			(xy 163.83 85.09) (xy 161.29 85.09)
 		)
 		(stroke
@@ -3599,16 +3583,6 @@
 			(type default)
 		)
 		(uuid "2c995f82-8da4-487f-a7c0-a6ee8824da2a")
-	)
-	(wire
-		(pts
-			(xy 236.22 107.95) (xy 228.6 107.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2d793d45-60d4-489e-b01f-61b78f91d82f")
 	)
 	(wire
 		(pts
@@ -3822,16 +3796,6 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 64.77) (xy 53.34 64.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4a1d6dfb-24de-4bbb-9410-874509a1be64")
-	)
-	(wire
-		(pts
 			(xy 123.19 118.11) (xy 130.81 118.11)
 		)
 		(stroke
@@ -3839,16 +3803,6 @@
 			(type default)
 		)
 		(uuid "4db4bc4e-3632-42a1-9d8b-63306a2d87e8")
-	)
-	(wire
-		(pts
-			(xy 228.6 107.95) (xy 228.6 110.49)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4ea9e9ae-6f83-49ef-b043-5d59a898cdaf")
 	)
 	(wire
 		(pts
@@ -3879,6 +3833,16 @@
 			(type default)
 		)
 		(uuid "55449242-d5ec-436b-bf26-e272cf79deba")
+	)
+	(wire
+		(pts
+			(xy 261.62 100.33) (xy 261.62 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "558949ce-2cf6-4151-97dd-107531cf3e79")
 	)
 	(wire
 		(pts
@@ -3919,6 +3883,16 @@
 			(type default)
 		)
 		(uuid "58a16f12-f47d-4691-8302-a37eb49be77b")
+	)
+	(wire
+		(pts
+			(xy 223.52 107.95) (xy 236.22 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "58add1e8-2da7-4002-ba5e-4fd591ff451c")
 	)
 	(wire
 		(pts
@@ -4012,7 +3986,7 @@
 	)
 	(wire
 		(pts
-			(xy 222.25 120.65) (xy 222.25 121.92)
+			(xy 223.52 120.65) (xy 223.52 121.92)
 		)
 		(stroke
 			(width 0)
@@ -4049,6 +4023,16 @@
 			(type default)
 		)
 		(uuid "6769339f-3a15-49e6-ab03-10e7f63e9ff0")
+	)
+	(wire
+		(pts
+			(xy 36.83 67.31) (xy 39.37 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "68a22337-e839-4af7-8281-c2d187b1fc23")
 	)
 	(wire
 		(pts
@@ -4149,6 +4133,16 @@
 			(type default)
 		)
 		(uuid "7223b153-a4a0-4350-840c-9cec07cecbe3")
+	)
+	(wire
+		(pts
+			(xy 261.62 102.87) (xy 261.62 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "72e60c14-7e37-4c05-ad7b-959832b58d72")
 	)
 	(wire
 		(pts
@@ -4282,7 +4276,7 @@
 	)
 	(wire
 		(pts
-			(xy 222.25 118.11) (xy 222.25 120.65)
+			(xy 223.52 118.11) (xy 223.52 120.65)
 		)
 		(stroke
 			(width 0)
@@ -4382,7 +4376,7 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 107.95) (xy 222.25 107.95)
+			(xy 214.63 107.95) (xy 223.52 107.95)
 		)
 		(stroke
 			(width 0)
@@ -4742,6 +4736,16 @@
 	)
 	(wire
 		(pts
+			(xy 261.62 105.41) (xy 261.62 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d6017420-6a12-454c-95c9-0b96e2bbb61a")
+	)
+	(wire
+		(pts
 			(xy 88.9 54.61) (xy 92.71 54.61)
 		)
 		(stroke
@@ -4749,16 +4753,6 @@
 			(type default)
 		)
 		(uuid "d62d58f0-1445-4570-a4bf-66df63622720")
-	)
-	(wire
-		(pts
-			(xy 228.6 118.11) (xy 228.6 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d9114b42-50c5-44c0-a74e-ec5a4b43613d")
 	)
 	(wire
 		(pts
@@ -4789,16 +4783,6 @@
 			(type default)
 		)
 		(uuid "da0dbeeb-276f-4b0d-96cb-ac7e5225ed4e")
-	)
-	(wire
-		(pts
-			(xy 222.25 107.95) (xy 228.6 107.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dcc8c179-4564-4e08-86c1-610d5cafd3e1")
 	)
 	(wire
 		(pts
@@ -4862,6 +4846,16 @@
 	)
 	(wire
 		(pts
+			(xy 261.62 107.95) (xy 264.16 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e424cfae-1cc6-41b6-94c9-ca01d3f0e2b1")
+	)
+	(wire
+		(pts
 			(xy 92.71 72.39) (xy 92.71 74.93)
 		)
 		(stroke
@@ -4882,7 +4876,17 @@
 	)
 	(wire
 		(pts
-			(xy 222.25 107.95) (xy 222.25 110.49)
+			(xy 36.83 64.77) (xy 53.34 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e48a0c99-d040-4c59-a39e-fb39ecfb00d1")
+	)
+	(wire
+		(pts
+			(xy 223.52 107.95) (xy 223.52 110.49)
 		)
 		(stroke
 			(width 0)
@@ -4952,13 +4956,13 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 67.31) (xy 39.37 67.31)
+			(xy 264.16 102.87) (xy 261.62 102.87)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "ea6c46a9-43b2-4624-aa5e-82994efbde7c")
+		(uuid "e99292f2-46c4-4afd-b755-aa758e74b830")
 	)
 	(wire
 		(pts
@@ -4979,6 +4983,26 @@
 			(type default)
 		)
 		(uuid "ebf4a33b-00ae-4141-816d-69f5af09b50a")
+	)
+	(wire
+		(pts
+			(xy 264.16 105.41) (xy 261.62 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ec0fa916-311c-4dc0-bb67-6d5220dd48ef")
+	)
+	(wire
+		(pts
+			(xy 223.52 120.65) (xy 245.11 120.65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ec4a04d8-926b-4702-aab8-c6a542621f10")
 	)
 	(wire
 		(pts
@@ -5173,7 +5197,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "021bcd55-fe9f-435a-bb83-850d35e680dc")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR011"
 			(at 88.9 106.68 0)
 			(effects
 				(font
@@ -5223,7 +5247,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR019")
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
@@ -5239,7 +5263,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0c417718-9257-432e-8c90-aada9ad32aa5")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR02"
 			(at 39.37 74.93 0)
 			(effects
 				(font
@@ -5289,7 +5313,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR021")
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -5305,7 +5329,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0d7ffbbc-2c60-498a-a535-2be2f7024a9c")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR015"
 			(at 118.11 118.11 0)
 			(effects
 				(font
@@ -5356,7 +5380,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR018")
+					(reference "#PWR015")
 					(unit 1)
 				)
 			)
@@ -5372,7 +5396,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "11a9a988-5ce8-49f3-a72e-f5ad122d5878")
-		(property "Reference" "R8"
+		(property "Reference" "R4"
 			(at 193.04 82.55 90)
 			(effects
 				(font
@@ -5424,7 +5448,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R8")
+					(reference "R4")
 					(unit 1)
 				)
 			)
@@ -5440,7 +5464,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "15e27f37-e6aa-456d-97f1-ed59c783cff5")
-		(property "Reference" "C8"
+		(property "Reference" "C10"
 			(at 123.1963 71.12 90)
 			(effects
 				(font
@@ -5492,7 +5516,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C8")
+					(reference "C10")
 					(unit 1)
 				)
 			)
@@ -5508,7 +5532,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "16f6c965-e63f-4942-ae98-68acb0a53881")
-		(property "Reference" "C17"
+		(property "Reference" "C1"
 			(at 86.3663 48.26 90)
 			(effects
 				(font
@@ -5560,7 +5584,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C17")
+					(reference "C1")
 					(unit 1)
 				)
 			)
@@ -5576,7 +5600,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "199fb9d8-1687-476f-bb13-70d90ad9a68c")
-		(property "Reference" "#PWR015"
+		(property "Reference" "#PWR022"
 			(at 41.91 173.99 0)
 			(effects
 				(font
@@ -5626,7 +5650,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR015")
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -5642,7 +5666,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1ad01364-8276-41ed-a823-efe82b748430")
-		(property "Reference" "R13"
+		(property "Reference" "R12"
 			(at 99.06 111.7599 0)
 			(effects
 				(font
@@ -5696,7 +5720,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R13")
+					(reference "R12")
 					(unit 1)
 				)
 			)
@@ -5712,7 +5736,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1e9f6b0e-1d5a-42a2-ab19-42abd3dc7e74")
-		(property "Reference" "C1"
+		(property "Reference" "C16"
 			(at 176.53 132.0862 0)
 			(effects
 				(font
@@ -5766,7 +5790,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C1")
+					(reference "C16")
 					(unit 1)
 				)
 			)
@@ -5782,7 +5806,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1fe53eeb-5411-4e59-986f-2423d1802351")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR023"
 			(at 54.61 173.99 0)
 			(effects
 				(font
@@ -5832,7 +5856,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR016")
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -5848,7 +5872,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "21d2d79c-7bd3-4794-9d3d-5251778f3190")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR05"
 			(at 115.57 83.82 0)
 			(effects
 				(font
@@ -5898,7 +5922,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR06")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -5914,7 +5938,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "250d6d46-f84b-4b1a-ac1f-e6d970ce3cac")
-		(property "Reference" "C19"
+		(property "Reference" "C18"
 			(at 57.15 162.5662 0)
 			(effects
 				(font
@@ -5968,7 +5992,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C19")
+					(reference "C18")
 					(unit 1)
 				)
 			)
@@ -5984,7 +6008,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "26cb3b54-1083-4225-ad98-f248cb77ddf1")
-		(property "Reference" "R4"
+		(property "Reference" "R9"
 			(at 72.39 105.4099 0)
 			(effects
 				(font
@@ -6038,7 +6062,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R4")
+					(reference "R9")
 					(unit 1)
 				)
 			)
@@ -6054,7 +6078,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2b0ddf69-9bd7-42b4-9388-7a061906f070")
-		(property "Reference" "R1"
+		(property "Reference" "R11"
 			(at 209.55 101.6 90)
 			(effects
 				(font
@@ -6062,7 +6086,7 @@
 				)
 			)
 		)
-		(property "Value" "10mΩ 1W"
+		(property "Value" "10mΩ 1.5W"
 			(at 209.55 104.14 90)
 			(effects
 				(font
@@ -6070,7 +6094,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric"
+		(property "Footprint" "Resistor_SMD:R_0612_1632Metric"
 			(at 209.804 106.934 90)
 			(effects
 				(font
@@ -6106,7 +6130,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R1")
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -6122,7 +6146,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2b4b8383-0cd9-4c45-911b-c3fdf169fdc3")
-		(property "Reference" "R10"
+		(property "Reference" "R3"
 			(at 55.88 69.8499 0)
 			(effects
 				(font
@@ -6176,7 +6200,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R10")
+					(reference "R3")
 					(unit 1)
 				)
 			)
@@ -6192,7 +6216,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2be5b976-2097-43b6-bfb9-1dfa3ac4fbcb")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR04"
 			(at 179.07 82.55 0)
 			(effects
 				(font
@@ -6242,7 +6266,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR014")
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -6258,7 +6282,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3aa7484c-15ba-4049-8836-710f7b8e56a2")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR020"
 			(at 104.14 161.29 0)
 			(effects
 				(font
@@ -6308,7 +6332,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR023")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -6324,7 +6348,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3f27a9af-d6e1-4772-8a55-a8d19988b673")
-		(property "Reference" "#PWR022"
+		(property "Reference" "#PWR010"
 			(at 62.23 100.33 0)
 			(effects
 				(font
@@ -6375,7 +6399,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR022")
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -6391,7 +6415,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3ff6be92-81df-4480-9aaa-723960efdc0d")
-		(property "Reference" "#PWR08"
+		(property "Reference" "#PWR03"
 			(at 261.62 74.93 0)
 			(effects
 				(font
@@ -6441,7 +6465,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR08")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -6457,7 +6481,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "439244a3-a62f-49f2-966a-4770a06cdb46")
-		(property "Reference" "D3"
+		(property "Reference" "D1"
 			(at 163.83 31.75 0)
 			(effects
 				(font
@@ -6512,7 +6536,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "D3")
+					(reference "D1")
 					(unit 1)
 				)
 			)
@@ -6610,7 +6634,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "44d9ac45-6a18-4e83-8bd9-3c7e2827990e")
-		(property "Reference" "#PWR012"
+		(property "Reference" "#PWR018"
 			(at 146.05 138.43 0)
 			(effects
 				(font
@@ -6660,7 +6684,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR012")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -6668,7 +6692,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 222.25 114.3 0)
+		(at 223.52 114.3 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6676,26 +6700,26 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4836050d-4b91-46f7-9064-6e6d283ca1ca")
-		(property "Reference" "C3"
-			(at 218.44 113.0299 0)
+		(property "Reference" "C15"
+			(at 227.33 113.0299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
-		(property "Value" "22µF 25V"
-			(at 218.44 115.5699 0)
+		(property "Value" "22µF 25V x2"
+			(at 227.33 115.5699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
-			(at 223.2152 118.11 0)
+			(at 224.4852 118.11 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6704,7 +6728,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 222.25 114.3 0)
+			(at 223.52 114.3 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6713,7 +6737,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 222.25 114.3 0)
+			(at 223.52 114.3 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6730,7 +6754,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C3")
+					(reference "C15")
 					(unit 1)
 				)
 			)
@@ -6746,7 +6770,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4d6d3958-c4dc-4865-8040-b2c82425e64c")
-		(property "Reference" "C7"
+		(property "Reference" "C3"
 			(at 77.47 68.5862 0)
 			(effects
 				(font
@@ -6800,7 +6824,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C7")
+					(reference "C3")
 					(unit 1)
 				)
 			)
@@ -6816,7 +6840,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4db7d004-f654-4b17-91e4-1c420821061f")
-		(property "Reference" "D1"
+		(property "Reference" "D3"
 			(at 247.65 113.0299 90)
 			(effects
 				(font
@@ -6888,7 +6912,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "D1")
+					(reference "D3")
 					(unit 1)
 				)
 			)
@@ -6904,7 +6928,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4e10a6c3-52f3-4365-8de0-7fbd321d26d8")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR06"
 			(at 130.81 83.82 0)
 			(effects
 				(font
@@ -6954,7 +6978,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR07")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -6970,7 +6994,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4f11d7e1-31d7-4117-abb3-3712a31c01e1")
-		(property "Reference" "J2"
+		(property "Reference" "J1"
 			(at 270.51 60.9599 0)
 			(effects
 				(font
@@ -7033,7 +7057,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "J2")
+					(reference "J1")
 					(unit 1)
 				)
 			)
@@ -7174,7 +7198,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "52ac4b22-ab1f-4689-b6b6-418ec3df47c9")
-		(property "Reference" "R5"
+		(property "Reference" "R8"
 			(at 63.5 93.98 90)
 			(effects
 				(font
@@ -7226,7 +7250,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R5")
+					(reference "R8")
 					(unit 1)
 				)
 			)
@@ -7242,7 +7266,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "56459d04-99bb-4ed9-a8e8-f23379c1fbd5")
-		(property "Reference" "#PWR09"
+		(property "Reference" "#PWR08"
 			(at 168.91 74.93 0)
 			(effects
 				(font
@@ -7292,7 +7316,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR09")
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -7383,7 +7407,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "60b16a24-8948-4517-bae4-d32bcb787162")
-		(property "Reference" "#PWR010"
+		(property "Reference" "#PWR01"
 			(at 179.07 55.88 0)
 			(effects
 				(font
@@ -7434,7 +7458,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR010")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -7450,7 +7474,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "67b46c18-5396-43eb-980a-a3347fafea44")
-		(property "Reference" "C6"
+		(property "Reference" "C4"
 			(at 95.25 68.5862 0)
 			(effects
 				(font
@@ -7504,7 +7528,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C6")
+					(reference "C4")
 					(unit 1)
 				)
 			)
@@ -7520,7 +7544,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6ad80f6d-8848-4212-b074-84badbc50f82")
-		(property "Reference" "C16"
+		(property "Reference" "C11"
 			(at 57.15 80.0099 0)
 			(effects
 				(font
@@ -7574,7 +7598,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C16")
+					(reference "C11")
 					(unit 1)
 				)
 			)
@@ -7658,7 +7682,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6e2beb2b-2256-427f-aae8-16d73f9094a7")
-		(property "Reference" "#PWR013"
+		(property "Reference" "#PWR09"
 			(at 53.34 92.71 0)
 			(effects
 				(font
@@ -7708,77 +7732,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR013")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 228.6 114.3 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "6eab467f-0e49-4ff6-beb8-8d525e4433af")
-		(property "Reference" "C4"
-			(at 232.41 113.0299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "22µF 25V"
-			(at 232.41 115.5699 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
-			(at 229.5652 118.11 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 228.6 114.3 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor"
-			(at 228.6 114.3 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "67e4d509-468b-4e36-8ce5-025aed4d6b86")
-		)
-		(pin "1"
-			(uuid "4f6e8f22-ddd2-4beb-b45c-87cf559951f0")
-		)
-		(instances
-			(project "BatteryCharger"
-				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C4")
+					(reference "#PWR09")
 					(unit 1)
 				)
 			)
@@ -7794,7 +7748,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "70a37367-e8fc-4db6-aa6f-f63bf2c91059")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR07"
 			(at 209.55 85.09 0)
 			(effects
 				(font
@@ -7844,7 +7798,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR011")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -7860,7 +7814,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "742057d0-5903-4008-9f6b-41b9ffdd42b0")
-		(property "Reference" "R6"
+		(property "Reference" "R5"
 			(at 114.3 86.36 90)
 			(effects
 				(font
@@ -7912,7 +7866,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R6")
+					(reference "R5")
 					(unit 1)
 				)
 			)
@@ -8008,7 +7962,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "78693757-71b0-4120-9fa9-ac40b93bcca3")
-		(property "Reference" "R9"
+		(property "Reference" "R1"
 			(at 166.37 48.2599 0)
 			(effects
 				(font
@@ -8062,7 +8016,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R9")
+					(reference "R1")
 					(unit 1)
 				)
 			)
@@ -8078,7 +8032,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7d7a8da1-1e7a-4ccc-aaa7-6a48297f7fa2")
-		(property "Reference" "R11"
+		(property "Reference" "R13"
 			(at 119.38 111.76 90)
 			(effects
 				(font
@@ -8130,7 +8084,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R11")
+					(reference "R13")
 					(unit 1)
 				)
 			)
@@ -8223,7 +8177,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8ac1d304-eb64-4c08-a182-d64ec49ea045")
-		(property "Reference" "C10"
+		(property "Reference" "C8"
 			(at 113.03 72.3962 0)
 			(effects
 				(font
@@ -8277,7 +8231,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C10")
+					(reference "C8")
 					(unit 1)
 				)
 			)
@@ -8293,7 +8247,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8ce6b546-71ce-4e82-905f-7021a1d9b702")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR014"
 			(at 96.52 124.46 0)
 			(effects
 				(font
@@ -8343,7 +8297,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR020")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -8427,7 +8381,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8e6b71a6-de91-4065-8304-89f7d7f91efc")
-		(property "Reference" "C18"
+		(property "Reference" "C5"
 			(at 175.26 69.8499 0)
 			(effects
 				(font
@@ -8481,7 +8435,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C18")
+					(reference "C5")
 					(unit 1)
 				)
 			)
@@ -8579,7 +8533,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "95e8a8ea-b31d-43fb-b307-45376e20a1fd")
-		(property "Reference" "#PWR01"
+		(property "Reference" "#PWR016"
 			(at 184.15 128.27 0)
 			(effects
 				(font
@@ -8629,7 +8583,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR01")
+					(reference "#PWR016")
 					(unit 1)
 				)
 			)
@@ -8645,7 +8599,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "97d0f91e-e2c5-4565-9b17-6846e1993252")
-		(property "Reference" "C13"
+		(property "Reference" "C2"
 			(at 168.9163 59.69 90)
 			(effects
 				(font
@@ -8697,7 +8651,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C13")
+					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -8781,7 +8735,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a8b444d2-36c6-475f-b9b3-88e6dec07f1a")
-		(property "Reference" "R3"
+		(property "Reference" "R6"
 			(at 72.39 92.7099 0)
 			(effects
 				(font
@@ -8835,7 +8789,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R3")
+					(reference "R6")
 					(unit 1)
 				)
 			)
@@ -8851,7 +8805,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b23a1d8d-4c02-47a0-861d-a992bc22937d")
-		(property "Reference" "C5"
+		(property "Reference" "C14"
 			(at 167.6463 101.6 90)
 			(effects
 				(font
@@ -8903,7 +8857,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C5")
+					(reference "C14")
 					(unit 1)
 				)
 			)
@@ -8919,7 +8873,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b51ada2b-638b-4a5d-aee0-9e67d67fa9f8")
-		(property "Reference" "C2"
+		(property "Reference" "C17"
 			(at 176.53 142.2462 0)
 			(effects
 				(font
@@ -8973,7 +8927,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C2")
+					(reference "C17")
 					(unit 1)
 				)
 			)
@@ -8989,7 +8943,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b92af94b-4468-4f80-b101-55e3593625d1")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR021"
 			(at 54.61 161.29 0)
 			(effects
 				(font
@@ -9039,7 +8993,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR017")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -9125,7 +9079,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c22739c4-8094-42d8-b53a-3d9698157cce")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR019"
 			(at 173.99 153.67 0)
 			(effects
 				(font
@@ -9175,7 +9129,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR04")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -9261,7 +9215,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d4ac236b-6a1f-47a7-b850-d2bb926a7bd6")
-		(property "Reference" "R12"
+		(property "Reference" "R10"
 			(at 90.17 110.49 90)
 			(effects
 				(font
@@ -9313,7 +9267,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "R12")
+					(reference "R10")
 					(unit 1)
 				)
 			)
@@ -9473,7 +9427,8 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Pin")
-		(at 31.75 64.77 0)
+		(at 31.75 67.31 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9481,24 +9436,26 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e3ffe941-b366-4e2f-ab84-eb92ceb87fa4")
-		(property "Reference" "J3"
-			(at 32.385 59.69 0)
+		(property "Reference" "J2"
+			(at 30.48 64.7699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Value" "ADAPTER"
-			(at 32.385 62.23 0)
+			(at 30.48 67.3099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Footprint" "BW_Connectors:Molex_Mini-Fit_Max_2P_V_215915-1002"
-			(at 31.75 64.77 0)
+			(at 31.75 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9507,7 +9464,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 31.75 64.77 0)
+			(at 31.75 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9516,7 +9473,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
-			(at 31.75 64.77 0)
+			(at 31.75 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9533,7 +9490,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "J3")
+					(reference "J2")
 					(unit 1)
 				)
 			)
@@ -9549,7 +9506,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e41a711b-8a6f-4a3e-9ba4-f6fbdc9993a8")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR013"
 			(at 261.62 118.11 0)
 			(effects
 				(font
@@ -9599,7 +9556,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR03")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -9676,7 +9633,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 222.25 121.92 0)
+		(at 223.52 121.92 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9684,8 +9641,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f782df48-f45d-4f5e-9498-f0977f29a5c3")
-		(property "Reference" "#PWR02"
-			(at 222.25 128.27 0)
+		(property "Reference" "#PWR017"
+			(at 223.52 128.27 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9694,7 +9651,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 222.25 127 0)
+			(at 223.52 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9702,7 +9659,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 222.25 121.92 0)
+			(at 223.52 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9711,7 +9668,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 222.25 121.92 0)
+			(at 223.52 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9720,7 +9677,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 222.25 121.92 0)
+			(at 223.52 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9734,7 +9691,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR02")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)
@@ -9750,7 +9707,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f7c8bce7-49e6-405f-a2e3-6573429a82c4")
-		(property "Reference" "C11"
+		(property "Reference" "C13"
 			(at 227.33 92.7162 0)
 			(effects
 				(font
@@ -9804,7 +9761,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C11")
+					(reference "C13")
 					(unit 1)
 				)
 			)
@@ -9820,7 +9777,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f91f4bff-2eab-4613-b603-57d09979b3d1")
-		(property "Reference" "C14"
+		(property "Reference" "C6"
 			(at 193.04 69.8499 0)
 			(effects
 				(font
@@ -9874,7 +9831,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C14")
+					(reference "C6")
 					(unit 1)
 				)
 			)
@@ -9890,7 +9847,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "faba11ad-678e-475d-a5a2-ba620ec66806")
-		(property "Reference" "J1"
+		(property "Reference" "J3"
 			(at 270.51 104.1399 0)
 			(effects
 				(font
@@ -9953,7 +9910,7 @@
 		(instances
 			(project ""
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "J1")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -9969,7 +9926,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "faecd82f-47cb-479a-ab21-3a12c5d8a79e")
-		(property "Reference" "C15"
+		(property "Reference" "C7"
 			(at 213.36 69.8499 0)
 			(effects
 				(font
@@ -10023,7 +9980,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "C15")
+					(reference "C7")
 					(unit 1)
 				)
 			)
@@ -10039,7 +9996,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fc3ea38c-b293-4cb9-9718-14ecdc24d6ad")
-		(property "Reference" "#PWR05"
+		(property "Reference" "#PWR012"
 			(at 69.85 118.11 0)
 			(effects
 				(font
@@ -10089,7 +10046,7 @@
 		(instances
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
-					(reference "#PWR05")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
