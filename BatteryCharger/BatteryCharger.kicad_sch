@@ -914,6 +914,125 @@
 				)
 			)
 		)
+		(symbol "Connector:Conn_01x01_Pin"
+			(pin_names
+				(offset 1.016) hide)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x01_Pin"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x01, script generated"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x01_Pin_1_1"
+				(polyline
+					(pts
+						(xy 1.27 0) (xy 0.8636 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 0.8636 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "Connector:Conn_01x02_Pin"
 			(pin_names
 				(offset 1.016) hide)
@@ -3079,6 +3198,12 @@
 		(uuid "5268612b-4af5-46d4-9918-7db78440c7f8")
 	)
 	(junction
+		(at 261.62 110.49)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "55a51ca3-66d5-4704-9c19-7efd8f6043c9")
+	)
+	(junction
 		(at 118.11 68.58)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3253,6 +3378,12 @@
 		(uuid "c837e765-8cb1-4fdb-9bda-b91ba2c81c55")
 	)
 	(junction
+		(at 261.62 67.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c8b5e9c8-d8e2-4245-ba19-71c6cad16f66")
+	)
+	(junction
 		(at 204.47 107.95)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3353,6 +3484,16 @@
 			(type default)
 		)
 		(uuid "0a4c5920-bf83-4ba5-b4ac-16527338e039")
+	)
+	(wire
+		(pts
+			(xy 256.54 116.84) (xy 256.54 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0c49f877-4bc8-4b59-899b-d533a59819c6")
 	)
 	(wire
 		(pts
@@ -3663,6 +3804,16 @@
 			(type default)
 		)
 		(uuid "39cdfae3-c1d3-44bb-b209-4e3aaf6fea36")
+	)
+	(wire
+		(pts
+			(xy 256.54 73.66) (xy 256.54 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3b1fd61c-803d-4232-b55b-9160e12cafd1")
 	)
 	(wire
 		(pts
@@ -4626,6 +4777,16 @@
 	)
 	(wire
 		(pts
+			(xy 256.54 67.31) (xy 261.62 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c4409b4f-2013-4571-8efd-9a16eac9035d")
+	)
+	(wire
+		(pts
 			(xy 166.37 118.11) (xy 166.37 128.27)
 		)
 		(stroke
@@ -5003,6 +5164,16 @@
 			(type default)
 		)
 		(uuid "ec4a04d8-926b-4702-aab8-c6a542621f10")
+	)
+	(wire
+		(pts
+			(xy 256.54 110.49) (xy 261.62 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ed3f74b1-9814-49fb-a20b-9e0e758d7164")
 	)
 	(wire
 		(pts
@@ -6400,6 +6571,73 @@
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
 					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Pin")
+		(at 256.54 78.74 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3f75ed6f-8693-4d15-a099-63d6287e854e")
+		(property "Reference" "J6"
+			(at 257.81 76.8349 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "GND_BRIDGE"
+			(at 257.81 79.3749 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:HolePad_2.5mm_3.5mm"
+			(at 256.54 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 256.54 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 256.54 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "208d07de-ff82-49be-bb28-3bc26312b603")
+		)
+		(instances
+			(project "BatteryCharger"
+				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
+					(reference "J6")
 					(unit 1)
 				)
 			)
@@ -9130,6 +9368,73 @@
 			(project "BatteryCharger"
 				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
 					(reference "#PWR019")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x01_Pin")
+		(at 256.54 121.92 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cb46e3c8-8be2-4c59-ac79-94a0d149e93e")
+		(property "Reference" "J5"
+			(at 257.81 120.0149 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "GND_BRIDGE"
+			(at 257.81 122.5549 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "BW_PassiveMechanical:HolePad_2.5mm_3.5mm"
+			(at 256.54 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 256.54 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 256.54 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "734608f4-3203-42c1-a383-2c4d72593e18")
+		)
+		(instances
+			(project ""
+				(path "/2812e6ed-be62-4845-b36d-492b76fd9757"
+					(reference "J5")
 					(unit 1)
 				)
 			)
