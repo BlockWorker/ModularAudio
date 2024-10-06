@@ -126,6 +126,10 @@ int main(void)
   printf("Controller init complete\n");
 #endif
 
+  HAL_Delay(1000);
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

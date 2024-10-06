@@ -46,7 +46,7 @@
 45;"C14,C13,C29,C31";"C_Rect_L7.2mm_W7.2mm_P5.00mm_FKS2_FKP2_MKS2_MKP2";4;"4.7µF";;;
 46;"TP5";"TP_0603_1608Metric_Fused";1;"UART_RX";;;
 47;"U9";"WSON-6-1EP_2x2mm_P0.65mm_EP1x1.6mm_LongerPads";1;"TLV76733DRVx";;;
-48;"R17,R10,R8,R18";"R_0603_1608Metric";4;"1Ω";;;
+48;"R17,R10,R8,R18";"R_0603_1608Metric";4;"1Ω 0.25W";;;
 49;"U11";"WSON-12-1EP_4x4mm_P0.5mm_EP2.6x3mm";1;"LP38798";;;
 50;"C62";"C_1206_3216Metric";1;"68µF 6.3V";;;
 51;"TP9";"TP_0603_1608Metric_Fused";1;"I2C_SCL";;;
