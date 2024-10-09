@@ -5315,6 +5315,16 @@
 		)
 		(uuid "8964778e-d047-465d-ae2c-6c4169077081")
 	)
+	(text "Possible future addition:\nReverse polarity protection?"
+		(exclude_from_sim no)
+		(at 86.106 32.512 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "8a920c30-9c66-4e57-8eac-2d7a20eb656a")
+	)
 	(text "Ensures adapter operational range\n19.5V to 24V with at least 2% tolerance\nwhile ensuring chip shutdown on disconnect"
 		(exclude_from_sim no)
 		(at 42.926 106.426 0)
