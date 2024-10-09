@@ -35,6 +35,11 @@
 #define P_ADC_CURRENT_PROCESSING_VECTOR { 0x4000, 0x0000 }
 #endif
 
+//conversion factor between float format and (integer form of) 34.30 fixed-point format
+#define P_ADC_3430_CONV_FACTOR 1073741824.0f
+//divisor for fixed-point to floating-point sum-of-squares averaging (given sum-of-squares in 34.30 format)
+#define P_ADC_SOS_AVG_DIVISOR (P_ADC_3430_CONV_FACTOR * P_ADC_SAMPLE_BATCH_SIZE)
+
 //EMA alpha and 1-alpha values for 0.1s and 1.0s time constants
 //calculation: 1-alpha = e^(-t_batch / t_constant)
 //given values here calculated for t_batch = 4.21ms (18 MHz f_ADC, 512 batch size)
