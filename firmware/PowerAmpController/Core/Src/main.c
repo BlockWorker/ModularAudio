@@ -24,6 +24,8 @@
 #include "retarget.h"
 #include "stdio.h"
 #include "adc.h"
+#include "pvdd_control.h"
+#include "safety.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -78,7 +80,21 @@ static void MX_USART3_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == AMP_FAULT_N_Pin) {
+    if (HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin) == GPIO_PIN_SET) {
+      DEBUG_PRINTF("Amp Fault Cleared\n");
+    } else {
+      DEBUG_PRINTF("Amp Fault Detected!!\n");
+    }
+  } else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
+    if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_SET) {
+      DEBUG_PRINTF("Amp Clip/OTW Cleared\n");
+    } else {
+      DEBUG_PRINTF("Amp Clip/OTW Detected!!\n");
+    }
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -123,43 +139,64 @@ int main(void)
 
   HAL_Delay(1000);
 
-#ifdef DEBUG
-  printf("Controller init complete\n");
-#endif
+  DEBUG_PRINTF("Controller started\n");
 
   HAL_Delay(10);
 
-  if (HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0) != HAL_OK) {
-    Error_Handler();
-  }
-  if (HAL_DAC_Start(&hdac1, DAC_CHANNEL_1) != HAL_OK) {
+  DEBUG_PRINTF("Initializing PVDD control...\n");
+  if (PVDD_Init() != HAL_OK) {
     Error_Handler();
   }
 
   HAL_Delay(10);
 
-#ifdef DEBUG
-  printf("Calibrating ADC...\n");
-#endif
+  DEBUG_PRINTF("Calibrating ADC...\n");
   if (ADC_Calibrate() != HAL_OK) {
     Error_Handler();
   }
-#ifdef DEBUG
-  printf("ADC cal complete, starting monitoring\n");
-#endif
+  DEBUG_PRINTF("ADC cal complete, starting monitoring\n");
   if (ADC_StartMonitoring() != HAL_OK) {
-      Error_Handler();
+    Error_Handler();
   }
+
+  HAL_Delay(10);
+
+  DEBUG_PRINTF("Initializing safety system...\n");
+  if (SAFETY_Init() != HAL_OK) {
+    Error_Handler();
+  }
+
+  HAL_Delay(10);
+
+  DEBUG_PRINTF("Amp state: fault %d clip %d\n", HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin), HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin));
+
+  DEBUG_PRINTF("Init complete!\n");
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#ifdef DEBUG
+    static uint32_t cycle_count = 0;
+    if (cycle_count++ * MAIN_LOOP_PERIOD_MS >= 1000) {
+      cycle_count = 0;
+      printf("---------------------\n");
+      printf("PVDD: %6.3f valid %d - amp shutdown %d\n", pvdd_voltage_measured, pvdd_valid_voltage, is_shutdown);
+      printf("Vrms: %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f\n", rms_voltage_0s1[0], rms_voltage_1s0[0], rms_voltage_0s1[1], rms_voltage_1s0[1], rms_voltage_0s1[2], rms_voltage_1s0[2], rms_voltage_0s1[3], rms_voltage_1s0[3]);
+      printf("Irms: %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f\n", rms_current_0s1[0], rms_current_1s0[0], rms_current_0s1[1], rms_current_1s0[1], rms_current_0s1[2], rms_current_1s0[2], rms_current_0s1[3], rms_current_1s0[3]);
+      printf("Pavg: %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f\n", avg_real_power_0s1[0], avg_real_power_1s0[0], avg_real_power_0s1[1], avg_real_power_1s0[1], avg_real_power_0s1[2], avg_real_power_1s0[2], avg_real_power_0s1[3], avg_real_power_1s0[3]);
+      printf("Papp: %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f  %7.3f/%7.3f\n", avg_apparent_power_0s1[0], avg_apparent_power_1s0[0], avg_apparent_power_0s1[1], avg_apparent_power_1s0[1], avg_apparent_power_0s1[2], avg_apparent_power_1s0[2], avg_apparent_power_0s1[3], avg_apparent_power_1s0[3]);
+    }
+#endif
+
+    PVDD_LoopUpdate();
+    SAFETY_LoopUpdate();
+
+    HAL_Delay(MAIN_LOOP_PERIOD_MS);
   }
   /* USER CODE END 3 */
 }
@@ -700,9 +737,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : AMP_FAULT_N_Pin AMP_CLIP_OTW_N_Pin */
   GPIO_InitStruct.Pin = AMP_FAULT_N_Pin|AMP_CLIP_OTW_N_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

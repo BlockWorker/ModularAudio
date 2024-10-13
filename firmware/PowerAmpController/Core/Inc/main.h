@@ -59,7 +59,19 @@ extern UART_HandleTypeDef huart3;
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+//quick error-return macro
 #define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
+
+//debug printout, disabled outside of debug mode
+#ifdef DEBUG
+#define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
+#else
+#define DEBUG_PRINTF(...) do { } while (0)
+#endif
+
+//allow define to select four-channel (SE) mode, keep undefined to select two-channel (BTL) mode
+#undef MAIN_FOUR_CHANNEL
+//#define MAIN_FOUR_CHANNEL
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -76,11 +88,14 @@ void Error_Handler(void);
 #define AMP_RESET_N_GPIO_Port GPIOA
 #define AMP_FAULT_N_Pin GPIO_PIN_11
 #define AMP_FAULT_N_GPIO_Port GPIOA
+#define AMP_FAULT_N_EXTI_IRQn EXTI15_10_IRQn
 #define AMP_CLIP_OTW_N_Pin GPIO_PIN_12
 #define AMP_CLIP_OTW_N_GPIO_Port GPIOA
+#define AMP_CLIP_OTW_N_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
-
+//main loop period in milliseconds
+#define MAIN_LOOP_PERIOD_MS 10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

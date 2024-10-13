@@ -8,6 +8,7 @@
 #include "adc.h"
 #include <stdio.h>
 #include "arm_math.h"
+#include "safety.h"
 
 //raw DMA buffers - with the given DMA configuration, samples end up arranged as {A1, B1, A2, B2, ...} and {C1, D1, C2, D2, ...}, respectively
 q15_t dma_current_AB[P_ADC_DMA_BUFFER_SIZE];
@@ -25,7 +26,7 @@ arm_matrix_instance_q15 mat_current_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma
 arm_matrix_instance_q15 mat_voltage_CD_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD};
 arm_matrix_instance_q15 mat_voltage_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD + (P_ADC_DMA_BUFFER_SIZE / 2)};
 
-#ifdef P_ADC_FOUR_CHANNEL
+#ifdef MAIN_FOUR_CHANNEL
 //processing vectors (for channel extraction)
 const q15_t processing_vector_AC[] = P_ADC_PROCESSING_VECTOR_AC;
 const q15_t processing_vector_BD[] = P_ADC_PROCESSING_VECTOR_BD;
@@ -35,25 +36,25 @@ const q15_t processing_vector_current[] = P_ADC_CURRENT_PROCESSING_VECTOR;
 const q15_t processing_vector_voltage[] = P_ADC_VOLTAGE_PROCESSING_VECTOR;
 #endif
 
-//raw rms voltage and current, average real power, and average apparent power of all channels (A, B, C, D) - all rescaled to factor 1
+//rms voltage and current, average real power, and average apparent power of all channels (A, B, C, D) - in V, A, and W, respectively
 //last batch values ("instantaneous")
-float raw_rms_voltage_inst[4] = { 0 };
-float raw_rms_voltage_inst[4] = { 0 };
-float raw_rms_current_inst[4] = { 0 };
-float raw_rms_current_inst[4] = { 0 };
-//averaged using EMA: 0s1 = 0.1s time constant, 1s0 = 1.0s time constant, sos = sum of squares (for calculating rms)
-float raw_sos_voltage_0s1[4] = { 0 };
-float raw_sos_voltage_1s0[4] = { 0 };
-float raw_sos_current_0s1[4] = { 0 };
-float raw_sos_current_1s0[4] = { 0 };
-float raw_rms_voltage_0s1[4] = { 0 };
-float raw_rms_voltage_1s0[4] = { 0 };
-float raw_rms_current_0s1[4] = { 0 };
-float raw_rms_current_1s0[4] = { 0 };
-float raw_avg_real_power_0s1[4] = { 0 };
-float raw_avg_real_power_1s0[4] = { 0 };
-float raw_avg_apparent_power_0s1[4] = { 0 };
-float raw_avg_apparent_power_1s0[4] = { 0 };
+float rms_voltage_inst[4] = { 0 };
+float rms_current_inst[4] = { 0 };
+float avg_real_power_inst[4] = { 0 };
+float avg_apparent_power_inst[4] = { 0 };
+//averaged using EMA: 0s1 = 0.1s time constant, 1s0 = 1.0s time constant, mos = mean of squares (for calculating rms, not scaled yet)
+float raw_mos_voltage_0s1[4] = { 0 };
+float raw_mos_voltage_1s0[4] = { 0 };
+float raw_mos_current_0s1[4] = { 0 };
+float raw_mos_current_1s0[4] = { 0 };
+float rms_voltage_0s1[4] = { 0 };
+float rms_voltage_1s0[4] = { 0 };
+float rms_current_0s1[4] = { 0 };
+float rms_current_1s0[4] = { 0 };
+float avg_real_power_0s1[4] = { 0 };
+float avg_real_power_1s0[4] = { 0 };
+float avg_apparent_power_0s1[4] = { 0 };
+float avg_apparent_power_1s0[4] = { 0 };
 
 
 HAL_StatusTypeDef ADC_Init() {
@@ -96,13 +97,22 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
   q15_t raw_current[P_ADC_SAMPLE_BATCH_SIZE];
   q15_t raw_voltage[P_ADC_SAMPLE_BATCH_SIZE];
   q15_t raw_power[P_ADC_SAMPLE_BATCH_SIZE];
-#ifdef P_ADC_FOUR_CHANNEL
+#ifdef MAIN_FOUR_CHANNEL
   q15_t raw_current_second[P_ADC_SAMPLE_BATCH_SIZE];
   q15_t raw_voltage_second[P_ADC_SAMPLE_BATCH_SIZE];
   q15_t raw_power_second[P_ADC_SAMPLE_BATCH_SIZE];
 #endif
 
   int i;
+  uint8_t arr_offset = 2 * index;
+
+#ifdef DEBUG
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+  uint32_t start_cycle = DWT->CYCCNT;
+#endif
 
   //select matrices based on index and half
   if (index == 0) {
@@ -123,15 +133,18 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
     }
   }
 
-#ifdef DEBUG
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CYCCNT = 0;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
-  uint32_t start_cycle = DWT->CYCCNT;
+  //select unit conversion factors
+  float conv_fact_i = index == 0 ? P_ADC_FACTOR_IA : P_ADC_FACTOR_IC;
+  float conv_fact_v = index == 0 ? P_ADC_FACTOR_VA : P_ADC_FACTOR_VC;
+  float conv_fact_p = index == 0 ? P_ADC_FACTOR_PA : P_ADC_FACTOR_PC;
+#ifdef MAIN_FOUR_CHANNEL
+  float conv_fact_i_second = index == 0 ? P_ADC_FACTOR_IB : P_ADC_FACTOR_ID;
+  float conv_fact_v_second = index == 0 ? P_ADC_FACTOR_VB : P_ADC_FACTOR_VD;
+  float conv_fact_p_second = index == 0 ? P_ADC_FACTOR_PB : P_ADC_FACTOR_PD;
 #endif
 
-#ifdef P_ADC_FOUR_CHANNEL
+  //main processing
+#ifdef MAIN_FOUR_CHANNEL
   //extract currents from matrices
   arm_mat_vec_mult_q15(current_matrix, processing_vector_AC, raw_current);
   arm_mat_vec_mult_q15(current_matrix, processing_vector_BD, raw_current_second);
@@ -140,7 +153,7 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
   arm_mat_vec_mult_q15(voltage_matrix, processing_vector_BD, raw_voltage_second);
   //calculate instantaneous power
   arm_mult_q15(raw_voltage, raw_current, raw_power, P_ADC_SAMPLE_BATCH_SIZE);
-  arm_mult_q15(raw_voltage_2, raw_current_2, raw_power_2, P_ADC_SAMPLE_BATCH_SIZE);
+  arm_mult_q15(raw_voltage_second, raw_current_second, raw_power_second, P_ADC_SAMPLE_BATCH_SIZE);
   //calculate voltage and current sums of squares and average power
   q63_t raw_sos[4]; //sums of squares: I1, V1, I2, V2; in 34.30 format (see CMSIS-DSP documentation)
   q15_t raw_avg_powers[2]; //average real powers: 1, 2
@@ -157,38 +170,80 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
   }
   arm_q15_to_float(raw_avg_powers, f_results + 4, 2);
   //perform batch result calculations
-  raw_rms_current_inst[2 * index] = sqrtf(f_results[0]) * 2.0f;
-  raw_rms_voltage_inst[2 * index] = sqrtf(f_results[1]) * 2.0f;
-  raw_avg_apparent_power_inst[2 * index] = sqrtf(f_results[0] * f_results[1]) * 4.0f;
-  raw_rms_current[2 * index + 1] = sqrtf(f_results[2]) * 2.0f;
-  raw_rms_voltage[2 * index + 1] = sqrtf(f_results[3]) * 2.0f;
-  raw_avg_apparent_power[2 * index + 1] = sqrtf(f_results[2] * f_results[3]) * 4.0f;
-  raw_avg_real_power[2 * index] = fabsf(f_results[4]) * 4.0f;
-  raw_avg_real_power[2 * index + 1] = fabsf(f_results[5]) * 4.0f;
-  //update EMA results
-  raw_sos_current_0s1[2 * index] = raw_sos_current_0s1[2 * index] * P_ADC_EMA_0S1_1MALPHA + f_results[0] * P_ADC_EMA_0S1_ALPHA;
-  raw_sos_current_1s0[2 * index] = raw_sos_current_1s0[2 * index] * P_ADC_EMA_1S0_1MALPHA + f_results[0] * P_ADC_EMA_1S0_ALPHA;
-  raw_sos_voltage_0s1[2 * index] = raw_sos_voltage_0s1[2 * index] * P_ADC_EMA_0S1_1MALPHA + f_results[1] * P_ADC_EMA_0S1_ALPHA;
-  raw_sos_voltage_1s0[2 * index] = raw_sos_voltage_1s0[2 * index] * P_ADC_EMA_1S0_1MALPHA + f_results[1] * P_ADC_EMA_1S0_ALPHA;
+  rms_current_inst[arr_offset] = sqrtf(f_results[0]) * conv_fact_i;
+  rms_voltage_inst[arr_offset] = sqrtf(f_results[1]) * conv_fact_v;
+  avg_apparent_power_inst[arr_offset] = sqrtf(f_results[0] * f_results[1]) * conv_fact_p;
+  rms_current_inst[arr_offset + 1] = sqrtf(f_results[2]) * conv_fact_i_second;
+  rms_voltage_inst[arr_offset + 1] = sqrtf(f_results[3]) * conv_fact_v_second;
+  avg_apparent_power_inst[arr_offset + 1] = sqrtf(f_results[2] * f_results[3]) * conv_fact_p_second;
+  avg_real_power_inst[arr_offset] = fabsf(f_results[4]) * conv_fact_p;
+  avg_real_power_inst[arr_offset + 1] = fabsf(f_results[5]) * conv_fact_p_second;
+  //update EMA direct results (means of squares, avg real power)
+  raw_mos_current_0s1[arr_offset] = raw_mos_current_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + f_results[0] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_current_1s0[arr_offset] = raw_mos_current_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + f_results[0] * P_ADC_EMA_1S0_ALPHA;
+  raw_mos_voltage_0s1[arr_offset] = raw_mos_voltage_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + f_results[1] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_voltage_1s0[arr_offset] = raw_mos_voltage_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + f_results[1] * P_ADC_EMA_1S0_ALPHA;
+  raw_mos_current_0s1[arr_offset + 1] = raw_mos_current_0s1[arr_offset + 1] * P_ADC_EMA_0S1_1MALPHA + f_results[2] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_current_1s0[arr_offset + 1] = raw_mos_current_1s0[arr_offset + 1] * P_ADC_EMA_1S0_1MALPHA + f_results[2] * P_ADC_EMA_1S0_ALPHA;
+  raw_mos_voltage_0s1[arr_offset + 1] = raw_mos_voltage_0s1[arr_offset + 1] * P_ADC_EMA_0S1_1MALPHA + f_results[3] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_voltage_1s0[arr_offset + 1] = raw_mos_voltage_1s0[arr_offset + 1] * P_ADC_EMA_1S0_1MALPHA + f_results[3] * P_ADC_EMA_1S0_ALPHA;
+  avg_real_power_0s1[arr_offset] = avg_real_power_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + fabsf(f_results[4]) * conv_fact_p * P_ADC_EMA_0S1_ALPHA;
+  avg_real_power_1s0[arr_offset] = avg_real_power_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + fabsf(f_results[4]) * conv_fact_p * P_ADC_EMA_1S0_ALPHA;
+  avg_real_power_0s1[arr_offset + 1] = avg_real_power_0s1[arr_offset + 1] * P_ADC_EMA_0S1_1MALPHA + fabsf(f_results[5]) * conv_fact_p_second * P_ADC_EMA_0S1_ALPHA;
+  avg_real_power_1s0[arr_offset + 1] = avg_real_power_1s0[arr_offset + 1] * P_ADC_EMA_1S0_1MALPHA + fabsf(f_results[5]) * conv_fact_p_second * P_ADC_EMA_1S0_ALPHA;
+  //calculate EMA-based indirect results (rms values, avg apparent power)
+  rms_current_0s1[arr_offset] = sqrtf(raw_mos_current_0s1[arr_offset]) * conv_fact_i;
+  rms_current_1s0[arr_offset] = sqrtf(raw_mos_current_1s0[arr_offset]) * conv_fact_i;
+  rms_voltage_0s1[arr_offset] = sqrtf(raw_mos_voltage_0s1[arr_offset]) * conv_fact_v;
+  rms_voltage_1s0[arr_offset] = sqrtf(raw_mos_voltage_1s0[arr_offset]) * conv_fact_v;
+  avg_apparent_power_0s1[arr_offset] = sqrtf(raw_mos_current_0s1[arr_offset] * raw_mos_voltage_0s1[arr_offset]) * conv_fact_p;
+  avg_apparent_power_1s0[arr_offset] = sqrtf(raw_mos_current_1s0[arr_offset] * raw_mos_voltage_1s0[arr_offset]) * conv_fact_p;
+  rms_current_0s1[arr_offset + 1] = sqrtf(raw_mos_current_0s1[arr_offset + 1]) * conv_fact_i_second;
+  rms_current_1s0[arr_offset + 1] = sqrtf(raw_mos_current_1s0[arr_offset + 1]) * conv_fact_i_second;
+  rms_voltage_0s1[arr_offset + 1] = sqrtf(raw_mos_voltage_0s1[arr_offset + 1]) * conv_fact_v_second;
+  rms_voltage_1s0[arr_offset + 1] = sqrtf(raw_mos_voltage_1s0[arr_offset + 1]) * conv_fact_v_second;
+  avg_apparent_power_0s1[arr_offset + 1] = sqrtf(raw_mos_current_0s1[arr_offset + 1] * raw_mos_voltage_0s1[arr_offset + 1]) * conv_fact_p_second;
+  avg_apparent_power_1s0[arr_offset + 1] = sqrtf(raw_mos_current_1s0[arr_offset + 1] * raw_mos_voltage_1s0[arr_offset + 1]) * conv_fact_p_second;
 #else
   //extract current and differential voltage based on index
   arm_mat_vec_mult_q15(current_matrix, processing_vector_current, raw_current);
   arm_mat_vec_mult_q15(voltage_matrix, processing_vector_voltage, raw_voltage);
   //calculate instantaneous power
   arm_mult_q15(raw_voltage, raw_current, raw_power, P_ADC_SAMPLE_BATCH_SIZE);
-  //calculate rms voltage and current and average power
-  q15_t raw_results[3]; //Irms, Vrms, Pavg
-  arm_rms_q15(raw_current, P_ADC_SAMPLE_BATCH_SIZE, raw_results);
-  arm_rms_q15(raw_voltage, P_ADC_SAMPLE_BATCH_SIZE, raw_results + 1);
-  arm_mean_q15(raw_power, P_ADC_SAMPLE_BATCH_SIZE, raw_results + 2);
-  //convert to floats and save
-  float f_results[3];
-  arm_q15_to_float(raw_results, f_results, 3);
-  raw_rms_current[2 * index] = raw_rms_current[2 * index + 1] = f_results[0] * 2.0f;
-  raw_rms_voltage[2 * index] = raw_rms_voltage[2 * index + 1] = f_results[1] * 2.0f;
-  raw_avg_real_power[2 * index] = raw_avg_real_power[2 * index + 1] = fabsf(f_results[2]) * 4.0f;
-  raw_avg_apparent_power[2 * index] = raw_avg_apparent_power[2 * index + 1] = f_results[0] * f_results[1] * 4.0f;
+  //calculate voltage and current sums of squares and average power
+  q63_t raw_sos[2]; //sums of squares: I, V; in 34.30 format (see CMSIS-DSP documentation)
+  q15_t raw_avg_power; //average real powers
+  arm_power_q15(raw_current, P_ADC_SAMPLE_BATCH_SIZE, raw_sos);
+  arm_power_q15(raw_voltage, P_ADC_SAMPLE_BATCH_SIZE, raw_sos + 1);
+  arm_mean_q15(raw_power, P_ADC_SAMPLE_BATCH_SIZE, &raw_avg_power);
+  //convert to floats, sums of squares also get averaged at the same time
+  float f_results[3]; //I, V, P
+  for (i = 0; i < 2; i++) {
+      f_results[i] = (float)raw_sos[i] / P_ADC_SOS_AVG_DIVISOR;
+  }
+  arm_q15_to_float(&raw_avg_power, f_results + 2, 1);
+  //perform batch result calculations
+  rms_current_inst[arr_offset] = rms_current_inst[arr_offset + 1] = sqrtf(f_results[0]) * 2.0f;
+  rms_voltage_inst[arr_offset] = rms_voltage_inst[arr_offset + 1] = sqrtf(f_results[1]) * 2.0f;
+  avg_apparent_power_inst[arr_offset] = avg_apparent_power_inst[arr_offset + 1] = sqrtf(f_results[0] * f_results[1]) * 4.0f;
+  avg_real_power_inst[arr_offset] = avg_real_power_inst[arr_offset + 1] = fabsf(f_results[2]) * 4.0f;
+  //update EMA direct results (sums of squares, avg real power)
+  raw_mos_current_0s1[arr_offset] = raw_mos_current_0s1[arr_offset + 1] = raw_mos_current_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + f_results[0] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_current_1s0[arr_offset] = raw_mos_current_1s0[arr_offset + 1] = raw_mos_current_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + f_results[0] * P_ADC_EMA_1S0_ALPHA;
+  raw_mos_voltage_0s1[arr_offset] = raw_mos_voltage_0s1[arr_offset + 1] = raw_mos_voltage_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + f_results[1] * P_ADC_EMA_0S1_ALPHA;
+  raw_mos_voltage_1s0[arr_offset] = raw_mos_voltage_1s0[arr_offset + 1] = raw_mos_voltage_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + f_results[1] * P_ADC_EMA_1S0_ALPHA;
+  avg_real_power_0s1[arr_offset] = avg_real_power_0s1[arr_offset + 1] = avg_real_power_0s1[arr_offset] * P_ADC_EMA_0S1_1MALPHA + fabsf(f_results[2]) * conv_fact_p * P_ADC_EMA_0S1_ALPHA;
+  avg_real_power_1s0[arr_offset] = avg_real_power_1s0[arr_offset + 1] = avg_real_power_1s0[arr_offset] * P_ADC_EMA_1S0_1MALPHA + fabsf(f_results[2]) * conv_fact_p * P_ADC_EMA_1S0_ALPHA;
+  //calculate EMA-based indirect results (rms values, avg apparent power)
+  rms_current_0s1[arr_offset] = rms_current_0s1[arr_offset + 1] = sqrtf(raw_mos_current_0s1[arr_offset]) * conv_fact_i;
+  rms_current_1s0[arr_offset] = rms_current_1s0[arr_offset + 1] = sqrtf(raw_mos_current_1s0[arr_offset]) * conv_fact_i;
+  rms_voltage_0s1[arr_offset] = rms_voltage_0s1[arr_offset + 1] = sqrtf(raw_mos_voltage_0s1[arr_offset]) * conv_fact_v;
+  rms_voltage_1s0[arr_offset] = rms_voltage_1s0[arr_offset + 1] = sqrtf(raw_mos_voltage_1s0[arr_offset]) * conv_fact_v;
+  avg_apparent_power_0s1[arr_offset] = avg_apparent_power_0s1[arr_offset + 1] = sqrtf(raw_mos_current_0s1[arr_offset] * raw_mos_voltage_0s1[arr_offset]) * conv_fact_p;
+  avg_apparent_power_1s0[arr_offset] = avg_apparent_power_1s0[arr_offset + 1] = sqrtf(raw_mos_current_1s0[arr_offset] * raw_mos_voltage_1s0[arr_offset]) * conv_fact_p;
 #endif
+
+  SAFETY_CheckADCInstValues();
 
 #ifdef DEBUG
   uint32_t cycles = DWT->CYCCNT - start_cycle;
