@@ -76,6 +76,7 @@
 #define P_ADC_FACTOR_PD (P_ADC_FACTOR_ID * P_ADC_FACTOR_VD)
 
 
+//READ ONLY
 //rms voltage and current, average real power, and average apparent power of all channels (A, B, C, D) - in V, A, and W, respectively
 //last batch values ("instantaneous")
 extern float rms_voltage_inst[4];

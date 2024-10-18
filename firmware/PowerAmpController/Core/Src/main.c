@@ -26,6 +26,7 @@
 #include "adc.h"
 #include "pvdd_control.h"
 #include "safety.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,6 +87,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       DEBUG_PRINTF("Amp Fault Cleared\n");
     } else {
       DEBUG_PRINTF("Amp Fault Detected!!\n");
+      I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_FAULT_Msk);
     }
   } /*else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
     if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_SET) {
@@ -163,6 +165,13 @@ int main(void)
 
   DEBUG_PRINTF("Initializing safety system...\n");
   if (SAFETY_Init() != HAL_OK) {
+    Error_Handler();
+  }
+
+  HAL_Delay(10);
+
+  DEBUG_PRINTF("Initializing I2C...\n");
+  if (I2C_Init() != HAL_OK) {
     Error_Handler();
   }
 

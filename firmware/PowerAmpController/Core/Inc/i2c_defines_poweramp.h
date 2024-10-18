@@ -8,64 +8,78 @@
  *
  *  Register map:
  *  * General registers
- *   - 0x01: STATUS: General status (1B, bit field, r)
- *   - 0x08: CONTROL: General control (1B, bit field, rw)
+ *    - 0x01: STATUS: General status (1B, bit field, r)
+ *    - 0x08: CONTROL: General control (1B, bit field, rw)
  *  * Interrupt registers
- *   - 0x10: INT_MASK: Interrupt mask (1B, bit field, rw, high = interrupt enable)
- *   - 0x11: INT_FLAGS: Interrupt flags (1B, bit field, rc, high = interrupt occurred)
+ *    - 0x10: INT_MASK: Interrupt mask (1B, bit field, rw, high = interrupt enable)
+ *    - 0x11: INT_FLAGS: Interrupt flags (1B, bit field, rc, high = interrupt occurred)
  *  * PVDD registers
- *   - 0x20: PVDD_REQ: PVDD requested voltage (4B, float little endian, rw)
- *   - 0x21: PVDD_MEASURED: PVDD measured voltage (4B, float little endian, r)
- *   - 0x22: PVDD_OFFSET: PVDD request offset (4B, float little endian, r)
+ *    - 0x20: PVDD_REQ: PVDD requested voltage (4B, float little endian, rw)
+ *    - 0x21: PVDD_MEASURED: PVDD measured voltage (4B, float little endian, r)
+ *    - 0x22: PVDD_OFFSET: PVDD request offset (4B, float little endian, r)
  *  * Output monitor registers
- *   - 0x30-0x33: MON_VRMS_FAST_[A-D]: Channel A-D rms voltage, 0.1s time constant (each 4B, float little endian, r)
- *   - 0x34-0x37: MON_IRMS_FAST_[A-D]: Channel A-D rms current, 0.1s time constant (each 4B, float little endian, r)
- *   - 0x38-0x3B: MON_PAVG_FAST_[A-D]: Channel A-D avg real power, 0.1s time constant (each 4B, float little endian, r)
- *   - 0x3C-0x3F: MON_PAPP_FAST_[A-D]: Channel A-D avg apparent power, 0.1s time constant (each 4B, float little endian, r)
- *   - 0x40-0x43: MON_VRMS_SLOW_[A-D]: Channel A-D rms voltage, 1s time constant (each 4B, float little endian, r)
- *   - 0x44-0x47: MON_IRMS_SLOW_[A-D]: Channel A-D rms current, 1s time constant (each 4B, float little endian, r)
- *   - 0x48-0x4B: MON_PAVG_SLOW_[A-D]: Channel A-D avg real power, 1s time constant (each 4B, float little endian, r)
- *   - 0x4C-0x4F: MON_PAPP_SLOW_[A-D]: Channel A-D avg apparent power, 1s time constant (each 4B, float little endian, r)
+ *    - 0x30-0x33: MON_VRMS_FAST_[A-D]: Channel A-D rms voltage, 0.1s time constant (each 4B, float little endian, r)
+ *    - 0x34-0x37: MON_IRMS_FAST_[A-D]: Channel A-D rms current, 0.1s time constant (each 4B, float little endian, r)
+ *    - 0x38-0x3B: MON_PAVG_FAST_[A-D]: Channel A-D avg real power, 0.1s time constant (each 4B, float little endian, r)
+ *    - 0x3C-0x3F: MON_PAPP_FAST_[A-D]: Channel A-D avg apparent power, 0.1s time constant (each 4B, float little endian, r)
+ *    - 0x40-0x43: MON_VRMS_SLOW_[A-D]: Channel A-D rms voltage, 1s time constant (each 4B, float little endian, r)
+ *    - 0x44-0x47: MON_IRMS_SLOW_[A-D]: Channel A-D rms current, 1s time constant (each 4B, float little endian, r)
+ *    - 0x48-0x4B: MON_PAVG_SLOW_[A-D]: Channel A-D avg real power, 1s time constant (each 4B, float little endian, r)
+ *    - 0x4C-0x4F: MON_PAPP_SLOW_[A-D]: Channel A-D avg apparent power, 1s time constant (each 4B, float little endian, r)
  *  * Safety system registers
- *   - 0x50-0x54: SERR_IRMS_INST_[A-D,SUM]: Channel A-D and sum current error limit, instantaneous (each 4B, float little endian, rw)
- *   - 0x55-0x59: SERR_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current error limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0x5A-0x5E: SERR_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current error limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0x60-0x64: SERR_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power error limit, instantaneous (each 4B, float little endian, rw)
- *   - 0x65-0x69: SERR_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power error limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0x6A-0x6E: SERR_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power error limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0x70-0x74: SERR_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power error limit, instantaneous (each 4B, float little endian, rw)
- *   - 0x75-0x79: SERR_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power error limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0x7A-0x7E: SERR_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power error limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0x80-0x84: SWARN_IRMS_INST_[A-D,SUM]: Channel A-D and sum current warning limit, instantaneous (each 4B, float little endian, rw)
- *   - 0x85-0x89: SWARN_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0x8A-0x8E: SWARN_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current warning limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0x90-0x94: SWARN_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power warning limit, instantaneous (each 4B, float little endian, rw)
- *   - 0x95-0x99: SWARN_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0x9A-0x9E: SWARN_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power warning limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0xA0-0xA4: SWARN_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, instantaneous (each 4B, float little endian, rw)
- *   - 0xA5-0xA9: SWARN_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *   - 0xAA-0xAE: SWARN_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 1s time constant (each 4B, float little endian, rw)
- *   - 0xB0: SAFETY_STATUS: Status of safety system (1B, bit field, r)
- *   - 0xB1: SERR_SOURCE: Indication of error source (2B, bit field, rc)
- *   - 0xB2: SWARN_SOURCE: Indication of warning source (2B, bit field, rc)
+ *    - 0x50-0x54: SERR_IRMS_INST_[A-D,SUM]: Channel A-D and sum current error limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0x55-0x59: SERR_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current error limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x5A-0x5E: SERR_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current error limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x60-0x64: SERR_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power error limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0x65-0x69: SERR_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power error limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x6A-0x6E: SERR_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power error limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x70-0x74: SERR_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power error limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0x75-0x79: SERR_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power error limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x7A-0x7E: SERR_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power error limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x80-0x84: SWARN_IRMS_INST_[A-D,SUM]: Channel A-D and sum current warning limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0x85-0x89: SWARN_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current warning limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x8A-0x8E: SWARN_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current warning limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x90-0x94: SWARN_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power warning limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0x95-0x99: SWARN_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power warning limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x9A-0x9E: SWARN_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power warning limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0xA0-0xA4: SWARN_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, instantaneous (each 4B, float little endian, rw)
+ *    - 0xA5-0xA9: SWARN_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0xAA-0xAE: SWARN_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 1s time constant (each 4B, float little endian, rw)
+ *    - 0xB0: SAFETY_STATUS: Status of safety system (1B, bit field, r)
+ *    - 0xB1: SERR_SOURCE: Indication of error source (2B, bit field, rc)
+ *    - 0xB2: SWARN_SOURCE: Indication of warning source (2B, bit field, rc)
  *  * Misc registers
- *   - 0xFF: MODULE_ID: Module ID (1B, hex, r)
+ *    - 0xFF: MODULE_ID: Module ID (1B, hex, r)
  *
  *  Bit field definitions:
  *  * STATUS (0x01, 1B):
- *
+ *    - 7: I2CERR: I2C communication error detected since last STATUS read
+ *    - 6: SWARN: safety warning active (any)
+ *    - 5: PVDD_OLIM: PVDD offset at limit
+ *    - 4: PVDD_ONZ: PVDD offset nonzero
+ *    - 3: PVDD_VALID: PVDD voltage valid
+ *    - 2: AMP_SD: amplifier shutdown active (set by this controller, external shutdown is possible through header and will not be detected)
+ *    - 1: AMP_CLIPOTW: amplifier clip/otw active
+ *    - 0: AMP_FAULT: amplifier fault active
  *  * CONTROL (0x08, 1B):
- *
+ *    - 1: INT_EN: enable interrupts
+ *    - 0: AMP_MAN_SD: activate manual amp shutdown
  *  * INT_MASK (0x10, 1B):
- *
+ *    - 4: INT_PVDD_OLIM: PVDD offset at limit
+ *    - 3: INT_PVDD_ERR: PVDD voltage error
+ *    - 2: INT_SWARN: safety warning
+ *    - 1: INT_SERR: safety error shutdown
+ *    - 0: INT_AMP_FAULT: amplifier fault
  *  * INT_FLAGS (0x11, 1B):
- *
+ *    same layout as INT_MASK
  *  * SAFETY_STATUS (0xB0, 1B):
- *
+ *    - 1: MAN_SD: manual shutdown active
+ *    - 0: SERR_SD: safety shutdown active
  *  * SERR_SOURCE (0xB1, 2B):
- *
+ *    - 13-5: MTYPE: source measurement type (one-hot, high to low: IRMS inst/fast/slow, PAVG inst/fast/slow, PAPP inst/fast/slow)
+ *    - 4-0: CHAN: source channel (one-hot, high to low: A,B,C,D,Sum)
  *  * SWARN_SOURCE (0xB2, 2B):
- *
+ *    same layout as SERR_SOURCE
  */
 
 #ifndef INC_I2C_DEFINES_POWERAMP_H_
@@ -95,13 +109,57 @@
 //General registers
 #define I2CDEF_POWERAMP_STATUS 0x01
 
+#define I2CDEF_POWERAMP_STATUS_AMP_FAULT_Pos 0
+#define I2CDEF_POWERAMP_STATUS_AMP_FAULT_Msk (0x1 << I2CDEF_POWERAMP_STATUS_AMP_FAULT_Pos)
+#define I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Pos 1
+#define I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Msk (0x1 << I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Pos)
+#define I2CDEF_POWERAMP_STATUS_AMP_SD_Pos 2
+#define I2CDEF_POWERAMP_STATUS_AMP_SD_Msk (0x1 << I2CDEF_POWERAMP_STATUS_AMP_SD_Pos)
+#define I2CDEF_POWERAMP_STATUS_PVDD_VALID_Pos 3
+#define I2CDEF_POWERAMP_STATUS_PVDD_VALID_Msk (0x1 << I2CDEF_POWERAMP_STATUS_PVDD_VALID_Pos)
+#define I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos 4
+#define I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Msk (0x1 << I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos)
+#define I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos 5
+#define I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Msk (0x1 << I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos)
+#define I2CDEF_POWERAMP_STATUS_SWARN_Pos 6
+#define I2CDEF_POWERAMP_STATUS_SWARN_Msk (0x1 << I2CDEF_POWERAMP_STATUS_SWARN_Pos)
+#define I2CDEF_POWERAMP_STATUS_I2CERR_Pos 7
+#define I2CDEF_POWERAMP_STATUS_I2CERR_Msk (0x1 << I2CDEF_POWERAMP_STATUS_I2CERR_Pos)
+
 #define I2CDEF_POWERAMP_CONTROL 0x08
+
+#define I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Pos 0
+#define I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Msk (0x1 << I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Pos)
+#define I2CDEF_POWERAMP_CONTROL_INT_EN_Pos 1
+#define I2CDEF_POWERAMP_CONTROL_INT_EN_Msk (0x1 << I2CDEF_POWERAMP_CONTROL_INT_EN_Pos)
 
 
 //Interrupt registers
 #define I2CDEF_POWERAMP_INT_MASK 0x10
 
+#define I2CDEF_POWERAMP_INT_MASK_INT_AMP_FAULT_Pos 0
+#define I2CDEF_POWERAMP_INT_MASK_INT_AMP_FAULT_Msk (0x1 << I2CDEF_POWERAMP_INT_MASK_INT_AMP_FAULT_Pos)
+#define I2CDEF_POWERAMP_INT_MASK_INT_SERR_Pos 1
+#define I2CDEF_POWERAMP_INT_MASK_INT_SERR_Msk (0x1 << I2CDEF_POWERAMP_INT_MASK_INT_SERR_Pos)
+#define I2CDEF_POWERAMP_INT_MASK_INT_SWARN_Pos 2
+#define I2CDEF_POWERAMP_INT_MASK_INT_SWARN_Msk (0x1 << I2CDEF_POWERAMP_INT_MASK_INT_SWARN_Pos)
+#define I2CDEF_POWERAMP_INT_MASK_INT_PVDD_ERR_Pos 3
+#define I2CDEF_POWERAMP_INT_MASK_INT_PVDD_ERR_Msk (0x1 << I2CDEF_POWERAMP_INT_MASK_INT_PVDD_ERR_Pos)
+#define I2CDEF_POWERAMP_INT_MASK_INT_PVDD_OLIM_Pos 4
+#define I2CDEF_POWERAMP_INT_MASK_INT_PVDD_OLIM_Msk (0x1 << I2CDEF_POWERAMP_INT_MASK_INT_PVDD_OLIM_Pos)
+
 #define I2CDEF_POWERAMP_INT_FLAGS 0x11
+
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_FAULT_Pos I2CDEF_POWERAMP_INT_MASK_INT_AMP_FAULT_Pos
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_FAULT_Msk I2CDEF_POWERAMP_INT_MASK_INT_AMP_FAULT_Msk
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_SERR_Pos I2CDEF_POWERAMP_INT_MASK_INT_SERR_Pos
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_SERR_Msk I2CDEF_POWERAMP_INT_MASK_INT_SERR_Msk
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_SWARN_Pos I2CDEF_POWERAMP_INT_MASK_INT_SWARN_Pos
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_SWARN_Msk I2CDEF_POWERAMP_INT_MASK_INT_SWARN_Msk
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Pos I2CDEF_POWERAMP_INT_MASK_INT_PVDD_ERR_Pos
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk I2CDEF_POWERAMP_INT_MASK_INT_PVDD_ERR_Msk
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Pos I2CDEF_POWERAMP_INT_MASK_INT_PVDD_OLIM_Pos
+#define I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk I2CDEF_POWERAMP_INT_MASK_INT_PVDD_OLIM_Msk
 
 
 //PVDD registers
@@ -265,13 +323,57 @@
 
 #define I2CDEF_POWERAMP_SAFETY_STATUS 0xB0
 
+#define I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_SERR_SD_Pos 0
+#define I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_SERR_SD_Msk (0x1 << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_SERR_SD_Pos)
+#define I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_MAN_SD_Pos 1
+#define I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_MAN_SD_Msk (0x1 << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_MAN_SD_Pos)
+
 #define I2CDEF_POWERAMP_SERR_SOURCE 0xB1
 
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos 0
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Msk (0x1F << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_A (0x10 << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_B (0x08 << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_C (0x04 << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_D (0x02 << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_CHAN_SUM (0x01 << I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos 5
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Msk (0x1FF << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST (0x100 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST (0x080 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_SLOW (0x040 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_INST (0x020 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_FAST (0x010 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_SLOW (0x008 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_INST (0x004 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_FAST (0x002 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+#define I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_SLOW (0x001 << I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos)
+
 #define I2CDEF_POWERAMP_SWARN_SOURCE 0xB2
+
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_Pos I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Pos
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_Msk I2CDEF_POWERAMP_SERR_SOURCE_CHAN_Msk
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_A I2CDEF_POWERAMP_SERR_SOURCE_CHAN_A
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_B I2CDEF_POWERAMP_SERR_SOURCE_CHAN_B
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_C I2CDEF_POWERAMP_SERR_SOURCE_CHAN_C
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_D I2CDEF_POWERAMP_SERR_SOURCE_CHAN_D
+#define I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_SUM I2CDEF_POWERAMP_SERR_SOURCE_CHAN_SUM
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_Pos I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Pos
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_Msk I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Msk
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_INST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_FAST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_SLOW I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_SLOW
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_INST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_INST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_FAST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_FAST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_SLOW I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_SLOW
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_INST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_INST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_FAST I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_FAST
+#define I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_SLOW I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_SLOW
 
 
 //Misc registers
 #define I2CDEF_POWERAMP_MODULE_ID 0xFF
+#define I2CDEF_POWERAMP_MODULE_ID_VALUE 0xA1
 
 
 #endif /* INC_I2C_DEFINES_POWERAMP_H_ */

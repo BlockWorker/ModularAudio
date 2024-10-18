@@ -8,14 +8,15 @@
 #include "pvdd_control.h"
 #include <stdio.h>
 #include "arm_math.h"
+#include "i2c.h"
 
 
-static float pvdd_voltage_requested = 0.0f;
+float pvdd_voltage_requested = 0.0f;
 float pvdd_voltage_measured = 0.0f;
 uint8_t pvdd_valid_voltage = 0;
 
 //offset added to requested voltage, to adjust for errors
-static float pvdd_voltage_request_offset = 0.0f;
+float pvdd_voltage_request_offset = 0.0f;
 //if >0, offset will not update in main loop - decrements every loop
 static uint16_t pvdd_remaining_lockout_cycles = 0;
 
@@ -61,7 +62,7 @@ void PVDD_LoopUpdate() {
   if (pvdd_voltage_requested < PVDD_MIN_VOLTAGE || pvdd_voltage_requested > PVDD_MAX_VOLTAGE) {
     DEBUG_PRINTF("ERROR: PVDD invalid requested voltage %f V, resetting PVDD control\n", pvdd_voltage_requested);
     PVDD_Init();
-    //TODO also indicate the error to I2C bus
+    I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk);
     return;
   }
 
@@ -101,7 +102,7 @@ void PVDD_LoopUpdate() {
     if (fabsf(pvdd_voltage_measured - pvdd_voltage_requested) > PVDD_VOLTAGE_ERROR_FAIL) {
       DEBUG_PRINTF("ERROR: PVDD voltage fail, measured %f V, target %f V\n", pvdd_voltage_measured, pvdd_voltage_requested);
       PVDD_Init();
-      //TODO also indicate the error to I2C bus
+      I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk);
       return;
     }
 
@@ -113,7 +114,7 @@ void PVDD_LoopUpdate() {
       if (pvdd_voltage_request_offset + PVDD_VOLTAGE_OFFSET_STEP >= PVDD_VOLTAGE_OFFSET_MAX) { //hit maximum: set to maximum correction and warn
 	pvdd_voltage_request_offset = PVDD_VOLTAGE_OFFSET_MAX;
 	DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_requested);
-	//TODO also indicate the warning to I2C bus
+	I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
       } else { //not at maximum yet: increment offset by one step
 	pvdd_voltage_request_offset += PVDD_VOLTAGE_OFFSET_STEP;
       }
@@ -126,7 +127,7 @@ void PVDD_LoopUpdate() {
       if (pvdd_voltage_request_offset - PVDD_VOLTAGE_OFFSET_STEP <= -PVDD_VOLTAGE_OFFSET_MAX) { //hit maximum: set to maximum correction and warn
 	pvdd_voltage_request_offset = -PVDD_VOLTAGE_OFFSET_MAX;
 	DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_requested);
-	//TODO also indicate the warning to I2C bus
+	I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
       } else { //not at maximum yet: decrement offset by one step
 	pvdd_voltage_request_offset -= PVDD_VOLTAGE_OFFSET_STEP;
       }

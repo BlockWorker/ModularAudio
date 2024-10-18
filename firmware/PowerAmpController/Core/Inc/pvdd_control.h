@@ -54,6 +54,9 @@
 //voltage offset maximum magnitude
 #define PVDD_VOLTAGE_OFFSET_MAX 1.0f
 
+//DO NOT SET THESE DIRECTLY - READ ONLY
+extern float pvdd_voltage_requested;
+extern float pvdd_voltage_request_offset;
 
 extern float pvdd_voltage_measured;
 //1 = voltage is valid (measured ~= requested), 0 = voltage is invalid

@@ -18,7 +18,7 @@
 
 
 HAL_StatusTypeDef I2C_Init();
-void I2C_UpdateStatus();
+void I2C_TriggerInterrupt(uint8_t interrupt_bit);
 
 
 #endif /* INC_I2C_H_ */

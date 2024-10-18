@@ -45,6 +45,16 @@ extern float safety_max_real_power_1s0[5];
 extern float safety_max_apparent_power_inst[5];
 extern float safety_max_apparent_power_0s1[5];
 extern float safety_max_apparent_power_1s0[5];
+//constant limit maximums for sanity checking and reset
+extern const float safety_limit_current_inst[5];
+extern const float safety_limit_current_0s1[5];
+extern const float safety_limit_current_1s0[5];
+extern const float safety_limit_real_power_inst[5];
+extern const float safety_limit_real_power_0s1[5];
+extern const float safety_limit_real_power_1s0[5];
+extern const float safety_limit_apparent_power_inst[5];
+extern const float safety_limit_apparent_power_0s1[5];
+extern const float safety_limit_apparent_power_1s0[5];
 //similar to above, but lower "warning" limits - notify I2C bus if exceeded
 extern float safety_warn_current_inst[5];
 extern float safety_warn_current_0s1[5];
@@ -56,8 +66,18 @@ extern float safety_warn_apparent_power_inst[5];
 extern float safety_warn_apparent_power_0s1[5];
 extern float safety_warn_apparent_power_1s0[5];
 
+//DO NOT SET THESE DIRECTLY - READ ONLY
 //1 = amp shut down (by force or error condition), 0 = amp allowed to run
 extern uint8_t is_shutdown;
+//safety shutdown set
+extern uint8_t safety_shutdown;
+//manual shutdown set
+extern uint8_t manual_shutdown;
+//error status: sources and channels, as defined in I2C defines file
+extern uint16_t safety_err_status;
+//warning status, like error status - separate ones for inst and loop measurement cycles
+extern uint16_t safety_warn_status_inst;
+extern uint16_t safety_warn_status_loop;
 
 
 /**
