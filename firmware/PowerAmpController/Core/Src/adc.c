@@ -11,29 +11,29 @@
 #include "safety.h"
 
 //raw DMA buffers - with the given DMA configuration, samples end up arranged as {A1, B1, A2, B2, ...} and {C1, D1, C2, D2, ...}, respectively
-q15_t dma_current_AB[P_ADC_DMA_BUFFER_SIZE];
-q15_t dma_voltage_AB[P_ADC_DMA_BUFFER_SIZE];
-q15_t dma_current_CD[P_ADC_DMA_BUFFER_SIZE];
-q15_t dma_voltage_CD[P_ADC_DMA_BUFFER_SIZE];
+static q15_t dma_current_AB[P_ADC_DMA_BUFFER_SIZE];
+static q15_t dma_voltage_AB[P_ADC_DMA_BUFFER_SIZE];
+static q15_t dma_current_CD[P_ADC_DMA_BUFFER_SIZE];
+static q15_t dma_voltage_CD[P_ADC_DMA_BUFFER_SIZE];
 
 //matrix representations of the above buffers (two columns, one per channel) - separate matrix for each buffer half, as processing is separate
-arm_matrix_instance_q15 mat_current_AB_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_AB};
-arm_matrix_instance_q15 mat_current_AB_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_AB + (P_ADC_DMA_BUFFER_SIZE / 2)};
-arm_matrix_instance_q15 mat_voltage_AB_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_AB};
-arm_matrix_instance_q15 mat_voltage_AB_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_AB + (P_ADC_DMA_BUFFER_SIZE / 2)};
-arm_matrix_instance_q15 mat_current_CD_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_CD};
-arm_matrix_instance_q15 mat_current_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_CD + (P_ADC_DMA_BUFFER_SIZE / 2)};
-arm_matrix_instance_q15 mat_voltage_CD_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD};
-arm_matrix_instance_q15 mat_voltage_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD + (P_ADC_DMA_BUFFER_SIZE / 2)};
+static arm_matrix_instance_q15 mat_current_AB_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_AB};
+static arm_matrix_instance_q15 mat_current_AB_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_AB + (P_ADC_DMA_BUFFER_SIZE / 2)};
+static arm_matrix_instance_q15 mat_voltage_AB_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_AB};
+static arm_matrix_instance_q15 mat_voltage_AB_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_AB + (P_ADC_DMA_BUFFER_SIZE / 2)};
+static arm_matrix_instance_q15 mat_current_CD_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_CD};
+static arm_matrix_instance_q15 mat_current_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_current_CD + (P_ADC_DMA_BUFFER_SIZE / 2)};
+static arm_matrix_instance_q15 mat_voltage_CD_first = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD};
+static arm_matrix_instance_q15 mat_voltage_CD_second = {P_ADC_SAMPLE_BATCH_SIZE, 2, dma_voltage_CD + (P_ADC_DMA_BUFFER_SIZE / 2)};
 
 #ifdef MAIN_FOUR_CHANNEL
 //processing vectors (for channel extraction)
-const q15_t processing_vector_AC[] = P_ADC_PROCESSING_VECTOR_AC;
-const q15_t processing_vector_BD[] = P_ADC_PROCESSING_VECTOR_BD;
+static const q15_t processing_vector_AC[] = P_ADC_PROCESSING_VECTOR_AC;
+static const q15_t processing_vector_BD[] = P_ADC_PROCESSING_VECTOR_BD;
 #else
 //processing vectors (for channel subtraction/extraction)
-const q15_t processing_vector_current[] = P_ADC_CURRENT_PROCESSING_VECTOR;
-const q15_t processing_vector_voltage[] = P_ADC_VOLTAGE_PROCESSING_VECTOR;
+static const q15_t processing_vector_current[] = P_ADC_CURRENT_PROCESSING_VECTOR;
+static const q15_t processing_vector_voltage[] = P_ADC_VOLTAGE_PROCESSING_VECTOR;
 #endif
 
 //rms voltage and current, average real power, and average apparent power of all channels (A, B, C, D) - in V, A, and W, respectively
@@ -43,10 +43,10 @@ float rms_current_inst[4] = { 0 };
 float avg_real_power_inst[4] = { 0 };
 float avg_apparent_power_inst[4] = { 0 };
 //averaged using EMA: 0s1 = 0.1s time constant, 1s0 = 1.0s time constant, mos = mean of squares (for calculating rms, not scaled yet)
-float raw_mos_voltage_0s1[4] = { 0 };
-float raw_mos_voltage_1s0[4] = { 0 };
-float raw_mos_current_0s1[4] = { 0 };
-float raw_mos_current_1s0[4] = { 0 };
+static float raw_mos_voltage_0s1[4] = { 0 };
+static float raw_mos_voltage_1s0[4] = { 0 };
+static float raw_mos_current_0s1[4] = { 0 };
+static float raw_mos_current_1s0[4] = { 0 };
 float rms_voltage_0s1[4] = { 0 };
 float rms_voltage_1s0[4] = { 0 };
 float rms_current_0s1[4] = { 0 };
@@ -106,13 +106,13 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
   int i;
   uint8_t arr_offset = 2 * index;
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
   uint32_t start_cycle = DWT->CYCCNT;
-#endif
+#endif*/
 
   //select matrices based on index and half
   if (index == 0) {
@@ -245,13 +245,13 @@ void _ADC_ProcessCallback(uint8_t index, uint8_t half) {
 
   SAFETY_CheckADCInstValues();
 
-#ifdef DEBUG
+/*#ifdef DEBUG
   uint32_t cycles = DWT->CYCCNT - start_cycle;
 
   DWT->CTRL &= ~DWT_CTRL_CYCCNTENA_Msk;
 
-  //printf("Processed index %u half %u, processing took %lu cycles\n", index, half, cycles);
-#endif
+  printf("Processed index %u half %u, processing took %lu cycles\n", index, half, cycles);
+#endif*/
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {

@@ -87,13 +87,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     } else {
       DEBUG_PRINTF("Amp Fault Detected!!\n");
     }
-  } else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
+  } /*else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
     if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_SET) {
       DEBUG_PRINTF("Amp Clip/OTW Cleared\n");
     } else {
       DEBUG_PRINTF("Amp Clip/OTW Detected!!\n");
     }
-  }
+  }*/
 }
 /* USER CODE END 0 */
 

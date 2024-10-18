@@ -10,14 +10,14 @@
 #include "arm_math.h"
 
 
-float pvdd_voltage_requested = 0.0f;
+static float pvdd_voltage_requested = 0.0f;
 float pvdd_voltage_measured = 0.0f;
 uint8_t pvdd_valid_voltage = 0;
 
 //offset added to requested voltage, to adjust for errors
-float pvdd_voltage_request_offset = 0.0f;
+static float pvdd_voltage_request_offset = 0.0f;
 //if >0, offset will not update in main loop - decrements every loop
-uint16_t pvdd_remaining_lockout_cycles = 0;
+static uint16_t pvdd_remaining_lockout_cycles = 0;
 
 HAL_StatusTypeDef PVDD_Init() {
   pvdd_voltage_measured = 0.0f;
@@ -118,6 +118,9 @@ void PVDD_LoopUpdate() {
 	pvdd_voltage_request_offset += PVDD_VOLTAGE_OFFSET_STEP;
       }
 
+      //lock out of further changes for a short time
+      pvdd_remaining_lockout_cycles = PVDD_OFFSET_LOCKOUT_SHORT_CYCLES;
+
       _PVDD_WriteDACVoltage();
     } else if (pvdd_voltage_measured - pvdd_voltage_requested > PVDD_VOLTAGE_ERROR_CORRECT && pvdd_voltage_request_offset > -PVDD_VOLTAGE_OFFSET_MAX) { //voltage higher than requested: correct downwards, if we have headroom
       if (pvdd_voltage_request_offset - PVDD_VOLTAGE_OFFSET_STEP <= -PVDD_VOLTAGE_OFFSET_MAX) { //hit maximum: set to maximum correction and warn
@@ -127,6 +130,9 @@ void PVDD_LoopUpdate() {
       } else { //not at maximum yet: decrement offset by one step
 	pvdd_voltage_request_offset -= PVDD_VOLTAGE_OFFSET_STEP;
       }
+
+      //lock out of further changes for a short time
+      pvdd_remaining_lockout_cycles = PVDD_OFFSET_LOCKOUT_SHORT_CYCLES;
 
       _PVDD_WriteDACVoltage();
     }

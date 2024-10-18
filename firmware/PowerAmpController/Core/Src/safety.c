@@ -29,15 +29,15 @@ float safety_max_apparent_power_inst[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_INST;
 float safety_max_apparent_power_0s1[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_0S1;
 float safety_max_apparent_power_1s0[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_1S0;
 //constant limit maximums for sanity checking and reset
-const float safety_limit_current_inst[5] = SAFETY_LIMIT_MAX_CURRENT_INST;
-const float safety_limit_current_0s1[5] = SAFETY_LIMIT_MAX_CURRENT_0S1;
-const float safety_limit_current_1s0[5] = SAFETY_LIMIT_MAX_CURRENT_1S0;
-const float safety_limit_real_power_inst[5] = SAFETY_LIMIT_MAX_REAL_POWER_INST;
-const float safety_limit_real_power_0s1[5] = SAFETY_LIMIT_MAX_REAL_POWER_0S1;
-const float safety_limit_real_power_1s0[5] = SAFETY_LIMIT_MAX_REAL_POWER_1S0;
-const float safety_limit_apparent_power_inst[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_INST;
-const float safety_limit_apparent_power_0s1[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_0S1;
-const float safety_limit_apparent_power_1s0[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_1S0;
+static const float safety_limit_current_inst[5] = SAFETY_LIMIT_MAX_CURRENT_INST;
+static const float safety_limit_current_0s1[5] = SAFETY_LIMIT_MAX_CURRENT_0S1;
+static const float safety_limit_current_1s0[5] = SAFETY_LIMIT_MAX_CURRENT_1S0;
+static const float safety_limit_real_power_inst[5] = SAFETY_LIMIT_MAX_REAL_POWER_INST;
+static const float safety_limit_real_power_0s1[5] = SAFETY_LIMIT_MAX_REAL_POWER_0S1;
+static const float safety_limit_real_power_1s0[5] = SAFETY_LIMIT_MAX_REAL_POWER_1S0;
+static const float safety_limit_apparent_power_inst[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_INST;
+static const float safety_limit_apparent_power_0s1[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_0S1;
+static const float safety_limit_apparent_power_1s0[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_1S0;
 //similar to above, but lower "warning" limits - notify I2C bus if exceeded
 float safety_warn_current_inst[5] = SAFETY_NO_WARN;
 float safety_warn_current_0s1[5] = SAFETY_NO_WARN;
@@ -52,9 +52,9 @@ float safety_warn_apparent_power_1s0[5] = SAFETY_NO_WARN;
 //1 = amp shut down (by force or error condition), 0 = amp allowed to run
 uint8_t is_shutdown = 1;
 //safety shutdown set
-uint8_t safety_shutdown = 1;
+static uint8_t safety_shutdown = 1;
 //manual shutdown set
-uint8_t manual_shutdown = 0;
+static uint8_t manual_shutdown = 0;
 
 
 //perform sanity check that configured fast limits are within the valid ranges
@@ -104,7 +104,7 @@ void _SAFETY_DoLoopChecks() {
   float current_sum_0s1 = 0.0f, real_power_sum_0s1 = 0.0f, apparent_power_sum_0s1 = 0.0f, current_sum_1s0 = 0.0f, real_power_sum_1s0 = 0.0f, apparent_power_sum_1s0 = 0.0f;
   int i;
 
-  //loop to get and check channel values
+//loop to get and check channel values
 #ifdef MAIN_FOUR_CHANNEL
   for (i = 0; i < 4; i++) {
 #else

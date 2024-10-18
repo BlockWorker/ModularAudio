@@ -36,6 +36,8 @@
 #define PVDD_OFFSET_LOCKOUT_MS 300
 //lock-out time in main loop cycles - plus some cycles to allow for smoothing
 #define PVDD_OFFSET_LOCKOUT_CYCLES (PVDD_OFFSET_LOCKOUT_MS / MAIN_LOOP_PERIOD_MS + 10)
+//lock-out time after small offset adjustment, in main loop cycles
+#define PVDD_OFFSET_LOCKOUT_SHORT_CYCLES 3
 
 //EMA alpha and 1-alpha values for voltage measurement smoothing
 //calculation: 1-alpha = e^(-t_loop_period / t_constant)
