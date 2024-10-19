@@ -165,6 +165,7 @@ int main(void)
 
   DEBUG_PRINTF("Initializing safety system...\n");
   if (SAFETY_Init() != HAL_OK) {
+    HAL_Delay(1000);
     Error_Handler();
   }
 
@@ -204,6 +205,7 @@ int main(void)
 
     PVDD_LoopUpdate();
     SAFETY_LoopUpdate();
+    I2C_LoopUpdate();
 
     HAL_Delay(MAIN_LOOP_PERIOD_MS);
   }
@@ -701,16 +703,16 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA2_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
   /* DMA2_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
   /* DMA2_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
 
 }

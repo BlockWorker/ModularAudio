@@ -48,7 +48,7 @@ HAL_StatusTypeDef _PVDD_WriteDACVoltage() {
 }
 
 HAL_StatusTypeDef PVDD_SetRequestedVoltage(float voltage) {
-  if (voltage < PVDD_MIN_VOLTAGE || voltage > PVDD_MAX_VOLTAGE) return HAL_ERROR;
+  if (voltage < PVDD_MIN_VOLTAGE || voltage > PVDD_MAX_VOLTAGE || isnanf(voltage)) return HAL_ERROR;
 
   pvdd_voltage_requested = voltage;
   pvdd_voltage_request_offset = 0.0f;

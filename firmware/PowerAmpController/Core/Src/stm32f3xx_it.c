@@ -22,6 +22,7 @@
 #include "stm32f3xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -355,7 +356,10 @@ void I2C3_EV_IRQHandler(void)
 void I2C3_ER_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C3_ER_IRQn 0 */
-
+  if (READ_BIT(hi2c3.Instance->ISR, I2C_ISR_TIMEOUT)) {
+    __HAL_I2C_CLEAR_FLAG(&hi2c3, I2C_FLAG_TIMEOUT);
+    I2C_TimeoutISR();
+  }
   /* USER CODE END I2C3_ER_IRQn 0 */
   HAL_I2C_ER_IRQHandler(&hi2c3);
   /* USER CODE BEGIN I2C3_ER_IRQn 1 */

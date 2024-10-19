@@ -26,28 +26,28 @@
  *    - 0x44-0x47: MON_IRMS_SLOW_[A-D]: Channel A-D rms current, 1s time constant (each 4B, float little endian, r)
  *    - 0x48-0x4B: MON_PAVG_SLOW_[A-D]: Channel A-D avg real power, 1s time constant (each 4B, float little endian, r)
  *    - 0x4C-0x4F: MON_PAPP_SLOW_[A-D]: Channel A-D avg apparent power, 1s time constant (each 4B, float little endian, r)
- *  * Safety system registers
- *    - 0x50-0x54: SERR_IRMS_INST_[A-D,SUM]: Channel A-D and sum current error limit, instantaneous (each 4B, float little endian, rw)
- *    - 0x55-0x59: SERR_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current error limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0x5A-0x5E: SERR_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current error limit, 1s time constant (each 4B, float little endian, rw)
- *    - 0x60-0x64: SERR_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power error limit, instantaneous (each 4B, float little endian, rw)
- *    - 0x65-0x69: SERR_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power error limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0x6A-0x6E: SERR_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power error limit, 1s time constant (each 4B, float little endian, rw)
- *    - 0x70-0x74: SERR_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power error limit, instantaneous (each 4B, float little endian, rw)
- *    - 0x75-0x79: SERR_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power error limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0x7A-0x7E: SERR_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power error limit, 1s time constant (each 4B, float little endian, rw)
- *    - 0x80-0x84: SWARN_IRMS_INST_[A-D,SUM]: Channel A-D and sum current warning limit, instantaneous (each 4B, float little endian, rw)
- *    - 0x85-0x89: SWARN_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0x8A-0x8E: SWARN_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current warning limit, 1s time constant (each 4B, float little endian, rw)
- *    - 0x90-0x94: SWARN_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power warning limit, instantaneous (each 4B, float little endian, rw)
- *    - 0x95-0x99: SWARN_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0x9A-0x9E: SWARN_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power warning limit, 1s time constant (each 4B, float little endian, rw)
- *    - 0xA0-0xA4: SWARN_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, instantaneous (each 4B, float little endian, rw)
- *    - 0xA5-0xA9: SWARN_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 0.1s time constant (each 4B, float little endian, rw)
- *    - 0xAA-0xAE: SWARN_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power warning limit, 1s time constant (each 4B, float little endian, rw)
+ *  * Safety system registers - threshold writes only permitted during manual shutdown
+ *    - 0x50-0x54: SERR_IRMS_INST_[A-D,SUM]: Channel A-D and sum current error threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0x55-0x59: SERR_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current error threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x5A-0x5E: SERR_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current error threshold, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x60-0x64: SERR_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power error threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0x65-0x69: SERR_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power error threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x6A-0x6E: SERR_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power error threshold, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x70-0x74: SERR_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power error threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0x75-0x79: SERR_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power error threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x7A-0x7E: SERR_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power error threshold, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x80-0x84: SWARN_IRMS_INST_[A-D,SUM]: Channel A-D and sum current warning threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0x85-0x89: SWARN_IRMS_FAST_[A-D,SUM]: Channel A-D and sum current warning threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x8A-0x8E: SWARN_IRMS_SLOW_[A-D,SUM]: Channel A-D and sum current warning threshold, 1s time constant (each 4B, float little endian, rw)
+ *    - 0x90-0x94: SWARN_PAVG_INST_[A-D,SUM]: Channel A-D and sum real power warning threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0x95-0x99: SWARN_PAVG_FAST_[A-D,SUM]: Channel A-D and sum real power warning threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0x9A-0x9E: SWARN_PAVG_SLOW_[A-D,SUM]: Channel A-D and sum real power warning threshold, 1s time constant (each 4B, float little endian, rw)
+ *    - 0xA0-0xA4: SWARN_PAPP_INST_[A-D,SUM]: Channel A-D and sum apparent power warning threshold, instantaneous (each 4B, float little endian, rw)
+ *    - 0xA5-0xA9: SWARN_PAPP_FAST_[A-D,SUM]: Channel A-D and sum apparent power warning threshold, 0.1s time constant (each 4B, float little endian, rw)
+ *    - 0xAA-0xAE: SWARN_PAPP_SLOW_[A-D,SUM]: Channel A-D and sum apparent power warning threshold, 1s time constant (each 4B, float little endian, rw)
  *    - 0xB0: SAFETY_STATUS: Status of safety system (1B, bit field, r)
- *    - 0xB1: SERR_SOURCE: Indication of error source (2B, bit field, rc)
- *    - 0xB2: SWARN_SOURCE: Indication of warning source (2B, bit field, rc)
+ *    - 0xB1: SERR_SOURCE: Indication of error source (2B, bit field, r)
+ *    - 0xB2: SWARN_SOURCE: Indication of warning source (2B, bit field, r)
  *  * Misc registers
  *    - 0xFF: MODULE_ID: Module ID (1B, hex, r)
  *
@@ -62,6 +62,7 @@
  *    - 1: AMP_CLIPOTW: amplifier clip/otw active
  *    - 0: AMP_FAULT: amplifier fault active
  *  * CONTROL (0x08, 1B):
+ *    - 4-7: RESET: controller reset (write 0xA to trigger software reset)
  *    - 1: INT_EN: enable interrupts
  *    - 0: AMP_MAN_SD: activate manual amp shutdown
  *  * INT_MASK (0x10, 1B):
@@ -132,6 +133,9 @@
 #define I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Msk (0x1 << I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Pos)
 #define I2CDEF_POWERAMP_CONTROL_INT_EN_Pos 1
 #define I2CDEF_POWERAMP_CONTROL_INT_EN_Msk (0x1 << I2CDEF_POWERAMP_CONTROL_INT_EN_Pos)
+#define I2CDEF_POWERAMP_CONTROL_RESET_Pos 4
+#define I2CDEF_POWERAMP_CONTROL_RESET_Msk (0xF << I2CDEF_POWERAMP_CONTROL_RESET_Pos)
+#define I2CDEF_POWERAMP_CONTROL_RESET_VALUE 0xA
 
 
 //Interrupt registers

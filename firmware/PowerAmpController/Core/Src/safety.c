@@ -11,13 +11,13 @@
 #include "adc.h"
 #include "pvdd_control.h"
 #include "arm_math.h"
-#include "i2c_defines_poweramp.h"
+#include "i2c.h"
 
 
 #define _SAFETY_CHECK_LIMITS(x,m,i) do { for (i = 0; i < 5; i++) { if (x[i] < 0.0f || x[i] > m[i]) return HAL_ERROR; } } while (0)
 
 
-//safety limits for current, real power, and apparent power - shutdown if exceeded
+//safety thresholds for current, real power, and apparent power - shutdown if exceeded
 //inst = single ADC batch (fast), 0s1 = 0.1s time constant EMA, 1s0 = 1.0s time constant EMA
 //entries 0-3 are channel-wise (A-D, BTL mode uses A and C only), entry 4 is sum of all channels
 float safety_max_current_inst[5] = SAFETY_LIMIT_MAX_CURRENT_INST;
@@ -29,7 +29,7 @@ float safety_max_real_power_1s0[5] = SAFETY_LIMIT_MAX_REAL_POWER_1S0;
 float safety_max_apparent_power_inst[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_INST;
 float safety_max_apparent_power_0s1[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_0S1;
 float safety_max_apparent_power_1s0[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_1S0;
-//constant limit maximums for sanity checking and reset
+//constant maximum limits for sanity checking and reset
 const float safety_limit_current_inst[5] = SAFETY_LIMIT_MAX_CURRENT_INST;
 const float safety_limit_current_0s1[5] = SAFETY_LIMIT_MAX_CURRENT_0S1;
 const float safety_limit_current_1s0[5] = SAFETY_LIMIT_MAX_CURRENT_1S0;
@@ -39,7 +39,7 @@ const float safety_limit_real_power_1s0[5] = SAFETY_LIMIT_MAX_REAL_POWER_1S0;
 const float safety_limit_apparent_power_inst[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_INST;
 const float safety_limit_apparent_power_0s1[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_0S1;
 const float safety_limit_apparent_power_1s0[5] = SAFETY_LIMIT_MAX_APPARENT_POWER_1S0;
-//similar to above, but lower "warning" limits - notify I2C bus if exceeded
+//similar to above, but lower "warning" thresholds - notify I2C bus if exceeded
 float safety_warn_current_inst[5] = SAFETY_NO_WARN;
 float safety_warn_current_0s1[5] = SAFETY_NO_WARN;
 float safety_warn_current_1s0[5] = SAFETY_NO_WARN;
@@ -55,7 +55,7 @@ uint8_t is_shutdown = 1;
 //safety shutdown set
 uint8_t safety_shutdown = 1;
 //manual shutdown set
-uint8_t manual_shutdown = 0;
+uint8_t manual_shutdown = 1;
 //error status
 uint16_t safety_err_status = 0;
 uint16_t safety_warn_status_inst = 0;
@@ -66,7 +66,7 @@ static const uint16_t safety_channel_err_bits[] = { I2CDEF_POWERAMP_SERR_SOURCE_
 static const uint16_t safety_channel_warn_bits[] = { I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_A, I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_B, I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_C, I2CDEF_POWERAMP_SWARN_SOURCE_CHAN_D };
 
 
-//perform sanity check that configured fast limits are within the valid ranges
+//perform sanity check that configured fast thresholds are within the valid ranges
 HAL_StatusTypeDef _SAFETY_SanityCheckFastLimits() {
   int i;
   _SAFETY_CHECK_LIMITS(safety_max_current_inst, safety_limit_current_inst, i);
@@ -75,7 +75,7 @@ HAL_StatusTypeDef _SAFETY_SanityCheckFastLimits() {
   return HAL_OK;
 }
 
-//perform sanity check that all configured limits are within the valid ranges
+//perform sanity check that all configured thresholds are within the valid ranges
 HAL_StatusTypeDef _SAFETY_SanityCheckLimits() {
   int i;
   ReturnOnError(_SAFETY_SanityCheckFastLimits());
@@ -88,8 +88,8 @@ HAL_StatusTypeDef _SAFETY_SanityCheckLimits() {
   return HAL_OK;
 }
 
-//reset maximum thresholds to default absolute limits
-void _SAFETY_ResetLimits() {
+//reset maximum thresholds to default maximum limits
+void _SAFETY_ResetThresholds() {
   memcpy(safety_max_current_inst, safety_limit_current_inst, sizeof(safety_max_current_inst));
   memcpy(safety_max_current_0s1, safety_limit_current_0s1, sizeof(safety_max_current_0s1));
   memcpy(safety_max_current_1s0, safety_limit_current_1s0, sizeof(safety_max_current_1s0));
@@ -137,7 +137,7 @@ void _SAFETY_DoLoopChecks() {
     _Bool amaxf = apparent_power_0s1 > safety_max_apparent_power_0s1[i];
     _Bool amaxl = apparent_power_1s0 > safety_max_apparent_power_1s0[i];
     if (imaxf || imaxl || pmaxf || pmaxl || amaxf || amaxl) {
-      DEBUG_PRINTF("ERROR: Safety loop - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
+      //DEBUG_PRINTF("ERROR: Safety loop - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
       if (imaxf) {
 	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST;
       }
@@ -170,7 +170,7 @@ void _SAFETY_DoLoopChecks() {
     _Bool awarnf = apparent_power_0s1 > safety_warn_apparent_power_0s1[i];
     _Bool awarnl = apparent_power_1s0 > safety_warn_apparent_power_1s0[i];
     if (iwarnf || iwarnl || pwarnf || pwarnl || awarnf || awarnl) {
-      DEBUG_PRINTF("WARNING: Safety loop - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
+      //DEBUG_PRINTF("WARNING: Safety loop - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
       if (iwarnf) {
 	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_FAST;
       }
@@ -210,7 +210,7 @@ void _SAFETY_DoLoopChecks() {
   _Bool amaxfs = apparent_power_sum_0s1 > safety_max_apparent_power_0s1[4];
   _Bool amaxls = apparent_power_sum_1s0 > safety_max_apparent_power_1s0[4];
   if (imaxfs || imaxls || pmaxfs || pmaxls || amaxfs || amaxls) {
-    DEBUG_PRINTF("ERROR: Safety loop - maximum exceeded, channel sum: %f A, %f W, %f VA\n", current_sum_0s1, real_power_sum_0s1, apparent_power_sum_0s1);
+    //DEBUG_PRINTF("ERROR: Safety loop - maximum exceeded, channel sum: %f A, %f W, %f VA\n", current_sum_0s1, real_power_sum_0s1, apparent_power_sum_0s1);
     if (imaxfs) {
       safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST;
     }
@@ -243,7 +243,7 @@ void _SAFETY_DoLoopChecks() {
   _Bool awarnfs = apparent_power_sum_0s1 > safety_warn_apparent_power_0s1[4];
   _Bool awarnls = apparent_power_sum_1s0 > safety_warn_apparent_power_1s0[4];
   if (iwarnfs || iwarnls || pwarnfs || pwarnls || awarnfs || awarnls) {
-    DEBUG_PRINTF("WARNING: Safety loop - warn level exceeded, channel sum: %f A, %f W, %f VA\n", current_sum_0s1, real_power_sum_0s1, apparent_power_sum_0s1);
+    //DEBUG_PRINTF("WARNING: Safety loop - warn level exceeded, channel sum: %f A, %f W, %f VA\n", current_sum_0s1, real_power_sum_0s1, apparent_power_sum_0s1);
     if (iwarnfs) {
       safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_FAST;
     }
@@ -274,7 +274,7 @@ void _SAFETY_DoLoopChecks() {
  */
 void SAFETY_SetManualShutdown(uint8_t shutdown) {
   //just set shutdown variable, leave actual pin updating to main loop
-  manual_shutdown = shutdown > 0;
+  manual_shutdown = shutdown > 0 ? 1 : 0;
 
   //when enabling manual shutdown: reset safety shutdown and errors
   if (shutdown > 0) {
@@ -291,7 +291,7 @@ void SAFETY_CheckADCInstValues() {
     DEBUG_PRINTF("ERROR: Safety inst value check - limit sanity check failed\n");
     safety_err_status = I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Msk; //all source types but no channels - special value for failed sanity check
     _SAFETY_TriggerSafetyShutdown();
-    _SAFETY_ResetLimits();
+    _SAFETY_ResetThresholds();
     I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_SERR_Msk);
     return;
   }
@@ -317,7 +317,7 @@ void SAFETY_CheckADCInstValues() {
     _Bool pmax = real_power > safety_max_real_power_inst[i];
     _Bool amax = apparent_power > safety_max_apparent_power_inst[i];
     if (imax || pmax || amax) {
-      DEBUG_PRINTF("ERROR: Safety inst value check - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
+      //DEBUG_PRINTF("ERROR: Safety inst value check - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
       if (imax) {
 	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST;
       }
@@ -338,7 +338,7 @@ void SAFETY_CheckADCInstValues() {
     _Bool pwarn = real_power > safety_warn_real_power_inst[i];
     _Bool awarn = apparent_power > safety_warn_apparent_power_inst[i];
     if (iwarn || pwarn || awarn) {
-      DEBUG_PRINTF("WARNING: Safety inst value check - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
+      //DEBUG_PRINTF("WARNING: Safety inst value check - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
       if (iwarn) {
 	safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_INST;
       }
@@ -363,7 +363,7 @@ void SAFETY_CheckADCInstValues() {
   _Bool pmaxs = real_power_sum > safety_max_real_power_inst[4];
   _Bool amaxs = apparent_power_sum > safety_max_apparent_power_inst[4];
   if (imaxs || pmaxs || amaxs) {
-    DEBUG_PRINTF("ERROR: Safety inst value check - maximum exceeded, channel sum: %f A, %f W, %f VA\n", current_sum, real_power_sum, apparent_power_sum);
+    //DEBUG_PRINTF("ERROR: Safety inst value check - maximum exceeded, channel sum: %f A, %f W, %f VA\n", current_sum, real_power_sum, apparent_power_sum);
     if (imaxs) {
       safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST;
     }
@@ -384,7 +384,7 @@ void SAFETY_CheckADCInstValues() {
   _Bool pwarns = real_power_sum > safety_warn_real_power_inst[4];
   _Bool awarns = apparent_power_sum > safety_warn_apparent_power_inst[4];
   if (iwarns || pwarns || awarns) {
-    DEBUG_PRINTF("WARNING: Safety inst value check - warn level exceeded, channel sum: %f A, %f W, %f VA\n", current_sum, real_power_sum, apparent_power_sum);
+    //DEBUG_PRINTF("WARNING: Safety inst value check - warn level exceeded, channel sum: %f A, %f W, %f VA\n", current_sum, real_power_sum, apparent_power_sum);
     if (iwarns) {
       safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_INST;
     }
@@ -404,7 +404,7 @@ HAL_StatusTypeDef SAFETY_Init() {
   _SAFETY_TriggerSafetyShutdown();
 
   //start with reset of threshold values to maximum limits (defaults)
-  _SAFETY_ResetLimits();
+  _SAFETY_ResetThresholds();
 
   //delay to settle smoothed ADC measurements - 500ms for full settling of 0.1s time constant
   HAL_Delay(500);
@@ -436,7 +436,7 @@ void SAFETY_LoopUpdate() {
     DEBUG_PRINTF("ERROR: Safety loop - limit sanity check failed\n");
     safety_err_status = I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_Msk; //all source types but no channels - special value for failed sanity check
     _SAFETY_TriggerSafetyShutdown();
-    _SAFETY_ResetLimits();
+    _SAFETY_ResetThresholds();
     I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_SERR_Msk);
   } else { //if sanity check passes: do threshold checks
     _SAFETY_DoLoopChecks();
