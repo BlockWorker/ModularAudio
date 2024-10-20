@@ -54,7 +54,11 @@ extern DAC_HandleTypeDef hdac1;
 
 extern I2C_HandleTypeDef hi2c3;
 
+extern IWDG_HandleTypeDef hiwdg;
+
 extern UART_HandleTypeDef huart3;
+
+extern WWDG_HandleTypeDef hwwdg;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -72,6 +76,9 @@ extern UART_HandleTypeDef huart3;
 //allow define to select four-channel (SE) mode, keep undefined to select two-channel (BTL) mode
 #undef MAIN_FOUR_CHANNEL
 //#define MAIN_FOUR_CHANNEL
+
+//maximum allowed early wakeup refreshes of windowed watchdog
+#define MAIN_WWDG_EARLYWAKE_MAX 4
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

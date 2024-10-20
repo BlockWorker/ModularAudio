@@ -58,10 +58,14 @@ DAC_HandleTypeDef hdac1;
 
 I2C_HandleTypeDef hi2c3;
 
+IWDG_HandleTypeDef hiwdg;
+
 UART_HandleTypeDef huart3;
 
-/* USER CODE BEGIN PV */
+WWDG_HandleTypeDef hwwdg;
 
+/* USER CODE BEGIN PV */
+static uint32_t wwdg_early_wakeups = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +79,8 @@ static void MX_ADC4_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_IWDG_Init(void);
+static void MX_WWDG_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -96,6 +102,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       DEBUG_PRINTF("Amp Clip/OTW Detected!!\n");
     }
   }*/
+}
+
+void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef *hwwdg) {
+  //if this interrupt gets through: we are not stuck in any other interrupt (since this one is lowest priority)
+  //allow a limited number of refreshes in this case (main loop can "freeze" for a little longer this way if needed)
+  if (wwdg_early_wakeups < MAIN_WWDG_EARLYWAKE_MAX) {
+    wwdg_early_wakeups++;
+    HAL_WWDG_Refresh(hwwdg);
+  }
+}
+
+static __always_inline void _RefreshWatchdogs() {
+  HAL_WWDG_Refresh(&hwwdg);
+  wwdg_early_wakeups = 0;
+  HAL_IWDG_Refresh(&hiwdg);
 }
 /* USER CODE END 0 */
 
@@ -135,15 +156,19 @@ int main(void)
   MX_DAC1_Init();
   MX_I2C3_Init();
   MX_USART3_UART_Init();
+  MX_IWDG_Init();
+  MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart3);
 
-  HAL_Delay(1000);
+  HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Controller started\n");
 
   HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Initializing PVDD control...\n");
   if (PVDD_Init() != HAL_OK) {
@@ -151,17 +176,22 @@ int main(void)
   }
 
   HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Calibrating ADC...\n");
   if (ADC_Calibrate() != HAL_OK) {
     Error_Handler();
   }
+
+  _RefreshWatchdogs();
+
   DEBUG_PRINTF("ADC cal complete, starting monitoring\n");
   if (ADC_StartMonitoring() != HAL_OK) {
     Error_Handler();
   }
 
   HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Initializing safety system...\n");
   if (SAFETY_Init() != HAL_OK) {
@@ -170,6 +200,7 @@ int main(void)
   }
 
   HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Initializing I2C...\n");
   if (I2C_Init() != HAL_OK) {
@@ -177,6 +208,7 @@ int main(void)
   }
 
   HAL_Delay(10);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Amp state: fault %d clip %d\n", HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin), HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin));
 
@@ -207,6 +239,7 @@ int main(void)
     SAFETY_LoopUpdate();
     I2C_LoopUpdate();
 
+    _RefreshWatchdogs();
     HAL_Delay(MAIN_LOOP_PERIOD_MS);
   }
   /* USER CODE END 3 */
@@ -225,9 +258,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -657,6 +691,35 @@ static void MX_I2C3_Init(void)
 }
 
 /**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
+
+}
+
+/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -688,6 +751,36 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * @brief WWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_WWDG_Init(void)
+{
+
+  /* USER CODE BEGIN WWDG_Init 0 */
+
+  /* USER CODE END WWDG_Init 0 */
+
+  /* USER CODE BEGIN WWDG_Init 1 */
+
+  /* USER CODE END WWDG_Init 1 */
+  hwwdg.Instance = WWDG;
+  hwwdg.Init.Prescaler = WWDG_PRESCALER_8;
+  hwwdg.Init.Window = 127;
+  hwwdg.Init.Counter = 127;
+  hwwdg.Init.EWIMode = WWDG_EWI_ENABLE;
+  if (HAL_WWDG_Init(&hwwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN WWDG_Init 2 */
+
+  /* USER CODE END WWDG_Init 2 */
 
 }
 

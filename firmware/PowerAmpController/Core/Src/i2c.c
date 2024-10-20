@@ -296,6 +296,9 @@ void _I2C_PrepareReadData() {
 	case I2CDEF_POWERAMP_MON_PAPP_SLOW_A:
 	  mon_array = avg_apparent_power_1s0;
 	  break;
+	default:
+	  i2c_err_detected = 1; //should never happen
+          return;
       }
 
       //return array value

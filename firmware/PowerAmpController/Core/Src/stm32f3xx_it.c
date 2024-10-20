@@ -66,6 +66,7 @@ extern ADC_HandleTypeDef hadc3;
 extern ADC_HandleTypeDef hadc4;
 extern I2C_HandleTypeDef hi2c3;
 extern UART_HandleTypeDef huart3;
+extern WWDG_HandleTypeDef hwwdg;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -207,6 +208,20 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles Window watchdog interrupt.
+  */
+void WWDG_IRQHandler(void)
+{
+  /* USER CODE BEGIN WWDG_IRQn 0 */
+
+  /* USER CODE END WWDG_IRQn 0 */
+  HAL_WWDG_IRQHandler(&hwwdg);
+  /* USER CODE BEGIN WWDG_IRQn 1 */
+
+  /* USER CODE END WWDG_IRQn 1 */
+}
 
 /**
   * @brief This function handles DMA1 channel1 global interrupt.
