@@ -44,6 +44,9 @@ static uint8_t non_idle_timeout = 0;
 //sightings of busy peripheral in idle state
 static uint8_t idle_busy_count = 0;
 
+//initial interrupt active
+static uint8_t init_interrupt_active = 0;
+
 //register size map
 static const uint8_t reg_size_map[] = I2CDEF_POWERAMP_REG_SIZES;
 
@@ -239,6 +242,10 @@ void _I2C_PrepareReadData() {
 	break;
       case I2CDEF_POWERAMP_INT_FLAGS:
 	read_buf[0] = interrupt_flags;
+        if (init_interrupt_active) { //clear init interrupt
+          init_interrupt_active = 0;
+          _I2C_UpdateInterruptPin();
+        }
 	break;
       case I2CDEF_POWERAMP_PVDD_REQ:
 	((float*)read_buf)[0] = pvdd_voltage_requested;
@@ -564,6 +571,10 @@ HAL_StatusTypeDef I2C_Init() {
 
   //reset internal state
   state = I2C_IDLE;
+
+  //assert init interrupt (notify master that the controller has been reset - cleared once INT_FLAGS register is accessed)
+  init_interrupt_active = 1;
+  HAL_GPIO_WritePin(I2C3_INT_N_GPIO_Port, I2C3_INT_N_Pin, GPIO_PIN_RESET);
 
   return HAL_OK;
 }
