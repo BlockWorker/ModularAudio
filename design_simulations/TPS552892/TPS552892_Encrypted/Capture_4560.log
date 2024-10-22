@@ -1,0 +1,18 @@
+[2023-03-30T15:14:47.950+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseStateHandler::CDSPulseStateHandler] [DEBUG] - Creating CDSPulseStateHandler.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManager::startSync] [DEBUG] - Param received is conf explore
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManager::startSync] [DEBUG] - Handle start server synchronously.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManager::startSync] [DEBUG] - Sending server start event to health state handler.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [PulseStartEvent::PulseStartEvent] [DEBUG] - Creating pulse start event.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [PulseStateNoServer::handleEvent] [DEBUG] - Start event received.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::getInitJsonFileLocation] [DEBUG] - Creating json file pathC:/Users/a0497752/AppData/Local/Temp\pulse_stage_a0497752_4560\sjson
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::launchInitTranslateServer] [DEBUG] - Launching Init Translate Server.
+[2023-03-30T15:14:47.965+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::launchInitTranslateServer] [DEBUG] - Init translate server command is C:\Cadence\SPB_17.4\tools/pcbdw/bin\translate.bat -parent "4560" -parentlocation "C:/Users/a0497752/AppData/Local/Temp\pulse_stage_a0497752_4560\sjson" -appname "orcad" -conf "explore"
+[2023-03-30T15:14:48.543+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPortFileReaderThread::checkFileCreated] [DEBUG] - Checking for server json file from launch.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPortFileReaderThread::readPort] [DEBUG] - Reading server json file from launch.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPortFileReaderThread::readPort] [DEBUG] - Reading data from server json file.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPortFileReaderThread::readPort] [DEBUG] - Signaling server json file from launch as read.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::updateData] [DEBUG] - Port file reading finished.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::updateData] [DEBUG] - Server started successfully.
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManagerImpl::updateData] [ERROR] - Pulse health checkup system could not be initialized for server http://127.0.0.1:7200
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseStateHandler::setCurrentState] [DEBUG] - Setting state as started
+[2023-03-30T15:14:53.621+0800] [4560] [568] [a0497752] [Capture.exe] [10.85.8.169] [DT4CV022WMV0] [CDSPulseManager::getDataValue] [DEBUG] - value is: http://127.0.0.1:7200

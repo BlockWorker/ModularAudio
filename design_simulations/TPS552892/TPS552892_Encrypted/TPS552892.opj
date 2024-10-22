@@ -1,0 +1,93 @@
+(ExpressProject "TPS552892"
+  (ProjectVersion "19981106")
+  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[10/22/24]")
+  (ProjectType "Analog or A/D Mixed Mode")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\generic_blocks.olb"
+        (Type "Schematic Library"))
+      (File ".\tps552892.olb"
+        (Type "Schematic Library")))
+    (Allegro Netlist Directory "allegro")
+    (DOCKED "TRUE")
+    (DOCKING_POSITION "59420")
+    (NoModify)
+    (File ".\tps552892.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (PSPICE_Regenerate_Netlist_Flag "FALSE"))
+  (Folder "Layout")
+  (Folder "Outputs"
+    (File ".\tps552892-pspicefiles\tps552892 startup\tps552892 startup.net"
+      (Type "Report")))
+  (Folder "PSpice Resources"
+    (Folder "Simulation Profiles"
+      (ActiveProfile ".\tps552892-pspicefiles\tps552892 startup\startup.sim")
+      (File.PSpice.{09528990-3187-11D2-BC7B-00A0C90CBF91}
+         ".\tps552892-pspicefiles\tps552892 startup\startup.sim"
+        (DisplayName "TPS552892 Startup-Startup")
+        (Type "PSpice Profile")))
+    (Folder "Stimulus Files"
+      (Sort User))
+    (Folder "Include Files"
+      (Sort User))
+    (Folder "Model Libraries"
+      (Sort User)
+      (File ".\tps552892-pspicefiles\tps552892.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\tps552892-pspicefiles\tps552892.lib"))
+      (File ".\generic_blocks.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\generic_blocks.lib"))
+      (File ".\tps552892.lib"
+        (Type "PSpiceLibrary")
+        (DisplayName ".\tps552892.lib"))))
+  (DefaultLibraryBrowseDirectory "library\PSpice")
+  (Folder "Logs")
+  (PartMRUSelector
+    (Sbreak
+      (FullPartName "Sbreak.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\BREAKOUT.OLB")
+      (DeviceIndex "0"))
+    (TPS552892_SYMBOL
+      (FullPartName "TPS552892_SYMBOL.Normal")
+      (LibraryName
+         "C:\USERS\A0497752\DOWNLOADS\TPS55289\TPS552892_NEW\PSPICE_RELEASE\TPS552892.OLB")
+      (DeviceIndex "0")))
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\tps552892_encrypted\tps552892.dsn")
+      (Path "Design Resources"
+         "e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\tps552892_encrypted\tps552892.dsn"
+         "TPS552892 Startup")
+      (Path "Design Resources" "Library")
+      (Path "Outputs")
+      (Path "PSpice Resources")
+      (Path "PSpice Resources" "Model Libraries")
+      (Path "PSpice Resources" "Simulation Profiles")
+      (Select "Design Resources"
+         "e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\tps552892_encrypted\tps552892.dsn"
+         "TPS552892 Startup" "TPS552892 Startup"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -1 -1 0 200 0 873"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 5 24 5 1674 24 891")
+        (Scroll "-172 -5")
+        (Zoom "85")
+        (Occurrence "/"))
+      (Path
+         "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\TPS552892\TPS552892_ENCRYPTED\TPS552892.DSN")
+      (Schematic "TPS552892 Startup")
+      (Page "TPS552892 Startup")))
+  (MPSSessionName "Alex")
+  (ISPCBBASICLICENSE "false"))

@@ -1,0 +1,25 @@
+** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\tps552892_encrypted\tps552892-pspicefiles\tps552892 startup\startup.sim ] 
+
+** Creating circuit file "Startup.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../tps552892-pspicefiles/tps552892.lib" 
+.LIB "../../../generic_blocks.lib" 
+.LIB "../../../tps552892.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "C:\Program Files\Cadence\OrCADX_23.1\tools\pspice\Library\nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 5ms 0 50n 
+.OPTIONS ADVCONV
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 80
+.OPTIONS ITL4= 40
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\TPS552892 Startup.net" 
+
+
+.END

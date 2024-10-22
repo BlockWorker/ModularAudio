@@ -1,0 +1,171 @@
+
+**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+** Creating circuit file "Startup.cir" 
+** WARNING: THIS AUTOMATICALLY GENERATED FILE MAY BE OVERWRITTEN BY SUBSEQUENT SIMULATIONS
+
+*Libraries: 
+* Profile Libraries :
+* Local Libraries :
+.LIB "../../../tps552892-pspicefiles/tps552892.lib" 
+.LIB "../../../generic_blocks.lib" 
+.LIB "../../../tps552892.lib" 
+* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+.lib "C:\Program Files\Cadence\OrCADX_23.1\tools\pspice\Library\nom.lib" 
+
+*Analysis directives: 
+.TRAN  0 5ms 0 50n 
+.OPTIONS ADVCONV
+.OPTIONS ITL1= 1000
+.OPTIONS ITL2= 80
+.OPTIONS ITL4= 40
+.PROBE64 V(alias(*)) I(alias(*)) 
+.INC "..\TPS552892 Startup.net" 
+
+
+
+**** INCLUDING "TPS552892 Startup.net" ****
+* source TPS552892
+C_C8         N16777243 SW2  0.1u  TC=0,0 
+R_R7         N167775671 0  1G TC=0,0 
+R_R4         FB 0  {Rup/(Vout/1.2-1)} TC=0,0 
+C_C7         N16777240 SW1  0.1u  TC=0,0 
+R_R8         N16787982 0  {Vout/(Iout-0.1)} TC=0,0 
+L_L1         SW1 SW2  3.3uH  
+C_C1         0 VIN  7u  TC=0,0 
+R_R5         COMP N16777555  487k TC=0,0 
+R_R2         ISN ISP  10m TC=0,0 
+V_V5         EN 0  
++PULSE 0 3 10u 1u 0 1 10
+C_C3         0 ISP  28u IC=0 TC=0,0 
+C_C5         0 VCC  4.7u  TC=0,0 
+C_C10         0 COMP  18p  TC=0,0 
+R_R3         ISN FB  {Rup} TC=0,0 
+C_C9         0 N16777555  470p  TC=0,0 
+V_V4         MODE 0 {3.3*FPWM}
+C_C11         0 DITH  1G  TC=0,0 
+R_R1         0 FSW  33k TC=0,0 
+R_R9         PG VCC  100k TC=0,0 
+R_R10         CC VCC  100k TC=0,0 
+X_U1         0 N16777240 N16777243 CC N167775671 COMP DITH EN 0 FB FSW ISN ISP
++  MODE PG 0 SW1 SW2 VCC VIN ISP TPS552892_SYMBOL PARAMS:  FAST_STARTUP=0
+C_C12         ISN ISP  0.1u  TC=0,0 
+C_C13         0 N16786097  100u  TC=0,0 
+R_R11         N16786097 VIN  20m TC=0,0 
+R_R12         N16786216 ISP  8m TC=0,0 
+C_C15         0 N16786216  1m IC=0 TC=0,0 
+V_V6         VIN 0  
++PULSE {Vin} {Vin} 1 100u 100u 1 10
+X_S1    N16788242 0 ISN N16787982 TPS552892_Startup_S1 
+R_R13         ISN 0  {Vout/0.1} TC=0,0 
+V_V7         N16788242 0  
++PULSE 12 12 1 1u 1u 2m 10
+.PARAM  iout=4.9 vin=10 fpwm=1 fast_startup=0 ss=0 vout=12.1 rup=100k
+
+.subckt TPS552892_Startup_S1 1 2 3 4  
+S_S1         3 4 1 2 Sbreak
+RS_S1         1 2 1G
+.ends TPS552892_Startup_S1
+
+**** RESUMING Startup.cir ****
+.END
+
+**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
+
+
+ ****     Voltage Controlled Switch MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               Sbreak          
+         RON    1.000000E-03 
+        ROFF    1.000000E+09 
+         VON    5            
+        VOFF     .5          
+
+
+WARNING(ORPSIM-15459): In device V_V5, default values (TF=1.00e-09) are used for zero TR and TF. Use the DEFTR and DEFTF options to control these defaults. To disable default value usage for zero TR and TF, specify the DISABLE_DEFAULT_PULSE_PARAMS option.
+
+**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   CC)    0.0000  (   EN)    0.0000  (   FB) 1.655E-24  (   PG)    0.0000      
+
+(  FSW)    1.0000  (  ISN) 16.69E-24  (  ISP) 16.75E-24  (  SW1) 10.01E-12      
+
+(  SW2) 10.01E-12  (  VCC)    0.0000  (  VIN)   10.0000  ( COMP)     .4667      
+
+( DITH)    1.0000  ( MODE)    3.3000  (N16777240) 20.02E-21                     
+
+(N16777243) 20.02E-21                 (N16777555)     .4667                     
+
+(N16786097)   10.0000                 (N16786216) 3.351E-24                     
+
+(N16787982) 16.68E-24                 (N16788242)   12.0000                     
+
+(N167775671) 1.351E-24                                                          
+
+(X_U1.X_U552892.X_U5.SW2_LOW_HOLD_600N)    0.0000        
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    V_V5         0.000E+00
+    V_V4        -4.125E-06
+    V_V6        -1.001E-08
+    V_V7        -1.201E-08
+
+    TOTAL POWER DISSIPATION   1.39E-05  WATTS
+
+Reducing minimum delta to make the circuit converge.
+Reducing minimum delta to make the circuit converge.
+
+
+          JOB CONCLUDED
+
+**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+ ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =     1251.16
+
