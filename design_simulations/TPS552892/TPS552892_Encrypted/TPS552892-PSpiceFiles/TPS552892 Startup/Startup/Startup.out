@@ -1,5 +1,5 @@
-
-**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+
+**** 10/23/24 23:03:12 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
 
@@ -81,7 +81,7 @@ RS_S1         1 2 1G
 **** RESUMING Startup.cir ****
 .END
 
-**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 10/23/24 23:03:12 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
 
@@ -103,7 +103,7 @@ RS_S1         1 2 1G
 
 WARNING(ORPSIM-15459): In device V_V5, default values (TF=1.00e-09) are used for zero TR and TF. Use the DEFTR and DEFTF options to control these defaults. To disable default value usage for zero TR and TF, specify the DISABLE_DEFAULT_PULSE_PARAMS option.
 
-**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 10/23/24 23:03:12 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
 
@@ -132,9 +132,7 @@ WARNING(ORPSIM-15459): In device V_V5, default values (TF=1.00e-09) are used for
 
 (N16787982) 16.68E-24                 (N16788242)   12.0000                     
 
-(N167775671) 1.351E-24                                                          
-
-(X_U1.X_U552892.X_U5.SW2_LOW_HOLD_600N)    0.0000        
+(N167775671) 1.351E-24                
 
 
 
@@ -155,7 +153,7 @@ Reducing minimum delta to make the circuit converge.
 
           JOB CONCLUDED
 
-**** 10/22/24 14:14:41 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
+**** 10/23/24 23:03:12 ****** PSpice 23.1.0 (29 May 2024) ***** ID# 0 ********
 
  ** Profile: "TPS552892 Startup-Startup"  [ e:\users\alex\documents\electronics projects\modular audio\design_simulations\tps552892\t
 
@@ -167,5 +165,5 @@ Reducing minimum delta to make the circuit converge.
 
 
 
-  Total job time (using Solver 1)   =     1251.16
+  Total job time (using Solver 1)   =     1242.95
 
