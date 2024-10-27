@@ -98,12 +98,15 @@ void PVDD_LoopUpdate() {
     //use (slow) EMA for voltage measurement smoothing
     pvdd_voltage_measured = PVDD_EMA_1MALPHA * pvdd_voltage_measured + PVDD_EMA_ALPHA * direct_measured_voltage;
 
-    //check voltage fail condition: reset if met
+    //check voltage fail conditions: reset if met
     if (fabsf(pvdd_voltage_measured - pvdd_voltage_requested) > PVDD_VOLTAGE_ERROR_FAIL) {
-      DEBUG_PRINTF("ERROR: PVDD voltage fail, measured %f V, target %f V\n", pvdd_voltage_measured, pvdd_voltage_requested);
-      PVDD_Init();
-      I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk);
-      return;
+      //check for "expected overvoltage" condition (requested voltage is at/below supply input voltage) - only reset in other cases
+      if (pvdd_voltage_measured < pvdd_voltage_requested || pvdd_voltage_measured > PVDD_VOLTAGE_MAX_NOERROR) {
+        DEBUG_PRINTF("ERROR: PVDD voltage fail, measured %f V, target %f V\n", pvdd_voltage_measured, pvdd_voltage_requested);
+        PVDD_Init();
+        I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk);
+        return;
+      }
     }
 
     //not in fail condition: voltage is valid

@@ -45,6 +45,8 @@
 #define PVDD_EMA_1MALPHA 0.98f
 #define PVDD_EMA_ALPHA (1.0f - PVDD_EMA_1MALPHA)
 
+//maximum acceptable voltage that doesn't result in overvoltage error (expected overvoltage when supply input is at/above requested voltage)
+#define PVDD_VOLTAGE_MAX_NOERROR 25.0f
 //voltage error above which "fail" condition is triggered (causing PVDD control reset)
 #define PVDD_VOLTAGE_ERROR_FAIL 2.0f
 //voltage error which causes a correction attempt using offset
