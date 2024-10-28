@@ -41,12 +41,23 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c3;
 
+extern UART_HandleTypeDef huart2;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+//quick error-return macro
+#define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
 
+//debug printout, disabled outside of debug mode
+#ifdef DEBUG
+#define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
+#else
+#define DEBUG_PRINTF(...) do { } while (0)
+#endif
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
