@@ -71,8 +71,8 @@ void Error_Handler(void);
 #define PWR_SWITCH_Pin GPIO_PIN_14
 #define PWR_SWITCH_GPIO_Port GPIOC
 #define PWR_SWITCH_EXTI_IRQn EXTI4_15_IRQn
-#define I2C_INT_N_Pin GPIO_PIN_9
-#define I2C_INT_N_GPIO_Port GPIOA
+#define I2C_ISO_EN_Pin GPIO_PIN_9
+#define I2C_ISO_EN_GPIO_Port GPIOA
 #define BMS_ALERT_N_Pin GPIO_PIN_5
 #define BMS_ALERT_N_GPIO_Port GPIOB
 #define BMS_ALERT_N_EXTI_IRQn EXTI4_15_IRQn

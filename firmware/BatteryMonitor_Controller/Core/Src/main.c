@@ -186,8 +186,8 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00000004;
-  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.Timing = 0x00100E16;
+  hi2c1.Init.OwnAddress1 = 22;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;
@@ -234,8 +234,8 @@ static void MX_I2C3_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x00100E16;
-  hi2c3.Init.OwnAddress1 = 22;
+  hi2c3.Init.Timing = 0x00000004;
+  hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c3.Init.OwnAddress2 = 0;
@@ -318,7 +318,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(I2C_INT_N_GPIO_Port, I2C_INT_N_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PWR_SWITCH_Pin */
   GPIO_InitStruct.Pin = PWR_SWITCH_Pin;
@@ -326,12 +326,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(PWR_SWITCH_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : I2C_INT_N_Pin */
-  GPIO_InitStruct.Pin = I2C_INT_N_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  /*Configure GPIO pin : I2C_ISO_EN_Pin */
+  GPIO_InitStruct.Pin = I2C_ISO_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(I2C_INT_N_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(I2C_ISO_EN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BMS_ALERT_N_Pin */
   GPIO_InitStruct.Pin = BMS_ALERT_N_Pin;
