@@ -180,8 +180,8 @@
 /* ------ SECURITY SETTINGS ------ */
 /***********************************/
 
-//security config ([upper 5 reserved], SEAL, LOCK_CFG, PERM_SEAL) - default 0x00, here 0x04 (seal after config done)
-#define MON_SEC_CONFIG 0x04
+//security config ([upper 5 reserved], SEAL, LOCK_CFG, PERM_SEAL) - default 0x00
+#define MON_SEC_CONFIG 0x00
 //full access key step 1 - default 0x0414
 #define MON_SEC_FULLACCESS_KEY_1 0x0414
 //full access key step 2 - default 0x3672

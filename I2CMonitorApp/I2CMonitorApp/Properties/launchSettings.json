@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "I2CMonitorApp": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
