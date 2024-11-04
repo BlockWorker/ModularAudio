@@ -44,6 +44,7 @@ I2CDRVLIB_API int  i2c_write(I2CDriver* sd, const uint8_t bytes[], size_t nn);
 I2CDRVLIB_API void i2c_read(I2CDriver* sd, uint8_t bytes[], size_t nn);
 I2CDRVLIB_API int  i2c_start(I2CDriver* sd, uint8_t dev, uint8_t op);
 I2CDRVLIB_API void i2c_stop(I2CDriver* sd);
+I2CDRVLIB_API void i2c_regrd(I2CDriver* sd, uint8_t dev, uint8_t reg, uint8_t bytes[], uint8_t nn);
 
 I2CDRVLIB_API void i2c_monitor(I2CDriver* sd, int enable);
 I2CDRVLIB_API void i2c_capture(I2CDriver* sd);

@@ -407,7 +407,11 @@ HAL_StatusTypeDef SAFETY_Init() {
   _SAFETY_ResetThresholds();
 
   //delay to settle smoothed ADC measurements - 500ms for full settling of 0.1s time constant
-  HAL_Delay(500);
+  int i;
+  for (i = 0; i < 50; i++) {
+    HAL_Delay(10);
+    RefreshWatchdogsExt();
+  }
 
   //check that initial voltage and current are within limits
   float max_current, max_voltage;

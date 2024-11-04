@@ -55,6 +55,9 @@ namespace I2CMonitorApp {
         internal static extern void i2c_stop(ref I2CDriver sd);
 
         [DllImport("I2CDriverLib.dll")]
+        internal static extern void i2c_regrd(ref I2CDriver sd, byte dev, byte reg, [Out] byte[] bytes, byte nn);
+
+        [DllImport("I2CDriverLib.dll")]
         internal static extern void i2c_monitor(ref I2CDriver sd, int enable);
 
         [DllImport("I2CDriverLib.dll")]
@@ -85,9 +88,13 @@ namespace I2CMonitorApp {
         }
 
         internal static bool I2C_ReadReg(ref I2CDriver sd, byte dev, byte reg, int length, ref byte[] data) {
-            if (sd.connected == 0) return false;
+            if (sd.connected == 0 || length > 0xFF) return false;
 
-            byte[] wdata = [reg];
+            i2c_regrd(ref sd, dev, reg, data, (byte)(length & 0xFF));
+
+            return true;
+
+            /*byte[] wdata = [reg];
 
             int r = i2c_start(ref sd, dev, 0);
             if (r == 0) {
@@ -97,8 +104,8 @@ namespace I2CMonitorApp {
             }
 
             r = i2c_write(ref sd, wdata, 1);
-            i2c_stop(ref sd);
             if (r == 0) {
+                i2c_stop(ref sd);
                 i2c_getstatus(ref sd);
                 return false;
             }
@@ -113,7 +120,7 @@ namespace I2CMonitorApp {
             i2c_read(ref sd, data, (nuint)length);
             i2c_stop(ref sd);
             i2c_getstatus(ref sd);
-            return true;
+            return true;*/
         }
 
     }

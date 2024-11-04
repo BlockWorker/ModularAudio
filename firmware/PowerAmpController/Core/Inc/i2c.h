@@ -17,12 +17,21 @@
 #define I2C_VIRT_BUFFER_SIZE 4
 
 //timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)
-//initial values calculated for 8 MHz I2CCLK: 4ms stretch timeout, 8ms low timeout
-#define I2C_SCL_STRETCH_TIMEOUT (15 << I2C_TIMEOUTR_TIMEOUTB_Pos)
-#define I2C_SCL_LOW_TIMEOUT (31 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+//initial values calculated for 8 MHz I2CCLK: stretch timeout 8ms in release, 16ms in debug, low timeout 16ms in release, 65ms in debug
+#ifdef DEBUG
+#define I2C_SCL_STRETCH_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (255 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#else
+#define I2C_SCL_STRETCH_TIMEOUT (31 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#endif
 
 //timeout for non-idle state, in main loop cycles
+#ifdef DEBUG
+#define I2C_NONIDLE_TIMEOUT 10
+#else
 #define I2C_NONIDLE_TIMEOUT 3
+#endif
 
 
 HAL_StatusTypeDef I2C_Init();

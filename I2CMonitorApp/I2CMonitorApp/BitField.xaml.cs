@@ -37,6 +37,9 @@ namespace I2CMonitorApp {
         public byte Value {
             get => _value;
             set {
+                var changes = value ^ _value;
+                _set_switches &= (byte)~changes; //disable switches that were already changed
+
                 _value = value;
                 UpdateColors();
             }

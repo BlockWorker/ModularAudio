@@ -95,13 +95,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       DEBUG_PRINTF("Amp Fault Detected!!\n");
       I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_FAULT_Msk);
     }
-  } /*else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
-    if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_SET) {
-      DEBUG_PRINTF("Amp Clip/OTW Cleared\n");
-    } else {
-      DEBUG_PRINTF("Amp Clip/OTW Detected!!\n");
+  } else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
+    if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET) {
+      I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_CLIPOTW_Msk);
     }
-  }*/
+  }
 }
 
 void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef *hwwdg) {
@@ -117,6 +115,10 @@ static __always_inline void _RefreshWatchdogs() {
   HAL_WWDG_Refresh(&hwwdg);
   wwdg_early_wakeups = 0;
   HAL_IWDG_Refresh(&hiwdg);
+}
+
+void RefreshWatchdogsExt() {
+  _RefreshWatchdogs();
 }
 /* USER CODE END 0 */
 
@@ -195,7 +197,6 @@ int main(void)
 
   DEBUG_PRINTF("Initializing safety system...\n");
   if (SAFETY_Init() != HAL_OK) {
-    HAL_Delay(1000);
     Error_Handler();
   }
 
@@ -222,7 +223,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-#ifdef DEBUG
+#ifdef DISABLED___DEBUG
     static uint32_t cycle_count = 0;
     if (cycle_count++ * MAIN_LOOP_PERIOD_MS >= 1000) {
       cycle_count = 0;
@@ -846,7 +847,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */

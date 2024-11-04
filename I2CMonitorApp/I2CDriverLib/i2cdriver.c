@@ -381,6 +381,14 @@ void i2c_read(I2CDriver* sd, uint8_t bytes[], size_t nn)
     }
 }
 
+void i2c_regrd(I2CDriver* sd, uint8_t dev, uint8_t reg, uint8_t bytes[], uint8_t nn)
+{
+    uint8_t cmd[4] = { 'r', dev, reg, nn };
+    writeToSerialPort(sd->port, cmd, 4);
+    readFromSerialPort(sd->port, bytes, nn);
+    crc_update(sd, bytes, nn);
+}
+
 void i2c_monitor(I2CDriver* sd, int enable)
 {
     charCommand(sd, enable ? 'm' : '@');
