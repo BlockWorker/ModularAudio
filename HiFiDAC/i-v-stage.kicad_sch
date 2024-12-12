@@ -2647,7 +2647,7 @@
 		)
 		(uuid "01807641-e944-423f-9dee-5a33a31852bd")
 	)
-	(text "Shown config: High voltage (>9Vpk) low bandwidth (50-65kHz)\nAlternatives: Low voltage (>4.5Vpk) and/or high bandwith (200-300kHz)\n\nHV HB:\n - Feedback caps 220pF\n - RC filter caps 3.3nF\nLV LB:\n - Feedback resistors 1.5kΩ | 22kΩ\n - Feedback caps 1.5nF\nLV HB:\n - Feedback resistors 1.5kΩ | 22kΩ\n - Feedback caps 330pF\n - RC filter caps 3.3nF"
+	(text "Shown config: High voltage (>9Vpp) low bandwidth (55-65kHz)\nAlternatives: Low voltage (>4.5Vpp) and/or high bandwith (250-350kHz)\n\nHV HB:\n - Feedback caps 330pF\n - RC filter caps 3.3nF\nLV LB:\n - Feedback resistors 1.5kΩ | 1.5kΩ\n - Feedback caps 3.3nF\nLV HB:\n - Feedback resistors 1.5kΩ | 1.5kΩ\n - Feedback caps 470pF\n - RC filter caps 3.3nF"
 		(exclude_from_sim no)
 		(at 227.33 59.69 0)
 		(effects
@@ -3137,7 +3137,7 @@
 				)
 			)
 		)
-		(property "Value" "1nF C0G"
+		(property "Value" "1.5nF C0G"
 			(at 80.01 46.99 90)
 			(effects
 				(font
@@ -3205,7 +3205,7 @@
 				)
 			)
 		)
-		(property "Value" "3.3kΩRS"
+		(property "Value" "1.5kΩRS"
 			(at 80.01 168.91 90)
 			(effects
 				(font
@@ -3475,7 +3475,7 @@
 				)
 			)
 		)
-		(property "Value" "1nF C0G"
+		(property "Value" "1.5nF C0G"
 			(at 80.01 179.07 90)
 			(effects
 				(font
@@ -3951,7 +3951,7 @@
 				)
 			)
 		)
-		(property "Value" "1nF C0G"
+		(property "Value" "1.5nF C0G"
 			(at 80.01 246.38 90)
 			(effects
 				(font
@@ -4519,7 +4519,7 @@
 				)
 			)
 		)
-		(property "Value" "3.3kΩRS"
+		(property "Value" "1.5kΩRS"
 			(at 80.01 127 90)
 			(effects
 				(font
@@ -4793,7 +4793,7 @@
 				)
 			)
 		)
-		(property "Value" "1nF C0G"
+		(property "Value" "1.5nF C0G"
 			(at 80.01 114.3 90)
 			(effects
 				(font
@@ -4929,7 +4929,7 @@
 				)
 			)
 		)
-		(property "Value" "3.3kΩRS"
+		(property "Value" "1.5kΩRS"
 			(at 80.01 36.83 90)
 			(effects
 				(font
@@ -6244,7 +6244,7 @@
 				)
 			)
 		)
-		(property "Value" "3.3kΩRS"
+		(property "Value" "1.5kΩRS"
 			(at 80.01 259.08 90)
 			(effects
 				(font
