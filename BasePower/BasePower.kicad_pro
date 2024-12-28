@@ -644,6 +644,10 @@
     [
       "66a6072f-b93c-48b6-9ad2-cc693c587a24",
       "3.3V Buck"
+    ],
+    [
+      "941b7ee6-060b-47d8-8880-cb652c0a66c6",
+      "12V Clean LDO"
     ]
   ],
   "text_variables": {}

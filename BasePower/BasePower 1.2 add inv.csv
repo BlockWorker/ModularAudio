@@ -1,0 +1,58 @@
+Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have
+1;R14;R_0805_2012Metric;1;10mΩ 0.5W;;;;v
+2;R12,R13;R_0603_1608Metric;2;50Ω;;;;v
+3;R11,R10;R_1206_3216Metric;2;?Ω;;;;v
+4;R9,R7,R1,R6;R_0603_1608Metric;4;1kΩ;;;;v
+5;R8;R_0603_1608Metric;1;4.7kΩ;;;;v
+6;C35;C_1210_3225Metric;1;22µF 16V;;;x;
+7;U4;Texas_RGW0020A_VQFN-20-1EP_5x5mm_P0.65mm_EP3.15x3.15mm;1;TPS7A47;;;x;
+8;R5;R_0603_1608Metric;1;2kΩ;;;;v
+9;R3;R_0603_1608Metric;1;3.3kΩ;;;;v
+10;Q2,Q1;SOT-23;2;NX138BK;;;;v
+11;D4;LED_0603_1608Metric;1;Green;;;x;
+12;C37;C_0805_2012Metric;1;1µF 50Vl;;;;v
+13;C36;CP_Radial_D6.3mm_P2.50mm;1;470µF 16V;;;x;
+14;C34,C27,C5,C8,C14,C13,C4,C9,C25,C31;C_0603_1608Metric;10;0.1µF;;;;v
+15;C33;C_1206_3216Metric;1;10µF 50V;;;;v
+16;C20,C21;C_1210_3225Metric;2;47µF 6.3V;;;;v
+17;J2;PinHeader_2x15_P2.54mm_Vertical;1;3.3V;;;;v
+18;C7,C6;C_1210_3225Metric;2;10µF 50Vl x2;;;;v
+19;D3;LED_0603_1608Metric;1;YellowGreen;;;;v
+20;D1;LED_0603_1608Metric;1;Amber;;;;v
+21;R20;R_0603_1608Metric;1;40.2kΩ;;;;v
+22;C1;CP_Radial_D8.0mm_P3.50mm;1;220µF 35V;;;;v
+23;C3,C2;C_0603_1608Metric;2;?pF;;;;v
+24;J3;PinHeader_2x10_P2.54mm_Vertical;1;5V;;;;v
+25;U2;TI_B3QFN-20;1;TLVM13640;;;;v
+26;C11,C10;C_1206_3216Metric;2;10µF 50V x2;;;;v
+27;F2;Fuse_0603_1608Metric;1;4A;;;x;
+28;R16;R_0603_1608Metric;1;487kΩ;;;;v
+29;C26,C32;C_0603_1608Metric;2;1µF;;;;v
+30;R25;R_0603_1608Metric;1;23.2kΩ;;;;v
+31;C28;C_1210_3225Metric;1;47µF 6.3V x2;;;;v
+32;F1;Fuse_0603_1608Metric;1;2.5A;;;x;
+33;R27,R22;R_0603_1608Metric;2;10kΩ;;;;v
+34;L1;L_Vishay_IHLP-2525;1;3.3µH;;;;v
+35;R4,R21,R2;R_0603_1608Metric;3;0Ω;;;;v
+36;C19;C_0603_1608Metric;1;10pF;;;;v
+37;C18;C_0603_1608Metric;1;470pF;;;;v
+38;J1;Molex_Nano-Fit_105309-xx02_1x02_P2.50mm_Vertical;1;VIN;;;;v
+39;R15,R26;R_0603_1608Metric;2;100kΩ;;;;v
+40;C12;CP_Radial_D8.0mm_P3.50mm;1;1mF 16V;;;;v
+41;C23,C24,C30;C_1210_3225Metric;3;10µF 50Vl;;;;v
+42;U3;TI_QFN-FCMOD-HR;1;TPSM33625F;;;;v
+43;C16;C_0603_1608Metric;1;18pF;;;;v
+44;C22,C29;CP_Radial_D6.3mm_P2.50mm;2;470µF 6.3V;;;;v
+45;F3;Fuse_0603_1608Metric;1;5A;;;x;
+46;D2;LED_0603_1608Metric;1;Red;;;;v
+47;U1;TI_VQFN-HR-21;1;TPS552892;;;;v
+48;J4;PinHeader_2x15_P2.54mm_Vertical;1;12V;;;;v
+49;C15;C_0603_1608Metric;1;4.7µF;;;;v
+50;R17;R_0603_1608Metric;1;11kΩ;;;;v
+51;TP1;U.FL_Molex_MCRF_73412-0110_Vertical;1;SW1;;;;v
+52;TP2;U.FL_Molex_MCRF_73412-0110_Vertical;1;SW2;;;;v
+53;C17;C_0603_1608Metric;1;Shunt;;;;v
+54;R23;R_0603_1608Metric;1;12.1kΩ;;;;v
+55;R24;R_0603_1608Metric;1;750kΩ;;;;v
+56;R19;R_0603_1608Metric;1;?kΩ;;;;v
+57;R18;R_0603_1608Metric;1;33kΩ;;;;v
