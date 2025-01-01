@@ -7017,17 +7017,6 @@
 		)
 		(uuid "675f56d9-3bb7-4343-8da5-74b0cadbccbb")
 	)
-	(label "PIO5"
-		(at 55.88 105.41 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "67ea45a8-b279-4431-9cd3-813f42c716a0")
-	)
 	(label "PIO32"
 		(at 55.88 123.19 180)
 		(fields_autoplaced yes)
@@ -7150,6 +7139,17 @@
 		(uuid "af0c6cbf-c090-4a52-8ae0-20df89af326f")
 	)
 	(label "PIO3"
+		(at 55.88 105.41 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "bd8cdbe0-0771-461c-a084-9eb953c81ebc")
+	)
+	(label "PIO5"
 		(at 93.98 105.41 0)
 		(fields_autoplaced yes)
 		(effects
@@ -7158,7 +7158,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c1545566-1b2e-447a-a8c5-80fed01774c6")
+		(uuid "c27e40ca-4087-4296-915d-d26977feebfd")
 	)
 	(label "I2C_SDA{slash}RX"
 		(at 55.88 113.03 180)
@@ -7247,6 +7247,29 @@
 			(justify right bottom)
 		)
 		(uuid "fd341172-587f-4852-a0ac-f65c3d72dc10")
+	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
+		(at 240.03 36.83 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d0eb8785-82c1-4229-a75e-94bd407fc09f")
+		(property "Netclass" "50Ohm"
+			(at 240.7285 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
 	)
 	(symbol
 		(lib_id "Device:C_Small")
@@ -7551,7 +7574,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "BW_Connectors:Amphenol_MINITEK_0.8_6P_V"
+		(property "Footprint" "BW_Connectors:Amphenol_MINITEK_WTB_1.25_6P"
 			(at 275.59 77.47 0)
 			(effects
 				(font
@@ -10919,7 +10942,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "BW_Connectors:Amphenol_MINITEK_0.8_5P_V"
+		(property "Footprint" "BW_Connectors:Amphenol_MINITEK_WTB_1.25_5P"
 			(at 242.57 64.77 0)
 			(effects
 				(font

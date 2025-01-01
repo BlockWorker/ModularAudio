@@ -71,12 +71,12 @@ void Error_Handler(void);
 #define BT_SYS_CTRL_GPIO_Port GPIOA
 #define BT_RST_N_Pin GPIO_PIN_10
 #define BT_RST_N_GPIO_Port GPIOA
-#define BT_PIO3_Pin GPIO_PIN_15
-#define BT_PIO3_GPIO_Port GPIOA
+#define BT_PIO5_Pin GPIO_PIN_15
+#define BT_PIO5_GPIO_Port GPIOA
 #define BT_PIO6_Pin GPIO_PIN_3
 #define BT_PIO6_GPIO_Port GPIOB
-#define BT_PIO5_Pin GPIO_PIN_4
-#define BT_PIO5_GPIO_Port GPIOB
+#define BT_PIO3_Pin GPIO_PIN_4
+#define BT_PIO3_GPIO_Port GPIOB
 #define I2C_INT_N_Pin GPIO_PIN_5
 #define I2C_INT_N_GPIO_Port GPIOB
 

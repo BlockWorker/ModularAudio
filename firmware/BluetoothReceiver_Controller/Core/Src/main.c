@@ -267,10 +267,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BT_PIO26_GPIO_Port, BT_PIO26_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BT_PIO26_Pin|BT_PIO3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BT_SYS_CTRL_Pin|BT_PIO3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(BT_SYS_CTRL_GPIO_Port, BT_SYS_CTRL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BT_RST_N_GPIO_Port, BT_RST_N_Pin, GPIO_PIN_SET);
@@ -278,33 +278,31 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(I2C_INT_N_GPIO_Port, I2C_INT_N_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : BT_PIO32_Pin BT_PIO29_Pin BT_PIO31_Pin BT_PIO6_Pin
-                           BT_PIO5_Pin */
-  GPIO_InitStruct.Pin = BT_PIO32_Pin|BT_PIO29_Pin|BT_PIO31_Pin|BT_PIO6_Pin
-                          |BT_PIO5_Pin;
+  /*Configure GPIO pins : BT_PIO32_Pin BT_PIO29_Pin BT_PIO31_Pin BT_PIO6_Pin */
+  GPIO_InitStruct.Pin = BT_PIO32_Pin|BT_PIO29_Pin|BT_PIO31_Pin|BT_PIO6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BT_PIO26_Pin */
-  GPIO_InitStruct.Pin = BT_PIO26_Pin;
+  /*Configure GPIO pins : BT_PIO26_Pin BT_PIO3_Pin */
+  GPIO_InitStruct.Pin = BT_PIO26_Pin|BT_PIO3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BT_PIO26_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BT_PIO30_Pin */
-  GPIO_InitStruct.Pin = BT_PIO30_Pin;
+  /*Configure GPIO pins : BT_PIO30_Pin BT_PIO5_Pin */
+  GPIO_InitStruct.Pin = BT_PIO30_Pin|BT_PIO5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(BT_PIO30_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BT_SYS_CTRL_Pin BT_PIO3_Pin */
-  GPIO_InitStruct.Pin = BT_SYS_CTRL_Pin|BT_PIO3_Pin;
+  /*Configure GPIO pin : BT_SYS_CTRL_Pin */
+  GPIO_InitStruct.Pin = BT_SYS_CTRL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(BT_SYS_CTRL_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BT_RST_N_Pin */
   GPIO_InitStruct.Pin = BT_RST_N_Pin;
