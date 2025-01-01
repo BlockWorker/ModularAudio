@@ -5070,6 +5070,12 @@
 		(uuid "a095c832-4ed8-4085-8fe7-d48f10038a85")
 	)
 	(junction
+		(at 182.88 54.61)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a22f5d5c-a039-4cc1-9dfe-3f2244ea6ce4")
+	)
+	(junction
 		(at 135.89 44.45)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5104,12 +5110,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "b641ce3e-1039-4ccd-8c71-f610104bc2f7")
-	)
-	(junction
-		(at 173.99 54.61)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "b7096485-647b-4bf6-a37d-ce3fd1f1ab94")
 	)
 	(junction
 		(at 156.21 46.99)
@@ -5346,6 +5346,16 @@
 			(type default)
 		)
 		(uuid "06a3e02f-a93c-4844-8c69-ab97e4f5b5ca")
+	)
+	(wire
+		(pts
+			(xy 58.42 92.71) (xy 113.03 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "077f5c87-f37b-46ee-b515-fffa10533ea7")
 	)
 	(wire
 		(pts
@@ -6899,16 +6909,6 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 92.71) (xy 58.42 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a696d778-fbd1-4d57-8a30-3b84a91e8cec")
-	)
-	(wire
-		(pts
 			(xy 156.21 44.45) (xy 156.21 46.99)
 		)
 		(stroke
@@ -7019,6 +7019,16 @@
 	)
 	(wire
 		(pts
+			(xy 182.88 54.61) (xy 210.82 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "badea8e7-e388-424d-be29-649737cc1ff4")
+	)
+	(wire
+		(pts
 			(xy 35.56 78.74) (xy 39.37 78.74)
 		)
 		(stroke
@@ -7079,7 +7089,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 54.61) (xy 173.99 54.61)
+			(xy 163.83 54.61) (xy 182.88 54.61)
 		)
 		(stroke
 			(width 0)
@@ -7216,16 +7226,6 @@
 			(type default)
 		)
 		(uuid "c9611481-b31f-41ca-b71e-094c5a8ecf9d")
-	)
-	(wire
-		(pts
-			(xy 173.99 54.61) (xy 210.82 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "caccb7ca-f64c-4706-a3cd-c9e63f48d8c6")
 	)
 	(wire
 		(pts
@@ -7657,6 +7657,17 @@
 		)
 		(uuid "fdbf74fb-95f1-4acd-be8b-9e283b5391be")
 	)
+	(label "USB_D-"
+		(at 166.37 82.55 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "076b9820-3c63-47ad-83e0-e98e04d7398c")
+	)
 	(label "I2S_MCLK_IN"
 		(at 191.77 49.53 180)
 		(fields_autoplaced yes)
@@ -7678,6 +7689,17 @@
 			(justify left bottom)
 		)
 		(uuid "23ef958d-21a7-401b-bb50-112cd7caddbf")
+	)
+	(label "I2S_OUT_BCK"
+		(at 166.37 59.69 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "24ac492a-1a3c-4752-b386-55e08a73dad0")
 	)
 	(label "SWDIO"
 		(at 54.61 36.83 0)
@@ -7701,6 +7723,83 @@
 		)
 		(uuid "2e82e1db-682e-4dc6-9b8e-705d1cc7b41c")
 	)
+	(label "I2C_SDA"
+		(at 177.8 107.95 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "36167523-59e2-4af0-acc2-e7a712465e21")
+	)
+	(label "I2S_2_LRCK"
+		(at 166.37 125.73 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "37f31a77-f2ae-440e-9677-9809f4c34225")
+	)
+	(label "I2S_3_BCK"
+		(at 110.49 105.41 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "484cd225-bf2e-404d-aff6-08528fa13657")
+	)
+	(label "I2S_1_BCK"
+		(at 166.37 67.31 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "5109dc72-2188-4026-986c-f8f31c0ef97f")
+	)
+	(label "USB_VBUS"
+		(at 166.37 77.47 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "522cad96-0687-4f3c-ab86-6fa6f375ebbd")
+	)
+	(label "I2S_1_DATA"
+		(at 166.37 69.85 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "525d62c0-5666-4eb9-974f-3d043356725d")
+	)
+	(label "I2C_SCL"
+		(at 177.8 105.41 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "55e06b21-b812-49d3-9921-d55128017335")
+	)
 	(label "I2S_3_LRCK"
 		(at 166.37 92.71 0)
 		(fields_autoplaced yes)
@@ -7711,6 +7810,17 @@
 			(justify left bottom)
 		)
 		(uuid "58fa980b-c56f-4e99-b3a0-2561012e05f6")
+	)
+	(label "I2S_2_BCK"
+		(at 166.37 123.19 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "71f75daf-451d-4b9d-a292-2b0cb96feaf0")
 	)
 	(label "I2S_OUT_LRCK"
 		(at 110.49 87.63 180)
@@ -7734,6 +7844,61 @@
 		)
 		(uuid "8eb4323e-326f-4ec0-b303-a64740c5ae80")
 	)
+	(label "DEBUG_RX"
+		(at 166.37 118.11 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9cb09456-4433-4a0f-8ec5-53d3a9d63e96")
+	)
+	(label "DEBUG_TX"
+		(at 166.37 120.65 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a08713bd-2774-4506-a820-e8c75f3155fb")
+	)
+	(label "SPDIF_IN"
+		(at 110.49 92.71 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "a5d514d8-96cd-46a7-9bd3-b1be2f7516a6")
+	)
+	(label "USB_D+"
+		(at 166.37 85.09 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "abe5fe59-bf33-4cd4-89a3-ea75ccc83f67")
+	)
+	(label "I2S_1_LRCK"
+		(at 166.37 64.77 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b81bc33d-84d8-44e2-be47-1f89839eef16")
+	)
 	(label "SWCLK"
 		(at 166.37 90.17 0)
 		(fields_autoplaced yes)
@@ -7744,6 +7909,28 @@
 			(justify left bottom)
 		)
 		(uuid "c3c2feba-3d2c-4a05-b916-b739474a00c6")
+	)
+	(label "I2S_OUT_DATA"
+		(at 166.37 54.61 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c3dab959-3692-47a4-9941-3b48ca6134b8")
+	)
+	(label "I2C_~{INT}"
+		(at 177.8 110.49 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c6ffa0b9-e3de-4ac7-b34c-a9cc2e142c09")
 	)
 	(label "I2S_3_LRCK"
 		(at 78.74 110.49 0)
@@ -7766,6 +7953,28 @@
 			(justify right bottom)
 		)
 		(uuid "dbd9f3a2-19d2-4e61-ace6-6917bc7397de")
+	)
+	(label "I2S_2_DATA"
+		(at 166.37 130.81 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "dd0275c9-effe-4d52-be9c-7dcce0cd1a9e")
+	)
+	(label "I2S_3_DATA"
+		(at 110.49 107.95 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "eec8e8f4-15ed-4f38-8c1b-c3c9e51cae27")
 	)
 	(symbol
 		(lib_id "power:GND")
@@ -10167,7 +10376,7 @@
 	)
 	(symbol
 		(lib_id "Connector:TestPoint_Small")
-		(at 173.99 54.61 0)
+		(at 182.88 54.61 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10175,7 +10384,7 @@
 		(dnp no)
 		(uuid "58c42af6-84bf-4933-bd2a-e17913a0d527")
 		(property "Reference" "TP2"
-			(at 175.26 53.3399 0)
+			(at 184.15 53.3399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10184,7 +10393,7 @@
 			)
 		)
 		(property "Value" "I2S_OUT_DATA"
-			(at 170.688 51.308 0)
+			(at 180.34 51.308 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10193,7 +10402,7 @@
 			)
 		)
 		(property "Footprint" "BW_PassiveMechanical:TP_0603_1608Metric_Fused"
-			(at 179.07 54.61 0)
+			(at 187.96 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10202,7 +10411,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 179.07 54.61 0)
+			(at 187.96 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10211,7 +10420,7 @@
 			)
 		)
 		(property "Description" "test point"
-			(at 173.99 54.61 0)
+			(at 182.88 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
