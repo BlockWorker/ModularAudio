@@ -36,7 +36,7 @@ Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have
 35;R4,R21,R2;R_0603_1608Metric;3;0Ω;;;;v
 36;C19;C_0603_1608Metric;1;10pF;;;;v
 37;C18;C_0603_1608Metric;1;470pF;;;;v
-38;J1;Molex_Nano-Fit_105309-xx02_1x02_P2.50mm_Vertical;1;VIN;;;;v
+38;J1;Molex_Nano-Fit_105309-xx02_1x02_P2.50mm_Vertical;1;VIN;;;x(TPA);v
 39;R15,R26;R_0603_1608Metric;2;100kΩ;;;;v
 40;C12;CP_Radial_D8.0mm_P3.50mm;1;1mF 16V;;;;v
 41;C23,C24,C30;C_1210_3225Metric;3;10µF 50Vl;;;;v
