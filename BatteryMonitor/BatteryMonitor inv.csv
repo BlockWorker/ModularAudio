@@ -33,7 +33,7 @@ Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other 
 32;C8;C_0805_2012Metric;1;10µF 25V;;;;v;
 33;C6;C_1206_3216Metric;1;10µF 50V;;;;v;
 34;C5;C_0603_1608Metric;1;1µF 25V;;;;v;
-35;U3;MSOP-8_3x3mm_P0.65mm;1;ADuM1252;;;;;
+35;U3;MSOP-8_3x3mm_P0.65mm;1;ADuM1252;;;v;;
 36;Q1;SOT-23-3;1;NX138BK;;;;v;
 37;C19,C12;C_0603_1608Metric;2;1nF;;;;v;
 38;R13;R_0603_1608Metric;1;1MΩ;;;;v;

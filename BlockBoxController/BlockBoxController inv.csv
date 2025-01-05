@@ -1,0 +1,56 @@
+Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other List
+1;J13;PinHeader_3x05_P2.54mm_Vertical;1;I2C5;;;v(2x 36P single);(housings);
+2;J3;PinHeader_2x09_P2.54mm_Vertical_Mirrored;1;NHD-3.5-320240FT-CON;;;v(housings both ends);(pins see 1);
+3;U1;LQFP-100_14x14mm_P0.5mm;1;STM32H725VGTx;;;v;;
+4;TP15;TP_0603_1608Metric_Fused;1;I2C5_SCL;;;;;v
+5;TP14;TP_0603_1608Metric_Fused;1;I2C5_SDA;;;;;v
+6;TP13;TP_0603_1608Metric_Fused;1;I2C4_SDA/UART4_TX;;;;;v
+7;TP12;TP_0603_1608Metric_Fused;1;I2C4_SCL/UART4_RX;;;;;v
+8;TP11;TP_0603_1608Metric_Fused;1;I2C1_SDA/USART1_RX;;;;;v
+9;TP10;TP_0603_1608Metric_Fused;1;I2C1_SCL/USART1_TX;;;;;v
+10;TP9;TestPoint_Pad_D1.0mm;1;AMP_~{RESET};;;;v;
+11;TP8;TestPoint_Pad_D1.0mm;1;AMP_~{FAULT};;;;v;
+12;TP7;TestPoint_Pad_D1.0mm;1;CHG_IOUT;;;;v;
+13;TP6;TestPoint_Pad_D1.0mm;1;AMP_~{CLIP_OTW};;;;v;
+14;TP5;TP_0603_1608Metric_Fused;1;CHG_ACOK;;;;;v
+15;TP4;TP_0603_1608Metric_Fused;1;CHG_SMB_SDA;;;;;v
+16;TP3;TP_0603_1608Metric_Fused;1;CHG_SMB_SCL;;;;;v
+17;TP2;TP_0603_1608Metric_Fused;1;DEBUG_RX;;;;;v
+18;TP1;TP_0603_1608Metric_Fused;1;DEBUG_TX;;;;;v
+19;RV1;Potentiometer_TT_35W;1;35WR10K;;;v;;
+20;R23,R22;R_0603_1608Metric;2;1kΩ;;;;v;
+21;R21,R20,R19,R18;R_0603_1608Metric;4;0Ω;;;;v;
+22;R17,R16,R15,R14,R9,R8;R_0603_1608Metric;6;4.7kΩ;;;v;v!;
+23;R13,R12;R_0603_1608Metric;2;27Ω;;;;;v
+24;R11;R_0603_1608Metric;1;10Ω;;;;;v
+25;R10;R_0603_1608Metric;1;47Ω;;;;v;
+26;R7,R6,R4,R3,R2,R1;R_0603_1608Metric;6;50/100Ω;;;;v;
+27;R5;R_0603_1608Metric;1;10kΩ;;;;v;
+28;Q6,Q5,Q4,Q3;SOT-23;4;DMG2302UK;;;v;;
+29;Q2,Q1;SOT-23;2;NX138BK;;;;v;
+30;L1;L_0805_2012Metric;1;2.2µH;;;v;;
+31;J15;Molex_Nano-Fit_105309-xx04_1x04_P2.50mm_Vertical;1;PWR;;;v(+hsg+contacts+tpa);;
+32;J14;PinHeader_2x06_P2.54mm_Vertical;1;B1_BTN;;;;(pins see 1);
+33;J12;PinHeader_1x03_P2.54mm_Vertical;1;B1_LED_BRIGHTNESS;;;;(pins see 1);
+34;J11;Amphenol_MINITEK_WTB_1.25_3P;1;I2C4/UART4;;;;v;
+35;J10;Amphenol_MINITEK_WTB_1.25_4P;1;I2C1/USART1;;;;;v
+36;J9;PinHeader_1x03_P2.54mm_Vertical;1;B1_LEDMODE;;;;(pins see 1);
+37;J8;PinHeader_1x04_P2.54mm_Vertical;1;LED;;;;(pins see 1);
+38;J7;PinHeader_1x02_P2.54mm_Vertical;1;B1_LCD_SWITCH;;;;(pins see 1);
+39;J6;Amphenol_MINITEK_WTB_1.25_4P;1;I2S;;;;;v
+40;J5;Amphenol_MINITEK_WTB_1.25_4P;1;AMP;;;;;v
+41;J4;Amphenol_MINITEK_WTB_1.25_5P;1;CHG;;;;v;
+42;J2;PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right;1;SWD;;;v;;
+43;J1;PinHeader_1x03_P2.54mm_Vertical;1;B1_SWLED;;;;(pins see 1);
+44;C29,C28;CP_Elec_5x5.8;2;220µF 6.3V;;;v;;
+45;C27;CP_Elec_6.3x7.7;1;220µF 16V;;;v;;
+46;C26,C25,C24,C23,C18,C14,C13,C12,C11,C10,C8,C7,C6,C5,C4,C3;C_0603_1608Metric;16;0.1µF;;;;v;
+47;C22,C16,C15,C1;C_0603_1608Metric;4;1µF;;;;v;
+48;C21;C_0603_1608Metric;1;220pF;;;;v;
+49;C20,C19,C9;C_0805_2012Metric;3;10µF 25V;;;;v;
+50;C17,C2;C_0603_1608Metric;2;4.7µF;;;;;v
+51;;Cable option 1: Flat Cable 14cond 2ft;;;;;v;;
+52;;Cable option 2: Cat7 Ethernet 1m;;;;;v(amazon);;
+53;;LCD-side termination resistors (THT);4;50 Ohm;;;v;;
+54;;Extra long sockets for LCD probing;;;;;v;;
+55;;Ensure enough connectors etc;;;;;v(header contacts);;

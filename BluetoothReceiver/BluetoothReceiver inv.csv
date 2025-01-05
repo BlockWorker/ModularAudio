@@ -1,0 +1,46 @@
+Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have;Other List
+1;J7;Amphenol_MINITEK_0.8_4P_V;1;USB;;;;v;
+2;J4;Amphenol_MINITEK_WTB_1.25_6P;1;MIC;;;v(+housing);;
+3;J3;Amphenol_MINITEK_WTB_1.25_5P;1;SPKR/HP;;;;v;
+4;A1;IDC777_767;1;IDC777/767;;;;v;
+5;U1;QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm;1;STM32F413CHUx;;;v;;
+6;TP23;TP_0603_1608Metric_Fused;1;I2C_~{INT};;;;;v
+7;TP22;TestPoint_Pad_D1.0mm;1;USB_VBUS;;;;v;
+8;TP21;TP_0603_1608Metric_Fused;1;BT_UART_RX;;;;;v
+9;TP20;TP_0603_1608Metric_Fused;1;I2S_LRCK;;;;;v
+10;TP19;TP_0603_1608Metric_Fused;1;BT_UART_TX;;;;;v
+11;TP18;TP_0603_1608Metric_Fused;1;I2S_DIN;;;;;v
+12;TP17;TP_0603_1608Metric_Fused;1;I2S_DOUT;;;;;v
+13;TP16;TP_0603_1608Metric_Fused;1;BT_~{RST};;;;;v
+14;TP15;TP_0603_1608Metric_Fused;1;I2S_BCK;;;;;v
+15;TP14;TP_0603_1608Metric_Fused;1;BT_SYS_CTRL;;;;;v
+16;TP13;TP_0603_1608Metric_Fused;1;DEBUG_RX;;;;;v
+17;TP12;TP_0603_1608Metric_Fused;1;DEBUG_TX;;;;;v
+18;TP11;TestPoint_Pad_D1.0mm;1;VCHG_SENSE;;;;v;
+19;TP10;TestPoint_Pad_D1.0mm;1;PIO32;;;;v;
+20;TP9;TestPoint_Pad_D1.0mm;1;PIO31;;;;v;
+21;TP8;TestPoint_Pad_D1.0mm;1;PIO30;;;;v;
+22;TP7;TestPoint_Pad_D1.0mm;1;PIO29;;;;v;
+23;TP6;TestPoint_Pad_D1.0mm;1;VCHG;;;;v;
+24;TP5;TestPoint_Pad_D1.0mm;1;PIO26;;;;v;
+25;TP4;TestPoint_Pad_D1.0mm;1;CHG_EXT;;;;v;
+26;TP3;TestPoint_Pad_D1.0mm;1;PIO6;;;;v;
+27;TP2;TestPoint_Pad_D1.0mm;1;PIO5;;;;v;
+28;TP1;TestPoint_Pad_D1.0mm;1;PIO3;;;;v;
+29;R5,R4,R3;R_0603_1608Metric;3;27Ω;;;;;v
+30;R2;R_0603_1608Metric;1;10Ω;;;;;v
+31;R1;R_0603_1608Metric;1;10kΩ;;;;v;
+32;J8;Amphenol_MINITEK_WTB_1.25_2P;1;3.3V;;;;v;
+33;J6;Amphenol_MINITEK_WTB_1.25_4P;1;I2C/UART;;;;;v
+34;J5;Amphenol_MINITEK_WTB_1.25_5P;1;I2S;;;;v;
+35;J2;PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right;1;SWD;;;v;;
+36;J1;U.FL_Molex_MCRF_73412-0110_Vertical;1;EXT_ANTENNA;;;v;v;
+37;C15;CP_Elec_5x5.8;1;220µF 6.3V;;;v;;
+38;C14,C1;C_0603_1608Metric;2;4.7µF;;;;;v
+39;C13,C12,C11,C10;C_0603_1608Metric;4;2.2µF;;;v;;
+40;C9,C8,C7,C6,C3,C2;C_0603_1608Metric;6;0.1µF;;;;v;
+41;C5;C_0805_2012Metric;1;10µF 25V;;;;v;
+42;C4;C_0603_1608Metric;1;1µF;;;;v;
+43;;Ext Antenna Cables RP-SMA(F) to U.FL (short+long);;;;;v;;
+44;;Ext Antenna;;;;;v;;
+45;ModuleRes;R_0201;1;0 Ohm;;;v;;

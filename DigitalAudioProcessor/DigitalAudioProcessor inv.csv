@@ -1,0 +1,41 @@
+Id;Designator;Footprint;Quantity;Designation;Supplier and ref;;Added;Have
+1;U1;DLR2180;1;TOSLINK_RX;;;v(on the way);
+2;U3;QFN-68-1EP_8x8mm_P0.4mm_EP6.4x6.4mm;1;STM32H725RGVx;;;v;
+3;U2;SOT-23-6;1;USBLC6-2SC6;;;v;
+4;TP16;TP_0603_1608Metric_Fused;1;I2S_2_LRCK;;;v(20 more);v!
+5;TP15;TP_0603_1608Metric_Fused;1;I2S_2_DATA;;;;v(above)
+6;TP14;TP_0603_1608Metric_Fused;1;I2S_2_BCK;;;;v(above)
+7;TP13;TP_0603_1608Metric_Fused;1;UART_TX;;;;v(above)
+8;TP12;TP_0603_1608Metric_Fused;1;UART_RX;;;;v(above)
+9;TP11;TP_0603_1608Metric_Fused;1;I2C_~{INT};;;;v(above)
+10;TP10;TP_0603_1608Metric_Fused;1;I2S_3_LRCK;;;;v(above)
+11;TP9;TP_0603_1608Metric_Fused;1;I2S_3_DATA;;;;v(above)
+12;TP8;TP_0603_1608Metric_Fused;1;I2S_3_BCK;;;;v(above)
+13;TP7;TP_0603_1608Metric_Fused;1;SPDIF_IN;;;;v(above)
+14;TP6;TP_0603_1608Metric_Fused;1;I2S_1_LRCK;;;;v(above)
+15;TP5;TP_0603_1608Metric_Fused;1;I2S_1_DATA;;;;v(above)
+16;TP4;TP_0603_1608Metric_Fused;1;I2S_1_BCK;;;;v(above)
+17;TP3;TP_0603_1608Metric_Fused;1;I2S_OUT_LRCK;;;;v(above)
+18;TP2;TP_0603_1608Metric_Fused;1;I2S_OUT_DATA;;;;v(above)
+19;TP1;TP_0603_1608Metric_Fused;1;I2S_OUT_BCK;;;;v(above)
+20;R14,R13,R11,R10,R8,R7,R5,R4;R_0603_1608Metric;8;27Ω;;;v;v!
+21;R12,R9,R6,R3;R_0603_1608Metric;4;10Ω;;;v;v!
+22;R2;R_0603_1608Metric;1;0Ω;;;;v
+23;R1;R_0603_1608Metric;1;10kΩ;;;;v
+24;L1;L_0805_2012Metric;1;2.2µH;;;v;
+25;J8;Amphenol_MINITEK_WTB_1.25_2P;1;3.3V;;;;v
+26;J7;Amphenol_MINITEK_WTB_1.25_4P;1;I2S_2;;;v(10 more);v!
+27;J6;Amphenol_MINITEK_WTB_1.25_4P;1;I2C;;;;v(above)
+28;J5;Amphenol_MINITEK_WTB_1.25_4P;1;I2S_3;;;;v(above)
+29;J4;Amphenol_MINITEK_WTB_1.25_4P;1;USB;;;;v(above)
+30;J3;Amphenol_MINITEK_WTB_1.25_4P;1;I2S_1;;;;v(above)
+31;J2;Amphenol_MINITEK_WTB_1.25_5P;1;I2S_OUT;;;;v
+32;J1;PinSocket_1x05_P1.27mm_Vertical_SMD_Pin1Right;1;SWD;;;v;
+33;FB1;L_0603_1608Metric;1;Shunt?;;;;v
+34;C22;CP_Elec_5x5.8;1;220µF 6.3V;;;v;
+35;C21,C20,C19,C15,C13,C11,C10,C9,C8,C7,C4,C3;C_0603_1608Metric;12;0.1µF;;;;v
+36;C18;C_0603_1608Metric;1;220pF;;;;v
+37;C17,C16,C6;C_0805_2012Metric;3;10µF 25V;;;;v
+38;C14;C_0603_1608Metric;1;30pF;;;;v(33pF)
+39;C12,C2;C_0603_1608Metric;2;4.7µF;;;v;v!
+40;C5,C1;C_0603_1608Metric;2;1µF;;;;v
