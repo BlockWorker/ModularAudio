@@ -56,11 +56,12 @@ namespace I2CMonitorApp {
                 return;
             }
 
-            if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x01, 1, ref buf)) {
+            if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x01, 2, ref buf)) {
                 DisconnectReset();
                 return;
             }
-            statusField.Value = buf[0];
+            statusLowField.Value = buf[0];
+            statusHighField.Value = buf[1];
 
             if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x11, 1, ref buf)) {
                 DisconnectReset();
@@ -72,13 +73,13 @@ namespace I2CMonitorApp {
                 DisconnectReset();
                 return;
             }
-            pvddMeasBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
+            pvddReqBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
 
             if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x22, 4, ref buf)) {
                 DisconnectReset();
                 return;
             }
-            pvddOffsBox.Text = BitConverter.ToSingle(buf, 0).ToString("F1");
+            pvddMeasBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
 
             if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x30, 128, ref buf)) {
                 DisconnectReset();
@@ -137,6 +138,14 @@ namespace I2CMonitorApp {
             swarnSourceLowField.Value = buf[0];
             swarnSourceHighField.Value = buf[1];
 
+            if (!pvddTargetBox.IsFocused) {
+                if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x20, 4, ref buf)) {
+                    DisconnectReset();
+                    return;
+                }
+                pvddTargetBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
+            }
+
             if (readAllCycles++ < READ_ALL_PERIOD) return;
 
             readAllCycles = 0;
@@ -152,14 +161,6 @@ namespace I2CMonitorApp {
                 return;
             }
             intMaskField.Value = buf[0];
-
-            if (!pvddReqBox.IsFocused) {
-                if (!I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x20, 4, ref buf)) {
-                    DisconnectReset();
-                    return;
-                }
-                pvddReqBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
-            }
         }
 
         private void DisconnectReset() {
@@ -272,8 +273,8 @@ namespace I2CMonitorApp {
         private void DoPVDDApply(object sender, RoutedEventArgs e) {
             if (d.connected == 0) return;
 
-            if (!float.TryParse(pvddReqBox.Text, out float value) || value < 18.0f || value > 53.5f) {
-                MessageBox.Show("Invalid input, must be a number between 18.0 and 53.5");
+            if (!float.TryParse(pvddTargetBox.Text, out float value) || value < 18.7f || value > 53.5f) {
+                MessageBox.Show("Invalid input, must be a number between 18.7 and 53.5");
                 return;
             }
 
@@ -285,7 +286,7 @@ namespace I2CMonitorApp {
             }
 
             if (I2CDriverLib.I2C_ReadReg(ref d, DEV_ADDR, 0x20, 4, ref buf)) {
-                pvddReqBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
+                pvddTargetBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
             }
         }
     }

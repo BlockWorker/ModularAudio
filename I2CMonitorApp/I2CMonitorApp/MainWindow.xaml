@@ -7,8 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="1000" MinWidth="1000" MinHeight="450" Closing="OnWindowClosing">
     <Grid>
-        <Grid Margin="10,10,0,0" Width="400" Height="309" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Margin="10,10,0,0" Width="400" Height="359" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Grid.RowDefinitions>
+                <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition Height="5"/>
                 <RowDefinition/>
@@ -30,25 +31,26 @@
                 <ColumnDefinition/>
                 <ColumnDefinition Width="50"/>
             </Grid.ColumnDefinitions>
-            <local:BitField x:Name="statusField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;ASD&#xA;PVV&#xA;PON&#xA;POL&#xA;SWN&#xA;I2E" Grid.Column="1"/>
-            <Label Content="Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="AMS&#xA;ITE&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
-            <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="2"/>
-            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;POL&#xA;&#xA;" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
-            <Label Content="Int Mask" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="4"/>
-            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;POL&#xA;&#xA;" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
-            <Label Content="Int Flags" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="6"/>
-            <local:BitField x:Name="safetyStatusField" LabelFontSize="12" Labels="SSD&#xA;MSD&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;" ActiveColor="IndianRed" Grid.Row="8" Grid.Column="1"/>
-            <Label Content="Safety" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="8"/>
-            <local:BitField x:Name="serrSourceHighField" LabelFontSize="12" Labels="Ps&#xA;Pf&#xA;Pi&#xA;Is&#xA;If&#xA;Ii&#xA;&#xA;" ActiveColor="IndianRed" Grid.Row="10" Grid.Column="1"/>
-            <Label Content="Err Src" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="10" Grid.RowSpan="2"/>
-            <local:BitField x:Name="serrSourceLowField" LabelFontSize="12" Labels="Sum&#xA;D&#xA;C&#xA;B&#xA;A&#xA;PAs&#xA;PAf&#xA;PAi" ActiveColor="IndianRed" Grid.Row="11" Grid.Column="1"/>
-            <local:BitField x:Name="swarnSourceHighField" LabelFontSize="12" Labels="Ps&#xA;Pf&#xA;Pi&#xA;Is&#xA;If&#xA;Ii&#xA;&#xA;" ActiveColor="Orange" Grid.Row="13" Grid.Column="1"/>
-            <Label Content="Warn Src" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="13" Grid.RowSpan="2"/>
-            <local:BitField x:Name="swarnSourceLowField" LabelFontSize="12" Labels="Sum&#xA;D&#xA;C&#xA;B&#xA;A&#xA;PAs&#xA;PAf&#xA;PAi" ActiveColor="Orange" Grid.Row="14" Grid.Column="1"/>
-            <Button Content="Apply" Grid.Row="2" Grid.Column="2" Margin="3" Click="DoControlApply"/>
-            <Button Content="Apply" Grid.Row="4" Grid.Column="2" Margin="3" Click="DoIntMaskApply"/>
-            <Button Content="Clear" Grid.Row="6" Grid.Column="2" Margin="3" Click="DoIntFlagsClear"/>
+            <local:BitField x:Name="statusHighField" LabelFontSize="12" Labels="I2E&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;" Grid.Column="1"/>
+            <local:BitField x:Name="statusLowField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;ASD&#xA;PVV&#xA;PVR&#xA;PON&#xA;POL&#xA;SWN" Grid.Row="1" Grid.Column="1"/>
+            <Label Content="Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.RowSpan="2"/>
+            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="AMS&#xA;ITE&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="3" Grid.Column="1"/>
+            <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="3"/>
+            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;POL&#xA;" AllowSwitches="True" Grid.Row="5" Grid.Column="1"/>
+            <Label Content="Int Mask" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="5"/>
+            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;POL&#xA;" ActiveColor="Yellow" Grid.Row="7" Grid.Column="1"/>
+            <Label Content="Int Flags" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="7"/>
+            <local:BitField x:Name="safetyStatusField" LabelFontSize="12" Labels="SSD&#xA;MSD&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;" ActiveColor="IndianRed" Grid.Row="9" Grid.Column="1"/>
+            <Label Content="Safety" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="9"/>
+            <local:BitField x:Name="serrSourceHighField" LabelFontSize="12" Labels="Ps&#xA;Pf&#xA;Pi&#xA;Is&#xA;If&#xA;Ii&#xA;&#xA;" ActiveColor="IndianRed" Grid.Row="11" Grid.Column="1"/>
+            <Label Content="Err Src" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="11" Grid.RowSpan="2"/>
+            <local:BitField x:Name="serrSourceLowField" LabelFontSize="12" Labels="Sum&#xA;D&#xA;C&#xA;B&#xA;A&#xA;PAs&#xA;PAf&#xA;PAi" ActiveColor="IndianRed" Grid.Row="12" Grid.Column="1"/>
+            <local:BitField x:Name="swarnSourceHighField" LabelFontSize="12" Labels="Ps&#xA;Pf&#xA;Pi&#xA;Is&#xA;If&#xA;Ii&#xA;&#xA;" ActiveColor="Orange" Grid.Row="14" Grid.Column="1"/>
+            <Label Content="Warn Src" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14" Grid.RowSpan="2"/>
+            <local:BitField x:Name="swarnSourceLowField" LabelFontSize="12" Labels="Sum&#xA;D&#xA;C&#xA;B&#xA;A&#xA;PAs&#xA;PAf&#xA;PAi" ActiveColor="Orange" Grid.Row="15" Grid.Column="1"/>
+            <Button Content="Apply" Grid.Row="3" Grid.Column="2" Margin="3" Click="DoControlApply"/>
+            <Button Content="Apply" Grid.Row="5" Grid.Column="2" Margin="3" Click="DoIntMaskApply"/>
+            <Button Content="Clear" Grid.Row="7" Grid.Column="2" Margin="3" Click="DoIntFlagsClear"/>
         </Grid>
         <Grid Margin="0,110,10,0" Width="520" Height="160" HorizontalAlignment="Right" VerticalAlignment="Top">
             <Grid.RowDefinitions>
@@ -153,12 +155,12 @@
                 <ColumnDefinition Width="25"/>
             </Grid.ColumnDefinitions>
             <Label Content="PVDD" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
-            <Label Content="Requested" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
-            <Label Content="Measured" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
-            <Label Content="Offset" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
-            <TextBox x:Name="pvddReqBox" Text="0.00" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <TextBox x:Name="pvddMeasBox" Text="0.00" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
-            <TextBox x:Name="pvddOffsBox" Text="0.0" Grid.Row="1" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <Label Content="Target" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Requested" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Measured" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <TextBox x:Name="pvddTargetBox" Text="0.00" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="pvddReqBox" Text="0.00" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="pvddMeasBox" Text="0.00" Grid.Row="1" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
             <Button Content="Apply" Grid.Row="2" Grid.Column="1" Margin="3" Click="DoPVDDApply"/>
             <Label Content="V" Grid.Row="1" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
         </Grid>

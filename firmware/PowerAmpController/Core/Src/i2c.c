@@ -103,10 +103,10 @@ void _I2C_ProcessWriteData() {
         interrupt_flags &= write_buf[0]; //clear bits received as 0
         _I2C_UpdateInterruptPin();
         break;
-      case I2CDEF_POWERAMP_PVDD_REQ:
+      case I2CDEF_POWERAMP_PVDD_TARGET:
         tf1 = *(float*)write_buf;
-        if (PVDD_SetRequestedVoltage(tf1) != HAL_OK) { //voltage update fail is reported as an error (e.g., caused by invalid voltage value)
-          DEBUG_PRINTF("I2C write error: PVDD voltage request failed\n");
+        if (PVDD_SetTargetVoltage(tf1) != HAL_OK) { //voltage update fail is reported as an error (e.g., caused by invalid voltage value)
+          DEBUG_PRINTF("I2C write error: PVDD voltage target change failed\n");
           i2c_err_detected = 1;
         }
         break;
@@ -220,15 +220,16 @@ void _I2C_PrepareReadData() {
   if (reg_addr < I2CDEF_POWERAMP_MON_VRMS_FAST_A || reg_addr > I2CDEF_POWERAMP_SWARN_PAPP_SLOW_SUM) { //basic registers
     switch (reg_addr) {
       case I2CDEF_POWERAMP_STATUS:
-	read_buf[0] =
+        ((uint16_t*)read_buf)[0] =
 	  ((HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_FAULT_Pos) |
 	  ((HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Pos) |
 	  (is_shutdown << I2CDEF_POWERAMP_STATUS_AMP_SD_Pos) |
 	  (pvdd_valid_voltage << I2CDEF_POWERAMP_STATUS_PVDD_VALID_Pos) |
+          (pvdd_reduction_ongoing << I2CDEF_POWERAMP_STATUS_PVDD_RED_Pos) |
 	  ((fabsf(pvdd_voltage_request_offset) > 1e-5f ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos) |
 	  ((fabsf(pvdd_voltage_request_offset) >= PVDD_VOLTAGE_OFFSET_MAX ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos) |
 	  (((safety_warn_status_inst | safety_warn_status_loop) != 0 ? 1 : 0) << I2CDEF_POWERAMP_STATUS_SWARN_Pos) |
-	  (i2c_err_detected << I2CDEF_POWERAMP_STATUS_I2CERR_Pos);
+	  ((uint16_t)i2c_err_detected << I2CDEF_POWERAMP_STATUS_I2CERR_Pos);
 	i2c_err_detected = 0; //reset comm error detection after read
 	break;
       case I2CDEF_POWERAMP_CONTROL:
@@ -247,14 +248,14 @@ void _I2C_PrepareReadData() {
           _I2C_UpdateInterruptPin();
         }
 	break;
+      case I2CDEF_POWERAMP_PVDD_TARGET:
+        ((float*)read_buf)[0] = pvdd_voltage_target;
+        break;
       case I2CDEF_POWERAMP_PVDD_REQ:
 	((float*)read_buf)[0] = pvdd_voltage_requested;
 	break;
       case I2CDEF_POWERAMP_PVDD_MEASURED:
 	((float*)read_buf)[0] = pvdd_voltage_measured;
-	break;
-      case I2CDEF_POWERAMP_PVDD_OFFSET:
-	((float*)read_buf)[0] = pvdd_voltage_request_offset;
 	break;
       case I2CDEF_POWERAMP_SAFETY_STATUS:
       	read_buf[0] =

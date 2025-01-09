@@ -108,6 +108,7 @@ void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef *hwwdg) {
   if (wwdg_early_wakeups < MAIN_WWDG_EARLYWAKE_MAX) {
     wwdg_early_wakeups++;
     HAL_WWDG_Refresh(hwwdg);
+    DEBUG_PRINTF("WWDG Early wakeup %lu\n", wwdg_early_wakeups);
   }
 }
 
@@ -164,12 +165,10 @@ int main(void)
 
   RetargetInit(&huart3);
 
-  HAL_Delay(10);
   _RefreshWatchdogs();
 
   DEBUG_PRINTF("Controller started\n");
 
-  HAL_Delay(10);
   _RefreshWatchdogs();
 
   DEBUG_PRINTF("Initializing PVDD control...\n");
@@ -177,6 +176,7 @@ int main(void)
     Error_Handler();
   }
 
+  _RefreshWatchdogs();
   HAL_Delay(10);
   _RefreshWatchdogs();
 
@@ -223,6 +223,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t iteration_start_tick = HAL_GetTick();
+
 #ifdef DISABLED___DEBUG
     static uint32_t cycle_count = 0;
     if (cycle_count++ * MAIN_LOOP_PERIOD_MS >= 1000) {
@@ -241,7 +243,7 @@ int main(void)
     I2C_LoopUpdate();
 
     _RefreshWatchdogs();
-    HAL_Delay(MAIN_LOOP_PERIOD_MS);
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
   /* USER CODE END 3 */
 }
