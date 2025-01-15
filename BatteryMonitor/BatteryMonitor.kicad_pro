@@ -523,7 +523,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "BatteryMonitor.step",
       "svg": "",
       "vrml": ""
     },

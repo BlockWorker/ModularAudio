@@ -8,7 +8,7 @@
 // All credit to Carmine Noviello for this code
 // https://github.com/cnoviello/mastering-stm32/blob/master/nucleo-f030R8/system/include/retarget/retarget.h
 
-#include "stm32f3xx_hal.h"
+#include "stm32l0xx_hal.h"
 #include <sys/stat.h>
 
 void RetargetInit(UART_HandleTypeDef *huart);
