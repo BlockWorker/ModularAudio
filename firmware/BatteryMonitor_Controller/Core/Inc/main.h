@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -41,6 +41,8 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern CRC_HandleTypeDef hcrc;
+
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
 
@@ -57,6 +59,14 @@ extern UART_HandleTypeDef huart2;
 #define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
 #else
 #define DEBUG_PRINTF(...) do { } while (0)
+#endif
+
+#ifndef MIN
+  #define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef MAX
+  #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
 /* USER CODE END EM */
 

@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
 #include <stdio.h>
+#include <string.h>
+#include "bms_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +43,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
+
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c3;
 
@@ -56,6 +60,7 @@ static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_CRC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,6 +104,7 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C3_Init();
   MX_USART2_UART_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&huart2);
 
@@ -106,6 +112,153 @@ int main(void)
   _RefreshWatchdogs();
 
   DEBUG_PRINTF("Controller started\n");
+
+  HAL_Delay(1000);
+
+  uint8_t test_buf[256] = { 0 };
+  uint16_t* test_buf_16 = (uint16_t*)test_buf;
+  //uint32_t* test_buf_32 = (uint32_t*)test_buf;
+
+  DEBUG_PRINTF("Reading device number...\n");
+  if (BMS_I2C_SubcommandRead(SUBCMD_DEVICE_NUMBER, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: DeviceNumber = 0x%04X\n", test_buf_16[0]);
+  } else {
+    DEBUG_PRINTF("Device number read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading current gain calibration...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CURR_GAIN, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: CurrGain = %u\n", test_buf_16[0]);
+  } else {
+    DEBUG_PRINTF("Current gain read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Entering CFGUPDATE...\n");
+  if (BMS_I2C_SubcommandOnly(SUBCMD_SET_CFGUPDATE, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Entered CFGUPDATE\n");
+  } else {
+    DEBUG_PRINTF("Enter CFGUPDATE failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading battery status...\n");
+  if (BMS_I2C_DirectCommandRead(DIRCMD_BATTERY_STATUS, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: BatteryStatus = 0x%04X\n", test_buf_16[0]);
+  } else {
+    DEBUG_PRINTF("Battery status read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Writing VCell mode...\n");
+  test_buf[0] = 4;
+  if (BMS_I2C_DataMemoryWrite(MEMADDR_SET_VCELL_MODE, test_buf, 1, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: VCell mode written\n");
+  } else {
+    DEBUG_PRINTF("VCell mode write failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Writing I2C config...\n");
+  test_buf_16[0] = 0x3403; //default + bus busy timeout + crc
+  if (BMS_I2C_DataMemoryWrite(MEMADDR_SET_I2C_CONFIG, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: I2C config written\n");
+  } else {
+    DEBUG_PRINTF("I2C config write failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Exiting CFGUPDATE...\n");
+  if (BMS_I2C_SubcommandOnly(SUBCMD_EXIT_CFGUPDATE, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Exited CFGUPDATE\n");
+  } else {
+    DEBUG_PRINTF("Exit CFGUPDATE failed!\n");
+  }
+
+  bms_i2c_crc_active = 1;
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading battery status...\n");
+  if (BMS_I2C_DirectCommandRead(DIRCMD_BATTERY_STATUS, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: BatteryStatus = 0x%04X\n", test_buf_16[0]);
+  } else {
+    DEBUG_PRINTF("Battery status read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading VCell mode...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_SET_VCELL_MODE, test_buf, 1, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: VCell mode = %u\n", test_buf[0]);
+  } else {
+    DEBUG_PRINTF("VCell mode read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading cell voltages...\n");
+  if (BMS_I2C_DirectCommandRead(DIRCMD_CELL1_VOLTAGE, test_buf, 10, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Cell voltages = %u, %u, %u, %u, %u\n", test_buf_16[0], test_buf_16[1], test_buf_16[2], test_buf_16[3], test_buf_16[4]);
+  } else {
+    DEBUG_PRINTF("Cell voltage read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  DEBUG_PRINTF("Reading i2ccfg...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_SET_I2C_CONFIG, test_buf, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: i2ccfg = %u\n", test_buf_16[0]);
+  } else {
+    DEBUG_PRINTF("i2ccfg read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  uint8_t data_mem_values[115] = { 0 };
+
+  DEBUG_PRINTF("Reading contiguous data memory...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL1_GAIN, data_mem_values, 0x5E, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Contiguous memory read\n");
+  } else {
+    DEBUG_PRINTF("Contiguous data memory read failed!\n");
+  }
+
+  DEBUG_PRINTF("Reading extra data memory...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL4_DELTA, data_mem_values + 0x71, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Extra memory read\n");
+  } else {
+    DEBUG_PRINTF("Extra data memory read failed!\n");
+  }
+
+  HAL_Delay(100);
+
+  uint8_t configured_mem_values[115] = { 0 };
+  memcpy(configured_mem_values + 0x14, bms_config_main_array, sizeof(bms_config_main_array));
+
+  int i, j;
+  DEBUG_PRINTF("\n     _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _A _B _C _D _E _F\n");
+  for (i = 0; i < 8; i++) {
+    int end = (i == 7) ? 3 : 16;
+
+    DEBUG_PRINTF("\n r%X_", i);
+    for (j = 0; j < end; j++) {
+      DEBUG_PRINTF(" %02X", data_mem_values[16 * i + j]);
+    }
+    DEBUG_PRINTF("\n c%X_", i);
+    for (j = 0; j < end; j++) {
+      DEBUG_PRINTF(" %02X", configured_mem_values[16 * i + j]);
+    }
+    DEBUG_PRINTF("\n");
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -168,6 +321,40 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_DISABLE;
+  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_DISABLE;
+  hcrc.Init.GeneratingPolynomial = 7;
+  hcrc.Init.CRCLength = CRC_POLYLENGTH_8B;
+  hcrc.Init.InitValue = 0;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
