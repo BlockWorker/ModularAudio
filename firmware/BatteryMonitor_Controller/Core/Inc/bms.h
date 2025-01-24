@@ -31,10 +31,11 @@
 #define BMS_ERROR_CHARGE INT64_MIN
 #define BMS_ERROR_TIME UINT32_MAX
 
-//conversion factor: mA per current measurement LSB - needs to match the configured CC2 current gain setting
-#define BMS_CONV_MA_PER_CUR_LSB 2
-//conversion factor: mAs per charge measurement LSB - needs to match the configured CC1 current gain setting
-#define BMS_CONV_MAS_PER_CHG_LSB 1
+//current measurement to mA conversion multiplier - based on the CC2 current gain config
+#define BMS_CONV_CUR_TO_MA_MULT 2
+//charge measurement to mAs conversion multiplier and divisor - multiplier is based on the CC1 current gain config; divisor set to 4 to match 250ms integration period
+#define BMS_CONV_CHG_TO_MAS_MULT 1
+#define BMS_CONV_CHG_TO_MAS_DIV 4
 
 //IC-integrated pull-up resistor value for thermistor measurement in ohms
 #define BMS_THERM_PULLUP 20000.0f

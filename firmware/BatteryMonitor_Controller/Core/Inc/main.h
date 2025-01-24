@@ -97,6 +97,10 @@ void Error_Handler(void);
 
 //main loop cycles for power switch debouncing
 #define MAIN_PWRSW_DEBOUNCE_CYCLES 3
+
+//current calibration mode - disable for actual use!
+#undef MAIN_CURRENT_CALIBRATION
+//#define MAIN_CURRENT_CALIBRATION
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

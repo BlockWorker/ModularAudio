@@ -1,0 +1,337 @@
+296.2 mA: CC1=45.25 CC2=11560
+591.2 mA: CC1=90.08 CC2=23070
+841.0 mA: CC1=128.1 CC2=32750
+1388 mA: CC1=211.3 CC2=54090
+
+CC1/I ~= 0.1521
+I/CC1 ~= 6.575
+32*I/CC1 ~= 210.4
+
+CC2/I ~= 38.95
+I/CC2 ~= 0.02568
+8192*I/CC2 ~= 210.3
+8192*I/CC2/2 ~= 105.2
+
+stddev: CC1 ~= 0.5 (4µV=4mA); CC2 ~= 170 (5µV=5mA)
+
+-----------------------------------------------------------------------
+
+296.2 mA - CC1=45.25 CC2=11560
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15531, Current: -346
+Temps: Bat 26 Int 28, Charge: -78423, Time: 1161
+CC1 CAL: mean = -45.25; stddev = 0.47
+CC2 CAL: mean = -11604.13; stddev = 191.61; lt_mean = -7047.63
+CC1 CAL: mean = -45.25; stddev = 0.46
+CC2 CAL: mean = -11616.83; stddev = 185.18; lt_mean = -7056.95
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15530, Current: -354
+Temps: Bat 26 Int 28, Charge: -78785, Time: 1169
+CC1 CAL: mean = -45.25; stddev = 0.46
+CC2 CAL: mean = -11603.50; stddev = 183.18; lt_mean = -7065.84
+CC1 CAL: mean = -45.25; stddev = 0.46
+CC2 CAL: mean = -11600.67; stddev = 180.24; lt_mean = -7074.85
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15530, Current: -346
+Temps: Bat 26 Int 28, Charge: -79147, Time: 1177
+CC1 CAL: mean = -45.25; stddev = 0.45
+CC2 CAL: mean = -11585.53; stddev = 174.86; lt_mean = -7083.65
+CC1 CAL: mean = -45.25; stddev = 0.45
+CC2 CAL: mean = -11575.21; stddev = 167.36; lt_mean = -7092.47
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15532, Current: -352
+Temps: Bat 26 Int 28, Charge: -79554, Time: 1186
+CC1 CAL: mean = -45.25; stddev = 0.45
+CC2 CAL: mean = -11594.85; stddev = 181.63; lt_mean = -7101.75
+CC1 CAL: mean = -45.25; stddev = 0.45
+CC2 CAL: mean = -11589.06; stddev = 172.96; lt_mean = -7110.64
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15533, Current: -352
+Temps: Bat 26 Int 28, Charge: -79916, Time: 1194
+CC1 CAL: mean = -45.25; stddev = 0.44
+CC2 CAL: mean = -11588.29; stddev = 167.74; lt_mean = -7119.58
+CC1 CAL: mean = -45.25; stddev = 0.44
+CC2 CAL: mean = -11556.26; stddev = 184.12; lt_mean = -7127.97
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15530, Current: -356
+Temps: Bat 26 Int 28, Charge: -80324, Time: 1203
+CC1 CAL: mean = -45.25; stddev = 0.44
+CC2 CAL: mean = -11563.59; stddev = 186.97; lt_mean = -7136.95
+CC1 CAL: mean = -45.22; stddev = 0.49
+CC2 CAL: mean = -11557.03; stddev = 195.13; lt_mean = -7145.67
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15529, Current: -330
+Temps: Bat 26 Int 28, Charge: -80685, Time: 1211
+CC1 CAL: mean = -45.25; stddev = 0.50
+CC2 CAL: mean = -11553.04; stddev = 193.74; lt_mean = -7154.41
+CC1 CAL: mean = -45.25; stddev = 0.49
+CC2 CAL: mean = -11548.48; stddev = 187.90; lt_mean = -7163.14
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3886 3895 3895 3863 3891, Stack voltage: 15533, Current: -340
+Temps: Bat 26 Int 28, Charge: -81048, Time: 1219
+CC1 CAL: mean = -45.25; stddev = 0.49
+CC2 CAL: mean = -11547.88; stddev = 178.78; lt_mean = -7171.89
+CC1 CAL: mean = -45.25; stddev = 0.48
+CC2 CAL: mean = -11560.81; stddev = 190.60; lt_mean = -7180.84
+
+
+
+591.2 mA - CC1=90.08 CC2=23070
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3891 3890 3841 3891, Stack voltage: 15489, Current: -692
+Temps: Bat 26 Int 28, Charge: -45919, Time: 510
+CC1 CAL: mean = -90.09; stddev = 0.43
+CC2 CAL: mean = -23033.49; stddev = 190.06; lt_mean = -5038.09
+CC1 CAL: mean = -90.08; stddev = 0.40
+CC2 CAL: mean = -23032.54; stddev = 180.82; lt_mean = -5074.04
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3891 3841 3891, Stack voltage: 15489, Current: -686
+Temps: Bat 26 Int 28, Charge: -46639, Time: 518
+CC1 CAL: mean = -90.07; stddev = 0.45
+CC2 CAL: mean = -23034.07; stddev = 173.90; lt_mean = -5109.95
+CC1 CAL: mean = -90.09; stddev = 0.51
+CC2 CAL: mean = -23045.30; stddev = 167.22; lt_mean = -5145.96
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3891 3841 3891, Stack voltage: 15488, Current: -682
+Temps: Bat 26 Int 28, Charge: -47360, Time: 526
+CC1 CAL: mean = -90.08; stddev = 0.48
+CC2 CAL: mean = -23053.36; stddev = 160.62; lt_mean = -5181.88
+CC1 CAL: mean = -90.07; stddev = 0.45
+CC2 CAL: mean = -23082.39; stddev = 174.41; lt_mean = -5218.07
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3891 3841 3891, Stack voltage: 15486, Current: -680
+Temps: Bat 26 Int 28, Charge: -48170, Time: 535
+CC1 CAL: mean = -90.06; stddev = 0.49
+CC2 CAL: mean = -23075.25; stddev = 173.75; lt_mean = -5253.65
+CC1 CAL: mean = -90.08; stddev = 0.49
+CC2 CAL: mean = -23071.21; stddev = 166.77; lt_mean = -5289.20
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3891 3841 3891, Stack voltage: 15489, Current: -688
+Temps: Bat 26 Int 28, Charge: -48891, Time: 543
+CC1 CAL: mean = -90.07; stddev = 0.46
+CC2 CAL: mean = -23063.63; stddev = 168.35; lt_mean = -5324.60
+CC1 CAL: mean = -90.09; stddev = 0.46
+CC2 CAL: mean = -23054.86; stddev = 173.55; lt_mean = -5359.90
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3890 3841 3891, Stack voltage: 15484, Current: -678
+Temps: Bat 26 Int 28, Charge: -49612, Time: 551
+CC1 CAL: mean = -90.08; stddev = 0.43
+CC2 CAL: mean = -23074.85; stddev = 177.69; lt_mean = -5395.60
+CC1 CAL: mean = -90.07; stddev = 0.41
+CC2 CAL: mean = -23069.33; stddev = 184.43; lt_mean = -5430.84
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3890 3841 3891, Stack voltage: 15488, Current: -672
+Temps: Bat 26 Int 28, Charge: -50422, Time: 560
+CC1 CAL: mean = -90.09; stddev = 0.41
+CC2 CAL: mean = -23073.95; stddev = 176.21; lt_mean = -5466.17
+CC1 CAL: mean = -90.08; stddev = 0.39
+CC2 CAL: mean = -23073.64; stddev = 177.19; lt_mean = -5501.35
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3873 3890 3890 3841 3891, Stack voltage: 15486, Current: -686
+Temps: Bat 26 Int 28, Charge: -51143, Time: 568
+CC1 CAL: mean = -90.07; stddev = 0.37
+CC2 CAL: mean = -23082.24; stddev = 184.97; lt_mean = -5536.61
+CC1 CAL: mean = -90.09; stddev = 0.38
+CC2 CAL: mean = -23082.94; stddev = 180.92; lt_mean = -5571.68
+
+
+
+841.0 mA - CC1=128.1 CC2=32750
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3856 3880 3881 3813 3891, Stack voltage: 15424, Current: -966
+Temps: Bat 27 Int 28, Charge: -155542, Time: 1810
+CC1 CAL: mean = -128.07; stddev = 0.44
+CC2 CAL: mean = -32733.79; stddev = 167.58; lt_mean = -13390.98
+CC1 CAL: mean = -128.06; stddev = 0.41
+CC2 CAL: mean = -32726.12; stddev = 167.19; lt_mean = -13429.50
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3855 3880 3881 3814 3891, Stack voltage: 15420, Current: -962
+Temps: Bat 27 Int 28, Charge: -156567, Time: 1818
+CC1 CAL: mean = -128.06; stddev = 0.39
+CC2 CAL: mean = -32732.51; stddev = 176.47; lt_mean = -13468.19
+CC1 CAL: mean = -128.05; stddev = 0.36
+CC2 CAL: mean = -32732.02; stddev = 190.04; lt_mean = -13506.68
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3855 3880 3880 3815 3891, Stack voltage: 15422, Current: -974
+Temps: Bat 27 Int 28, Charge: -157591, Time: 1826
+CC1 CAL: mean = -128.04; stddev = 0.34
+CC2 CAL: mean = -32723.90; stddev = 190.80; lt_mean = -13544.97
+CC1 CAL: mean = -128.04; stddev = 0.32
+CC2 CAL: mean = -32732.35; stddev = 191.40; lt_mean = -13583.44
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3856 3880 3881 3815 3891, Stack voltage: 15423, Current: -970
+Temps: Bat 27 Int 28, Charge: -158743, Time: 1835
+CC1 CAL: mean = -128.03; stddev = 0.30
+CC2 CAL: mean = -32745.30; stddev = 191.45; lt_mean = -13621.92
+CC1 CAL: mean = -128.03; stddev = 0.37
+CC2 CAL: mean = -32739.36; stddev = 190.07; lt_mean = -13660.02
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3856 3880 3881 3815 3891, Stack voltage: 15422, Current: -974
+Temps: Bat 27 Int 28, Charge: -159767, Time: 1843
+CC1 CAL: mean = -128.02; stddev = 0.35
+CC2 CAL: mean = -32769.80; stddev = 208.00; lt_mean = -13698.66
+CC1 CAL: mean = -128.05; stddev = 0.37
+CC2 CAL: mean = -32759.78; stddev = 198.16; lt_mean = -13736.60
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3855 3880 3880 3815 3891, Stack voltage: 15425, Current: -968
+Temps: Bat 27 Int 28, Charge: -160792, Time: 1851
+CC1 CAL: mean = -128.08; stddev = 0.38
+CC2 CAL: mean = -32765.55; stddev = 189.00; lt_mean = -13774.71
+CC1 CAL: mean = -128.07; stddev = 0.36
+CC2 CAL: mean = -32763.47; stddev = 178.84; lt_mean = -13812.63
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3856 3880 3880 3815 3891, Stack voltage: 15425, Current: -964
+Temps: Bat 27 Int 28, Charge: -161944, Time: 1860
+CC1 CAL: mean = -128.06; stddev = 0.34
+CC2 CAL: mean = -32761.42; stddev = 173.52; lt_mean = -13850.46
+CC1 CAL: mean = -128.08; stddev = 0.36
+CC2 CAL: mean = -32764.89; stddev = 176.29; lt_mean = -13888.31
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3855 3880 3880 3815 3891, Stack voltage: 15422, Current: -958
+Temps: Bat 27 Int 28, Charge: -162969, Time: 1868
+CC1 CAL: mean = -128.07; stddev = 0.34
+CC2 CAL: mean = -32770.01; stddev = 172.80; lt_mean = -13926.12
+CC1 CAL: mean = -128.06; stddev = 0.32
+CC2 CAL: mean = -32774.03; stddev = 163.79; lt_mean = -13963.84
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3855 3880 3880 3815 3891, Stack voltage: 15422, Current: -960
+Temps: Bat 27 Int 28, Charge: -163993, Time: 1876
+CC1 CAL: mean = -128.09; stddev = 0.34
+CC2 CAL: mean = -32760.53; stddev = 165.54; lt_mean = -14001.21
+CC1 CAL: mean = -128.08; stddev = 0.40
+CC2 CAL: mean = -32762.69; stddev = 164.42; lt_mean = -14038.73
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3856 3880 3880 3815 3891, Stack voltage: 15424, Current: -972
+Temps: Bat 27 Int 28, Charge: -165146, Time: 1885
+CC1 CAL: mean = -128.07; stddev = 0.38
+CC2 CAL: mean = -32752.66; stddev = 162.04; lt_mean = -14075.99
+CC1 CAL: mean = -128.09; stddev = 0.39
+CC2 CAL: mean = -32755.37; stddev = 159.39; lt_mean = -14113.35
+
+
+
+1388 mA - CC1=211.3 CC2=54090
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3830 3863 3863 3755 3884, Stack voltage: 15303, Current: -1600
+Temps: Bat 28 Int 28, Charge: -140580, Time: 660
+CC1 CAL: mean = -211.53; stddev = 0.51
+CC2 CAL: mean = -54096.83; stddev = 174.53; lt_mean = -14870.11
+CC1 CAL: mean = -211.53; stddev = 0.51
+CC2 CAL: mean = -54098.45; stddev = 170.52; lt_mean = -14948.53
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3830 3863 3863 3755 3884, Stack voltage: 15304, Current: -1592
+Temps: Bat 28 Int 28, Charge: -142483, Time: 669
+CC1 CAL: mean = -211.46; stddev = 0.56
+CC2 CAL: mean = -54087.66; stddev = 174.68; lt_mean = -15026.58
+CC1 CAL: mean = -211.41; stddev = 0.60
+CC2 CAL: mean = -54071.93; stddev = 175.65; lt_mean = -15104.38
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3754 3884, Stack voltage: 15300, Current: -1602
+Temps: Bat 28 Int 28, Charge: -144171, Time: 677
+CC1 CAL: mean = -211.36; stddev = 0.63
+CC2 CAL: mean = -54070.85; stddev = 174.14; lt_mean = -15182.23
+CC1 CAL: mean = -211.32; stddev = 0.60
+CC2 CAL: mean = -54076.59; stddev = 174.79; lt_mean = -15260.05
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3754 3884, Stack voltage: 15301, Current: -1594
+Temps: Bat 28 Int 28, Charge: -145859, Time: 685
+CC1 CAL: mean = -211.28; stddev = 0.57
+CC2 CAL: mean = -54078.33; stddev = 173.13; lt_mean = -15337.65
+CC1 CAL: mean = -211.28; stddev = 0.56
+CC2 CAL: mean = -54074.67; stddev = 172.61; lt_mean = -15415.00
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3753 3884, Stack voltage: 15300, Current: -1604
+Temps: Bat 28 Int 28, Charge: -147760, Time: 694
+CC1 CAL: mean = -211.27; stddev = 0.55
+CC2 CAL: mean = -54091.27; stddev = 169.37; lt_mean = -15492.54
+CC1 CAL: mean = -211.30; stddev = 0.55
+CC2 CAL: mean = -54088.99; stddev = 164.71; lt_mean = -15569.63
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3753 3884, Stack voltage: 15300, Current: -1610
+Temps: Bat 28 Int 28, Charge: -149451, Time: 702
+CC1 CAL: mean = -211.29; stddev = 0.53
+CC2 CAL: mean = -54102.01; stddev = 165.71; lt_mean = -15646.83
+CC1 CAL: mean = -211.29; stddev = 0.52
+CC2 CAL: mean = -54102.40; stddev = 165.74; lt_mean = -15723.69
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3753 3884, Stack voltage: 15298, Current: -1594
+Temps: Bat 28 Int 28, Charge: -151141, Time: 710
+CC1 CAL: mean = -211.31; stddev = 0.52
+CC2 CAL: mean = -54104.72; stddev = 164.06; lt_mean = -15800.43
+CC1 CAL: mean = -211.31; stddev = 0.51
+CC2 CAL: mean = -54103.82; stddev = 163.33; lt_mean = -15876.96
+------------------------------
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3829 3862 3863 3753 3884, Stack voltage: 15300, Current: -1598
+Temps: Bat 28 Int 28, Charge: -153043, Time: 719
+CC1 CAL: mean = -211.30; stddev = 0.51
+CC2 CAL: mean = -54090.44; stddev = 158.04; lt_mean = -15953.13
+CC1 CAL: mean = -211.29; stddev = 0.50
+CC2 CAL: mean = -54068.08; stddev = 181.63; lt_mean = -16028.96

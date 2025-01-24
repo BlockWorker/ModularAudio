@@ -162,8 +162,9 @@ static HAL_StatusTypeDef _BMS_CheckAndApplyConfig() {
   ReturnOnError(BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL1_GAIN, read_buffer, 0x5E, BMS_COMM_MAX_TRIES));
 
   //check if everything is already correct - in that case, we can abort early
+  bool cc1_gain_correct = (*(uint16_t*)(read_buffer + 0x0A) == BMS_CAL_CC1_GAIN);
   bool current_gain_correct = (*(uint16_t*)(read_buffer + 0x06) == BMS_CAL_CURR_GAIN);
-  if (memcmp(read_buffer + BMS_CONFIG_MAIN_ARRAY_OFFSET, bms_config_main_array, sizeof(bms_config_main_array)) == 0 && current_gain_correct) {
+  if (memcmp(read_buffer + BMS_CONFIG_MAIN_ARRAY_OFFSET, bms_config_main_array, sizeof(bms_config_main_array)) == 0 && cc1_gain_correct && current_gain_correct) {
     DEBUG_PRINTF("INFO: BMS Config: Already correct at init\n");
     return HAL_OK;
   }
@@ -172,7 +173,15 @@ static HAL_StatusTypeDef _BMS_CheckAndApplyConfig() {
   ReturnOnError(_BMS_EnterCFGUPDATE());
   HAL_StatusTypeDef res = HAL_OK;
 
-  //start with current gain (separate)
+  //start with current gains (separate)
+  if (!cc1_gain_correct) {
+    //write configured CC1 current gain
+    uint8_t cc1_gain_config[2] = { TwoBytes(BMS_CAL_CC1_GAIN) };
+    if (BMS_I2C_DataMemoryWrite(MEMADDR_CAL_CC1_GAIN, cc1_gain_config, 2, BMS_COMM_MAX_TRIES) != HAL_OK) {
+      DEBUG_PRINTF("ERROR: BMS Config: CC1 gain write failed\n");
+      res = HAL_ERROR;
+    }
+  }
   if (!current_gain_correct) {
     //write configured current gain
     uint8_t curr_gain_config[2] = { TwoBytes(BMS_CAL_CURR_GAIN) };
@@ -218,8 +227,9 @@ static HAL_StatusTypeDef _BMS_CheckAndApplyConfig() {
   if (res == HAL_OK) {
     //re-read data memory to check the written config
     if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL1_GAIN, read_buffer, 0x5E, BMS_COMM_MAX_TRIES) == HAL_OK) {
+      cc1_gain_correct = (*(uint16_t*)(read_buffer + 0x0A) == BMS_CAL_CC1_GAIN);
       current_gain_correct = (*(uint16_t*)(read_buffer + 0x06) == BMS_CAL_CURR_GAIN);
-      if (memcmp(read_buffer + BMS_CONFIG_MAIN_ARRAY_OFFSET, bms_config_main_array, sizeof(bms_config_main_array)) == 0 && current_gain_correct) {
+      if (memcmp(read_buffer + BMS_CONFIG_MAIN_ARRAY_OFFSET, bms_config_main_array, sizeof(bms_config_main_array)) == 0 && cc1_gain_correct && current_gain_correct) {
         //we're good: finish
         return HAL_OK;
       } else {
@@ -370,7 +380,7 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
   //read current - unnecessary if power off
   if (pwrsw_status) {
     if (BMS_I2C_DirectCommandRead(DIRCMD_CURRENT, read_buffer_u8, 2, BMS_COMM_MAX_TRIES) == HAL_OK) {
-      bms_measurements.current = BMS_CONV_MA_PER_CUR_LSB * (int32_t)read_buffer_s16[0];
+      bms_measurements.current = BMS_CONV_CUR_TO_MA_MULT * (int32_t)read_buffer_s16[0];
     } else {
       //read failed: default to error current
       DEBUG_PRINTF("ERROR: BMS measurement update: Current read failed\n");
@@ -382,7 +392,7 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
   //read charge and integration time - unnecessary if power off
   if (pwrsw_status) {
     if (BMS_I2C_SubcommandRead(SUBCMD_PASSQ, read_buffer_u8, 12, BMS_COMM_MAX_TRIES) == HAL_OK) {
-      bms_measurements.accumulated_charge = BMS_CONV_MAS_PER_CHG_LSB * (*(int64_t*)read_buffer_u8);
+      bms_measurements.accumulated_charge = ((int64_t)BMS_CONV_CHG_TO_MAS_MULT * (*(int64_t*)read_buffer_u8)) / (int64_t)BMS_CONV_CHG_TO_MAS_DIV;
       bms_measurements.charge_accumulation_time = *(uint32_t*)(read_buffer_u8 + 8);
     } else {
       //read failed: default to error charge and time
@@ -617,6 +627,41 @@ HAL_StatusTypeDef BMS_Init() {
 }
 
 void BMS_LoopUpdate(uint32_t loop_count) {
+
+#ifdef MAIN_CURRENT_CALIBRATION
+  static float cc1_mean = 0.0f;
+  static float cc1_var = 0.0f;
+  static float cc2_mean = 0.0f;
+  static float cc2_var = 0.0f;
+  const float alpha = 0.03125f;
+  static float cc2_lt_mean = 0.0f;
+  const float lt_alpha = 0.0005f;
+
+  //calculate moving averages and standard deviations
+  if (loop_count % 25 == 0) {
+    int16_t cc1_read;
+    int32_t cc2_read;
+    BMS_I2C_DirectCommandRead(DIRCMD_CC1_CURRENT, (uint8_t*)&cc1_read, 2, BMS_COMM_MAX_TRIES);
+    BMS_I2C_DirectCommandRead(DIRCMD_RAW_CURRENT, (uint8_t*)&cc2_read, 4, BMS_COMM_MAX_TRIES);
+
+    float diff = (float)cc1_read - cc1_mean;
+    float incr = alpha * diff;
+    cc1_mean += incr;
+    cc1_var = (1.0f - alpha) * (cc1_var + diff * incr);
+
+    diff = (float)cc2_read - cc2_mean;
+    incr = alpha * diff;
+    cc2_mean += incr;
+    cc2_var = (1.0f - alpha) * (cc2_var + diff * incr);
+
+    cc2_lt_mean = lt_alpha * (float)cc2_read + (1.0f - lt_alpha) * cc2_lt_mean;
+  }
+
+  if (loop_count % 100 == 0) {
+    DEBUG_PRINTF("CC1 CAL: mean = %.2f; stddev = %.2f\nCC2 CAL: mean = %.2f; stddev = %.2f; lt_mean = %.2f\n", cc1_mean, sqrtf(cc1_var), cc2_mean, sqrtf(cc2_var), cc2_lt_mean);
+  }
+#endif
+
   //update alerts if interrupt was somehow missed
   if (HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_RESET) {
     BMS_AlertInterrupt();
@@ -677,6 +722,7 @@ void BMS_LoopUpdate(uint32_t loop_count) {
   }
 
   //debug status printout - TODO remove later?
+#ifdef DEBUG
   if (loop_count % 200 == 1) {
     char* mode_str =
         (bms_status.mode == BMSMODE_NORMAL) ? "Normal" :
@@ -692,5 +738,6 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     DEBUG_PRINTF("Temps: Bat %d Int %d, Charge: %lld, Time: %lu\n", bms_measurements.bat_temp, bms_measurements.internal_temp, bms_measurements.accumulated_charge,
                  bms_measurements.charge_accumulation_time);
   }
+#endif
 }
 

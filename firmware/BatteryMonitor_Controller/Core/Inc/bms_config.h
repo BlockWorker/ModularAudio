@@ -19,9 +19,16 @@
 /* ------ CALIBRATION SETTINGS ------ */
 /**************************************/
 
-//CC2 current gain - default (in prototype sample) 241 = 1mA/userA, here 121 = 2mA/userA (again, for prototype sample)
-//this may need adjustment depending on the factory-trimmed default value, which may differ between samples
-#define BMS_CAL_CURR_GAIN 121
+//CC2 current gain - default (in prototype sample) 241 targetting 1mA/userA, here 105 targetting 2mA/userA (after calibration)
+#define BMS_CAL_CURR_GAIN 105
+
+#ifdef MAIN_CURRENT_CALIBRATION
+//CC1 current gain - here 32 for calibration mode
+#define BMS_CAL_CC1_GAIN 32
+#else
+//CC1 current gain - default (in prototype sample) 241 targetting 1mA/userA, here 210 targetting 1mA/userA (after calibration)
+#define BMS_CAL_CC1_GAIN 210
+#endif
 
 
 /**********************************/

@@ -103,6 +103,7 @@ static void _TestReadDataMem() {
   uint8_t configured_mem_values[115] __attribute__((aligned (2))) = { 0 };
   memcpy(configured_mem_values + 0x14, bms_config_main_array, sizeof(bms_config_main_array));
   *(uint16_t*)(configured_mem_values + 0x06) = BMS_CAL_CURR_GAIN;
+  *(uint16_t*)(configured_mem_values + 0x0A) = BMS_CAL_CC1_GAIN;
 
   int i, j;
   DEBUG_PRINTF("\n     _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _A _B _C _D _E _F\n");
