@@ -95,7 +95,7 @@ const uint8_t bms_config_main_array[74] = {
 };
 
 
-uint8_t bms_i2c_crc_active = 0;
+bool bms_i2c_crc_active = false;
 
 static uint8_t bms_i2c_buffer[BMS_I2C_BUFSIZE] = { 0 };
 
@@ -159,7 +159,7 @@ HAL_StatusTypeDef BMS_I2C_DirectCommandRead(BMS_I2C_DirectCommand command, uint8
   return res;
 }
 
-HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, uint8_t* data, uint8_t length, uint8_t max_tries) {
+HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, const uint8_t* data, uint8_t length, uint8_t max_tries) {
   if (length < 1 || length > (BMS_I2C_BUFSIZE / 2)) return HAL_ERROR;
 
   if (bms_i2c_crc_active) {
@@ -263,7 +263,7 @@ HAL_StatusTypeDef BMS_I2C_SubcommandRead(BMS_I2C_SubCommand command, uint8_t* bu
   return res;
 }
 
-HAL_StatusTypeDef BMS_I2C_SubcommandWrite(BMS_I2C_SubCommand command, uint8_t* data, uint8_t length, uint8_t max_tries) {
+HAL_StatusTypeDef BMS_I2C_SubcommandWrite(BMS_I2C_SubCommand command, const uint8_t* data, uint8_t length, uint8_t max_tries) {
   if (length < 1 || length > 32) return HAL_ERROR;
 
   //calculate checksum from command and data, prepare final two bytes
@@ -302,7 +302,7 @@ HAL_StatusTypeDef BMS_I2C_DataMemoryRead(BMS_I2C_DataMemAddress address, uint8_t
   return BMS_I2C_SubcommandRead((BMS_I2C_SubCommand)address, buffer, length, max_tries);
 }
 
-HAL_StatusTypeDef BMS_I2C_DataMemoryWrite(BMS_I2C_DataMemAddress address, uint8_t* data, uint8_t length, uint8_t max_tries) {
+HAL_StatusTypeDef BMS_I2C_DataMemoryWrite(BMS_I2C_DataMemAddress address, const uint8_t* data, uint8_t length, uint8_t max_tries) {
   //data memory write operation is identical to subcommand write
   return BMS_I2C_SubcommandWrite((BMS_I2C_SubCommand)address, data, length, max_tries);
 }

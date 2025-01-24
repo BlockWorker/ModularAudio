@@ -19,24 +19,25 @@
 /* ------ CALIBRATION SETTINGS ------ */
 /**************************************/
 
-//CC2 current gain divisor from factory value (one userA = this many mA) - default 1 = 1mA/userA, here 2 = 2mA/userA
-#define BMS_CAL_CURR_GAIN_DIV 2
+//CC2 current gain - default (in prototype sample) 241 = 1mA/userA, here 121 = 2mA/userA (again, for prototype sample)
+//this may need adjustment depending on the factory-trimmed default value, which may differ between samples
+#define BMS_CAL_CURR_GAIN 121
 
 
 /**********************************/
 /* ------ GENERAL SETTINGS ------ */
 /**********************************/
 
-//power config (bitfield, see TRM) - default 0x01, here 0x0C (full loop speeds, shutdown on HW OT, shutdown on LFO fault, no deepsleep LFO, sleep mode disabled)
-#define BMS_SET_POWER_CONFIG 0x0C
+//power config (bitfield, see TRM) - default 0x01, here 0x0E (full loop speeds, shutdown on HW OT, shutdown on LFO fault, deepsleep LFO on, sleep mode disabled)
+#define BMS_SET_POWER_CONFIG 0x0E
 
 //REGOUT config (bitfield, see TRM) - default 0x0E (or 0x08?), here 0x0E (enabled, 3.3V)
 #define BMS_SET_REGOUT_CONFIG 0x0E
 
 //I2C address - default 0x08
 #define BMS_SET_I2C_ADDRESS 0x08
-//I2C config (bitfield, see TRM) - default 0x3400, here 0x3402 (no short timeouts, 2s low timeout, 2s busy timeout, no CRC)
-#define BMS_SET_I2C_CONFIG 0x3402
+//I2C config (bitfield, see TRM) - default 0x3400, here 0x3403 (no short timeouts, 2s low timeout, 2s busy timeout, CRC mode)
+#define BMS_SET_I2C_CONFIG 0x3403
 
 //data acquisition config (bitfield, see TRM) - default 0x0000 (TS thermistor mode, continuous CC measurements, all ADCs at highest resolution)
 #define BMS_SET_DA_CONFIG 0x0000
@@ -113,8 +114,8 @@
 #define BMS_PROT_OCD1_DELAY 6
 //overcurrent in discharge 2 threshold in 2A steps - default 3 = 6A, here 16 = 32A
 #define BMS_PROT_OCD2_THRESHOLD 16
-//overcurrent in discharge 2 delay in varying steps (see TRM) - default 19 = 6.71ms, here 85 = 71.675ms
-#define BMS_PROT_OCD2_DELAY 85
+//overcurrent in discharge 2 delay in varying steps (see TRM) - default 19 = 6.71ms, here 133 = 201ms
+#define BMS_PROT_OCD2_DELAY 133
 
 //short circuit in discharge threshold (values see TRM) - default 0 = 10A, here 5 = 100A
 #define BMS_PROT_SCD_THRESHOLD 5

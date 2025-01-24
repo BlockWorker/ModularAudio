@@ -32,6 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -47,6 +48,9 @@ extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
 
 extern UART_HandleTypeDef huart2;
+
+
+extern bool pwrsw_status;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -88,7 +92,11 @@ void Error_Handler(void);
 #define BMS_ALERT_N_EXTI_IRQn EXTI4_15_IRQn
 
 /* USER CODE BEGIN Private defines */
+//period of main program loop in milliseconds
+#define MAIN_LOOP_PERIOD_MS 10
 
+//main loop cycles for power switch debouncing
+#define MAIN_PWRSW_DEBOUNCE_CYCLES 3
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

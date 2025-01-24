@@ -24,7 +24,7 @@
 #include "retarget.h"
 #include <stdio.h>
 #include <string.h>
-#include "bms_i2c.h"
+#include "bms.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,10 +48,18 @@ CRC_HandleTypeDef hcrc;
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c3;
 
+IWDG_HandleTypeDef hiwdg;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+//power switch status and debouncing logic variables
+static uint8_t pwrsw_debounce_count = 0;
+static GPIO_PinState pwrsw_last_state = GPIO_PIN_SET;
+bool pwrsw_status = false;
 
+//whether the current main loop cycle follows stop mode
+static bool wakeup_from_stop = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,6 +69,7 @@ static void MX_I2C1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CRC_Init(void);
+static void MX_IWDG_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -68,8 +77,61 @@ static void MX_CRC_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 static __always_inline void _RefreshWatchdogs() {
-  /*HAL_WWDG_Refresh(&hwwdg);
-  HAL_IWDG_Refresh(&hiwdg);*/
+  //HAL_WWDG_Refresh(&hwwdg);
+  HAL_IWDG_Refresh(&hiwdg);
+}
+
+static void _TestReadDataMem() {
+  uint8_t data_mem_values[115] = { 0 };
+
+  DEBUG_PRINTF("Reading contiguous data memory...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL1_GAIN, data_mem_values, 0x5E, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Contiguous memory read\n");
+  } else {
+    DEBUG_PRINTF("Contiguous data memory read failed!\n");
+  }
+
+  DEBUG_PRINTF("Reading extra data memory...\n");
+  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL4_DELTA, data_mem_values + 0x71, 2, 3) == HAL_OK) {
+    DEBUG_PRINTF("Success: Extra memory read\n");
+  } else {
+    DEBUG_PRINTF("Extra data memory read failed!\n");
+  }
+
+  HAL_Delay(10);
+
+  uint8_t configured_mem_values[115] __attribute__((aligned (2))) = { 0 };
+  memcpy(configured_mem_values + 0x14, bms_config_main_array, sizeof(bms_config_main_array));
+  *(uint16_t*)(configured_mem_values + 0x06) = BMS_CAL_CURR_GAIN;
+
+  int i, j;
+  DEBUG_PRINTF("\n     _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _A _B _C _D _E _F\n");
+  for (i = 0; i < 8; i++) {
+    int end = (i == 7) ? 3 : 16;
+
+    DEBUG_PRINTF("\n r%X_", i);
+    for (j = 0; j < end; j++) {
+      DEBUG_PRINTF(" %02X", data_mem_values[16 * i + j]);
+    }
+    DEBUG_PRINTF("\n c%X_", i);
+    for (j = 0; j < end; j++) {
+      DEBUG_PRINTF(" %02X", configured_mem_values[16 * i + j]);
+    }
+    DEBUG_PRINTF("\n");
+  }
+}
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  switch (GPIO_Pin) {
+    case BMS_ALERT_N_Pin:
+      BMS_AlertInterrupt();
+      break;
+    case PWR_SWITCH_Pin:
+      pwrsw_last_state = HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin);
+      pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
+      break;
+  }
 }
 /* USER CODE END 0 */
 
@@ -105,6 +167,7 @@ int main(void)
   MX_I2C3_Init();
   MX_USART2_UART_Init();
   MX_CRC_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&huart2);
 
@@ -115,159 +178,87 @@ int main(void)
 
   HAL_Delay(1000);
 
-  uint8_t test_buf[256] = { 0 };
-  uint16_t* test_buf_16 = (uint16_t*)test_buf;
-  //uint32_t* test_buf_32 = (uint32_t*)test_buf;
+  pwrsw_debounce_count = 0;
+  pwrsw_status = (HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin) == GPIO_PIN_RESET);
+  wakeup_from_stop = false;
 
-  DEBUG_PRINTF("Reading device number...\n");
-  if (BMS_I2C_SubcommandRead(SUBCMD_DEVICE_NUMBER, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: DeviceNumber = 0x%04X\n", test_buf_16[0]);
-  } else {
-    DEBUG_PRINTF("Device number read failed!\n");
+  //configure for lowest power - not sure if compatible with stop mode, but won't hurt
+  HAL_PWREx_EnableUltraLowPower();
+  HAL_PWREx_EnableFastWakeUp();
+
+  if (BMS_Init() != HAL_OK) {
+    DEBUG_PRINTF("ERROR: BMS init failed!\n");
+    //Error_Handler();
   }
+  DEBUG_PRINTF("BMS init completed\n");
 
   HAL_Delay(100);
 
-  DEBUG_PRINTF("Reading current gain calibration...\n");
-  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CURR_GAIN, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: CurrGain = %u\n", test_buf_16[0]);
-  } else {
-    DEBUG_PRINTF("Current gain read failed!\n");
-  }
+  _TestReadDataMem();
 
   HAL_Delay(100);
-
-  DEBUG_PRINTF("Entering CFGUPDATE...\n");
-  if (BMS_I2C_SubcommandOnly(SUBCMD_SET_CFGUPDATE, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: Entered CFGUPDATE\n");
-  } else {
-    DEBUG_PRINTF("Enter CFGUPDATE failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Reading battery status...\n");
-  if (BMS_I2C_DirectCommandRead(DIRCMD_BATTERY_STATUS, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: BatteryStatus = 0x%04X\n", test_buf_16[0]);
-  } else {
-    DEBUG_PRINTF("Battery status read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Writing VCell mode...\n");
-  test_buf[0] = 4;
-  if (BMS_I2C_DataMemoryWrite(MEMADDR_SET_VCELL_MODE, test_buf, 1, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: VCell mode written\n");
-  } else {
-    DEBUG_PRINTF("VCell mode write failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Writing I2C config...\n");
-  test_buf_16[0] = 0x3403; //default + bus busy timeout + crc
-  if (BMS_I2C_DataMemoryWrite(MEMADDR_SET_I2C_CONFIG, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: I2C config written\n");
-  } else {
-    DEBUG_PRINTF("I2C config write failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Exiting CFGUPDATE...\n");
-  if (BMS_I2C_SubcommandOnly(SUBCMD_EXIT_CFGUPDATE, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: Exited CFGUPDATE\n");
-  } else {
-    DEBUG_PRINTF("Exit CFGUPDATE failed!\n");
-  }
-
-  bms_i2c_crc_active = 1;
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Reading battery status...\n");
-  if (BMS_I2C_DirectCommandRead(DIRCMD_BATTERY_STATUS, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: BatteryStatus = 0x%04X\n", test_buf_16[0]);
-  } else {
-    DEBUG_PRINTF("Battery status read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Reading VCell mode...\n");
-  if (BMS_I2C_DataMemoryRead(MEMADDR_SET_VCELL_MODE, test_buf, 1, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: VCell mode = %u\n", test_buf[0]);
-  } else {
-    DEBUG_PRINTF("VCell mode read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Reading cell voltages...\n");
-  if (BMS_I2C_DirectCommandRead(DIRCMD_CELL1_VOLTAGE, test_buf, 10, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: Cell voltages = %u, %u, %u, %u, %u\n", test_buf_16[0], test_buf_16[1], test_buf_16[2], test_buf_16[3], test_buf_16[4]);
-  } else {
-    DEBUG_PRINTF("Cell voltage read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  DEBUG_PRINTF("Reading i2ccfg...\n");
-  if (BMS_I2C_DataMemoryRead(MEMADDR_SET_I2C_CONFIG, test_buf, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: i2ccfg = %u\n", test_buf_16[0]);
-  } else {
-    DEBUG_PRINTF("i2ccfg read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  uint8_t data_mem_values[115] = { 0 };
-
-  DEBUG_PRINTF("Reading contiguous data memory...\n");
-  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL1_GAIN, data_mem_values, 0x5E, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: Contiguous memory read\n");
-  } else {
-    DEBUG_PRINTF("Contiguous data memory read failed!\n");
-  }
-
-  DEBUG_PRINTF("Reading extra data memory...\n");
-  if (BMS_I2C_DataMemoryRead(MEMADDR_CAL_CELL4_DELTA, data_mem_values + 0x71, 2, 3) == HAL_OK) {
-    DEBUG_PRINTF("Success: Extra memory read\n");
-  } else {
-    DEBUG_PRINTF("Extra data memory read failed!\n");
-  }
-
-  HAL_Delay(100);
-
-  uint8_t configured_mem_values[115] = { 0 };
-  memcpy(configured_mem_values + 0x14, bms_config_main_array, sizeof(bms_config_main_array));
-
-  int i, j;
-  DEBUG_PRINTF("\n     _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _A _B _C _D _E _F\n");
-  for (i = 0; i < 8; i++) {
-    int end = (i == 7) ? 3 : 16;
-
-    DEBUG_PRINTF("\n r%X_", i);
-    for (j = 0; j < end; j++) {
-      DEBUG_PRINTF(" %02X", data_mem_values[16 * i + j]);
-    }
-    DEBUG_PRINTF("\n c%X_", i);
-    for (j = 0; j < end; j++) {
-      DEBUG_PRINTF(" %02X", configured_mem_values[16 * i + j]);
-    }
-    DEBUG_PRINTF("\n");
-  }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  //loop iteration counter - even if extremely unlikely wrap-around happens, it shouldn't be critical
+  uint32_t loop_count = 0;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t iteration_start_tick = HAL_GetTick();
+
+    //check power switch: handle debouncing or see if it changed outside of debouncing somehow
+    GPIO_PinState switch_state = HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin);
+    if (pwrsw_debounce_count > 0) {
+      //if state changed: reset debounce counter
+      if (switch_state != pwrsw_last_state) {
+        pwrsw_last_state = switch_state;
+        pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
+      } else if (pwrsw_debounce_count-- == 1) { //same state as before: decrement counter and check if we're at the last cycle
+        //last cycle: debounce is done, write switch status based on state
+        pwrsw_status = (switch_state == GPIO_PIN_RESET);
+      }
+    } else if (pwrsw_status != (switch_state == GPIO_PIN_RESET)) {
+      //this shouldn't really ever happen
+      DEBUG_PRINTF("WARNING: Power switch change detected that somehow wasn't caught by an interrupt\n");
+      pwrsw_last_state = switch_state;
+      pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
+    }
+
+    //apply power switch status to desired BMS state
+    bms_should_disable_fets = bms_should_deepsleep = !pwrsw_status;
+
+    if (wakeup_from_stop) {
+      //exit deepsleep after wakeup, to allow measurements
+      BMS_ExitDeepSleep();
+    }
+
+    BMS_LoopUpdate(loop_count);
+
+    _RefreshWatchdogs();
+
+    //check whether to stop or continue to next loop, stop conditions: power switch off, no ongoing debounce, BMS in deepsleep, BMS alert pin is high (no alert)
+    if (!pwrsw_status && pwrsw_debounce_count == 0 && bms_status.mode == BMSMODE_DEEPSLEEP && HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_SET) {
+      //prepare everything for a check cycle after wakeup
+      loop_count = 0;
+      wakeup_from_stop = true;
+
+      //enter stop mode
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+      _RefreshWatchdogs();
+      DEBUG_PRINTF("Woke up from STOP, loop before stop took %lu ms\n", HAL_GetTick() - iteration_start_tick);
+    } else {
+      //just go to next loop after corresponding delay
+      loop_count++;
+      wakeup_from_stop = false;
+      while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
+    }
   }
   /* USER CODE END 3 */
 }
@@ -284,12 +275,13 @@ void SystemClock_Config(void)
 
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
@@ -421,7 +413,7 @@ static void MX_I2C3_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x00000004;
+  hi2c3.Init.Timing = 0x00100E16;
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -450,6 +442,35 @@ static void MX_I2C3_Init(void)
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
+
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
 
 }
 
@@ -512,6 +533,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(PWR_SWITCH_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA0 PA1 PA4 PA5
+                           PA6 PA7 PA10 PA11
+                           PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_10|GPIO_PIN_11
+                          |GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : I2C_ISO_EN_Pin */
   GPIO_InitStruct.Pin = I2C_ISO_EN_Pin;

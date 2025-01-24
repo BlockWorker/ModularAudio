@@ -177,18 +177,18 @@ extern const uint8_t bms_i2c_data_reg_sizes[115];
 
 
 //whether CRC calculation is currently enabled for I2C communication
-extern uint8_t bms_i2c_crc_active;
+extern bool bms_i2c_crc_active;
 
 
 HAL_StatusTypeDef BMS_I2C_DirectCommandRead(BMS_I2C_DirectCommand command, uint8_t* buffer, uint8_t length, uint8_t max_tries);
-HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, uint8_t* data, uint8_t length, uint8_t max_tries);
+HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, const uint8_t* data, uint8_t length, uint8_t max_tries);
 
 HAL_StatusTypeDef BMS_I2C_SubcommandOnly(BMS_I2C_SubCommand command, uint8_t max_tries);
 HAL_StatusTypeDef BMS_I2C_SubcommandRead(BMS_I2C_SubCommand command, uint8_t* buffer, uint8_t length, uint8_t max_tries);
-HAL_StatusTypeDef BMS_I2C_SubcommandWrite(BMS_I2C_SubCommand command, uint8_t* data, uint8_t length, uint8_t max_tries);
+HAL_StatusTypeDef BMS_I2C_SubcommandWrite(BMS_I2C_SubCommand command, const uint8_t* data, uint8_t length, uint8_t max_tries);
 
 HAL_StatusTypeDef BMS_I2C_DataMemoryRead(BMS_I2C_DataMemAddress address, uint8_t* buffer, uint8_t length, uint8_t max_tries);
-HAL_StatusTypeDef BMS_I2C_DataMemoryWrite(BMS_I2C_DataMemAddress address, uint8_t* data, uint8_t length, uint8_t max_tries);
+HAL_StatusTypeDef BMS_I2C_DataMemoryWrite(BMS_I2C_DataMemAddress address, const uint8_t* data, uint8_t length, uint8_t max_tries);
 
 
 #endif /* INC_BMS_I2C_H_ */
