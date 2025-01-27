@@ -54,6 +54,24 @@
 //period of temperature measurement updates, in main loop cycles - must be a multiple of BMS_LOOP_PERIOD_MEASUREMENTS!
 #define BMS_LOOP_PERIOD_TEMPERATURES (2 * BMS_LOOP_PERIOD_MEASUREMENTS)
 
+//state-of-charge calculation constants
+//number of cells in the pack (series and parallel)
+#define BMS_CELLS_SERIES 4
+#define BMS_CELLS_PARALLEL 4
+#define BMS_CELLS_TOTAL (BMS_CELLS_SERIES * BMS_CELLS_PARALLEL)
+//minimum and maximum cell voltages to be considered acceptable for estimations
+#define BMS_SOC_CELL_VOLTAGE_MIN 2.5f
+#define BMS_SOC_CELL_VOLTAGE_MAX 4.25f
+//voltage above which a cell is considered "fully charged"
+#define BMS_SOC_CELL_FULL_CHARGE_VOLTAGE_MIN 4.17f
+//cell current and voltage smoothing parameter - approx 30s time constant, given measurements once per second
+#define BMS_SOC_SMOOTHING_ALPHA 0.03f
+#define BMS_SOC_SMOOTHING_1MALPHA (1.0f - BMS_SOC_SMOOTHING_ALPHA)
+//current initialisation factor for start delay before allowing reference point setting - 1.4 with alpha 0.03 results in approx. 10 measurement cycles of delay
+#define BMS_SOC_CURRENT_INIT_FACTOR 1.4f
+//maximum allowable difference between tracked charge and estimated charge, in Ah
+#define BMS_SOC_CHARGE_DIFFERENCE_MAX 0.15f
+
 
 //BMS IC mode - shutdown is not an option here, since controller would be unpowered in that mode
 typedef enum {
@@ -109,11 +127,7 @@ typedef struct {
 
 //BMS IC voltage, current, temperature, and charge measurements
 typedef struct {
-  int16_t voltage_cell_1;             //all in mV
-  int16_t voltage_cell_2;
-  int16_t voltage_cell_3;
-  int16_t voltage_cell_4;
-  int16_t voltage_cell_5;
+  int16_t voltage_cells[5];           //all in mV
   uint16_t voltage_stack;             //in mV
   int32_t current;                    //in mA
   int16_t bat_temp;                   //in °C
@@ -122,9 +136,25 @@ typedef struct {
   uint32_t charge_accumulation_time;  //in 250ms
 } BMS_Measurements;
 
+//precision level ("quality") of the state-of-charge calculation
+typedef enum {
+  SOC_VOLTAGE_ONLY = 0,
+  SOC_CHARGE_ESTIMATED = 1,
+  SOC_CHARGE_FULL = 2
+} BMS_SoC_PrecisionLevel;
+
 
 extern BMS_Status bms_status;
 extern BMS_Measurements bms_measurements;
+
+//state-of-charge calculation status and results
+//battery health fraction (in (0, 1]) - may be modified externally, will apply on next update
+extern float bms_soc_battery_health;
+//precision level of current calculated values
+extern BMS_SoC_PrecisionLevel bms_soc_precisionlevel;
+//calculated state-of-charge in terms of energy (in Wh) and fraction of full (in [0, 1])
+extern float bms_soc_energy;
+extern float bms_soc_fraction;
 
 //desired status: may be set externally, BMS_LoopUpdate logic will aim to achieve and keep that status
 extern bool bms_should_deepsleep;

@@ -27,7 +27,16 @@ with open('energy-1.0a.csv', 'r') as f:
 chg_data_true_h = np.max(chg_data_h[1]) - chg_data_h[1]
 eng_data_true_h = np.max(eng_data_h[1]) - eng_data_h[1]
 
-plt.scatter(chg_data_true, eng_data_true)
-plt.scatter(chg_data_true_h, eng_data_true_h)
-plt.plot(chg_data_true, eng_data_interp, color='green')
-plt.show()
+#plt.scatter(chg_data_true, eng_data_true)
+#plt.scatter(chg_data_true_h, eng_data_true_h)
+#plt.plot(chg_data_true, eng_data_interp, color='green')
+#plt.show()
+
+for factor in np.linspace(.5, 1, 6):
+    chg_scaled = factor * chg_data_true
+    eng_scaled = factor * eng_data_true
+    interp_scaled = poly(chg_scaled) + (1 - factor) * (.3 * chg_scaled + .1 * (chg_scaled**2))
+
+    plt.scatter(chg_scaled, eng_scaled)
+    plt.plot(chg_scaled, interp_scaled, color='red')
+    plt.show()

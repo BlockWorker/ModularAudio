@@ -6,12 +6,22 @@
  */
 
 #include "bms.h"
+#include "bat_calculations.h"
 #include <math.h>
 #include <string.h>
 
 
 BMS_Status bms_status;
 BMS_Measurements bms_measurements;
+
+//state-of-charge calculation status and results
+//battery health fraction (in [0, 1]) - may be modified externally, will apply on next update
+float bms_soc_battery_health = 1.0f;
+//precision level of current calculated values
+BMS_SoC_PrecisionLevel bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+//calculated state-of-charge in terms of energy (in Wh) and fraction of full (in [0, 1])
+float bms_soc_energy = NAN;
+float bms_soc_fraction = NAN;
 
 bool bms_should_deepsleep = false;
 bool bms_should_disable_fets = false;
@@ -22,6 +32,9 @@ static bool _bms_detected_initcomp = false;
 static bool _bms_detected_shutdown_voltage = false;
 //set to true when a safety fault or alert is detected
 static bool _bms_detected_safety_event = false;
+
+//charge reference point in Ah (actual charge of a single cell when BMS charge register is zero), for SOC_CHARGE_ESTIMATED and SOC_CHARGE_FULL modes
+static float _bms_soc_charge_reference = 0.0f;
 
 
 //wait for init-complete alert to occur, up to configured maximum wait time
@@ -104,6 +117,10 @@ static int16_t _BMS_GetThermistorTemp(int16_t adc_value) {
 
 //enter CFGUPDATE mode
 static HAL_StatusTypeDef _BMS_EnterCFGUPDATE() {
+  //reset state-of-charge calculation to voltage-only mode, due to CFGUPDATE resetting integrated charge
+  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+
+  //send actual command
   ReturnOnError(BMS_I2C_SubcommandOnly(SUBCMD_SET_CFGUPDATE, BMS_COMM_MAX_TRIES));
 
   //update status repeatedly with small delays until we see the mode update
@@ -125,8 +142,11 @@ static HAL_StatusTypeDef _BMS_EnterCFGUPDATE() {
 
 //exit CFGUPDATE mode
 static HAL_StatusTypeDef _BMS_ExitCFGUPDATE() {
-  _bms_detected_initcomp = false;
+  //reset state-of-charge calculation to voltage-only mode, due to CFGUPDATE resetting integrated charge
+  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
 
+  //send actual command
+  _bms_detected_initcomp = false;
   ReturnOnError(BMS_I2C_SubcommandOnly(SUBCMD_EXIT_CFGUPDATE, BMS_COMM_MAX_TRIES));
 
   //update status repeatedly with small delays until we see the mode update
@@ -251,6 +271,139 @@ static HAL_StatusTypeDef _BMS_CheckAndApplyConfig() {
   return res;
 }
 
+//state-of-charge calculation update - TODO: automatic battery health detection? here or separately?
+static void _BMS_UpdateSoC() {
+  //smoothed current (in A) and cell voltage (in V) values - initially NaN meaning "uninitialised"
+  static float current_smoothed = NAN;
+  static float voltages_smoothed[BMS_CELLS_SERIES];
+
+  int i;
+  float min_voltage;
+  float charge;
+  float cell_energy;
+
+  //convert integer measurements to floats in corresponding units
+  float current = (float)bms_measurements.current / 1000.0f / (float)BMS_CELLS_PARALLEL; //mA total -> A per cell
+  float voltages[BMS_CELLS_SERIES];
+  for (i = 0; i < BMS_CELLS_SERIES; i++) voltages[i] = (float)bms_measurements.voltage_cells[i] / 1000.0f; //mV -> V
+  float charge_delta = (float)bms_measurements.accumulated_charge / 3600000.0f / (float)BMS_CELLS_PARALLEL; //mAs total -> Ah per cell
+
+  //calculate smoothed current and cell voltages
+  if (isnanf(current_smoothed)) {
+    //initialise from first measurement, if valid
+    if (bms_measurements.current != BMS_ERROR_CURRENT && bms_measurements.voltage_cells[0] > 0 && bms_measurements.voltage_cells[1] > 0 &&
+        bms_measurements.voltage_cells[2] > 0 && bms_measurements.voltage_cells[3] > 0 && bms_measurements.voltage_cells[4] > 0) {
+      //current initially set to "too much" for reference point setting, to ensure some settling time at the start
+      current_smoothed = (bms_measurements.current > 0 ? 1.0f : -1.0f) * bat_calc_voltageToCharge_max_valid_current * BMS_SOC_CURRENT_INIT_FACTOR;
+      //cell voltages initialised correctly
+      for (i = 0; i < BMS_CELLS_SERIES; i++) voltages_smoothed[i] = voltages[i];
+    }
+  } else {
+    //apply exponential smoothing
+    current_smoothed = BMS_SOC_SMOOTHING_ALPHA * current + BMS_SOC_SMOOTHING_1MALPHA * current_smoothed;
+    for (i = 0; i < BMS_CELLS_SERIES; i++) {
+      voltages_smoothed[i] = BMS_SOC_SMOOTHING_ALPHA * voltages[i] + BMS_SOC_SMOOTHING_1MALPHA * voltages_smoothed[i];
+    }
+  }
+
+  //if battery health is invalid, default to 100% health
+  if (bms_soc_battery_health <= 0.0f || bms_soc_battery_health > 1.0f) bms_soc_battery_health = 1.0f;
+
+  //run voltage-based charge estimation if smoothed current is small enough
+  float estimated_charge = NAN;
+  if (fabsf(current_smoothed) <= bat_calc_voltageToCharge_max_valid_current) {
+    //determine lowest smoothed cell voltage
+    min_voltage = voltages_smoothed[0];
+    for (i = 1; i < BMS_CELLS_SERIES; i++) {
+      if (voltages_smoothed[i] < min_voltage) min_voltage = voltages_smoothed[i];
+    }
+
+    //check if lowest smoothed voltage is acceptable
+    if (min_voltage >= BMS_SOC_CELL_VOLTAGE_MIN && min_voltage <= BMS_SOC_CELL_VOLTAGE_MAX) {
+      //check if the battery is fully charged, reset BMS charge measurement if so
+      if (min_voltage >= BMS_SOC_CELL_FULL_CHARGE_VOLTAGE_MIN && BMS_I2C_SubcommandOnly(SUBCMD_RESET_PASSQ, BMS_COMM_MAX_TRIES) == HAL_OK) {
+        //fully charged: set charge reference point to full and go to SOC_CHARGE_FULL mode
+        _bms_soc_charge_reference = bat_calc_cellCharge_max * bms_soc_battery_health;
+        charge_delta = 0.0f;
+        bms_soc_precisionlevel = SOC_CHARGE_FULL;
+      } else {
+        //not full (normal operation): estimate charge of weakest cell
+        estimated_charge = BAT_CALC_CellVoltageToCharge(min_voltage, bms_soc_battery_health);
+
+        //save as new charge reference or check existing charge reference
+        switch (bms_soc_precisionlevel) {
+          case SOC_CHARGE_ESTIMATED:
+          case SOC_CHARGE_FULL:
+            //check integrated charge
+            charge = _bms_soc_charge_reference + charge_delta;
+            if (fabsf(charge - estimated_charge) <= BMS_SOC_CHARGE_DIFFERENCE_MAX) {
+              //close enough to estimated charge: continue with existing reference
+              break;
+            }
+            //too far away from estimated charge: fall through to next case, resetting it
+          default:
+            //reset BMS charge measurement, then set estimated charge reference point and go to SOC_CHARGE_ESTIMATED mode
+            if (BMS_I2C_SubcommandOnly(SUBCMD_RESET_PASSQ, BMS_COMM_MAX_TRIES) == HAL_OK) {
+              _bms_soc_charge_reference = estimated_charge;
+              charge_delta = 0.0f;
+              bms_soc_precisionlevel = SOC_CHARGE_ESTIMATED;
+            } else {
+              //fall back to voltage-only if reset command fails somehow
+              bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+            }
+            break;
+        }
+      }
+    }
+  }
+
+  //calculate estimated cell energy, depending on the mode
+  switch (bms_soc_precisionlevel) {
+    default:
+      //invalid mode: default to voltage only, fall through to that case
+      DEBUG_PRINTF("WARNING: BMS SoC estimation encountered invalid mode %u\n", (uint8_t)bms_soc_precisionlevel);
+      bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+    case SOC_VOLTAGE_ONLY:
+      if (fabsf(current) > bat_calc_voltageToEnergy_max_valid_current) {
+        //current too high for valid voltage-to-energy estimation: report unknown energy and fraction (NaN)
+        bms_soc_energy = NAN;
+        bms_soc_fraction = NAN;
+        return;
+      } else {
+        //determine lowest cell voltage
+        min_voltage = voltages[0];
+        for (i = 1; i < BMS_CELLS_SERIES; i++) {
+          if (voltages[i] < min_voltage) min_voltage = voltages[i];
+        }
+
+        if (min_voltage < BMS_SOC_CELL_VOLTAGE_MIN || min_voltage > BMS_SOC_CELL_VOLTAGE_MAX) {
+          //unacceptable voltage: something went wrong, no estimation possible
+          bms_soc_energy = NAN;
+          bms_soc_fraction = NAN;
+          return;
+        }
+
+        //estimate energy of weakest cell
+        cell_energy = BAT_CALC_CellVoltageToEnergy(min_voltage, bms_soc_battery_health);
+      }
+      break;
+    case SOC_CHARGE_ESTIMATED:
+    case SOC_CHARGE_FULL:
+      //calculate integrated charge per cell
+      charge = _bms_soc_charge_reference + charge_delta;
+      //estimate energy of single cell
+      cell_energy = BAT_CALC_CellChargeToEnergy(charge, bms_soc_battery_health);
+      break;
+  }
+
+  //multiply single cell energy by cell count to get total energy
+  bms_soc_energy = BMS_CELLS_TOTAL * cell_energy;
+  //calculate fraction from cell energy and battery health, and clamp to [0, 1]
+  bms_soc_fraction = cell_energy / (bat_calc_cellEnergy_max * bms_soc_battery_health);
+  if (bms_soc_fraction < 0.0f) bms_soc_fraction = 0.0f;
+  else if (bms_soc_fraction > 1.0f) bms_soc_fraction = 1.0f;
+}
+
 
 HAL_StatusTypeDef BMS_UpdateStatus() {
   uint16_t status_read;
@@ -351,19 +504,15 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
 
   //read cell voltages
   if (BMS_I2C_DirectCommandRead(DIRCMD_CELL1_VOLTAGE, read_buffer_u8, 10, BMS_COMM_MAX_TRIES) == HAL_OK) {
-    bms_measurements.voltage_cell_1 = read_buffer_s16[0];
-    bms_measurements.voltage_cell_2 = read_buffer_s16[1];
-    bms_measurements.voltage_cell_3 = read_buffer_s16[2];
-    bms_measurements.voltage_cell_4 = read_buffer_s16[3];
-    bms_measurements.voltage_cell_5 = read_buffer_s16[4];
+    memcpy(bms_measurements.voltage_cells, read_buffer_s16, 10);
   } else {
     //read failed: default to error voltage
     DEBUG_PRINTF("ERROR: BMS measurement update: Cell voltage read failed\n");
-    bms_measurements.voltage_cell_1 = BMS_ERROR_VOLTAGE;
-    bms_measurements.voltage_cell_2 = BMS_ERROR_VOLTAGE;
-    bms_measurements.voltage_cell_3 = BMS_ERROR_VOLTAGE;
-    bms_measurements.voltage_cell_4 = BMS_ERROR_VOLTAGE;
-    bms_measurements.voltage_cell_5 = BMS_ERROR_VOLTAGE;
+    bms_measurements.voltage_cells[0] = BMS_ERROR_VOLTAGE;
+    bms_measurements.voltage_cells[1] = BMS_ERROR_VOLTAGE;
+    bms_measurements.voltage_cells[2] = BMS_ERROR_VOLTAGE;
+    bms_measurements.voltage_cells[3] = BMS_ERROR_VOLTAGE;
+    bms_measurements.voltage_cells[4] = BMS_ERROR_VOLTAGE;
     res = HAL_ERROR;
   }
 
@@ -377,8 +526,9 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
     res = HAL_ERROR;
   }
 
-  //read current - unnecessary if power off
+  //current, charge, time, state-of-charge are unnecessary when power is off
   if (pwrsw_status) {
+    //read current
     if (BMS_I2C_DirectCommandRead(DIRCMD_CURRENT, read_buffer_u8, 2, BMS_COMM_MAX_TRIES) == HAL_OK) {
       bms_measurements.current = BMS_CONV_CUR_TO_MA_MULT * (int32_t)read_buffer_s16[0];
     } else {
@@ -387,10 +537,8 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
       bms_measurements.current = BMS_ERROR_CURRENT;
       res = HAL_ERROR;
     }
-  }
 
-  //read charge and integration time - unnecessary if power off
-  if (pwrsw_status) {
+    //read charge and integration time
     if (BMS_I2C_SubcommandRead(SUBCMD_PASSQ, read_buffer_u8, 12, BMS_COMM_MAX_TRIES) == HAL_OK) {
       bms_measurements.accumulated_charge = ((int64_t)BMS_CONV_CHG_TO_MAS_MULT * (*(int64_t*)read_buffer_u8)) / (int64_t)BMS_CONV_CHG_TO_MAS_DIV;
       bms_measurements.charge_accumulation_time = *(uint32_t*)(read_buffer_u8 + 8);
@@ -401,6 +549,9 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
       bms_measurements.charge_accumulation_time = BMS_ERROR_TIME;
       res = HAL_ERROR;
     }
+
+    //update state-of-charge calculations
+    _BMS_UpdateSoC();
   }
 
   if (include_temps) {
@@ -584,6 +735,11 @@ static HAL_StatusTypeDef _BMS_InitAttempt() {
   _bms_detected_safety_event = false;
   _bms_detected_shutdown_voltage = false;
 
+  bms_soc_battery_health = 1.0f;
+  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+  bms_soc_energy = NAN;
+  bms_soc_fraction = NAN;
+
   //get current CRC mode and initialise config
   ReturnOnError(_BMS_DetectCRCMode());
   ReturnOnError(_BMS_CheckAndApplyConfig());
@@ -689,7 +845,6 @@ void BMS_LoopUpdate(uint32_t loop_count) {
 
     //if we're somehow in CFGUPDATE: exit it
     if (bms_status._cfgupdate_bit) {
-      //TODO note: resets PASSQ, may need to handle that stuff later
       _BMS_ExitCFGUPDATE();
     }
 
@@ -733,8 +888,8 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     DEBUG_PRINTF("------------------------------\n");
     DEBUG_PRINTF("Mode: %s, Sealed: %u, Alerts: 0x%04X, Faults: 0x%04X\n", mode_str, bms_status.sealed, bms_status.safety_alerts._all, bms_status.safety_faults._all);
     DEBUG_PRINTF("FETs enabled: %u, FET state: DSG %u CHG %u\n", bms_status.fets_enabled, bms_status.dsg_state, bms_status.chg_state);
-    DEBUG_PRINTF("Cell voltages: %d %d %d %d %d, Stack voltage: %u, Current: %ld\n", bms_measurements.voltage_cell_1, bms_measurements.voltage_cell_2,
-                 bms_measurements.voltage_cell_3, bms_measurements.voltage_cell_4, bms_measurements.voltage_cell_5, bms_measurements.voltage_stack, bms_measurements.current);
+    DEBUG_PRINTF("Cell voltages: %d %d %d %d %d, Stack voltage: %u, Current: %ld\n", bms_measurements.voltage_cells[0], bms_measurements.voltage_cells[1],
+                 bms_measurements.voltage_cells[2], bms_measurements.voltage_cells[3], bms_measurements.voltage_cells[4], bms_measurements.voltage_stack, bms_measurements.current);
     DEBUG_PRINTF("Temps: Bat %d Int %d, Charge: %lld, Time: %lu\n", bms_measurements.bat_temp, bms_measurements.internal_temp, bms_measurements.accumulated_charge,
                  bms_measurements.charge_accumulation_time);
   }

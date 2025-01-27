@@ -13,10 +13,10 @@
 /*  PARAMETERS - need to be updated based on cell type  */
 /********************************************************/
 
-//maximum input charge for charge-to-energy estimation
-static const float bat_chargeToEnergy_max_charge = 2.874f;
-//coefficients for quadratic charge-to-energy approximation
+//coefficients for quadratic charge-to-energy approximation (constant, linear, quadratic)
 static const float bat_chargeToEnergy_coeffs[3] = { -0.02124167f, 3.2197858f, 0.15655184f };
+//correction coefficients for charge-to-energy approximation, depending on battery health fraction (linear, quadratic)
+static const float bat_chargeToEnergy_healthCorrectionCoeffs[2] = { 0.3f, 0.1f };
 
 //B-spline knots, knot count, control points, and degree for voltage-to-charge estimation
 static const float bat_voltageToCharge_t[] = {
@@ -46,6 +46,10 @@ static const float bat_voltageToEnergy_c[] = {
 };
 static const uint8_t bat_voltageToEnergy_p = 3;
 
+//maximum charge per cell in Ah at 100% health 100% charge
+const float bat_calc_cellCharge_max = 2.874f;
+//maximum energy per cell in Wh at 100% health 100% charge
+const float bat_calc_cellEnergy_max = 10.52f;
 //maximum per-cell current in A for which the voltage-to-charge approximation is valid
 const float bat_calc_voltageToCharge_max_valid_current = 0.2f;
 //maximum per-cell current in A for which the voltage-to-energy approximation is valid
@@ -92,28 +96,44 @@ static float _BAT_CALC_DeBoor(float x, const float* t, uint8_t t_count, const fl
 }
 
 
-//Estimate energy of a single cell in Wh, given its charge in Ah
-float BAT_CALC_CellChargeToEnergy(float cell_charge_ah) {
+//Estimate energy of a single cell in Wh, given its charge in Ah and the battery health fraction
+float BAT_CALC_CellChargeToEnergy(float cell_charge_ah, float battery_health) {
+  //clamp battery health between 0 and 1
+  if (battery_health <= 0.0f) return 0.0f;
+  else if (battery_health > 1.0f) battery_health = 1.0f;
+
   //clamp charge between 0 and maximum
   if (cell_charge_ah <= 0.0f) return 0.0f;
-  else if (cell_charge_ah > bat_chargeToEnergy_max_charge) cell_charge_ah = bat_chargeToEnergy_max_charge;
+  else if (cell_charge_ah > bat_calc_cellCharge_max * battery_health) cell_charge_ah = bat_calc_cellCharge_max * battery_health;
 
-  //calculate quadratic approximation
-  float res = bat_chargeToEnergy_coeffs[0] + cell_charge_ah * (bat_chargeToEnergy_coeffs[1] + cell_charge_ah * bat_chargeToEnergy_coeffs[2]);
+  //calculate quadratic approximation, with correction for battery health
+  float battery_health_inverse = 1.0f - battery_health;
+  float constant_coeff = bat_chargeToEnergy_coeffs[0];
+  float linear_coeff = bat_chargeToEnergy_coeffs[1] + battery_health_inverse * bat_chargeToEnergy_healthCorrectionCoeffs[0];
+  float quadratic_coeff = bat_chargeToEnergy_coeffs[2] + battery_health_inverse * bat_chargeToEnergy_healthCorrectionCoeffs[1];
+  float res = constant_coeff + cell_charge_ah * (linear_coeff + cell_charge_ah * quadratic_coeff);
 
   //return result, clamping negative results to 0
   if (res < 0.0f) return 0.0f;
   else return res;
 }
 
-//Approximately estimate charge of a single cell in Ah, given its voltage in V - valid up to bat_calc_voltageToCharge_max_valid_current
-float BAT_CALC_CellVoltageToCharge(float cell_voltage_v) {
-  //calculate and return B-spline approximation
-  return _BAT_CALC_DeBoor(cell_voltage_v, bat_voltageToCharge_t, bat_voltageToCharge_t_count, bat_voltageToCharge_c, bat_voltageToCharge_p);
+//Approximately estimate charge of a single cell in Ah, given its voltage in V and the battery health fraction - valid up to bat_calc_voltageToCharge_max_valid_current
+float BAT_CALC_CellVoltageToCharge(float cell_voltage_v, float battery_health) {
+  //clamp battery health between 0 and 1
+  if (battery_health <= 0.0f) return 0.0f;
+  else if (battery_health > 1.0f) battery_health = 1.0f;
+
+  //calculate and return B-spline approximation, scaled by battery health
+  return battery_health * _BAT_CALC_DeBoor(cell_voltage_v, bat_voltageToCharge_t, bat_voltageToCharge_t_count, bat_voltageToCharge_c, bat_voltageToCharge_p);
 }
 
-//Approximately estimate energy of a single cell in Wh, given its voltage in V - valid up to bat_calc_voltageToEnergy_max_valid_current
-float BAT_CALC_CellVoltageToEnergy(float cell_voltage_v) {
-  //calculate and return B-spline approximation
-  return _BAT_CALC_DeBoor(cell_voltage_v, bat_voltageToEnergy_t, bat_voltageToEnergy_t_count, bat_voltageToEnergy_c, bat_voltageToEnergy_p);
+//Approximately estimate energy of a single cell in Wh, given its voltage in V and the battery health fraction - valid up to bat_calc_voltageToEnergy_max_valid_current
+float BAT_CALC_CellVoltageToEnergy(float cell_voltage_v, float battery_health) {
+  //clamp battery health between 0 and 1
+  if (battery_health <= 0.0f) return 0.0f;
+  else if (battery_health > 1.0f) battery_health = 1.0f;
+
+  //calculate and return B-spline approximation, scaled by battery health
+  return battery_health * _BAT_CALC_DeBoor(cell_voltage_v, bat_voltageToEnergy_t, bat_voltageToEnergy_t_count, bat_voltageToEnergy_c, bat_voltageToEnergy_p);
 }
