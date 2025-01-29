@@ -31,6 +31,11 @@
 #define BMS_ERROR_CHARGE INT64_MIN
 #define BMS_ERROR_TIME UINT32_MAX
 
+//number of cells in the pack (series and parallel)
+#define BMS_CELLS_SERIES 4
+#define BMS_CELLS_PARALLEL 4
+#define BMS_CELLS_TOTAL (BMS_CELLS_SERIES * BMS_CELLS_PARALLEL)
+
 //current measurement to mA conversion multiplier - based on the CC2 current gain config
 #define BMS_CONV_CUR_TO_MA_MULT 2
 //charge measurement to mAs conversion multiplier and divisor - multiplier is based on the CC1 current gain config; divisor set to 4 to match 250ms integration period
@@ -55,10 +60,6 @@
 #define BMS_LOOP_PERIOD_TEMPERATURES (2 * BMS_LOOP_PERIOD_MEASUREMENTS)
 
 //state-of-charge calculation constants
-//number of cells in the pack (series and parallel)
-#define BMS_CELLS_SERIES 4
-#define BMS_CELLS_PARALLEL 4
-#define BMS_CELLS_TOTAL (BMS_CELLS_SERIES * BMS_CELLS_PARALLEL)
 //minimum and maximum cell voltages to be considered acceptable for estimations
 #define BMS_SOC_CELL_VOLTAGE_MIN 2.5f
 #define BMS_SOC_CELL_VOLTAGE_MAX 4.25f
@@ -71,6 +72,12 @@
 #define BMS_SOC_CURRENT_INIT_FACTOR 1.4f
 //maximum allowable difference between tracked charge and estimated charge, in Ah
 #define BMS_SOC_CHARGE_DIFFERENCE_MAX 0.15f
+
+//cell balancing configuration
+//minimum voltage difference between two cells to be considered "unbalanced", in mV - TODO maybe higher in production? might also be fine like this? not sure
+#define BMS_BAL_DIFF_START 10
+//voltage difference between two cells at/below which balancing should be stopped, in mV - TODO test whether this is too low
+#define BMS_BAL_DIFF_STOP 2
 
 
 //BMS IC mode - shutdown is not an option here, since controller would be unpowered in that mode

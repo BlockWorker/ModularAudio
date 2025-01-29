@@ -35,8 +35,8 @@
 /* ------ GENERAL SETTINGS ------ */
 /**********************************/
 
-//power config (bitfield, see TRM) - default 0x01, here 0x0E (full loop speeds, shutdown on HW OT, shutdown on LFO fault, deepsleep LFO on, sleep mode disabled)
-#define BMS_SET_POWER_CONFIG 0x0E
+//power config (bitfield, see TRM) - default 0x01, here 0x0E (full normal loop speed, slowest CB loop speed, shutdown on HW OT, shutdown on LFO fault, deepsleep LFO on, sleep mode disabled)
+#define BMS_SET_POWER_CONFIG 0x3E
 
 //REGOUT config (bitfield, see TRM) - default 0x0E (or 0x08?), here 0x0E (enabled, 3.3V)
 #define BMS_SET_REGOUT_CONFIG 0x0E

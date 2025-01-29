@@ -36,6 +36,9 @@ static bool _bms_detected_safety_event = false;
 //charge reference point in Ah (actual charge of a single cell when BMS charge register is zero), for SOC_CHARGE_ESTIMATED and SOC_CHARGE_FULL modes
 static float _bms_soc_charge_reference = 0.0f;
 
+//bit mask of which cells are currently balancing
+static uint8_t _bms_bal_active_cells = 0;
+
 
 //wait for init-complete alert to occur, up to configured maximum wait time
 static void _BMS_WaitForInitComp() {
@@ -119,6 +122,10 @@ static int16_t _BMS_GetThermistorTemp(int16_t adc_value) {
 static HAL_StatusTypeDef _BMS_EnterCFGUPDATE() {
   //reset state-of-charge calculation to voltage-only mode, due to CFGUPDATE resetting integrated charge
   bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+
+  //disable all cell balancing
+  _bms_bal_active_cells = 0;
+  ReturnOnError(BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES));
 
   //send actual command
   ReturnOnError(BMS_I2C_SubcommandOnly(SUBCMD_SET_CFGUPDATE, BMS_COMM_MAX_TRIES));
@@ -404,6 +411,70 @@ static void _BMS_UpdateSoC() {
   else if (bms_soc_fraction > 1.0f) bms_soc_fraction = 1.0f;
 }
 
+//check if any cells need balancing and enable/disable balancing accordingly
+static HAL_StatusTypeDef _BMS_HandleBalancing() {
+  int i;
+
+  //check whether we're even in a state to do cell balancing
+  if (bms_status._deepsleep_bit || bms_status.safety_faults._all != 0 || !pwrsw_status) {
+    //no: disable all cell balancing
+    _bms_bal_active_cells = 0;
+    return BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES);
+  }
+
+  //find lowest voltage (weakest) cell
+  int16_t min_voltage = bms_measurements.voltage_cells[0];
+  uint8_t min_index = 0;
+  for (i = 1; i < BMS_CELLS_SERIES; i++) {
+    if (bms_measurements.voltage_cells[i] < min_voltage) {
+      min_voltage = bms_measurements.voltage_cells[i];
+      min_index = i;
+    }
+  }
+
+  if (min_voltage < BMS_PROT_CUV_THRESHOLD || min_voltage > BMS_PROT_COV_THRESHOLD) {
+    //invalid weakest cell voltage, something is wrong: disable balancing and return
+    _bms_bal_active_cells = 0;
+    BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES);
+    return HAL_ERROR;
+  }
+
+  //check other cells for whether balancing is needed
+  uint8_t need_balancing = 0;
+  for (i = 0; i < BMS_CELLS_SERIES; i++) {
+    if (i == min_index) continue;
+
+    uint8_t cell_bit = (2 << i); //cell 1 = bit 1 (not bit 0)
+
+    //determine difference to weakest cell needed for balancing
+    int16_t threshold;
+    if ((_bms_bal_active_cells & cell_bit) != 0) {
+      //cell already balancing: keep balancing enabled as long as above stop threshold
+      threshold = BMS_BAL_DIFF_STOP;
+    } else {
+      //cell not balancing right now: only start balancing if below start threshold
+      threshold = BMS_BAL_DIFF_START;
+    }
+
+    //compare difference to threshold to see whether balancing should be enabled
+    if (bms_measurements.voltage_cells[i] - min_voltage > threshold) {
+      need_balancing |= cell_bit;
+    }
+  }
+
+  //enable balancing for non-adjacent set of cells that need it - prefer "uneven" cells 1,3,5 (arbitrary choice)
+  if ((need_balancing & 0x2A) != 0) {
+    //enable uneven cells only, to prevent adjacent cells from balancing simultaneously (might result in too much current otherwise)
+    _bms_bal_active_cells = (need_balancing & 0x2A);
+  } else {
+    //uneven cells don't need balancing: can enable whatever others need balancing (adjacent cells impossible now anyway)
+    _bms_bal_active_cells = need_balancing;
+  }
+
+  //send command
+  return BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES);
+}
+
 
 HAL_StatusTypeDef BMS_UpdateStatus() {
   uint16_t status_read;
@@ -637,6 +708,10 @@ HAL_StatusTypeDef BMS_EnterDeepSleep() {
     return HAL_OK;
   }
 
+  //disable all cell balancing
+  _bms_bal_active_cells = 0;
+  ReturnOnError(BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES));
+
   //send enter command twice and read status again
   ReturnOnError(BMS_I2C_SubcommandOnly(SUBCMD_DEEPSLEEP, BMS_COMM_MAX_TRIES));
   ReturnOnError(BMS_I2C_SubcommandOnly(SUBCMD_DEEPSLEEP, BMS_COMM_MAX_TRIES));
@@ -744,6 +819,10 @@ static HAL_StatusTypeDef _BMS_InitAttempt() {
   ReturnOnError(_BMS_DetectCRCMode());
   ReturnOnError(_BMS_CheckAndApplyConfig());
 
+  //disable all cell balancing
+  _bms_bal_active_cells = 0;
+  ReturnOnError(BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES));
+
   //get first measurement data
   ReturnOnError(BMS_UpdateMeasurements(true));
 
@@ -848,6 +927,12 @@ void BMS_LoopUpdate(uint32_t loop_count) {
       _BMS_ExitCFGUPDATE();
     }
 
+    //if there are any safety faults, disable all cell balancing
+    if (bms_status.safety_faults._all != 0) {
+      _bms_bal_active_cells = 0;
+      BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES);
+    }
+
     //if FETs should be forced off, do that before mode changes
     if (bms_should_disable_fets) {
       BMS_SetFETForceOff(true, true);
@@ -876,6 +961,11 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     }
   }
 
+  //cell balancing handling (in phase with measurement update)
+  if (!bms_status._deepsleep_bit && loop_count % BMS_LOOP_PERIOD_MEASUREMENTS == 0) {
+    _BMS_HandleBalancing();
+  }
+
   //debug status printout - TODO remove later?
 #ifdef DEBUG
   if (loop_count % 200 == 1) {
@@ -890,8 +980,9 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     DEBUG_PRINTF("FETs enabled: %u, FET state: DSG %u CHG %u\n", bms_status.fets_enabled, bms_status.dsg_state, bms_status.chg_state);
     DEBUG_PRINTF("Cell voltages: %d %d %d %d %d, Stack voltage: %u, Current: %ld\n", bms_measurements.voltage_cells[0], bms_measurements.voltage_cells[1],
                  bms_measurements.voltage_cells[2], bms_measurements.voltage_cells[3], bms_measurements.voltage_cells[4], bms_measurements.voltage_stack, bms_measurements.current);
-    DEBUG_PRINTF("Temps: Bat %d Int %d, Charge: %lld, Time: %lu\n", bms_measurements.bat_temp, bms_measurements.internal_temp, bms_measurements.accumulated_charge,
-                 bms_measurements.charge_accumulation_time);
+    DEBUG_PRINTF("SoC: Mode: %u, Energy: %.2f, Fraction: %.4f, Health: %.2f\n", (uint8_t)bms_soc_precisionlevel, bms_soc_energy, bms_soc_fraction, bms_soc_battery_health);
+    DEBUG_PRINTF("Temps: Bat %d Int %d, Charge: %lld, Time: %lu, Balancing: 0x%02X\n", bms_measurements.bat_temp, bms_measurements.internal_temp, bms_measurements.accumulated_charge,
+                 bms_measurements.charge_accumulation_time, _bms_bal_active_cells);
   }
 #endif
 }
