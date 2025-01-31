@@ -5277,7 +5277,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1kΩ"
+		(property "Value" "510Ω"
 			(at 166.37 120.6499 0)
 			(effects
 				(font
@@ -5757,7 +5757,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1kΩ"
+		(property "Value" "2.2kΩ"
 			(at 184.15 120.6499 0)
 			(effects
 				(font

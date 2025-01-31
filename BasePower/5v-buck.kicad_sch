@@ -1871,7 +1871,6 @@
 	(hierarchical_label "EN"
 		(shape input)
 		(at 80.01 93.98 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1883,7 +1882,6 @@
 	(hierarchical_label "PG"
 		(shape output)
 		(at 106.68 101.6 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1895,7 +1893,6 @@
 	(hierarchical_label "5V"
 		(shape output)
 		(at 241.3 85.09 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1907,7 +1904,6 @@
 	(hierarchical_label "VIN"
 		(shape input)
 		(at 33.02 88.9 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)

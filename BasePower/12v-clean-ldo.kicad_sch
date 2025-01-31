@@ -1652,7 +1652,6 @@
 	(hierarchical_label "12V"
 		(shape input)
 		(at 41.91 39.37 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1664,7 +1663,6 @@
 	(hierarchical_label "12VC"
 		(shape output)
 		(at 160.02 39.37 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
