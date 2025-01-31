@@ -45,11 +45,11 @@
 /* Private variables ---------------------------------------------------------*/
 CRC_HandleTypeDef hcrc;
 
-I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c3;
 
 IWDG_HandleTypeDef hiwdg;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -58,6 +58,13 @@ static uint8_t pwrsw_debounce_count = 0;
 static GPIO_PinState pwrsw_last_state = GPIO_PIN_SET;
 bool pwrsw_status = false;
 
+//whether the system should be turned off due to low battery voltage
+bool low_voltage_powerdown = false;
+//timer for system powerdown due to low battery voltage
+static uint32_t low_voltage_timer = MAIN_LVOFF_TIMEOUT;
+//whether low-voltage powerdown notifications have been sent to system
+static bool low_voltage_notif_sent = false;
+
 //whether the current main loop cycle follows stop mode
 static bool wakeup_from_stop = false;
 /* USER CODE END PV */
@@ -65,11 +72,11 @@ static bool wakeup_from_stop = false;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CRC_Init(void);
 static void MX_IWDG_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -164,11 +171,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_I2C3_Init();
   MX_USART2_UART_Init();
   MX_CRC_Init();
   MX_IWDG_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&huart2);
 
@@ -182,6 +189,9 @@ int main(void)
   pwrsw_debounce_count = 0;
   pwrsw_status = (HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin) == GPIO_PIN_RESET);
   wakeup_from_stop = false;
+  low_voltage_powerdown = false;
+  low_voltage_timer = MAIN_LVOFF_TIMEOUT;
+  low_voltage_notif_sent = false;
 
   //configure for lowest power - not sure if compatible with stop mode, but won't hurt
   HAL_PWREx_EnableUltraLowPower();
@@ -222,6 +232,13 @@ int main(void)
       } else if (pwrsw_debounce_count-- == 1) { //same state as before: decrement counter and check if we're at the last cycle
         //last cycle: debounce is done, write switch status based on state
         pwrsw_status = (switch_state == GPIO_PIN_RESET);
+
+        //if power turned off: reset low-voltage powerdown logic
+        if (!pwrsw_status) {
+          low_voltage_powerdown = false;
+          low_voltage_timer = MAIN_LVOFF_TIMEOUT;
+          low_voltage_notif_sent = false;
+        }
       }
     } else if (pwrsw_status != (switch_state == GPIO_PIN_RESET)) {
       //this shouldn't really ever happen
@@ -230,8 +247,39 @@ int main(void)
       pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
     }
 
+    //handle low-voltage powerdown timeouts etc
+    if (low_voltage_timer == 0) {
+      //already reached powerdown time: enter or stay in powerdown
+      low_voltage_powerdown = true;
+    } else {
+      //not in powerdown yet: check if any cells are below threshold
+      bool any_cells_below_threshold = false;
+      int i;
+      for (i = 0; i < BMS_CELLS_SERIES; i++) {
+        if (bms_measurements.voltage_cells[i] < MAIN_LVOFF_THRESHOLD) {
+          any_cells_below_threshold = true;
+          break;
+        }
+      }
+
+      if (any_cells_below_threshold) {
+        //cells below threshold: decrement timer and potentially notify system
+        if (low_voltage_timer-- % MAIN_LVOFF_NOTIFY_PERIOD == 0) {
+          //TODO notify system
+          low_voltage_notif_sent = true;
+        }
+      } else {
+        //all cells are okay: reset timer, notify system of cancellation if notif was sent before
+        low_voltage_timer = MAIN_LVOFF_TIMEOUT;
+        if (low_voltage_notif_sent) {
+          low_voltage_notif_sent = false;
+          //TODO notify system of powerdown cancellation
+        }
+      }
+    }
+
     //apply power switch status to desired BMS state
-    bms_should_disable_fets = bms_should_deepsleep = !pwrsw_status;
+    bms_should_disable_fets = bms_should_deepsleep = (!pwrsw_status || low_voltage_powerdown);
 
     if (wakeup_from_stop) {
       //exit deepsleep after wakeup, to allow measurements
@@ -242,8 +290,8 @@ int main(void)
 
     _RefreshWatchdogs();
 
-    //check whether to stop or continue to next loop, stop conditions: power switch off, no ongoing debounce, BMS in deepsleep, BMS alert pin is high (no alert)
-    if (!pwrsw_status && pwrsw_debounce_count == 0 && bms_status.mode == BMSMODE_DEEPSLEEP && HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_SET) {
+    //check whether to stop or continue to next loop, stop conditions: power switch off or powerdown due to low voltage, no ongoing debounce, BMS in deepsleep, BMS alert pin is high (no alert)
+    if ((!pwrsw_status || low_voltage_powerdown) && pwrsw_debounce_count == 0 && bms_status.mode == BMSMODE_DEEPSLEEP && HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_SET) {
       //prepare everything for a check cycle after wakeup
       loop_count = 0;
       wakeup_from_stop = true;
@@ -305,10 +353,10 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
                               |RCC_PERIPHCLK_I2C3;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c3ClockSelection = RCC_I2C3CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -347,54 +395,6 @@ static void MX_CRC_Init(void)
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
-
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00100E16;
-  hi2c1.Init.OwnAddress1 = 22;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -472,6 +472,41 @@ static void MX_IWDG_Init(void)
   /* USER CODE BEGIN IWDG_Init 2 */
 
   /* USER CODE END IWDG_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 

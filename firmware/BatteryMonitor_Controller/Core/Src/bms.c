@@ -33,6 +33,9 @@ static bool _bms_detected_shutdown_voltage = false;
 //set to true when a safety fault or alert is detected
 static bool _bms_detected_safety_event = false;
 
+//whether charge fet should be forced off until recovered by software or deepsleep
+static bool _bms_chg_force_off = false;
+
 //charge reference point in Ah (actual charge of a single cell when BMS charge register is zero), for SOC_CHARGE_ESTIMATED and SOC_CHARGE_FULL modes
 static float _bms_soc_charge_reference = 0.0f;
 
@@ -456,8 +459,8 @@ static HAL_StatusTypeDef _BMS_HandleBalancing() {
       threshold = BMS_BAL_DIFF_START;
     }
 
-    //compare difference to threshold to see whether balancing should be enabled
-    if (bms_measurements.voltage_cells[i] - min_voltage > threshold) {
+    //compare difference to threshold to see whether balancing should be enabled; always enable balancing if cell is above COV threshold
+    if (bms_measurements.voltage_cells[i] - min_voltage > threshold || bms_measurements.voltage_cells[i] >= BMS_PROT_COV_THRESHOLD) {
       need_balancing |= cell_bit;
     }
   }
@@ -694,6 +697,13 @@ HAL_StatusTypeDef BMS_SetFETForceOff(bool force_off_dsg, bool force_off_chg) {
     return HAL_ERROR;
   }
 
+  //when forcing all off: recover from all latched faults
+  if (force_off_dsg && force_off_chg) {
+    _bms_chg_force_off = false;
+    uint8_t recovery_byte = 0xFE;
+    ReturnOnError(BMS_I2C_SubcommandWrite(SUBCMD_PROT_RECOVERY, &recovery_byte, 1, BMS_COMM_MAX_TRIES));
+  }
+
   //do a final status update to reflect new FET states
   return BMS_UpdateStatus();
 }
@@ -810,6 +820,8 @@ static HAL_StatusTypeDef _BMS_InitAttempt() {
   _bms_detected_safety_event = false;
   _bms_detected_shutdown_voltage = false;
 
+  _bms_chg_force_off = false;
+
   bms_soc_battery_health = 1.0f;
   bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
   bms_soc_energy = NAN;
@@ -905,11 +917,20 @@ void BMS_LoopUpdate(uint32_t loop_count) {
   //alert/fault handling
   if (_bms_detected_safety_event) {
     _bms_detected_safety_event = false;
-    //TODO
+
+    //update status to get latest faults etc
+    BMS_UpdateStatus();
+
+    //if charge fault: latch chg fet off
+    if (bms_status.safety_faults.cov || bms_status.safety_faults.occ || bms_status.safety_faults.otc || bms_status.safety_faults.utc) {
+      _bms_chg_force_off = true;
+    }
+
+    //TODO communicate to system
   }
   if (_bms_detected_shutdown_voltage) {
     _bms_detected_shutdown_voltage = false;
-    //TODO
+    //TODO communicate fault to system
   }
 
   //measurement update
@@ -934,8 +955,8 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     }
 
     //if FETs should be forced off, do that before mode changes
-    if (bms_should_disable_fets) {
-      BMS_SetFETForceOff(true, true);
+    if (bms_should_disable_fets || _bms_chg_force_off) {
+      BMS_SetFETForceOff(bms_should_disable_fets, true);
     }
 
     //do mode change into or out of deepsleep depending on requirement
@@ -946,8 +967,8 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     }
 
     //if at least one FET is off and they should not be forced off, unforce them after mode changes
-    if (!bms_should_disable_fets && (!bms_status.dsg_state || !bms_status.chg_state)) {
-      BMS_SetFETForceOff(false, false);
+    if (!bms_should_disable_fets && (!bms_status.dsg_state || (!bms_status.chg_state && !_bms_chg_force_off))) {
+      BMS_SetFETForceOff(false, _bms_chg_force_off);
     }
 
     //if FET control is disabled, enable it (should always be enabled)

@@ -44,13 +44,14 @@ extern "C" {
 /* USER CODE BEGIN EC */
 extern CRC_HandleTypeDef hcrc;
 
-extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
 
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
 
 extern bool pwrsw_status;
+extern bool low_voltage_powerdown;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -97,6 +98,13 @@ void Error_Handler(void);
 
 //main loop cycles for power switch debouncing
 #define MAIN_PWRSW_DEBOUNCE_CYCLES 3
+
+//cell voltage threshold for low-voltage power off, in mV
+#define MAIN_LVOFF_THRESHOLD 3000
+//timeout in main loop cycles for low-voltage power off
+#define MAIN_LVOFF_TIMEOUT (30100 / MAIN_LOOP_PERIOD_MS)
+//period for low-voltage power off system notifications, in main loop cycles
+#define MAIN_LVOFF_NOTIFY_PERIOD (1000 / MAIN_LOOP_PERIOD_MS)
 
 //current calibration mode - disable for actual use!
 #undef MAIN_CURRENT_CALIBRATION
