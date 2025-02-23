@@ -97,7 +97,7 @@ void Error_Handler(void);
 #define MAIN_LOOP_PERIOD_MS 10
 
 //main loop cycles for power switch debouncing
-#define MAIN_PWRSW_DEBOUNCE_CYCLES 3
+#define MAIN_PWRSW_DEBOUNCE_CYCLES 5
 
 //cell voltage threshold for low-voltage power off, in mV
 #define MAIN_LVOFF_THRESHOLD 3000

@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -41,12 +41,44 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern ADC_HandleTypeDef hadc1;
 
+extern I2C_HandleTypeDef hi2c1;
+extern SMBUS_HandleTypeDef hsmbus3;
+extern I2C_HandleTypeDef hi2c4;
+extern I2C_HandleTypeDef hi2c5;
+
+extern I2S_HandleTypeDef hi2s6;
+
+extern OSPI_HandleTypeDef hospi1;
+
+extern SPI_HandleTypeDef hspi2;
+
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim4;
+
+extern UART_HandleTypeDef huart2;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+//quick error-return macro
+#define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
 
+//debug printout, disabled outside of debug mode
+#ifdef DEBUG
+#define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
+#else
+#define DEBUG_PRINTF(...) do { } while (0)
+#endif
+
+#ifndef MIN
+  #define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef MAX
+  #define MAX(x,y) ((x) > (y) ? (x) : (y))
+#endif
 /* USER CODE END EM */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);

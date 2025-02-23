@@ -110,17 +110,17 @@
 //cell overvoltage recovery hysteresis (disabled, 50mV, 100mV, 200mV) - default 0x2 = 100mV
 #define BMS_PROT_COV_HYSTERESIS 0x2
 
-//overcurrent in charge threshold in 2A steps - default 2 = 4A, here 5 = 10A
+//overcurrent in charge threshold in 2A steps - default 2 = 4A, here 5 = 9A (experimentally determined scale)
 #define BMS_PROT_OCC_THRESHOLD 5
 //overcurrent in charge delay in varying steps (see TRM) - default 58 = 18.605ms
 #define BMS_PROT_OCC_DELAY 58
 
-//overcurrent in discharge 1 threshold in 2A steps - default 4 = 8A, here 25 = 50A
-#define BMS_PROT_OCD1_THRESHOLD 25
+//overcurrent in discharge 1 threshold in 2A steps - default 4 = 8A, here 28 ~= 50A (experimentally determined rescale)
+#define BMS_PROT_OCD1_THRESHOLD 28
 //overcurrent in discharge 1 delay in varying steps (see TRM) - default 6 = 2.745ms
 #define BMS_PROT_OCD1_DELAY 6
-//overcurrent in discharge 2 threshold in 2A steps - default 3 = 6A, here 16 = 32A
-#define BMS_PROT_OCD2_THRESHOLD 16
+//overcurrent in discharge 2 threshold in 2A steps - default 3 = 6A, here 18 ~= 32A (experimentally determined rescale)
+#define BMS_PROT_OCD2_THRESHOLD 18
 //overcurrent in discharge 2 delay in varying steps (see TRM) - default 19 = 6.71ms, here 133 = 201ms
 #define BMS_PROT_OCD2_DELAY 133
 

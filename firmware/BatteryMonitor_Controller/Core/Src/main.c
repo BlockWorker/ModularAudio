@@ -150,7 +150,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  static uint32_t wu_count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -301,7 +301,7 @@ int main(void)
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 
       _RefreshWatchdogs();
-      DEBUG_PRINTF("Woke up from STOP, loop before stop took %lu ms\n", HAL_GetTick() - iteration_start_tick);
+      DEBUG_PRINTF("Woke up from STOP, loop before stop took %lu ms, count %lu\n", HAL_GetTick() - iteration_start_tick, wu_count++);
     } else {
       //just go to next loop after corresponding delay
       loop_count++;

@@ -926,10 +926,19 @@ void BMS_LoopUpdate(uint32_t loop_count) {
       _bms_chg_force_off = true;
     }
 
+    /*
+    if (bms_status.safety_faults._all != 0) {
+      DEBUG_PRINTF("**\n** BMS FAULT: 0x%04X (alerts 0x%04X) **\n**\n", bms_status.safety_faults._all, bms_status.safety_alerts._all);
+    } else {
+      DEBUG_PRINTF("BMS Alert: 0x%04X\n", bms_status.safety_alerts._all);
+    }
+    */
+
     //TODO communicate to system
   }
   if (_bms_detected_shutdown_voltage) {
     _bms_detected_shutdown_voltage = false;
+    DEBUG_PRINTF("***\n*** BMS FAULT: SHUTDOWN VOLTAGE DETECTED ***\n***\n");
     //TODO communicate fault to system
   }
 
