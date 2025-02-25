@@ -18,6 +18,17 @@ int cpp_main() {
 
   DEBUG_PRINTF("Controller started\n");
 
+
+
+
+  while (1) {
+
+  }
+}
+
+
+//old code for OSPI testing
+#if 0
   HAL_Delay(100);
 
   if (eve_phy.SendHostCommand(0x49, 0x40) == HAL_OK) {
@@ -126,9 +137,4 @@ int cpp_main() {
   } else {
     DEBUG_PRINTF("*** Direct Write 16 failed!!\n");
   }
-
-
-  while (1) {
-
-  }
-}
+#endif

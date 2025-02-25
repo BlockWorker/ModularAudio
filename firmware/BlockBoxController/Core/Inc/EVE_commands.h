@@ -134,7 +134,7 @@ class EVE_Driver {
 public:
   EVE_TargetPHY phy;
 
-  EVE_Driver() : fault_recovered(E_OK), in_display_list(false) {}
+  EVE_Driver() : fault_recovered(E_OK) {}
 
 /* ##################################################################
     helper functions
@@ -145,7 +145,6 @@ public:
   uint8_t GetAndResetFaultState();
   void ClearDLCmdBuffer();
   HAL_StatusTypeDef SendBufferedDLCmds();
-  bool IsInDisplayList();
 
 /* ##################################################################
     commands and functions to be used outside of display-lists
@@ -189,7 +188,7 @@ public:
   void CmdDial(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t val);
   void CmdFGColor(uint32_t color);
   void CmdGauge(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range);
-  void CmdGetMatrix(int32_t *p_a, int32_t *p_b, int32_t *p_c, int32_t *p_d, int32_t *p_e, int32_t *p_f);
+  //void CmdGetMatrix(int32_t *p_a, int32_t *p_b, int32_t *p_c, int32_t *p_d, int32_t *p_e, int32_t *p_f);
   void CmdGradColor(uint32_t color);
   void CmdGradient(int16_t xc0, int16_t yc0, uint32_t rgb0, int16_t xc1, int16_t yc1, uint32_t rgb1);
   void CmdKeys(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text);
@@ -218,21 +217,35 @@ public:
     special purpose functions
 ##################################################################### */
 
-  HAL_StatusTypeDef CalibrateManual(uint16_t width, uint16_t height);
+  //HAL_StatusTypeDef CalibrateManual(uint16_t width, uint16_t height);
+
+/* ##################################################################
+    meta-commands (commonly used sequences of display-list entries)
+##################################################################### */
+
+  HAL_StatusTypeDef CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color);
+  HAL_StatusTypeDef CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+  void CmdPoint(int16_t x0, int16_t y0, uint16_t size);
+  void CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width);
+  void CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner);
+  void CmdEndDisplay();
+  void CmdTag(uint8_t tag);
+  void CmdTagMask(bool enable_tag);
+  void CmdScissor(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 
 private:
   uint8_t fault_recovered;
-  bool in_display_list;
   std::vector<uint32_t> dl_cmd_buffer;
 
   HAL_StatusTypeDef CoprocessorFaultRecover();
   HAL_StatusTypeDef SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length);
-  HAL_StatusTypeDef WaitRegID();
-  HAL_StatusTypeDef WaitReset();
-  HAL_StatusTypeDef EnablePixelClock();
+  HAL_StatusTypeDef WaitRegID(uint8_t* p_result);
+  HAL_StatusTypeDef WaitReset(uint8_t* p_result);
   void WriteString(const char *p_text);
 
 };
+
+extern EVE_Driver eve_drv;
 
 #endif /* __cplusplus */
 
