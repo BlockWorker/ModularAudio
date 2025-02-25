@@ -8,6 +8,10 @@
 // All credit to Carmine Noviello for this code
 // https://github.com/cnoviello/mastering-stm32/blob/master/nucleo-f030R8/system/include/retarget/retarget.h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "stm32h7xx_hal.h"
 #include <sys/stat.h>
 
@@ -19,5 +23,8 @@ int _lseek(int fd, int ptr, int dir);
 int _read(int fd, char* ptr, int len);
 int _fstat(int fd, struct stat* st);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* INC_RETARGET_H_ */
