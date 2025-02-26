@@ -154,7 +154,10 @@ typedef enum {
 #ifdef __cplusplus
 }
 
+class EVE_Driver;
+
 class EVE_TargetPHY {
+  friend EVE_Driver;
 public:
   //send a host command to to the display; ends any ongoing memory mapping
   HAL_StatusTypeDef SendHostCommand(uint8_t command, uint8_t param);
@@ -174,8 +177,6 @@ public:
   HAL_StatusTypeDef EnsureMMapMode(EVE_MMapMode mode);
   HAL_StatusTypeDef EndMMap();
 
-  HAL_StatusTypeDef SetTransferMode(EVE_TransferMode mode);
-
   EVE_MMapMode GetMMapMode();
   EVE_TransferMode GetTransferMode() const;
 
@@ -185,11 +186,13 @@ private:
   EVE_MMapMode mmap_mode;
   EVE_TransferMode transfer_mode;
 
+  HAL_StatusTypeDef SetTransferMode(EVE_TransferMode mode);
+
   HAL_StatusTypeDef configure_main_mmap();
   HAL_StatusTypeDef configure_func_mmap();
 };
 
-extern EVE_TargetPHY eve_phy;
+//extern EVE_TargetPHY eve_phy;
 
 #endif
 

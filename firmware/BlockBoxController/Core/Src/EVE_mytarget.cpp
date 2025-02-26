@@ -207,7 +207,7 @@ static const OSPI_MemoryMappedTypeDef MMAP_CFG = {
 };
 
 
-EVE_TargetPHY eve_phy;
+//EVE_TargetPHY eve_phy;
 
 
 HAL_StatusTypeDef EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param) {

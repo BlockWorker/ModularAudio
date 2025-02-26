@@ -144,7 +144,7 @@ public:
   HAL_StatusTypeDef WaitUntilNotBusy(uint32_t timeout);
   uint8_t GetAndResetFaultState();
   void ClearDLCmdBuffer();
-  HAL_StatusTypeDef SendBufferedDLCmds();
+  HAL_StatusTypeDef SendBufferedDLCmds(uint32_t timeout);
 
 /* ##################################################################
     commands and functions to be used outside of display-lists
@@ -173,6 +173,8 @@ public:
 
   HAL_StatusTypeDef WriteDisplayParameters();
   HAL_StatusTypeDef Init(uint8_t* p_result);
+  HAL_StatusTypeDef SetTransferMode(EVE_TransferMode mode);
+  EVE_TransferMode GetTransferMode();
 
 /* ##################################################################
     functions for display lists
@@ -238,7 +240,7 @@ private:
   std::vector<uint32_t> dl_cmd_buffer;
 
   HAL_StatusTypeDef CoprocessorFaultRecover();
-  HAL_StatusTypeDef SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length);
+  HAL_StatusTypeDef SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout);
   HAL_StatusTypeDef WaitRegID(uint8_t* p_result);
   HAL_StatusTypeDef WaitReset(uint8_t* p_result);
   void WriteString(const char *p_text);

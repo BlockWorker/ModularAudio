@@ -58,21 +58,17 @@ HAL_StatusTypeDef EVE_Driver::IsBusy(uint8_t* p_result) {
 HAL_StatusTypeDef EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
   uint8_t busy;
 
-  if (timeout == HAL_MAX_DELAY) {
-    do {
-      ReturnOnError(this->IsBusy(&busy));
-    } while (busy != E_OK);
-  } else {
-    uint32_t start_tick = HAL_GetTick();
+  uint32_t start_tick = HAL_GetTick();
 
-    do {
-      ReturnOnError(this->IsBusy(&busy));
+  do {
+    ReturnOnError(this->IsBusy(&busy));
 
-      if ((HAL_GetTick() - start_tick) >= timeout) {
+    if (timeout != HAL_MAX_DELAY) {
+      if ((HAL_GetTick() - start_tick) > timeout) {
         return HAL_TIMEOUT;
       }
-    } while (busy != E_OK);
-  }
+    }
+  } while (busy != E_OK);
 
   return HAL_OK;
 }
@@ -104,9 +100,9 @@ void EVE_Driver::ClearDLCmdBuffer() {
 /**
  * @brief Sends the buffered display-list commands to the display, then exits display-list mode.
  */
-HAL_StatusTypeDef EVE_Driver::SendBufferedDLCmds() {
+HAL_StatusTypeDef EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
   //send commands as block transfer and clear afterwards
-  ReturnOnError(this->SendCmdBlockTransfer((const uint8_t*)this->dl_cmd_buffer.data(), this->dl_cmd_buffer.size()));
+  ReturnOnError(this->SendCmdBlockTransfer((const uint8_t*)this->dl_cmd_buffer.data(), this->dl_cmd_buffer.size() * sizeof(uint32_t), timeout));
   this->ClearDLCmdBuffer();
 
   return HAL_OK;
@@ -132,8 +128,8 @@ HAL_StatusTypeDef EVE_Driver::CoprocessorFaultRecover() {
   return HAL_OK;
 }
 
-HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length) {
-  if (p_data == NULL) {
+HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout) {
+  if (p_data == NULL || length % 4 != 0) {
     return HAL_ERROR;
   }
   if (length == 0) {
@@ -149,7 +145,7 @@ HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32
     ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, p_data + offset, block_len, 10));
     offset += block_len;
     bytes_left -= block_len;
-    ReturnOnError(this->WaitUntilNotBusy(10));
+    ReturnOnError(this->WaitUntilNotBusy(timeout));
   }
 
   return HAL_OK;
@@ -214,12 +210,12 @@ HAL_StatusTypeDef EVE_Driver::CmdGetPtr(uint32_t* p_pointer) {
 
 /**
  * @brief Decompress data into RAM_G.
- * @note - The data must be correct and complete.
+ * @note - The data must be correct and complete, padded to a multiple of 4 bytes.
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
 HAL_StatusTypeDef EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
-  if (p_data == NULL) {
+  if (p_data == NULL || len % 4 != 0) {
     return HAL_ERROR;
   }
 
@@ -227,7 +223,7 @@ HAL_StatusTypeDef EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, ui
 
   //write command and data as block transfer
   ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->SendCmdBlockTransfer(p_data, len);
+  return this->SendCmdBlockTransfer(p_data, len, 30);
 }
 
 /**
@@ -248,10 +244,15 @@ HAL_StatusTypeDef EVE_Driver::CmdInterrupt(uint32_t msec) {
  * @note - Decoding PNG images takes significantly more time than decoding JPEG images.
  * @note - In doubt use the EVE Asset Builder to check if PNG/JPEG files are compatible.
  * @note - If the image is in PNG format, the top 42kiB of RAM_G will be overwritten.
+ * @note - The data must be padded to a multiple of 4 bytes.
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
 HAL_StatusTypeDef EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len) {
+  if (p_data == NULL || len % 4 != 0) {
+    return HAL_ERROR;
+  }
+
   uint32_t cmd[3] = { CMD_LOADIMAGE, ptr, options };
 
   //write command and data as block transfer (unless mediafifo is used)
@@ -260,7 +261,7 @@ HAL_StatusTypeDef EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const
     if (p_data == NULL) {
       return HAL_ERROR;
     }
-    return this->SendCmdBlockTransfer(p_data, len);
+    return this->SendCmdBlockTransfer(p_data, len, 30);
   } else {
     return HAL_OK;
   }
@@ -342,11 +343,16 @@ HAL_StatusTypeDef EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
 
 /**
  * @brief Play back motion-JPEG encoded AVI video.
+ * @note - The data must be padded to a multiple of 4 bytes.
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command.
  * @note - Does not wait for completion in order to allow the video to be paused or terminated by REG_PLAY_CONTROL
  */
 HAL_StatusTypeDef EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len) {
+  if (p_data == NULL || len % 4 != 0) {
+    return HAL_ERROR;
+  }
+
   uint32_t cmd[2] = { CMD_PLAYVIDEO, options };
 
   //write command and data as block transfer (unless mediafifo is used)
@@ -355,7 +361,7 @@ HAL_StatusTypeDef EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_da
     if (p_data == NULL) {
       return HAL_ERROR;
     }
-    return this->SendCmdBlockTransfer(p_data, len);
+    return this->SendCmdBlockTransfer(p_data, len, 30);
   } else {
     return HAL_OK;
   }
@@ -561,6 +567,29 @@ HAL_StatusTypeDef EVE_Driver::Init(uint8_t* p_result) {
   return HAL_OK;
 }
 
+HAL_StatusTypeDef EVE_Driver::SetTransferMode(EVE_TransferMode mode) {
+  if (this->GetTransferMode() == mode) {
+    //already in desired mode
+    return HAL_OK;
+  }
+
+  if (mode != TRANSFERMODE_SINGLE && mode != TRANSFERMODE_QUAD) {
+    //invalid transfer mode requested
+    return HAL_ERROR;
+  }
+
+  //write to spi config register
+  uint8_t spi_config = (mode == TRANSFERMODE_QUAD) ? 0x02 : 0x00;
+  ReturnOnError(this->phy.DirectWrite8(REG_SPI_WIDTH, spi_config));
+
+  //configure interface to new width
+  return this->phy.SetTransferMode(mode);
+}
+
+EVE_TransferMode EVE_Driver::GetTransferMode() {
+  return this->phy.GetTransferMode();
+}
+
 
 /**
  * @brief Waits for either reading REG_ID with a value of 0x7c, indicating that
@@ -649,6 +678,10 @@ void EVE_Driver::CmdBGColor(uint32_t color) {
  * @note Appends to display-list command buffer
  */
 void EVE_Driver::CmdButton(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
+  if (p_text == NULL) {
+    return;
+  }
+
   this->dl_cmd_buffer.push_back(CMD_BUTTON);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -742,6 +775,10 @@ void EVE_Driver::CmdGradient(int16_t xc0, int16_t yc0, uint32_t rgb0, int16_t xc
  * @note - Does not work with UTF-8.
  */
 void EVE_Driver::CmdKeys(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
+  if (p_text == NULL) {
+    return;
+  }
+
   this->dl_cmd_buffer.push_back(CMD_KEYS);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -905,6 +942,10 @@ void EVE_Driver::CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t s
  * @note Appends to display-list command buffer
  */
 void EVE_Driver::CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, const char *p_text) {
+  if (p_text == NULL) {
+    return;
+  }
+
   this->dl_cmd_buffer.push_back(CMD_TEXT);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)font) | (((uint32_t)options) << 16U));
@@ -916,6 +957,10 @@ void EVE_Driver::CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t optio
  * @note Appends to display-list command buffer
  */
 void EVE_Driver::CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font, uint16_t options, uint16_t state, const char *p_text) {
+  if (p_text == NULL) {
+    return;
+  }
+
   this->dl_cmd_buffer.push_back(CMD_TOGGLE);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)font) << 16U));
