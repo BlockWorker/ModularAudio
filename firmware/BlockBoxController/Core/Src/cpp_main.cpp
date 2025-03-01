@@ -9,6 +9,11 @@
 #include "retarget.h"
 #include <string.h>
 #include "EVE.h"
+#include "gui_manager.h"
+
+
+static GUI_Screen_Test test_screen;
+static GUI_Manager gui_mgr(test_screen);
 
 
 int cpp_main() {
@@ -20,30 +25,15 @@ int cpp_main() {
 
   HAL_Delay(100);
 
-  uint8_t init_res;
-  if (eve_drv.Init(&init_res) == HAL_OK) {
-    DEBUG_PRINTF("EVE Init complete with code %u\n", init_res);
+  if (gui_mgr.Init() == HAL_OK) {
+    DEBUG_PRINTF("GUI Init complete\n");
   } else {
-    DEBUG_PRINTF("*** EVE Init failed!\n");
-  }
-
-  if (eve_drv.SetTransferMode(TRANSFERMODE_QUAD) == HAL_OK) {
-    DEBUG_PRINTF("Enabled quad mode\n");
-  } else {
-    DEBUG_PRINTF("*** Quad mode enable failed!\n");
-  }
-
-  HAL_Delay(1000);
-
-  eve_drv.CmdDL(CMD_LOGO);
-  if (eve_drv.SendBufferedDLCmds(4000) == HAL_OK) {
-    DEBUG_PRINTF("Sent logo command\n");
-  } else {
-    DEBUG_PRINTF("*** Logo command failed!\n");
+    DEBUG_PRINTF("*** GUI Init failed!\n");
   }
 
   while (1) {
-
+    HAL_Delay(50);
+    gui_mgr.Update();
   }
 }
 

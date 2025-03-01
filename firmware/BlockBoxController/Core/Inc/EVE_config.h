@@ -1483,4 +1483,15 @@ typedef struct
 #error "Please add a define for the desired display to your build-environment, e.g. -DEVE_EVE3_50G"
 #endif
 
+
+//MODIFICATIONS FOR NHD35
+#undef EVE_VOFFSET
+#define EVE_VOFFSET (13L)
+#undef EVE_VCYCLE
+#define EVE_VCYCLE (263L)
+#undef EVE_PCLK
+#define EVE_PCLK (6L)
+#define EVE_DITHER (0L)
+
+
 #endif /* EVE_CONFIG_H */

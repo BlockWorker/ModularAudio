@@ -11,6 +11,12 @@
 EVE_Driver eve_drv;
 
 
+EVE_Driver::EVE_Driver() : fault_recovered(E_OK) {
+  //allocate default size for display list, to avoid excessive allocations during first display list build
+  this->dl_cmd_buffer.reserve(EVE_DLBUFFER_DEFAULT_SIZE);
+}
+
+
 /* ##################################################################
     helper functions
 ##################################################################### */
@@ -98,14 +104,39 @@ void EVE_Driver::ClearDLCmdBuffer() {
 }
 
 /**
- * @brief Sends the buffered display-list commands to the display, then exits display-list mode.
+ * @brief Sends the buffered display-list commands to the display, then clears the buffer.
  */
 HAL_StatusTypeDef EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
-  //send commands as block transfer and clear afterwards
-  ReturnOnError(this->SendCmdBlockTransfer((const uint8_t*)this->dl_cmd_buffer.data(), this->dl_cmd_buffer.size() * sizeof(uint32_t), timeout));
+  ReturnOnError(this->SendSavedDLCmds(this->dl_cmd_buffer, timeout));
   this->ClearDLCmdBuffer();
 
   return HAL_OK;
+}
+
+/**
+ * @brief Saves the buffered display-list commands to an external vector, then clears the buffer.
+ */
+void EVE_Driver::SaveBufferedDLCmds(std::vector<uint32_t>& target) {
+  target = this->dl_cmd_buffer;
+  this->ClearDLCmdBuffer();
+}
+
+/**
+ * @brief Sends the display-list commands from an external vector to the display.
+ */
+HAL_StatusTypeDef EVE_Driver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout) {
+  if (source.empty()) {
+    return HAL_OK;
+  }
+
+  return this->SendCmdBlockTransfer((const uint8_t*)source.data(), source.size() * sizeof(uint32_t), timeout);
+}
+
+/**
+ * @brief Returns the current size of the display-list buffer, in 32-bit words. Useful for remembering positions of variable parameters in a saved list.
+ */
+uint32_t EVE_Driver::GetDLBufferSize() {
+  return this->dl_cmd_buffer.size();
 }
 
 
@@ -415,7 +446,7 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t x
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
+/*HAL_StatusTypeDef EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
   uint32_t cmd[4] = {
       CMD_TRACK,
       ((uint32_t)xc0) | (((uint32_t)yc0) << 16U),
@@ -426,7 +457,7 @@ HAL_StatusTypeDef EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, u
   //write command and wait for completion
   ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
   return this->WaitUntilNotBusy(10);
-}
+}*/
 
 /**
  * @brief Load the next frame of a video.
@@ -469,6 +500,10 @@ HAL_StatusTypeDef EVE_Driver::WriteDisplayParameters() {
   MMAP_REG_SWIZZLE = EVE_SWIZZLE;  //FT8xx output to LCD - pin order
   MMAP_REG_PCLK_POL = EVE_PCLKPOL; //LCD data is clocked in on this PCLK edge
   MMAP_REG_CSPREAD = EVE_CSPREAD;  //helps with noise, when set to 1 fewer signals are changed simultaneously, reset-default: 1
+
+#if defined (EVE_DITHER)
+  MMAP_REG_DITHER = EVE_DITHER;
+#endif
 
   //Configure Touch
   MMAP_REG_TOUCH_MODE = EVE_TMODE_CONTINUOUS; //enable touch
@@ -966,6 +1001,17 @@ void EVE_Driver::CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)font) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)options) | (((uint32_t)state) << 16U));
   this->WriteString(p_text);
+}
+
+/**
+ * @brief Set up touch tracking for a graphics object.
+ * @note Appends to display-list command buffer
+ */
+void EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
+  this->dl_cmd_buffer.push_back(CMD_TRACK);
+  this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
+  this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
+  this->dl_cmd_buffer.push_back((uint32_t)tag);
 }
 
 /**

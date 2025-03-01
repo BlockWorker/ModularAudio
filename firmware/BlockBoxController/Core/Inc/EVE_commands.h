@@ -127,6 +127,8 @@ extern "C"
 #define EVE_FLASH_STATUS_BASIC 2U
 #define EVE_FLASH_STATUS_FULL 3U
 
+#define EVE_DLBUFFER_DEFAULT_SIZE 128U
+
 #ifdef __cplusplus
 }
 
@@ -134,7 +136,7 @@ class EVE_Driver {
 public:
   EVE_TargetPHY phy;
 
-  EVE_Driver() : fault_recovered(E_OK) {}
+  EVE_Driver();
 
 /* ##################################################################
     helper functions
@@ -143,8 +145,13 @@ public:
   HAL_StatusTypeDef IsBusy(uint8_t* p_result);
   HAL_StatusTypeDef WaitUntilNotBusy(uint32_t timeout);
   uint8_t GetAndResetFaultState();
+
   void ClearDLCmdBuffer();
   HAL_StatusTypeDef SendBufferedDLCmds(uint32_t timeout);
+
+  void SaveBufferedDLCmds(std::vector<uint32_t>& target);
+  HAL_StatusTypeDef SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout);
+  uint32_t GetDLBufferSize();
 
 /* ##################################################################
     commands and functions to be used outside of display-lists
@@ -164,7 +171,7 @@ public:
   HAL_StatusTypeDef CmdSetRotate(uint32_t rotation);
   HAL_StatusTypeDef CmdSnapshot(uint32_t ptr);
   HAL_StatusTypeDef CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt);
-  HAL_StatusTypeDef CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
+  //HAL_StatusTypeDef CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
   HAL_StatusTypeDef CmdVideoFrame(uint32_t dest, uint32_t result_ptr);
 
 /* ##################################################################
@@ -210,6 +217,7 @@ public:
   void CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t scale);
   void CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, const char *p_text);
   void CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font, uint16_t options, uint16_t state, const char *p_text);
+  void CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
   void CmdTranslate(int32_t tr_x, int32_t tr_y);
 
   void ColorRGB(uint32_t color);
