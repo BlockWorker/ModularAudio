@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "retarget.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +62,25 @@ static void MX_USART6_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+static uint8_t debug_to_module[4096];
+static uint8_t debug_to_module_half = 0;
+static uint8_t module_to_debug[4096];
+static uint8_t module_to_debug_half = 0;
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
+  uint8_t* buf = (huart == &huart2) ? debug_to_module : module_to_debug;
+  uint8_t* half_p = (huart == &huart2) ? &debug_to_module_half : &module_to_debug_half;
+  UART_HandleTypeDef* huart_other = (huart == &huart2) ? &huart6 : &huart2;
+  uint8_t* read_p = buf + ((*half_p) * 2048);
+  *half_p = 1 - *half_p;
+
+  //set up to receive next
+  HAL_UARTEx_ReceiveToIdle_IT(huart, buf + ((*half_p) * 2048), 2048);
+
+  //transmit on other interface
+  HAL_UART_Transmit_IT(huart_other, read_p, Size);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +115,11 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  //RetargetInit(&huart2);
+
+  HAL_UARTEx_ReceiveToIdle_IT(&huart6, module_to_debug, 2048);
+  HAL_UARTEx_ReceiveToIdle_IT(&huart2, debug_to_module, 2048);
 
   /* USER CODE END 2 */
 
