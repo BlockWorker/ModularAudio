@@ -51,7 +51,7 @@ static const OSPI_RegularCmdTypeDef CMD_MAIN_QUAD_READ = {
   HAL_OSPI_DATA_4_LINES,                // Data mode: Quad SPI
   1,                                    // Data length: Unused
   HAL_OSPI_DATA_DTR_DISABLE,            // Data rate: One transfer per clock
-  2,                                    // Dummy Cycles: One byte (2) - TODO: test if correct
+  2,                                    // Dummy Cycles: One byte (2)
   HAL_OSPI_DQS_DISABLE,                 // DQS: Unused and must be disabled according to MCU errata
   HAL_OSPI_SIOO_INST_EVERY_CMD          // SIOO mode: Standard mode
 };
@@ -147,7 +147,7 @@ static const OSPI_RegularCmdTypeDef CMD_FUNC_QUAD_READ = {
   HAL_OSPI_DATA_4_LINES,                // Data mode: Quad SPI
   1,                                    // Data length: Unused
   HAL_OSPI_DATA_DTR_DISABLE,            // Data rate: One transfer per clock
-  2,                                    // Dummy Cycles: One byte (2) - TODO: test if correct
+  2,                                    // Dummy Cycles: One byte (2)
   HAL_OSPI_DQS_DISABLE,                 // DQS: Unused and must be disabled according to MCU errata
   HAL_OSPI_SIOO_INST_EVERY_CMD          // SIOO mode: Standard mode
 };
@@ -262,7 +262,7 @@ HAL_StatusTypeDef EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf
   dcmd.DataMode = (this->transfer_mode == TRANSFERMODE_QUAD) ? HAL_OSPI_DATA_4_LINES : HAL_OSPI_DATA_1_LINE;
   dcmd.NbData = size;
   dcmd.DataDtrMode = HAL_OSPI_DATA_DTR_DISABLE;
-  dcmd.DummyCycles = (this->transfer_mode == TRANSFERMODE_QUAD) ? 2 : 8; //one dummy byte = 8 cycles for single-spi, 2 cycles for quad-spi (TODO: check if correct)
+  dcmd.DummyCycles = (this->transfer_mode == TRANSFERMODE_QUAD) ? 2 : 8; //one dummy byte = 8 cycles for single-spi, 2 cycles for quad-spi
   dcmd.DQSMode = HAL_OSPI_DQS_DISABLE; //DQS not used and must be disabled for reads according to MCU errata
   dcmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;
 

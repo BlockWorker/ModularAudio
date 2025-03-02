@@ -45,12 +45,16 @@ public:
 
 protected:
   std::vector<uint32_t> saved_dl_commands;
-  std::vector<uint32_t> command_variable_offsets;
+  std::vector<uint32_t> dl_command_offsets;
   uint32_t display_timeout;
 
   void BuildAndSaveDisplayList();
   virtual void BuildScreenContent() = 0;
   virtual void UpdateDisplayList();
+
+  uint32_t SaveNextCommandOffset();
+  void ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value);
+  void ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value);
 
 private:
   void BuildCommonContent();

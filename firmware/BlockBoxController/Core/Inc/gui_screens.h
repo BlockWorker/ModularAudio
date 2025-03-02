@@ -25,19 +25,22 @@ public:
 protected:
   virtual void BuildScreenContent() override {
     eve_drv.CmdTag(1);
-    this->command_variable_offsets.push_back(eve_drv.GetDLBufferSize() + 3);
+    this->slider_offset_index = this->SaveNextCommandOffset();
     eve_drv.CmdSlider(50, 50, 150, 10, 0, slider_pos, 0xFFFFU);
     eve_drv.CmdTrack(45, 45, 160, 20, 1);
   }
 
   virtual void UpdateDisplayList() override {
-    this->GUI_Screen::UpdateDisplayList();
+    if (this->saved_dl_commands.empty()) {
+      this->GUI_Screen::UpdateDisplayList();
+      return;
+    }
 
-    uint32_t* slider_pos_ptr32 = this->saved_dl_commands.data() + this->command_variable_offsets[0];
-    ((uint16_t*)slider_pos_ptr32)[1] = slider_pos;
+    this->ModifyDLCommand16(this->slider_offset_index, 3, 1, slider_pos);
   }
 
 private:
+  uint32_t slider_offset_index;
   uint16_t slider_pos;
 };
 
