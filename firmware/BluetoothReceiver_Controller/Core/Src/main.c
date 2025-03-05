@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+#include "iot_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#undef UART_DIRECT_FORWARD
+//#define UART_DIRECT_FORWARD
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -40,8 +42,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-I2C_HandleTypeDef hi2c1;
-
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
 
@@ -52,9 +53,9 @@ UART_HandleTypeDef huart6;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -62,12 +63,15 @@ static void MX_USART6_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+#ifdef UART_DIRECT_FORWARD
 static uint8_t debug_to_module[4096];
 static uint8_t debug_to_module_half = 0;
 static uint8_t module_to_debug[4096];
 static uint8_t module_to_debug_half = 0;
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
+  if (huart == &huart1) return;
+
   uint8_t* buf = (huart == &huart2) ? debug_to_module : module_to_debug;
   uint8_t* half_p = (huart == &huart2) ? &debug_to_module_half : &module_to_debug_half;
   UART_HandleTypeDef* huart_other = (huart == &huart2) ? &huart6 : &huart2;
@@ -79,6 +83,21 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
 
   //transmit on other interface
   HAL_UART_Transmit_IT(huart_other, read_p, Size);
+}
+#else
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
+  if (huart == &huart6) {
+    IOT_UARTEx_RxEventCallback(huart, Size);
+  }
+}
+#endif
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+  if (huart == &huart2) {
+    Retarget_UART_TxCpltCallback(huart);
+  } else if (huart == &huart6) {
+    IOT_UART_TxCpltCallback(huart);
+  }
 }
 
 /* USER CODE END 0 */
@@ -111,15 +130,29 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  //RetargetInit(&huart2);
+  RetargetInit(&huart2);
 
+#ifdef UART_DIRECT_FORWARD
   HAL_UARTEx_ReceiveToIdle_IT(&huart6, module_to_debug, 2048);
   HAL_UARTEx_ReceiveToIdle_IT(&huart2, debug_to_module, 2048);
+  while (1);
+#endif
+
+  DEBUG_PRINTF("### MCU RESET ###\n");
+
+  //HAL_Delay(1000);
+
+  //DEBUG_PRINTF("Initialising IOT driver...\n");
+  if (IOT_Init() == HAL_OK) {
+    DEBUG_PRINTF("IOT driver init started\n");
+  } else {
+    DEBUG_PRINTF("*** IOT driver init failed!\n");
+  }
 
   /* USER CODE END 2 */
 
@@ -130,6 +163,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t iteration_start_tick = HAL_GetTick();
+
+    IOT_Update();
+
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
   /* USER CODE END 3 */
 }
@@ -182,36 +220,35 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief I2C1 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_I2C1_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END I2C1_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN I2C1_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
-  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END I2C1_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 

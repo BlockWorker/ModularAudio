@@ -81,7 +81,7 @@ void GUI_Manager::Update() {
       //touch before: check for hold or release
       if (new_touched) {
         //still touched: check for long-press/tick
-        if (tick > this->touch_state._next_tick_at) {
+        if ((int32_t)(tick - this->touch_state._next_tick_at) > 0) {
           this->touch_state.long_press = true;
           this->touch_state.long_press_tick = true;
           this->touch_state._next_tick_at = tick + GUI_TOUCH_TICK_PERIOD; //set up delay until next tick

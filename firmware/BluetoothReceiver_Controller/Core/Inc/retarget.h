@@ -19,5 +19,7 @@ int _lseek(int fd, int ptr, int dir);
 int _read(int fd, char* ptr, int len);
 int _fstat(int fd, struct stat* st);
 
+void Retarget_UART_TxCpltCallback(UART_HandleTypeDef* huart);
+
 
 #endif /* INC_RETARGET_H_ */

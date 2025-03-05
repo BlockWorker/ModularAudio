@@ -30,7 +30,7 @@
 
 UART_HandleTypeDef *gHuart;
 
-static uint8_t sendBuf[1024] = { 0 };
+static uint8_t sendBuf[8192] = { 0 };
 static uint16_t buf_writePos = 0;
 static uint16_t buf_lastReadPos = 0;
 
@@ -76,7 +76,7 @@ int _write(int fd, char* ptr, int len) {
   return -1;
 }
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+void Retarget_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   if (huart == gHuart) {
     if (buf_writePos <= buf_lastReadPos) {
       buf_writePos = buf_lastReadPos = 0;

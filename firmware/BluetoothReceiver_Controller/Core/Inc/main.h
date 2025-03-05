@@ -31,7 +31,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -41,8 +43,9 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-extern I2C_HandleTypeDef hi2c1;
+//extern I2C_HandleTypeDef hi2c1;
 
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart6;
 /* USER CODE END EC */
@@ -100,7 +103,8 @@ void Error_Handler(void);
 #define I2C_INT_N_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+//period of main program loop in milliseconds
+#define MAIN_LOOP_PERIOD_MS 10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
