@@ -1,0 +1,184 @@
+/*
+ * bt_defines.h
+ *
+ *  Created on: Mar 2, 2025
+ *      Author: Alex
+ */
+
+#ifndef INC_BT_DEFINES_H_
+#define INC_BT_DEFINES_H_
+
+
+#include "bt_config.h"
+
+
+//commands (printf syntax)
+//#define BT_CMD_ADVERTISING "ADVERTISING %s\r"
+#define BT_CMD_AVRCP_META_DATA "AVRCP_META_DATA %02X\r"
+//#define BT_CMD_AT "AT %02X %s\r"
+//#define BT_CMD_BATTERY_STATUS "BATTERY_STATUS\r"
+//#define BT_CMD_BLE_GET_CHAR "BLE_GET_CHAR %02X\r"
+//#define BT_CMD_BLE_GET_CHAR_PARTIAL "BLE_GET_CHAR %02X %04X %04X\r"
+//#define BT_CMD_BLE_GET_DES "BLE_GET_DES %02X %04X %04X\r"
+//#define BT_CMD_BLE_GET_SERV "BLE_GET_SERV %02X\r"
+//#define BT_CMD_BLE_INDICATION "BLE_INDICATION %02X %04X %u\r"
+//#define BT_CMD_BLE_NOTIF "BLE_NOTIF %02X %04X %s\r"
+//#define BT_CMD_BLE_NOTIFICATION "BLE_NOTIFICATION %02X %04X %u\r"
+//#define BT_CMD_BLE_READ "BLE_READ %02X %04X\r"
+//#define BT_CMD_BLE_READ_RES "BLE_READ_RES %02X %04X %u\r"
+//#define BT_CMD_BLE_SET_DB "BLE_SET_DB %02X\r"
+//#define BT_CMD_BLE_WRITE "BLE_WRITE %02X %04X %u\r"
+#define BT_CMD_BROADCAST "BROADCAST %s %u %s\r"
+#define BT_CMD_BROADCODE "BROADCODE %02X %s\r"
+//#define BT_CMD_CALL "CALL %02X %s %s\r"
+#define BT_CMD_CLOSE "CLOSE %02X\r"
+#define BT_CMD_CLOSE_ALL "CLOSE ALL\r"
+#define BT_CMD_CONFIG "CONFIG\r"
+#define BT_CMD_CONNECTABLE "CONNECTABLE %s\r"
+#define BT_CMD_DISCOVERABLE "DISCOVERABLE %s\r"
+//#define BT_CMD_ENTER_DATA_MODE "ENTER_DATA_MODE %02X\r"
+//#define BT_CMD_HELP "HELP\r"
+//#define BT_CMD_GET "GET %s\r"
+//#define BT_CMD_INQUIRY "INQUIRY %u\r"
+//#define BT_CMD_LIST "LIST\r"
+//#define BT_CMD_MICBIAS "MICBIAS %s\r"
+#define BT_CMD_MUSIC "MUSIC %02X %s\r"
+#define BT_CMD_NAME "NAME %012llX\r"
+#define BT_CMD_OPEN "OPEN %012llX %s\r"
+#define BT_CMD_OPEN_LONG "OPEN %012llX %s %u %X %06lX %u\r"
+//#define BT_CMD_PAIR "PAIR %012llX\r"
+//#define BT_CMD_PAIR_LE "PAIR_LE %012llX %u\r"
+//#define BT_CMD_PASSKEY "PASSKEY %u %s\r"
+//#define BT_CMD_PIO "PIO %u %s\r"
+//#define BT_CMD_POWER "POWER %s\r"
+//#define BT_CMD_RESET "RESET\r"
+//#define BT_CMD_RESTORE "RESTORE\r"
+//#define BT_CMD_ROUTE "ROUTE %u\r"
+#define BT_CMD_RSSI "RSSI %012llX\r"
+#define BT_CMD_QUALITY "QUALITY %012llX\r"
+#define BT_CMD_SCAN_BCAST "SCAN %u OFF 2\r"
+//#define BT_CMD_SCAN_UNI "SCAN_UNI %s %u %u\r"
+#define BT_CMD_SEND "SEND %02X %s\r"
+//#define BT_CMD_SEND_RAW "SEND_RAW %02X %u\r"
+#define BT_CMD_SET "SET %s=%s\r"
+//#define BT_CMD_SSRD "SSRD %u\r"
+#define BT_CMD_STATUS "STATUS\r"
+#define BT_CMD_TONE "TONE %s\r"
+//#define BT_CMD_UNPAIR "UNPAIR %012X\r"
+#define BT_CMD_VOLUME "VOLUME %02X %u\r"
+#define BT_CMD_VOLUME_GET "VOLUME\r"
+//#define BT_CMD_VERSION "VERSION\r"
+#define BT_CMD_WRITE "WRITE\r"
+
+
+//notifications - command responses (scanf syntax)
+#define BT_NOTIF_OK "OK\r"
+//#define BT_NOTIF_PENDING "PENDING\r"
+#define BT_NOTIF_CONFIG_ITEM "%255[^=]=%255[^\r]\r"
+#define BT_NOTIF_NAME "NAME %llX \"%255[^\"]\"\r"
+#define BT_NOTIF_RSSI "RSSI=%hd\r"
+#define BT_NOTIF_QUALITY "QUALITY=%hu\r"
+//TODO: double-check format of this scan response - no way of testing until actually implementing broadcast stuff
+#define BT_NOTIF_SCAN_BCAST "SCAN 2 %llX 0x%lX 0x%hhX %s %hd\r"
+#define BT_NOTIF_SCAN_OK "SCAN_OK\r"
+#define BT_NOTIF_STATE "STATE CONNECTABLE[%255[^]]] DISCOVERABLE[%255[^]]] ADVERTISING[%255[^]]] SCAN_UNI[%255[^]]]\r"
+#define BT_NOTIF_LINK_A2DP "LINK %hhX A2DP %llX %255s %255s %255s %lu\r"
+#define BT_NOTIF_LINK_AVRCP "LINK %hhX AVRCP %llX %255s\r"
+//#define BT_NOTIF_LINK_HFP "LINK %X HFP %llX %255s %255s %255s\r"
+//#define BT_NOTIF_LINK_BLE "LINK %X BLE %llX %u\r"
+#define BT_NOTIF_LINK_BRX1 "LINK %hhX BRX1 %llX 0x%lX %255s %255s PDEL %lu RATE %lu ENCR: %hhu SUBGROUP %hhu\r"
+#define BT_NOTIF_LINK_BTX1 "LINK %hhX BTX1 %llX %255s PDEL %lu RATE %lu SUBGROUP %hhu BISS %hhu\r"
+#define BT_NOTIF_VOLUME_READ "%hhX %s %hhu\r"
+
+//notifications - potentially unprompted (scanf syntax)
+#define BT_NOTIF_READY "Ready\r"
+#define BT_NOTIF_ERROR "ERROR 0x%hX\r"
+#define BT_NOTIF_A2DP_STREAM_START "A2DP_STREAM_START %hhX\r"
+#define BT_NOTIF_A2DP_STREAM_SUSPEND "A2DP_STREAM_SUSPEND %hhX\r"
+#define BT_NOTIF_ABS_VOL "ABS_VOL %hhX %hhu\r"
+//#define BT_NOTIF_AT "AT %X %u %255s\r"
+#define BT_NOTIF_AVRCP_BACKWARD "AVRCP_BACKWARD %hhX\r"
+#define BT_NOTIF_AVRCP_FORWARD "AVRCP_FORWARD %hhX\r"
+#define BT_NOTIF_AVRCP_MEDIA_TITLE "AVRCP_MEDIA TITLE: %255[^\r]\r"
+#define BT_NOTIF_AVRCP_MEDIA_ARTIST "AVRCP_MEDIA ARTIST: %255[^\r]\r"
+#define BT_NOTIF_AVRCP_MEDIA_ALBUM "AVRCP_MEDIA ALBUM: %255[^\r]\r"
+#define BT_NOTIF_AVRCP_PAUSE "AVRCP_PAUSE %hhX\r"
+#define BT_NOTIF_AVRCP_PLAY "AVRCP_PLAY %hhX\r"
+#define BT_NOTIF_AVRCP_STOP "AVRCP_STOP %hhX\r"
+//#define BT_NOTIF_BLE_INDICATION "BLE_INDICATION %X %X %u %255s\r"
+//#define BT_NOTIF_BLE_NOTIFICATION "BLE_NOTIFICATION %X %X %u %255s\r"
+//#define BT_NOTIF_BLE_READ "BLE_READ %X %X\r"
+//#define BT_NOTIF_BLE_WRITE "BLE_WRITE %X %X %u %255s\r"
+//#define BT_NOTIF_CALL_ACTIVE "CALL_ACTIVE %X\r"
+//#define BT_NOTIF_CALL_DIAL "CALL_DIAL %X %255s\r"
+//#define BT_NOTIF_CALL_END "CALL_END %X\r"
+//#define BT_NOTIF_CALL_INCOMING "CALL_INCOMING %X\r"
+//#define BT_NOTIF_CALL_OUTGOING "CALL_OUTGOING %X\r"
+#define BT_NOTIF_CLOSE_OK "CLOSE_OK %hhX %255s\r"
+#define BT_NOTIF_LINK_LOSS "LINK_LOSS %hhX %255s\r"
+#define BT_NOTIF_OPEN_OK "OPEN_OK %hhX %255s %llX\r"
+#define BT_NOTIF_OPEN_ERROR "OPEN_ERROR %llX %255s %hhu\r"
+#define BT_NOTIF_PAIR_ERROR "PAIR_ERROR %llX\r"
+#define BT_NOTIF_PAIR_OK "PAIR_OK %llX\r"
+//#define BT_NOTIF_PAIR_PASSKEY "PAIR_PASSKEY %llX %u %255s\r"
+#define BT_NOTIF_PAIR_PENDING "PAIR_PENDING\r"
+#define BT_NOTIF_RECV "RECV %hhX %hu %255[^\r]\r"
+//#define BT_NOTIF_SCO_CLOSE "SCO_CLOSE %X\r"
+//#define BT_NOTIF_SCO_OPEN "SCO_OPEN %X\r"
+
+
+typedef enum {
+  CMD_AVRCP_META_DATA = 0,
+  CMD_BROADCAST,
+  CMD_BROADCODE,
+  CMD_CLOSE,
+  CMD_CLOSE_ALL,
+  CMD_CONFIG,
+  CMD_CONNECTABLE,
+  CMD_DISCOVERABLE,
+  CMD_MUSIC,
+  CMD_NAME,
+  CMD_OPEN,
+  CMD_OPEN_LONG,
+  CMD_RSSI,
+  CMD_QUALITY,
+  CMD_SCAN_BCAST,
+  CMD_SEND,
+  CMD_SET,
+  CMD_STATUS,
+  CMD_TONE,
+  CMD_VOLUME,
+  CMD_VOLUME_GET,
+  CMD_WRITE,
+  CMD_INIT = 0xFE,
+  CMD_NONE = 0xFF
+} BT_Command;
+
+typedef enum {
+  BTERR_NONE = 0,
+  BTERR_UNKNOWN = 0x0003,
+  BTERR_COMMAND_NOT_ALLOWED_CONFIG = 0x0011,
+  BTERR_COMMAND_NOT_FOUND = 0x0012,
+  BTERR_WRONG_PARAMETER = 0x0013,
+  BTERR_WRONG_NUMBER_OF_PARAMETERS = 0x0014,
+  BTERR_COMMAND_NOT_ALLOWED_STATE = 0x0015,
+  BTERR_DEVICE_ALREADY_CONNECTED = 0x0016,
+  BTERR_DEVICE_NOT_CONNECTED = 0x0017,
+  BTERR_COMMAND_TOO_LONG = 0x0018,
+  BTERR_NAME_NOT_FOUND = 0x0019,
+  BTERR_CONFIG_NOT_FOUND = 0x001A,
+  BTERR_FAIL_READ_BAT_VOLTAGE = 0x0100,
+  BTERR_FAIL_CONFIG_CAP_SENSE = 0x1003,
+  BTERR_FAIL_REGISTER_DEVICE = 0x1004,
+  BTERR_BLE_REQUEST_FAILED = 0x1005,
+  BTERR_LICENSE_KEY_MISSING = 0xFF01,
+  BTERR_LICENSE_KEY_INVALID = 0xFF02,
+  BTERR_WRONG_CONFIG = 0xF004,
+  BTERR_OPEN_GENERAL = 0xFFF0,
+  BTERR_OPEN_DEVICE_NOT_PRESENT = 0xFFF1,
+  BTERR_OPEN_DEVICE_NOT_PAIRED = 0xFFF2,
+  BTERR_COMMAND_TIMEOUT = 0xFFFF
+} BT_Error;
+
+
+#endif /* INC_BT_DEFINES_H_ */

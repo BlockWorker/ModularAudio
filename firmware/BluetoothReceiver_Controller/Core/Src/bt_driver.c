@@ -1,31 +1,31 @@
 /*
- * iot_driver.c
+ * bt_driver.c
  *
  *  Created on: Mar 2, 2025
  *      Author: Alex
  */
 
-#include "iot_driver.h"
+#include "bt_driver.h"
 #include <stdlib.h>
 
 
-#define IOT_PARSEBUF_SIZE 2048
-#define IOT_CMDBUF_SIZE 256
+#define BT_PARSEBUF_SIZE 2048
+#define BT_CMDBUF_SIZE 256
 
 
 typedef struct _cmd_queue_item {
-  IOT_Command command;
-  char cmd_text[IOT_CMDBUF_SIZE];
+  BT_Command command;
+  char cmd_text[BT_CMDBUF_SIZE];
   uint32_t cmd_length;
   struct _cmd_queue_item* next;
-} IOT_CommandQueueItem;
+} BT_CommandQueueItem;
 
 
 //arrays of definition strings for configuration, commands, and notification parsing
-static const char* _config_array[] = IOT_CONFIG_ARRAY;
+static const char* _config_array[] = BT_CONFIG_ARRAY;
 
 //UART receive buffer (byte and char/text views)
-static uint8_t _rx_buffer[IOT_RXBUF_SIZE] = { 0 };
+static uint8_t _rx_buffer[BT_RXBUF_SIZE] = { 0 };
 static char* _rx_text = (char*)_rx_buffer;
 //buffer offset of start of current receive call
 static uint32_t _rx_buffer_write_offset = 0;
@@ -33,7 +33,7 @@ static uint32_t _rx_buffer_write_offset = 0;
 static uint32_t _rx_buffer_read_offset = 0;
 
 //notification parse buffer holding current notification (or part if not complete yet)
-static char _parse_buffer[IOT_PARSEBUF_SIZE] = { 0 };
+static char _parse_buffer[BT_PARSEBUF_SIZE] = { 0 };
 //parse buffer offset of next character to be written
 static uint32_t _parse_buffer_write_offset = 0;
 //smaller text buffers for notification parameters
@@ -43,15 +43,15 @@ static char _parse_str_2[256] = { 0 };
 static char _parse_str_3[256] = { 0 };
 
 //command preparation buffer holding the current command
-static char _cmd_prep_buffer[IOT_CMDBUF_SIZE] = { 0 };
+static char _cmd_prep_buffer[BT_CMDBUF_SIZE] = { 0 };
 //head and tail pointers of command queue
-static IOT_CommandQueueItem* _cmd_queue_head = NULL;
-static IOT_CommandQueueItem* _cmd_queue_tail = NULL;
+static BT_CommandQueueItem* _cmd_queue_head = NULL;
+static BT_CommandQueueItem* _cmd_queue_tail = NULL;
 
 //command that is currently being executed (and has not been confirmed as completed yet)
-static IOT_Command _current_command = CMD_NONE;
+static BT_Command _current_command = CMD_NONE;
 //transmit buffer for the current command
-static char _cmd_tx_buffer[IOT_CMDBUF_SIZE] = { 0 };
+static char _cmd_tx_buffer[BT_CMDBUF_SIZE] = { 0 };
 //tick after which the next command may be sent
 static uint32_t _next_cmd_tick = 0;
 //tick after which the current command times out
@@ -61,21 +61,21 @@ static uint32_t _cmd_timeout_tick = HAL_MAX_DELAY;
 bool _init_config_changed = false;
 
 //whether the driver has been initialised successfully
-bool iot_driver_init_complete = false;
+bool bt_driver_init_complete = false;
 
 
 /******************************************************************************************
  * COMMAND FUNCTIONS
  ******************************************************************************************/
 
-static HAL_StatusTypeDef _IOT_QueueCommand(IOT_Command command, int32_t length) {
-  if (length <= 0 || length >= IOT_CMDBUF_SIZE) {
+static HAL_StatusTypeDef _BT_QueueCommand(BT_Command command, int32_t length) {
+  if (length <= 0 || length >= BT_CMDBUF_SIZE) {
     //command buffer overflow or other error
     return HAL_ERROR;
   }
 
   //allocate queue item
-  IOT_CommandQueueItem* new_item = malloc(sizeof(IOT_CommandQueueItem));
+  BT_CommandQueueItem* new_item = malloc(sizeof(BT_CommandQueueItem));
   if (new_item == NULL) {
     //insufficient heap memory
     return HAL_ERROR;
@@ -100,14 +100,14 @@ static HAL_StatusTypeDef _IOT_QueueCommand(IOT_Command command, int32_t length) 
   return HAL_OK;
 }
 
-static IOT_CommandQueueItem* _IOT_DequeueCommand() {
+static BT_CommandQueueItem* _BT_DequeueCommand() {
   if (_cmd_queue_head == NULL || _cmd_queue_tail == NULL) {
     //empty queue: nothing to dequeue
     return NULL;
   }
 
   //take item from the front (head) of the queue, next item becomes the new head
-  IOT_CommandQueueItem* item = _cmd_queue_head;
+  BT_CommandQueueItem* item = _cmd_queue_head;
   _cmd_queue_head = item->next;
   if (_cmd_queue_head == NULL) {
     //removed item was the last item: clear tail pointer too
@@ -118,7 +118,7 @@ static IOT_CommandQueueItem* _IOT_DequeueCommand() {
 }
 
 //put the given command back at the top of the queue, e.g. in case of an error
-static void _IOT_RequeueCommand(IOT_CommandQueueItem* item) {
+static void _BT_RequeueCommand(BT_CommandQueueItem* item) {
   if (item == NULL) {
     return;
   }
@@ -134,9 +134,9 @@ static void _IOT_RequeueCommand(IOT_CommandQueueItem* item) {
   _cmd_queue_head = item;
 }
 
-static void _IOT_ClearCommandQueue() {
+static void _BT_ClearCommandQueue() {
   //iterate through queue from head, freeing all items
-  IOT_CommandQueueItem* item = _cmd_queue_head;
+  BT_CommandQueueItem* item = _cmd_queue_head;
   while (item != NULL) {
     item = item->next;
     free(item);
@@ -147,148 +147,148 @@ static void _IOT_ClearCommandQueue() {
   _cmd_queue_tail = NULL;
 }
 
-HAL_StatusTypeDef IOT_Command_AVRCP_META_DATA(uint8_t link_id) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_AVRCP_META_DATA, link_id);
-  return _IOT_QueueCommand(CMD_AVRCP_META_DATA, res);
+HAL_StatusTypeDef BT_Command_AVRCP_META_DATA(uint8_t link_id) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_AVRCP_META_DATA, link_id);
+  return _BT_QueueCommand(CMD_AVRCP_META_DATA, res);
 }
 
-HAL_StatusTypeDef IOT_Command_BROADCAST(bool start, uint8_t source, const char* pin) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_BROADCAST, start ? "ON" : "OFF", source, pin);
-  return _IOT_QueueCommand(CMD_BROADCAST, res);
+HAL_StatusTypeDef BT_Command_BROADCAST(bool start, uint8_t source, const char* pin) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_BROADCAST, start ? "ON" : "OFF", source, pin);
+  return _BT_QueueCommand(CMD_BROADCAST, res);
 }
 
-HAL_StatusTypeDef IOT_Command_BROADCODE(uint8_t link_id, const char* pin) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_BROADCODE, link_id, pin);
-  return _IOT_QueueCommand(CMD_BROADCODE, res);
+HAL_StatusTypeDef BT_Command_BROADCODE(uint8_t link_id, const char* pin) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_BROADCODE, link_id, pin);
+  return _BT_QueueCommand(CMD_BROADCODE, res);
 }
 
-HAL_StatusTypeDef IOT_Command_CLOSE(uint8_t link_id) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_CLOSE, link_id);
-  return _IOT_QueueCommand(CMD_CLOSE, res);
+HAL_StatusTypeDef BT_Command_CLOSE(uint8_t link_id) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_CLOSE, link_id);
+  return _BT_QueueCommand(CMD_CLOSE, res);
 }
 
-HAL_StatusTypeDef IOT_Command_CLOSE_ALL() {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_CLOSE_ALL);
-  return _IOT_QueueCommand(CMD_CLOSE_ALL, res);
+HAL_StatusTypeDef BT_Command_CLOSE_ALL() {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_CLOSE_ALL);
+  return _BT_QueueCommand(CMD_CLOSE_ALL, res);
 }
 
-static HAL_StatusTypeDef IOT_Command_CONFIG() {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_CONFIG);
-  return _IOT_QueueCommand(CMD_CONFIG, res);
+static HAL_StatusTypeDef BT_Command_CONFIG() {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_CONFIG);
+  return _BT_QueueCommand(CMD_CONFIG, res);
 }
 
-HAL_StatusTypeDef IOT_Command_CONNECTABLE(bool connectable) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_CONNECTABLE, connectable ? "ON" : "OFF");
-  return _IOT_QueueCommand(CMD_CONNECTABLE, res);
+HAL_StatusTypeDef BT_Command_CONNECTABLE(bool connectable) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_CONNECTABLE, connectable ? "ON" : "OFF");
+  return _BT_QueueCommand(CMD_CONNECTABLE, res);
 }
 
-HAL_StatusTypeDef IOT_Command_DISCOVERABLE(bool discoverable) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_DISCOVERABLE, discoverable ? "ON" : "OFF");
-  return _IOT_QueueCommand(CMD_DISCOVERABLE, res);
+HAL_StatusTypeDef BT_Command_DISCOVERABLE(bool discoverable) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_DISCOVERABLE, discoverable ? "ON" : "OFF");
+  return _BT_QueueCommand(CMD_DISCOVERABLE, res);
 }
 
-HAL_StatusTypeDef IOT_Command_MUSIC(uint8_t link_id, const char* command) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_MUSIC, link_id, command);
-  return _IOT_QueueCommand(CMD_MUSIC, res);
+HAL_StatusTypeDef BT_Command_MUSIC(uint8_t link_id, const char* command) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_MUSIC, link_id, command);
+  return _BT_QueueCommand(CMD_MUSIC, res);
 }
 
-HAL_StatusTypeDef IOT_Command_NAME(uint64_t bt_addr) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_NAME, bt_addr);
-  return _IOT_QueueCommand(CMD_NAME, res);
+HAL_StatusTypeDef BT_Command_NAME(uint64_t bt_addr) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_NAME, bt_addr);
+  return _BT_QueueCommand(CMD_NAME, res);
 }
 
-HAL_StatusTypeDef IOT_Command_OPEN(uint64_t bt_addr, const char* profile) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_OPEN, bt_addr, profile);
-  return _IOT_QueueCommand(CMD_OPEN, res);
+HAL_StatusTypeDef BT_Command_OPEN(uint64_t bt_addr, const char* profile) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_OPEN, bt_addr, profile);
+  return _BT_QueueCommand(CMD_OPEN, res);
 }
 
-HAL_StatusTypeDef IOT_Command_OPEN_BCAST(uint64_t bt_addr, const char* profile, uint8_t adv_sid, uint32_t bcast_id, bool pa_sync) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_OPEN_LONG, bt_addr, profile, 2, adv_sid, bcast_id, pa_sync ? 1 : 0);
-  return _IOT_QueueCommand(CMD_OPEN_LONG, res);
+HAL_StatusTypeDef BT_Command_OPEN_BCAST(uint64_t bt_addr, const char* profile, uint8_t adv_sid, uint32_t bcast_id, bool pa_sync) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_OPEN_LONG, bt_addr, profile, 2, adv_sid, bcast_id, pa_sync ? 1 : 0);
+  return _BT_QueueCommand(CMD_OPEN_LONG, res);
 }
 
-//static HAL_StatusTypeDef IOT_Command_RESET() {
-//  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_RESET);
-//  return _IOT_QueueCommand(CMD_RESET, res);
+//static HAL_StatusTypeDef BT_Command_RESET() {
+//  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_RESET);
+//  return _BT_QueueCommand(CMD_RESET, res);
 //}
 
-HAL_StatusTypeDef IOT_Command_RSSI(uint64_t bt_addr) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_RSSI, bt_addr);
-  return _IOT_QueueCommand(CMD_RSSI, res);
+HAL_StatusTypeDef BT_Command_RSSI(uint64_t bt_addr) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_RSSI, bt_addr);
+  return _BT_QueueCommand(CMD_RSSI, res);
 }
 
-HAL_StatusTypeDef IOT_Command_QUALITY(uint64_t bt_addr) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_QUALITY, bt_addr);
-  return _IOT_QueueCommand(CMD_QUALITY, res);
+HAL_StatusTypeDef BT_Command_QUALITY(uint64_t bt_addr) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_QUALITY, bt_addr);
+  return _BT_QueueCommand(CMD_QUALITY, res);
 }
 
-HAL_StatusTypeDef IOT_Command_SCAN_BCAST(uint8_t timeout) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_SCAN_BCAST, timeout);
-  return _IOT_QueueCommand(CMD_SCAN_BCAST, res);
+HAL_StatusTypeDef BT_Command_SCAN_BCAST(uint8_t timeout) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_SCAN_BCAST, timeout);
+  return _BT_QueueCommand(CMD_SCAN_BCAST, res);
 }
 
-HAL_StatusTypeDef IOT_Command_SEND(uint8_t link_id, const char* payload) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_SEND, link_id, payload);
-  return _IOT_QueueCommand(CMD_SEND, res);
+HAL_StatusTypeDef BT_Command_SEND(uint8_t link_id, const char* payload) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_SEND, link_id, payload);
+  return _BT_QueueCommand(CMD_SEND, res);
 }
 
-static HAL_StatusTypeDef IOT_Command_SET(const char* key, const char* value) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_SET, key, value);
-  return _IOT_QueueCommand(CMD_SET, res);
+static HAL_StatusTypeDef BT_Command_SET(const char* key, const char* value) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_SET, key, value);
+  return _BT_QueueCommand(CMD_SET, res);
 }
 
-HAL_StatusTypeDef IOT_Command_STATUS() {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_STATUS);
-  return _IOT_QueueCommand(CMD_STATUS, res);
+HAL_StatusTypeDef BT_Command_STATUS() {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_STATUS);
+  return _BT_QueueCommand(CMD_STATUS, res);
 }
 
-HAL_StatusTypeDef IOT_Command_TONE(const char* tone_string) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_TONE, tone_string);
-  return _IOT_QueueCommand(CMD_TONE, res);
+HAL_StatusTypeDef BT_Command_TONE(const char* tone_string) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_TONE, tone_string);
+  return _BT_QueueCommand(CMD_TONE, res);
 }
 
-HAL_StatusTypeDef IOT_Command_VOLUME(uint8_t link_id, uint8_t volume) {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_VOLUME, link_id, volume);
-  return _IOT_QueueCommand(CMD_VOLUME, res);
+HAL_StatusTypeDef BT_Command_VOLUME(uint8_t link_id, uint8_t volume) {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_VOLUME, link_id, volume);
+  return _BT_QueueCommand(CMD_VOLUME, res);
 }
 
-HAL_StatusTypeDef IOT_Command_VOLUME_GET() {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_VOLUME_GET);
-  return _IOT_QueueCommand(CMD_VOLUME_GET, res);
+HAL_StatusTypeDef BT_Command_VOLUME_GET() {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_VOLUME_GET);
+  return _BT_QueueCommand(CMD_VOLUME_GET, res);
 }
 
-static HAL_StatusTypeDef IOT_Command_WRITE() {
-  int32_t res = snprintf(_cmd_prep_buffer, IOT_CMDBUF_SIZE, IOT_CMD_WRITE);
-  return _IOT_QueueCommand(CMD_WRITE, res);
+static HAL_StatusTypeDef BT_Command_WRITE() {
+  int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_WRITE);
+  return _BT_QueueCommand(CMD_WRITE, res);
 }
 
 
-static void _IOT_Command_Finish(IOT_Error error) {
+static void _BT_Command_Finish(BT_Error error) {
   _current_command = CMD_NONE;
-  _next_cmd_tick = HAL_GetTick() + IOT_CMD_DELAY;
+  _next_cmd_tick = HAL_GetTick() + BT_CMD_DELAY;
 
-  if (error == IOTERR_NONE) {
+  if (error == BTERR_NONE) {
     DEBUG_PRINTF("Command finished successfully\n");
     return;
   }
 
-  DEBUG_PRINTF("* IOT reported error 0x%04X\n", (uint16_t)error);
+  DEBUG_PRINTF("* BT reported error 0x%04X\n", (uint16_t)error);
 
   if (_current_command == CMD_INIT || _current_command == CMD_CONFIG || _current_command == CMD_SET || _current_command == CMD_WRITE) {
     //error in init procedure: reset
-    IOT_Init(); //TODO: consider full MCU reset?
+    BT_Init(); //TODO: consider full MCU reset?
   }
 
   //TODO: handle other error cases
 }
 
-static void _IOT_Command_Timeout() {
+static void _BT_Command_Timeout() {
   DEBUG_PRINTF("* Command timed out!\n");
   if (_current_command == CMD_INIT || _current_command == CMD_CONFIG || _current_command == CMD_SET || _current_command == CMD_WRITE) {
     //timeout in init procedure: reset
-    IOT_Init(); //TODO: consider full MCU reset?
+    BT_Init(); //TODO: consider full MCU reset?
   } else {
-    _IOT_Command_Finish(IOTERR_COMMAND_TIMEOUT);
+    _BT_Command_Finish(BTERR_COMMAND_TIMEOUT);
   }
 }
 
@@ -298,10 +298,10 @@ static void _IOT_Command_Timeout() {
  ******************************************************************************************/
 
 //check correctness of given config key-value pair - if incorrect, queue a correcting SET command, and mark the config as changed
-static void _IOT_CheckConfigItem(const char* key, const char* value) {
+static void _BT_CheckConfigItem(const char* key, const char* value) {
   //iterate through all config array entries to check whether the given key is in there
   int i;
-  for (i = 0; i < IOT_CONFIG_ARRAY_ENTRIES; i++) {
+  for (i = 0; i < BT_CONFIG_ARRAY_ENTRIES; i++) {
     const char* arr_key = _config_array[2 * i];
     const char* arr_value = _config_array[2 * i + 1];
     //check given key against config entry key
@@ -310,9 +310,9 @@ static void _IOT_CheckConfigItem(const char* key, const char* value) {
       if (strcmp(value, arr_value) != 0) {
         //value doesn't match: queue command to correct it and mark the config as changed
         _init_config_changed = true;
-        if (IOT_Command_SET(arr_key, arr_value) != HAL_OK) {
+        if (BT_Command_SET(arr_key, arr_value) != HAL_OK) {
           //failed to queue set command: reset
-          IOT_Init(); //TODO: consider full MCU reset?
+          BT_Init(); //TODO: consider full MCU reset?
         }
       }
       return;
@@ -321,57 +321,57 @@ static void _IOT_CheckConfigItem(const char* key, const char* value) {
 }
 
 
-static bool _IOT_Parse_OK() {
-  if (strcmp(_parse_buffer, IOT_NOTIF_OK) != 0) {
+static bool _BT_Parse_OK() {
+  if (strcmp(_parse_buffer, BT_NOTIF_OK) != 0) {
     return false;
   }
   if (_current_command == CMD_CONFIG) {
     if (_init_config_changed) {
       //config will be changed (set commands queued), so queue a write command at the end
-      if (IOT_Command_WRITE() != HAL_OK) {
+      if (BT_Command_WRITE() != HAL_OK) {
         //failed to queue write command: reset
-        IOT_Init(); //TODO: consider full MCU reset?
+        BT_Init(); //TODO: consider full MCU reset?
         return true;
       }
     } else {
       //config is correct, so init is done
-      iot_driver_init_complete = true;
-      DEBUG_PRINTF("IOT driver init completed successfully\n");
+      bt_driver_init_complete = true;
+      DEBUG_PRINTF("BT driver init completed successfully\n");
       //TODO some kind of init complete notification? if necessary
     }
   } else if (_current_command == CMD_WRITE) {
     //config write succeeded, so reset to (hopefully) correct config
-    IOT_Init();
+    BT_Init();
     return true;
   }
-  _IOT_Command_Finish(IOTERR_NONE);
+  _BT_Command_Finish(BTERR_NONE);
   //DEBUG_PRINTF("OK response parsed\n");
   return true;
 }
 
-static bool _IOT_Parse_CONFIG_Item() {
-  if (sscanf(_parse_buffer, IOT_NOTIF_CONFIG_ITEM, _parse_str_0, _parse_str_1) < 2) {
+static bool _BT_Parse_CONFIG_Item() {
+  if (sscanf(_parse_buffer, BT_NOTIF_CONFIG_ITEM, _parse_str_0, _parse_str_1) < 2) {
     return false;
   }
-  _IOT_CheckConfigItem(_parse_str_0, _parse_str_1);
+  _BT_CheckConfigItem(_parse_str_0, _parse_str_1);
   //DEBUG_PRINTF("Config item parsed: %s = %s\n", _parse_str_0, _parse_str_1);
   return true;
 }
 
-static bool _IOT_Parse_NAME() {
+static bool _BT_Parse_NAME() {
   uint64_t bt_addr;
-  if (sscanf(_parse_buffer, IOT_NOTIF_NAME, &bt_addr, _parse_str_0) < 2) {
+  if (sscanf(_parse_buffer, BT_NOTIF_NAME, &bt_addr, _parse_str_0) < 2) {
     return false;
   }
   //TODO: process data
-  _IOT_Command_Finish(IOTERR_NONE);
+  _BT_Command_Finish(BTERR_NONE);
   DEBUG_PRINTF("NAME response parsed\n");
   return true;
 }
 
-static bool _IOT_Parse_RSSI() {
+static bool _BT_Parse_RSSI() {
   int16_t rssi;
-  if (sscanf(_parse_buffer, IOT_NOTIF_RSSI, &rssi) < 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_RSSI, &rssi) < 1) {
     return false;
   }
   //TODO: process data
@@ -379,9 +379,9 @@ static bool _IOT_Parse_RSSI() {
   return true;
 }
 
-static bool _IOT_Parse_QUALITY() {
+static bool _BT_Parse_QUALITY() {
   uint16_t quality;
-  if (sscanf(_parse_buffer, IOT_NOTIF_QUALITY, &quality) < 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_QUALITY, &quality) < 1) {
     return false;
   }
   //TODO: process data
@@ -389,25 +389,25 @@ static bool _IOT_Parse_QUALITY() {
   return true;
 }
 
-static bool _IOT_Parse_SCAN() {
+static bool _BT_Parse_SCAN() {
   uint64_t bt_addr;
   uint32_t bcast_id;
   uint8_t adv_id;
   int16_t rssi;
-  if (sscanf(_parse_buffer, IOT_NOTIF_SCAN_BCAST, &bt_addr, &bcast_id, &adv_id, _parse_str_0, &rssi) == 5) {
+  if (sscanf(_parse_buffer, BT_NOTIF_SCAN_BCAST, &bt_addr, &bcast_id, &adv_id, _parse_str_0, &rssi) == 5) {
     //TODO: process broadcast scan result
     DEBUG_PRINTF("SCAN broadcast response parsed\n");
     return true;
-  } else if (strcmp(_parse_buffer, IOT_NOTIF_SCAN_OK) == 0) {
-    _IOT_Command_Finish(IOTERR_NONE);
+  } else if (strcmp(_parse_buffer, BT_NOTIF_SCAN_OK) == 0) {
+    _BT_Command_Finish(BTERR_NONE);
     DEBUG_PRINTF("SCAN_OK response parsed\n");
     return true;
   }
   return false;
 }
 
-static bool _IOT_Parse_STATE() {
-  if (sscanf(_parse_buffer, IOT_NOTIF_STATE, _parse_str_0, _parse_str_1, _parse_str_2, _parse_str_3) < 4) {
+static bool _BT_Parse_STATE() {
+  if (sscanf(_parse_buffer, BT_NOTIF_STATE, _parse_str_0, _parse_str_1, _parse_str_2, _parse_str_3) < 4) {
     return false;
   }
   //TODO: process data
@@ -415,7 +415,7 @@ static bool _IOT_Parse_STATE() {
   return true;
 }
 
-static bool _IOT_Parse_LINK() {
+static bool _BT_Parse_LINK() {
   uint8_t link_id;
   uint64_t bt_addr;
   uint32_t sample_rate;
@@ -425,19 +425,19 @@ static bool _IOT_Parse_LINK() {
   uint8_t bcast_subgroup;
   uint8_t bcast_biss;
 
-  if (sscanf(_parse_buffer, IOT_NOTIF_LINK_A2DP, &link_id, &bt_addr, _parse_str_0, _parse_str_1, _parse_str_2, &sample_rate) == 6) {
+  if (sscanf(_parse_buffer, BT_NOTIF_LINK_A2DP, &link_id, &bt_addr, _parse_str_0, _parse_str_1, _parse_str_2, &sample_rate) == 6) {
     //TODO: process data
     DEBUG_PRINTF("LINK A2DP response parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_LINK_AVRCP, &link_id, &bt_addr, _parse_str_0) == 3) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_AVRCP, &link_id, &bt_addr, _parse_str_0) == 3) {
     //TODO: process data
     DEBUG_PRINTF("LINK AVRCP response parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_LINK_BRX1, &link_id, &bt_addr, &bcast_code, _parse_str_0, _parse_str_1, &bcast_pdel, &sample_rate, &bcast_encr, &bcast_subgroup) == 9) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_BRX1, &link_id, &bt_addr, &bcast_code, _parse_str_0, _parse_str_1, &bcast_pdel, &sample_rate, &bcast_encr, &bcast_subgroup) == 9) {
     //TODO: process data
     DEBUG_PRINTF("LINK BRX1 response parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_LINK_BTX1, &link_id, &bt_addr, _parse_str_0, &bcast_pdel, &sample_rate, &bcast_subgroup, &bcast_biss) == 7) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_BTX1, &link_id, &bt_addr, _parse_str_0, &bcast_pdel, &sample_rate, &bcast_subgroup, &bcast_biss) == 7) {
     //TODO: process data
     DEBUG_PRINTF("LINK BTX1 response parsed\n");
     return true;
@@ -446,10 +446,10 @@ static bool _IOT_Parse_LINK() {
   return false;
 }
 
-static bool _IOT_Parse_VOLUME_READ() {
+static bool _BT_Parse_VOLUME_READ() {
   uint8_t link_id;
   uint8_t volume;
-  if (sscanf(_parse_buffer, IOT_NOTIF_VOLUME_READ, &link_id, _parse_str_0, &volume) < 3) {
+  if (sscanf(_parse_buffer, BT_NOTIF_VOLUME_READ, &link_id, _parse_str_0, &volume) < 3) {
     return false;
   }
   //TODO: process volume readback
@@ -457,41 +457,41 @@ static bool _IOT_Parse_VOLUME_READ() {
   return true;
 }
 
-static bool _IOT_Parse_Ready() {
-  if (strcmp(_parse_buffer, IOT_NOTIF_READY) != 0) {
+static bool _BT_Parse_Ready() {
+  if (strcmp(_parse_buffer, BT_NOTIF_READY) != 0) {
     return false;
   }
   if (_current_command == CMD_INIT) {
     //module started up - read config next
-    if (IOT_Command_CONFIG() == HAL_OK) {
+    if (BT_Command_CONFIG() == HAL_OK) {
       //config command queued: finish init "command"
-      _IOT_Command_Finish(IOTERR_NONE);
+      _BT_Command_Finish(BTERR_NONE);
     } else {
       //failed to queue config command: reset
-      IOT_Init(); //TODO: consider full MCU reset?
+      BT_Init(); //TODO: consider full MCU reset?
     }
   }
   //DEBUG_PRINTF("Ready notification parsed\n");
   return true;
 }
 
-static bool _IOT_Parse_ERROR() {
+static bool _BT_Parse_ERROR() {
   uint16_t error_code;
-  if (sscanf(_parse_buffer, IOT_NOTIF_ERROR, &error_code) < 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_ERROR, &error_code) < 1) {
     return false;
   }
-  _IOT_Command_Finish((IOT_Error)error_code);
+  _BT_Command_Finish((BT_Error)error_code);
   DEBUG_PRINTF("ERROR notification parsed: 0x%04X\n", error_code);
   return true;
 }
 
-static bool _IOT_Parse_A2DP_Event() {
+static bool _BT_Parse_A2DP_Event() {
   uint8_t link_id;
-  if (sscanf(_parse_buffer, IOT_NOTIF_A2DP_STREAM_START, &link_id) == 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_START, &link_id) == 1) {
     //TODO: process event
     DEBUG_PRINTF("A2DP_STREAM_START notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_A2DP_STREAM_SUSPEND, &link_id) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_SUSPEND, &link_id) == 1) {
     //TODO: process event
     DEBUG_PRINTF("A2DP_STREAM_SUSPEND notification parsed\n");
     return true;
@@ -499,10 +499,10 @@ static bool _IOT_Parse_A2DP_Event() {
   return false;
 }
 
-static bool _IOT_Parse_ABS_VOL() {
+static bool _BT_Parse_ABS_VOL() {
   uint8_t link_id;
   uint8_t volume;
-  if (sscanf(_parse_buffer, IOT_NOTIF_ABS_VOL, &link_id, &volume) < 2) {
+  if (sscanf(_parse_buffer, BT_NOTIF_ABS_VOL, &link_id, &volume) < 2) {
     return false;
   }
   //TODO: process data
@@ -510,25 +510,25 @@ static bool _IOT_Parse_ABS_VOL() {
   return true;
 }
 
-static bool _IOT_Parse_AVRCP_Command() {
+static bool _BT_Parse_AVRCP_Command() {
   uint8_t link_id;
-  if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_BACKWARD, &link_id) == 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_BACKWARD, &link_id) == 1) {
     //TODO: process command
     DEBUG_PRINTF("AVRCP_BACKWARD notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_FORWARD, &link_id) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_FORWARD, &link_id) == 1) {
     //TODO: process command
     DEBUG_PRINTF("AVRCP_FORWARD notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_PAUSE, &link_id) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PAUSE, &link_id) == 1) {
     //TODO: process command
     DEBUG_PRINTF("AVRCP_PAUSE notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_PLAY, &link_id) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PLAY, &link_id) == 1) {
     //TODO: process command
     DEBUG_PRINTF("AVRCP_PLAY notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_STOP, &link_id) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_STOP, &link_id) == 1) {
     //TODO: process command
     DEBUG_PRINTF("AVRCP_STOP notification parsed\n");
     return true;
@@ -536,17 +536,17 @@ static bool _IOT_Parse_AVRCP_Command() {
   return false;
 }
 
-static bool _IOT_Parse_AVRCP_MediaInfo() {
+static bool _BT_Parse_AVRCP_MediaInfo() {
   //uint8_t link_id;
-  if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_MEDIA_TITLE, _parse_str_0) == 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_TITLE, _parse_str_0) == 1) {
     //TODO: process data
     DEBUG_PRINTF("AVRCP_MEDIA title notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_MEDIA_ARTIST, _parse_str_0) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_ARTIST, _parse_str_0) == 1) {
     //TODO: process data
     DEBUG_PRINTF("AVRCP_MEDIA artist notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_AVRCP_MEDIA_ALBUM, _parse_str_0) == 1) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_ALBUM, _parse_str_0) == 1) {
     //TODO: process data
     DEBUG_PRINTF("AVRCP_MEDIA album notification parsed\n");
     return true;
@@ -554,13 +554,13 @@ static bool _IOT_Parse_AVRCP_MediaInfo() {
   return false;
 }
 
-static bool _IOT_Parse_CLOSE_LOSS() {
+static bool _BT_Parse_CLOSE_LOSS() {
   uint8_t link_id;
-  if (sscanf(_parse_buffer, IOT_NOTIF_CLOSE_OK, &link_id, _parse_str_0) == 2) {
+  if (sscanf(_parse_buffer, BT_NOTIF_CLOSE_OK, &link_id, _parse_str_0) == 2) {
     //TODO: process close
     DEBUG_PRINTF("CLOSE_OK notification parsed\n");
     return true;
-  } else if (sscanf(_parse_buffer, IOT_NOTIF_LINK_LOSS, &link_id, _parse_str_0) == 2) {
+  } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_LOSS, &link_id, _parse_str_0) == 2) {
     //TODO: process loss
     DEBUG_PRINTF("LINK_LOSS notification parsed\n");
     return true;
@@ -568,35 +568,35 @@ static bool _IOT_Parse_CLOSE_LOSS() {
   return false;
 }
 
-static bool _IOT_Parse_OPEN_OK() {
+static bool _BT_Parse_OPEN_OK() {
   uint8_t link_id;
   uint64_t bt_addr;
-  if (sscanf(_parse_buffer, IOT_NOTIF_OPEN_OK, &link_id, _parse_str_0, &bt_addr) < 3) {
+  if (sscanf(_parse_buffer, BT_NOTIF_OPEN_OK, &link_id, _parse_str_0, &bt_addr) < 3) {
     return false;
   }
   //TODO: process open
   if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
-    _IOT_Command_Finish(IOTERR_NONE);
+    _BT_Command_Finish(BTERR_NONE);
   }
   DEBUG_PRINTF("OPEN_OK notification parsed\n");
   return true;
 }
 
-static bool _IOT_Parse_OPEN_ERROR() {
+static bool _BT_Parse_OPEN_ERROR() {
   uint64_t bt_addr;
   uint8_t reason;
-  int scan_res = sscanf(_parse_buffer, IOT_NOTIF_OPEN_ERROR, &bt_addr, _parse_str_0, &reason);
+  int scan_res = sscanf(_parse_buffer, BT_NOTIF_OPEN_ERROR, &bt_addr, _parse_str_0, &reason);
   if (scan_res == 3) {
     //TODO: process error with reason
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
-      _IOT_Command_Finish((IOT_Error)(0xFFF0U | reason));
+      _BT_Command_Finish((BT_Error)(0xFFF0U | reason));
     }
     DEBUG_PRINTF("OPEN_ERROR with reason notification parsed\n");
     return true;
   } else if (scan_res == 2) {
     //TODO: process error without reason
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
-      _IOT_Command_Finish(IOTERR_UNKNOWN);
+      _BT_Command_Finish(BTERR_UNKNOWN);
     }
     DEBUG_PRINTF("OPEN_ERROR without reason notification parsed\n");
     return true;
@@ -604,9 +604,9 @@ static bool _IOT_Parse_OPEN_ERROR() {
   return false;
 }
 
-static bool _IOT_Parse_PAIR_ERROR() {
+static bool _BT_Parse_PAIR_ERROR() {
   uint64_t bt_addr;
-  if (sscanf(_parse_buffer, IOT_NOTIF_PAIR_ERROR, &bt_addr) < 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_ERROR, &bt_addr) < 1) {
     return false;
   }
   //TODO: process error
@@ -614,9 +614,9 @@ static bool _IOT_Parse_PAIR_ERROR() {
   return true;
 }
 
-static bool _IOT_Parse_PAIR_OK() {
+static bool _BT_Parse_PAIR_OK() {
   uint64_t bt_addr;
-  if (sscanf(_parse_buffer, IOT_NOTIF_PAIR_OK, &bt_addr) < 1) {
+  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_OK, &bt_addr) < 1) {
     return false;
   }
   //TODO: process pair
@@ -624,8 +624,8 @@ static bool _IOT_Parse_PAIR_OK() {
   return true;
 }
 
-static bool _IOT_Parse_PAIR_PENDING() {
-  if (strcmp(_parse_buffer, IOT_NOTIF_PAIR_PENDING) != 0) {
+static bool _BT_Parse_PAIR_PENDING() {
+  if (strcmp(_parse_buffer, BT_NOTIF_PAIR_PENDING) != 0) {
     return false;
   }
   //TODO: process pending pair
@@ -633,10 +633,10 @@ static bool _IOT_Parse_PAIR_PENDING() {
   return true;
 }
 
-static bool _IOT_Parse_RECV() {
+static bool _BT_Parse_RECV() {
   uint8_t link_id;
   uint16_t size;
-  if (sscanf(_parse_buffer, IOT_NOTIF_RECV, &link_id, &size, _parse_str_0) < 3) {
+  if (sscanf(_parse_buffer, BT_NOTIF_RECV, &link_id, &size, _parse_str_0) < 3) {
     return false;
   }
   //TODO: process received data
@@ -645,45 +645,45 @@ static bool _IOT_Parse_RECV() {
 }
 
 static const bool (*_unprompted_parsers[])() = {
-  &_IOT_Parse_Ready,
-  &_IOT_Parse_ERROR,
-  &_IOT_Parse_A2DP_Event,
-  &_IOT_Parse_ABS_VOL,
-  &_IOT_Parse_AVRCP_Command,
-  &_IOT_Parse_AVRCP_MediaInfo,
-  &_IOT_Parse_CLOSE_LOSS,
-  &_IOT_Parse_OPEN_OK,
-  &_IOT_Parse_OPEN_ERROR,
-  &_IOT_Parse_PAIR_ERROR,
-  &_IOT_Parse_PAIR_OK,
-  &_IOT_Parse_PAIR_PENDING,
-  &_IOT_Parse_RECV
+  &_BT_Parse_Ready,
+  &_BT_Parse_ERROR,
+  &_BT_Parse_A2DP_Event,
+  &_BT_Parse_ABS_VOL,
+  &_BT_Parse_AVRCP_Command,
+  &_BT_Parse_AVRCP_MediaInfo,
+  &_BT_Parse_CLOSE_LOSS,
+  &_BT_Parse_OPEN_OK,
+  &_BT_Parse_OPEN_ERROR,
+  &_BT_Parse_PAIR_ERROR,
+  &_BT_Parse_PAIR_OK,
+  &_BT_Parse_PAIR_PENDING,
+  &_BT_Parse_RECV
 };
 
 static const int _unprompted_parser_count = 13;
 
 //parse the notification in the parse buffer (must be completely received at this point)
-static void _IOT_ParseNotification() {
+static void _BT_ParseNotification() {
   //try to parse command responses if there's a corresponding active command
   if (_current_command != CMD_NONE) {
-    if (_IOT_Parse_OK()) return;
+    if (_BT_Parse_OK()) return;
   }
 
   if (_current_command == CMD_CONFIG) {
-    if (_IOT_Parse_CONFIG_Item()) return;
+    if (_BT_Parse_CONFIG_Item()) return;
   } else if (_current_command == CMD_NAME) {
-    if (_IOT_Parse_NAME()) return;
+    if (_BT_Parse_NAME()) return;
   } else if (_current_command == CMD_RSSI) {
-    if (_IOT_Parse_RSSI()) return;
+    if (_BT_Parse_RSSI()) return;
   } else if (_current_command == CMD_QUALITY) {
-    if (_IOT_Parse_QUALITY()) return;
+    if (_BT_Parse_QUALITY()) return;
   } else if (_current_command == CMD_SCAN_BCAST) {
-    if (_IOT_Parse_SCAN()) return;
+    if (_BT_Parse_SCAN()) return;
   } else if (_current_command == CMD_STATUS) {
-    if (_IOT_Parse_STATE()) return;
-    if (_IOT_Parse_LINK()) return;
+    if (_BT_Parse_STATE()) return;
+    if (_BT_Parse_LINK()) return;
   } else if (_current_command == CMD_VOLUME_GET) {
-    if (_IOT_Parse_VOLUME_READ()) return;
+    if (_BT_Parse_VOLUME_READ()) return;
   }
 
   //try to parse notifications that may come up unprompted
@@ -701,22 +701,22 @@ static void _IOT_ParseNotification() {
  * INTERRUPT CALLBACKS
  ******************************************************************************************/
 
-void IOT_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
+void BT_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   //calculate next call's write offset in circular buffer
   _rx_buffer_write_offset += (uint32_t)Size;
-  if (_rx_buffer_write_offset >= IOT_RXBUF_SIZE) {
+  if (_rx_buffer_write_offset >= BT_RXBUF_SIZE) {
     _rx_buffer_write_offset = 0;
   }
 
   //start next reception immediately to avoid receiver overrun (data loss)
   //single transaction limited to remaining buffer space before wrap-around, because the HAL function has no "circular buffer" concept
-  if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, IOT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
+  if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, BT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
     DEBUG_PRINTF("*** NOTIFICATION RECEIVE ERROR\n");
     //TODO: handle error!! probably just a full reset?
   }
 }
 
-void IOT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+void BT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   DEBUG_PRINTF("[CMD] %s\n", _cmd_tx_buffer);
 }
 
@@ -725,7 +725,7 @@ void IOT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
  * MAIN DRIVER FUNCTIONS
  ******************************************************************************************/
 
-HAL_StatusTypeDef IOT_Init() {
+HAL_StatusTypeDef BT_Init() {
   bool factory_reset = false; //TODO: determine based on multiple consecutive resets or something?
   HAL_StatusTypeDef res = HAL_OK;
 
@@ -735,7 +735,7 @@ HAL_StatusTypeDef IOT_Init() {
   HAL_UART_Abort(&huart6);
 
   //reset all driver state
-  iot_driver_init_complete = false;
+  bt_driver_init_complete = false;
 
   _rx_buffer_write_offset = 0;
   _rx_buffer_read_offset = 0;
@@ -745,23 +745,23 @@ HAL_StatusTypeDef IOT_Init() {
   _cmd_timeout_tick = HAL_MAX_DELAY;
   _init_config_changed = false;
 
-  _IOT_ClearCommandQueue();
+  _BT_ClearCommandQueue();
 
   //take module out of reset after a small delay, or long delay for factory reset
   HAL_Delay(factory_reset ? 1800 : 1);
   //start reception of notifications
-  if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, IOT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
+  if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, BT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
     res = HAL_ERROR;
   }
   HAL_GPIO_WritePin(BT_RST_N_GPIO_Port, BT_RST_N_Pin, GPIO_PIN_SET);
 
   //schedule init timeout
-  _cmd_timeout_tick = HAL_GetTick() + IOT_CMD_TIMEOUT;
+  _cmd_timeout_tick = HAL_GetTick() + BT_CMD_TIMEOUT;
 
   return res;
 }
 
-void IOT_Update() {
+void BT_Update() {
   uint32_t tick = HAL_GetTick();
 
   //handle received data
@@ -770,7 +770,7 @@ void IOT_Update() {
     char rx_char = _rx_text[_rx_buffer_read_offset++];
     _parse_buffer[_parse_buffer_write_offset++] = rx_char;
     //handle circular receive buffer
-    if (_rx_buffer_read_offset >= IOT_RXBUF_SIZE) {
+    if (_rx_buffer_read_offset >= BT_RXBUF_SIZE) {
       _rx_buffer_read_offset = 0;
     }
 
@@ -781,8 +781,8 @@ void IOT_Update() {
 
       DEBUG_PRINTF("[NOTIF] %s\n", _parse_buffer);
 
-      _IOT_ParseNotification();
-    } else if (_parse_buffer_write_offset >= IOT_PARSEBUF_SIZE - 1) {
+      _BT_ParseNotification();
+    } else if (_parse_buffer_write_offset >= BT_PARSEBUF_SIZE - 1) {
       //parse buffer overflow: reset parse buffer
       DEBUG_PRINTF("*** ERROR: Notification parse buffer overflow\n");
       _parse_buffer_write_offset = 0;
@@ -791,20 +791,20 @@ void IOT_Update() {
 
   //check for command timeout
   if (_current_command != CMD_NONE && (int32_t)(tick - _cmd_timeout_tick) >= 0) {
-    _IOT_Command_Timeout();
+    _BT_Command_Timeout();
   }
 
   //send next command if it's time for that
   if (_current_command == CMD_NONE && (int32_t)(tick - _next_cmd_tick) >= 0) {
     //conditions for next command are met: dequeue command, if there is one
-    IOT_CommandQueueItem* item = _IOT_DequeueCommand();
+    BT_CommandQueueItem* item = _BT_DequeueCommand();
     if (item == NULL) {
       //no command queued: update next command tick (to avoid eventual underflows), try again next time
       _next_cmd_tick = tick;
     } else {
       //command queued: sanity-check length first
       uint32_t length = item->cmd_length;
-      if (length < IOT_CMDBUF_SIZE) {
+      if (length < BT_CMDBUF_SIZE) {
         //length okay: proceed, extract queue item values
         _current_command = item->command;
         memcpy(_cmd_tx_buffer, item->cmd_text, length);
@@ -814,12 +814,12 @@ void IOT_Update() {
         if (HAL_UART_Transmit_IT(&huart6, (uint8_t*)_cmd_tx_buffer, length) == HAL_OK) {
           //send success: free queue item memory, schedule timeout
           free(item);
-          _cmd_timeout_tick = tick + IOT_CMD_TIMEOUT;
+          _cmd_timeout_tick = tick + BT_CMD_TIMEOUT;
         } else {
           //error: reset to no command, update next command tick, requeue item to try again next time
           _current_command = CMD_NONE;
           _next_cmd_tick = tick;
-          _IOT_RequeueCommand(item);
+          _BT_RequeueCommand(item);
           DEBUG_PRINTF("*** Command transmit error on command %s\n", _cmd_tx_buffer);
         }
       }

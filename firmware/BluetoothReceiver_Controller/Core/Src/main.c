@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
-#include "iot_driver.h"
+#include "bt_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,7 +87,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
 #else
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   if (huart == &huart6) {
-    IOT_UARTEx_RxEventCallback(huart, Size);
+    BT_UARTEx_RxEventCallback(huart, Size);
   }
 }
 #endif
@@ -96,7 +96,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   if (huart == &huart2) {
     Retarget_UART_TxCpltCallback(huart);
   } else if (huart == &huart6) {
-    IOT_UART_TxCpltCallback(huart);
+    BT_UART_TxCpltCallback(huart);
   }
 }
 
@@ -145,13 +145,10 @@ int main(void)
 
   DEBUG_PRINTF("### MCU RESET ###\n");
 
-  //HAL_Delay(1000);
-
-  //DEBUG_PRINTF("Initialising IOT driver...\n");
-  if (IOT_Init() == HAL_OK) {
-    DEBUG_PRINTF("IOT driver init started\n");
+  if (BT_Init() == HAL_OK) {
+    DEBUG_PRINTF("BT driver init started\n");
   } else {
-    DEBUG_PRINTF("*** IOT driver init failed!\n");
+    DEBUG_PRINTF("*** BT driver init failed!\n");
   }
 
   /* USER CODE END 2 */
@@ -165,7 +162,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
     uint32_t iteration_start_tick = HAL_GetTick();
 
-    IOT_Update();
+    BT_Update();
 
     while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }

@@ -1,16 +1,16 @@
 /*
- * iot_config.h
+ * bt_config.h
  *
  *  Created on: Mar 2, 2025
  *      Author: Alex
  */
 
-#ifndef INC_IOT_CONFIG_H_
-#define INC_IOT_CONFIG_H_
+#ifndef INC_BT_CONFIG_H_
+#define INC_BT_CONFIG_H_
 
 
 //array of required config key-value pairs that we care about - always come in pairs, even indices are keys, odd indices are values
-#define IOT_CONFIG_ARRAY {\
+#define BT_CONFIG_ARRAY {\
   "AUDIO", "1 1",\
   "AUDIO_DIGITAL", "0 48000 64 01180101 00000000",\
   "AUTOCONN", "0 3",\
@@ -35,7 +35,7 @@
   "VOLUME_CONTROL", "ON 127 ON"\
 }
 
-#define IOT_CONFIG_ARRAY_ENTRIES 22
+#define BT_CONFIG_ARRAY_ENTRIES 22
 
 
-#endif /* INC_IOT_CONFIG_H_ */
+#endif /* INC_BT_CONFIG_H_ */
