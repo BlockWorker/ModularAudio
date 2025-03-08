@@ -42,6 +42,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+IWDG_HandleTypeDef hiwdg;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
@@ -56,6 +58,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_IWDG_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -100,6 +103,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   }
 }
 
+static __always_inline void _RefreshWatchdogs() {
+  //HAL_WWDG_Refresh(&hwwdg);
+  HAL_IWDG_Refresh(&hiwdg);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -133,28 +141,36 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 
-  RetargetInit(&huart2);
+  _RefreshWatchdogs();
 
 #ifdef UART_DIRECT_FORWARD
   HAL_UARTEx_ReceiveToIdle_IT(&huart6, module_to_debug, 2048);
   HAL_UARTEx_ReceiveToIdle_IT(&huart2, debug_to_module, 2048);
-  while (1);
+  while (1) _RefreshWatchdogs();
 #endif
+
+  RetargetInit(&huart2);
 
   DEBUG_PRINTF("### MCU RESET ###\n");
 
+  bt_driver_ota_upgrade_enabled = false; //start with no upgrade capability
   if (BT_Init() == HAL_OK) {
     DEBUG_PRINTF("BT driver init started\n");
   } else {
     DEBUG_PRINTF("*** BT driver init failed!\n");
   }
 
+  _RefreshWatchdogs();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  //iteration counter - may eventually overflow, but should be fine if it happens
+  uint32_t loop_counter = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -162,8 +178,11 @@ int main(void)
     /* USER CODE BEGIN 3 */
     uint32_t iteration_start_tick = HAL_GetTick();
 
-    BT_Update();
+    BT_Update(loop_counter);
 
+    loop_counter++;
+
+    _RefreshWatchdogs();
     while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
   /* USER CODE END 3 */
@@ -186,9 +205,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 16;
@@ -214,6 +234,34 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
+
 }
 
 /**

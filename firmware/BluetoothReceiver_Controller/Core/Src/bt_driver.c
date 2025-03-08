@@ -58,10 +58,26 @@ static uint32_t _next_cmd_tick = 0;
 static uint32_t _cmd_timeout_tick = HAL_MAX_DELAY;
 
 //whether any config changes had to be made during init, requiring a write and reset
-bool _init_config_changed = false;
+static bool _init_config_changed = false;
+//whether a factory reset should be forced on next init
+static bool _init_force_factory_reset = false;
+
+//link parameters seen in status update
+static uint8_t _status_a2dp_link_id = 0;
+static uint64_t _status_a2dp_bt_addr = 0;
+static bool _status_a2dp_stream_active = false;
+static char _status_a2dp_codec[BT_STATE_STR_LENGTH] = { 0 };
+static uint8_t _status_avrcp_link_id = 0;
+static uint64_t _status_avrcp_bt_addr = 0;
+static bool _status_avrcp_playing = false;
+
 
 //whether the driver has been initialised successfully
 bool bt_driver_init_complete = false;
+//whether OTA firmware updates are enabled
+bool bt_driver_ota_upgrade_enabled = false;
+
+BT_DriverState bt_driver_state;
 
 
 /******************************************************************************************
@@ -239,6 +255,13 @@ static HAL_StatusTypeDef BT_Command_SET(const char* key, const char* value) {
 
 HAL_StatusTypeDef BT_Command_STATUS() {
   int32_t res = snprintf(_cmd_prep_buffer, BT_CMDBUF_SIZE, BT_CMD_STATUS);
+  _status_a2dp_link_id = 0;
+  _status_a2dp_bt_addr = 0;
+  _status_a2dp_stream_active = false;
+  _status_a2dp_codec[0] = '\0';
+  _status_avrcp_link_id = 0;
+  _status_avrcp_bt_addr = 0;
+  _status_avrcp_playing = false;
   return _BT_QueueCommand(CMD_STATUS, res);
 }
 
@@ -268,15 +291,26 @@ static void _BT_Command_Finish(BT_Error error) {
   _next_cmd_tick = HAL_GetTick() + BT_CMD_DELAY;
 
   if (error == BTERR_NONE) {
-    DEBUG_PRINTF("Command finished successfully\n");
+    //DEBUG_PRINTF("Command finished successfully\n");
     return;
   }
 
   DEBUG_PRINTF("* BT reported error 0x%04X\n", (uint16_t)error);
 
+  if (((uint16_t)error & 0xFFF0U) == 0xF000U) {
+    //"critical error", reset
+    if (error == BTERR_WRONG_CONFIG) {
+      //wrong config: force factory reset
+      _init_force_factory_reset = true;
+    }
+    BT_Init();
+    return;
+  }
+
   if (_current_command == CMD_INIT || _current_command == CMD_CONFIG || _current_command == CMD_SET || _current_command == CMD_WRITE) {
     //error in init procedure: reset
     BT_Init(); //TODO: consider full MCU reset?
+    return;
   }
 
   //TODO: handle other error cases
@@ -303,10 +337,20 @@ static void _BT_CheckConfigItem(const char* key, const char* value) {
   int i;
   for (i = 0; i < BT_CONFIG_ARRAY_ENTRIES; i++) {
     const char* arr_key = _config_array[2 * i];
-    const char* arr_value = _config_array[2 * i + 1];
+    char arr_value[128] = { 0 };
+
     //check given key against config entry key
     if (strcmp(key, arr_key) == 0) {
       //key matches config entry key: check value
+
+      //populate value - for UI_CONFIG, insert firmware update setting; for all others, just copy
+      if (strcmp(arr_key, "UI_CONFIG") == 0) {
+        const char* enable_ota = bt_driver_ota_upgrade_enabled ? "ON" : "OFF";
+        snprintf(arr_value, 128, _config_array[2 * i + 1], enable_ota, enable_ota);
+      } else {
+        strncpy(arr_value, _config_array[2 * i + 1], 127);
+      }
+
       if (strcmp(value, arr_value) != 0) {
         //value doesn't match: queue command to correct it and mark the config as changed
         _init_config_changed = true;
@@ -318,6 +362,86 @@ static void _BT_CheckConfigItem(const char* key, const char* value) {
       return;
     }
   }
+}
+
+static bool _BT_ProcessStatusUpdate() {
+  if (_status_a2dp_link_id == 0) {
+    //no A2DP link
+    bt_driver_state.a2dp_link_id = 0;
+    bt_driver_state.a2dp_stream_active = false;
+    bt_driver_state.a2dp_codec[0] = '\0';
+  } else {
+    if (bt_driver_state.a2dp_link_id != _status_a2dp_link_id) {
+      //different link ID
+      if (bt_driver_state.a2dp_link_id == 0) {
+        //no link saved: save found link
+        bt_driver_state.a2dp_link_id = _status_a2dp_link_id;
+      } else {
+        //different link saved: error
+        DEBUG_PRINTF("* Status update encountered wrong A2DP link ID %02X instead of %02X\n", _status_a2dp_link_id, bt_driver_state.a2dp_link_id);
+        return false;
+      }
+    }
+    if (bt_driver_state.connected_device_addr != _status_a2dp_bt_addr) {
+      //different device address
+      if (bt_driver_state.connected_device_addr == 0) {
+        //no device address saved: save found address
+        bt_driver_state.connected_device_addr = _status_a2dp_bt_addr;
+        bt_driver_state.connected_device_name[0] = '\0';
+      } else {
+        //different device address saved: error
+        DEBUG_PRINTF("* Status update encountered wrong A2DP link address %012llX instead of %012llX\n", _status_a2dp_bt_addr, bt_driver_state.connected_device_addr);
+        return false;
+      }
+    }
+    bt_driver_state.a2dp_stream_active = _status_a2dp_stream_active;
+    strncpy(bt_driver_state.a2dp_codec, _status_a2dp_codec, BT_STATE_STR_LENGTH - 1);
+    bt_driver_state.a2dp_codec[BT_STATE_STR_LENGTH - 1] = '\0';
+  }
+
+  if (_status_avrcp_link_id == 0) {
+    //no AVRCP link
+    bt_driver_state.avrcp_link_id = 0;
+    bt_driver_state.avrcp_playing = false;
+    bt_driver_state.avrcp_title[0] = '\0';
+    bt_driver_state.avrcp_artist[0] = '\0';
+    bt_driver_state.avrcp_album[0] = '\0';
+  } else {
+    if (bt_driver_state.avrcp_link_id != _status_avrcp_link_id) {
+      //different link ID
+      if (bt_driver_state.avrcp_link_id == 0) {
+        //no link saved: save found link
+        bt_driver_state.avrcp_link_id = _status_avrcp_link_id;
+      } else {
+        //different link saved: error
+        DEBUG_PRINTF("* Status update encountered wrong AVRCP link ID %02X instead of %02X\n", _status_avrcp_link_id, bt_driver_state.avrcp_link_id);
+        return false;
+      }
+    }
+    if (bt_driver_state.connected_device_addr != _status_avrcp_bt_addr) {
+      //different device address
+      if (bt_driver_state.connected_device_addr == 0) {
+        //no device address saved: save found address
+        bt_driver_state.connected_device_addr = _status_avrcp_bt_addr;
+        bt_driver_state.connected_device_name[0] = '\0';
+      } else {
+        //different device address saved: error
+        DEBUG_PRINTF("* Status update encountered wrong AVRCP link address %012llX instead of %012llX\n", _status_avrcp_bt_addr, bt_driver_state.connected_device_addr);
+        return false;
+      }
+    }
+    bt_driver_state.avrcp_playing = _status_avrcp_playing;
+  }
+
+  if (bt_driver_state.a2dp_link_id == 0 && bt_driver_state.avrcp_link_id == 0) {
+    //both links disconnected: device disconnected
+    bt_driver_state.connected_device_addr = 0;
+    bt_driver_state.connected_device_name[0] = '\0';
+    bt_driver_state.connected_device_rssi = 0;
+    bt_driver_state.connected_device_link_quality = 0;
+  }
+
+  return true;
 }
 
 
@@ -343,6 +467,22 @@ static bool _BT_Parse_OK() {
     //config write succeeded, so reset to (hopefully) correct config
     BT_Init();
     return true;
+  } else if (_current_command == CMD_STATUS) {
+    //status update complete: process it
+    if (_BT_ProcessStatusUpdate()) {
+      //all good: queue additional reads if we're connected
+      if (bt_driver_state.connected_device_addr != 0) {
+        if (bt_driver_state.connected_device_name[0] == '\0') {
+          //request name if unknown
+          BT_Command_NAME(bt_driver_state.connected_device_addr);
+        }
+        BT_Command_RSSI(bt_driver_state.connected_device_addr);
+        BT_Command_QUALITY(bt_driver_state.connected_device_addr);
+      }
+    } else {
+      //invalid: queue close all
+      BT_Command_CLOSE_ALL();
+    }
   }
   _BT_Command_Finish(BTERR_NONE);
   //DEBUG_PRINTF("OK response parsed\n");
@@ -363,9 +503,14 @@ static bool _BT_Parse_NAME() {
   if (sscanf(_parse_buffer, BT_NOTIF_NAME, &bt_addr, _parse_str_0) < 2) {
     return false;
   }
-  //TODO: process data
+  if (bt_driver_state.connected_device_addr == bt_addr) {
+    strncpy(bt_driver_state.connected_device_name, _parse_str_0, BT_STATE_STR_LENGTH - 1);
+    bt_driver_state.connected_device_name[BT_STATE_STR_LENGTH - 1] = '\0';
+  } else {
+    DEBUG_PRINTF("* NAME response for different address (%012llX) than connected (%012llX)\n", bt_addr, bt_driver_state.connected_device_addr);
+  }
   _BT_Command_Finish(BTERR_NONE);
-  DEBUG_PRINTF("NAME response parsed\n");
+  //DEBUG_PRINTF("NAME response parsed\n");
   return true;
 }
 
@@ -374,8 +519,12 @@ static bool _BT_Parse_RSSI() {
   if (sscanf(_parse_buffer, BT_NOTIF_RSSI, &rssi) < 1) {
     return false;
   }
-  //TODO: process data
-  DEBUG_PRINTF("RSSI response parsed\n");
+  if (bt_driver_state.connected_device_addr != 0) {
+    bt_driver_state.connected_device_rssi = rssi;
+  } else {
+    DEBUG_PRINTF("* RSSI response outside of connected state\n");
+  }
+  //DEBUG_PRINTF("RSSI response parsed\n");
   return true;
 }
 
@@ -384,8 +533,12 @@ static bool _BT_Parse_QUALITY() {
   if (sscanf(_parse_buffer, BT_NOTIF_QUALITY, &quality) < 1) {
     return false;
   }
-  //TODO: process data
-  DEBUG_PRINTF("QUALITY response parsed\n");
+  if (bt_driver_state.connected_device_addr != 0) {
+    bt_driver_state.connected_device_link_quality = quality;
+  } else {
+    DEBUG_PRINTF("* QUALITY response outside of connected state\n");
+  }
+  //DEBUG_PRINTF("QUALITY response parsed\n");
   return true;
 }
 
@@ -410,8 +563,11 @@ static bool _BT_Parse_STATE() {
   if (sscanf(_parse_buffer, BT_NOTIF_STATE, _parse_str_0, _parse_str_1, _parse_str_2, _parse_str_3) < 4) {
     return false;
   }
-  //TODO: process data
-  DEBUG_PRINTF("STATE response parsed\n");
+
+  bt_driver_state.connectable = (strcmp(_parse_str_0, "ON") == 0);
+  bt_driver_state.discoverable = (strcmp(_parse_str_1, "ON") == 0);
+
+  //DEBUG_PRINTF("STATE response parsed\n");
   return true;
 }
 
@@ -426,12 +582,18 @@ static bool _BT_Parse_LINK() {
   uint8_t bcast_biss;
 
   if (sscanf(_parse_buffer, BT_NOTIF_LINK_A2DP, &link_id, &bt_addr, _parse_str_0, _parse_str_1, _parse_str_2, &sample_rate) == 6) {
-    //TODO: process data
-    DEBUG_PRINTF("LINK A2DP response parsed\n");
+    _status_a2dp_link_id = link_id;
+    _status_a2dp_bt_addr = bt_addr;
+    _status_a2dp_stream_active = (strcmp(_parse_str_0, "STREAMING") == 0);
+    strncpy(_status_a2dp_codec, _parse_str_1, BT_STATE_STR_LENGTH - 1);
+    _status_a2dp_codec[BT_STATE_STR_LENGTH - 1] = '\0';
+    //DEBUG_PRINTF("LINK A2DP response parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_AVRCP, &link_id, &bt_addr, _parse_str_0) == 3) {
-    //TODO: process data
-    DEBUG_PRINTF("LINK AVRCP response parsed\n");
+    _status_avrcp_link_id = link_id;
+    _status_avrcp_bt_addr = bt_addr;
+    _status_avrcp_playing = (strcmp(_parse_str_0, "PLAYING") == 0);
+    //DEBUG_PRINTF("LINK AVRCP response parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_BRX1, &link_id, &bt_addr, &bcast_code, _parse_str_0, _parse_str_1, &bcast_pdel, &sample_rate, &bcast_encr, &bcast_subgroup) == 9) {
     //TODO: process data
@@ -452,8 +614,15 @@ static bool _BT_Parse_VOLUME_READ() {
   if (sscanf(_parse_buffer, BT_NOTIF_VOLUME_READ, &link_id, _parse_str_0, &volume) < 3) {
     return false;
   }
-  //TODO: process volume readback
-  DEBUG_PRINTF("VOLUME readback response parsed\n");
+  //only care about A2DP volume
+  if (strcmp(_parse_str_0, "A2DP") == 0) {
+    if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
+      bt_driver_state.abs_volume = volume & 0x7F;
+    } else {
+      DEBUG_PRINTF("VOLUME A2DP readback reported unknown link %02X!\n", link_id);
+    }
+  }
+  //DEBUG_PRINTF("VOLUME readback response parsed\n");
   return true;
 }
 
@@ -488,12 +657,20 @@ static bool _BT_Parse_ERROR() {
 static bool _BT_Parse_A2DP_Event() {
   uint8_t link_id;
   if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_START, &link_id) == 1) {
-    //TODO: process event
-    DEBUG_PRINTF("A2DP_STREAM_START notification parsed\n");
+    if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
+      bt_driver_state.a2dp_stream_active = true;
+    } else {
+      DEBUG_PRINTF("A2DP_STREAM_START on unknown link %02X!\n", link_id);
+    }
+    //DEBUG_PRINTF("A2DP_STREAM_START notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_SUSPEND, &link_id) == 1) {
-    //TODO: process event
-    DEBUG_PRINTF("A2DP_STREAM_SUSPEND notification parsed\n");
+    if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
+      bt_driver_state.a2dp_stream_active = false;
+    } else {
+      DEBUG_PRINTF("A2DP_STREAM_SUSPEND on unknown link %02X!\n", link_id);
+    }
+    //DEBUG_PRINTF("A2DP_STREAM_SUSPEND notification parsed\n");
     return true;
   }
   return false;
@@ -505,8 +682,12 @@ static bool _BT_Parse_ABS_VOL() {
   if (sscanf(_parse_buffer, BT_NOTIF_ABS_VOL, &link_id, &volume) < 2) {
     return false;
   }
-  //TODO: process data
-  DEBUG_PRINTF("ABS_VOL notification parsed\n");
+  if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
+    bt_driver_state.abs_volume = volume & 0x7F;
+  } else {
+    DEBUG_PRINTF("ABS_VOL on unknown link %02X!\n", link_id);
+  }
+  //DEBUG_PRINTF("ABS_VOL notification parsed\n");
   return true;
 }
 
@@ -514,23 +695,35 @@ static bool _BT_Parse_AVRCP_Command() {
   uint8_t link_id;
   if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_BACKWARD, &link_id) == 1) {
     //TODO: process command
-    DEBUG_PRINTF("AVRCP_BACKWARD notification parsed\n");
+    //DEBUG_PRINTF("AVRCP_BACKWARD notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_FORWARD, &link_id) == 1) {
     //TODO: process command
-    DEBUG_PRINTF("AVRCP_FORWARD notification parsed\n");
+    //DEBUG_PRINTF("AVRCP_FORWARD notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PAUSE, &link_id) == 1) {
-    //TODO: process command
-    DEBUG_PRINTF("AVRCP_PAUSE notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
+      bt_driver_state.avrcp_playing = false;
+    } else {
+      DEBUG_PRINTF("AVRCP_PAUSE on unknown link %02X!\n", link_id);
+    }
+    //DEBUG_PRINTF("AVRCP_PAUSE notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PLAY, &link_id) == 1) {
-    //TODO: process command
-    DEBUG_PRINTF("AVRCP_PLAY notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
+      bt_driver_state.avrcp_playing = true;
+    } else {
+      DEBUG_PRINTF("AVRCP_PLAY on unknown link %02X!\n", link_id);
+    }
+    //DEBUG_PRINTF("AVRCP_PLAY notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_STOP, &link_id) == 1) {
-    //TODO: process command
-    DEBUG_PRINTF("AVRCP_STOP notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
+      bt_driver_state.avrcp_playing = false;
+    } else {
+      DEBUG_PRINTF("AVRCP_STOP on unknown link %02X!\n", link_id);
+    }
+    //DEBUG_PRINTF("AVRCP_STOP notification parsed\n");
     return true;
   }
   return false;
@@ -539,16 +732,25 @@ static bool _BT_Parse_AVRCP_Command() {
 static bool _BT_Parse_AVRCP_MediaInfo() {
   //uint8_t link_id;
   if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_TITLE, _parse_str_0) == 1) {
-    //TODO: process data
-    DEBUG_PRINTF("AVRCP_MEDIA title notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0) {
+      strncpy(bt_driver_state.avrcp_title, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
+      bt_driver_state.avrcp_title[BT_AVRCP_META_LENGTH - 1] = '\0';
+    }
+    //DEBUG_PRINTF("AVRCP_MEDIA title notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_ARTIST, _parse_str_0) == 1) {
-    //TODO: process data
-    DEBUG_PRINTF("AVRCP_MEDIA artist notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0) {
+      strncpy(bt_driver_state.avrcp_artist, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
+      bt_driver_state.avrcp_artist[BT_AVRCP_META_LENGTH - 1] = '\0';
+    }
+    //DEBUG_PRINTF("AVRCP_MEDIA artist notification parsed\n");
     return true;
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_MEDIA_ALBUM, _parse_str_0) == 1) {
-    //TODO: process data
-    DEBUG_PRINTF("AVRCP_MEDIA album notification parsed\n");
+    if (bt_driver_state.avrcp_link_id != 0) {
+      strncpy(bt_driver_state.avrcp_album, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
+      bt_driver_state.avrcp_album[BT_AVRCP_META_LENGTH - 1] = '\0';
+    }
+    //DEBUG_PRINTF("AVRCP_MEDIA album notification parsed\n");
     return true;
   }
   return false;
@@ -556,16 +758,41 @@ static bool _BT_Parse_AVRCP_MediaInfo() {
 
 static bool _BT_Parse_CLOSE_LOSS() {
   uint8_t link_id;
+  bool loss;
   if (sscanf(_parse_buffer, BT_NOTIF_CLOSE_OK, &link_id, _parse_str_0) == 2) {
-    //TODO: process close
-    DEBUG_PRINTF("CLOSE_OK notification parsed\n");
-    return true;
+    loss = false;
+    //DEBUG_PRINTF("CLOSE_OK notification parsed\n");
   } else if (sscanf(_parse_buffer, BT_NOTIF_LINK_LOSS, &link_id, _parse_str_0) == 2) {
-    //TODO: process loss
-    DEBUG_PRINTF("LINK_LOSS notification parsed\n");
-    return true;
+    loss = true;
+    //DEBUG_PRINTF("LINK_LOSS notification parsed\n");
+  } else {
+    return false;
   }
-  return false;
+  (void)loss; //unused right now
+
+  if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
+    bt_driver_state.a2dp_link_id = 0;
+    bt_driver_state.a2dp_stream_active = false;
+    bt_driver_state.a2dp_codec[0] = '\0';
+  } else if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
+    bt_driver_state.avrcp_link_id = 0;
+    bt_driver_state.avrcp_playing = false;
+    bt_driver_state.avrcp_title[0] = '\0';
+    bt_driver_state.avrcp_artist[0] = '\0';
+    bt_driver_state.avrcp_album[0] = '\0';
+  } else {
+    DEBUG_PRINTF("* Unknown link ID %02X closed (%s)!\n", link_id, _parse_str_0);
+  }
+
+  if (bt_driver_state.a2dp_link_id == 0 && bt_driver_state.avrcp_link_id == 0) {
+    //all links disconnected: connection closed
+    bt_driver_state.connected_device_addr = 0;
+    bt_driver_state.connected_device_name[0] = '\0';
+    bt_driver_state.connected_device_rssi = 0;
+    bt_driver_state.connected_device_link_quality = 0;
+  }
+
+  return true;
 }
 
 static bool _BT_Parse_OPEN_OK() {
@@ -574,11 +801,47 @@ static bool _BT_Parse_OPEN_OK() {
   if (sscanf(_parse_buffer, BT_NOTIF_OPEN_OK, &link_id, _parse_str_0, &bt_addr) < 3) {
     return false;
   }
-  //TODO: process open
-  if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
-    _BT_Command_Finish(BTERR_NONE);
+
+  BT_Error err = BTERR_NONE;
+
+  if (bt_addr != bt_driver_state.connected_device_addr) {
+    if (bt_driver_state.connected_device_addr == 0) {
+      //new connection
+      bt_driver_state.connected_device_addr = bt_addr;
+      BT_Command_NAME(bt_addr);
+      BT_Command_RSSI(bt_addr);
+      BT_Command_QUALITY(bt_addr);
+    } else {
+      //already connected to other Bluetooth address: error, close all connections
+      DEBUG_PRINTF("* Opened connection (%02X %s) with address %012llX, while already connected to %012llX!\n", link_id, _parse_str_0, bt_addr, bt_driver_state.connected_device_addr);
+      BT_Command_CLOSE_ALL();
+      if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
+        _BT_Command_Finish(BTERR_UNKNOWN);
+      }
+      return true;
+    }
   }
-  DEBUG_PRINTF("OPEN_OK notification parsed\n");
+
+  if (strcmp(_parse_str_0, "A2DP") == 0) {
+    bt_driver_state.a2dp_link_id = link_id;
+    bt_driver_state.a2dp_stream_active = false;
+    bt_driver_state.a2dp_codec[0] = '\0';
+    //query volume upon connecting
+    BT_Command_VOLUME_GET();
+  } else if (strcmp(_parse_str_0, "AVRCP") == 0) {
+    bt_driver_state.avrcp_link_id = link_id;
+    bt_driver_state.avrcp_playing = false;
+    bt_driver_state.avrcp_title[0] = '\0';
+    bt_driver_state.avrcp_artist[0] = '\0';
+    bt_driver_state.avrcp_album[0] = '\0';
+    //query volume upon connecting
+    BT_Command_VOLUME_GET();
+  }
+
+  if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
+    _BT_Command_Finish(err);
+  }
+  //DEBUG_PRINTF("OPEN_OK notification parsed\n");
   return true;
 }
 
@@ -591,47 +854,47 @@ static bool _BT_Parse_OPEN_ERROR() {
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
       _BT_Command_Finish((BT_Error)(0xFFF0U | reason));
     }
-    DEBUG_PRINTF("OPEN_ERROR with reason notification parsed\n");
+    //DEBUG_PRINTF("OPEN_ERROR with reason notification parsed\n");
     return true;
   } else if (scan_res == 2) {
     //TODO: process error without reason
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
       _BT_Command_Finish(BTERR_UNKNOWN);
     }
-    DEBUG_PRINTF("OPEN_ERROR without reason notification parsed\n");
+    //DEBUG_PRINTF("OPEN_ERROR without reason notification parsed\n");
     return true;
   }
   return false;
 }
 
-static bool _BT_Parse_PAIR_ERROR() {
-  uint64_t bt_addr;
-  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_ERROR, &bt_addr) < 1) {
-    return false;
-  }
-  //TODO: process error
-  DEBUG_PRINTF("PAIR_ERROR notification parsed\n");
-  return true;
-}
-
-static bool _BT_Parse_PAIR_OK() {
-  uint64_t bt_addr;
-  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_OK, &bt_addr) < 1) {
-    return false;
-  }
-  //TODO: process pair
-  DEBUG_PRINTF("PAIR_OK notification parsed\n");
-  return true;
-}
-
-static bool _BT_Parse_PAIR_PENDING() {
-  if (strcmp(_parse_buffer, BT_NOTIF_PAIR_PENDING) != 0) {
-    return false;
-  }
-  //TODO: process pending pair
-  //DEBUG_PRINTF("PAIR_PENDING notification parsed\n");
-  return true;
-}
+//static bool _BT_Parse_PAIR_ERROR() {
+//  uint64_t bt_addr;
+//  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_ERROR, &bt_addr) < 1) {
+//    return false;
+//  }
+//  //TODO: process error
+//  //DEBUG_PRINTF("PAIR_ERROR notification parsed\n");
+//  return true;
+//}
+//
+//static bool _BT_Parse_PAIR_OK() {
+//  uint64_t bt_addr;
+//  if (sscanf(_parse_buffer, BT_NOTIF_PAIR_OK, &bt_addr) < 1) {
+//    return false;
+//  }
+//  //TODO: process pair
+//  //DEBUG_PRINTF("PAIR_OK notification parsed\n");
+//  return true;
+//}
+//
+//static bool _BT_Parse_PAIR_PENDING() {
+//  if (strcmp(_parse_buffer, BT_NOTIF_PAIR_PENDING) != 0) {
+//    return false;
+//  }
+//  //TODO: process pending pair
+//  //DEBUG_PRINTF("PAIR_PENDING notification parsed\n");
+//  return true;
+//}
 
 static bool _BT_Parse_RECV() {
   uint8_t link_id;
@@ -654,13 +917,13 @@ static const bool (*_unprompted_parsers[])() = {
   &_BT_Parse_CLOSE_LOSS,
   &_BT_Parse_OPEN_OK,
   &_BT_Parse_OPEN_ERROR,
-  &_BT_Parse_PAIR_ERROR,
-  &_BT_Parse_PAIR_OK,
-  &_BT_Parse_PAIR_PENDING,
+//  &_BT_Parse_PAIR_ERROR,
+//  &_BT_Parse_PAIR_OK,
+//  &_BT_Parse_PAIR_PENDING,
   &_BT_Parse_RECV
 };
 
-static const int _unprompted_parser_count = 13;
+static const int _unprompted_parser_count = 10;
 
 //parse the notification in the parse buffer (must be completely received at this point)
 static void _BT_ParseNotification() {
@@ -692,7 +955,7 @@ static void _BT_ParseNotification() {
     if (_unprompted_parsers[i]()) return;
   }
 
-  DEBUG_PRINTF("Notification parse failed\n");
+  //DEBUG_PRINTF("Notification parse failed\n");
   //DEBUG_PRINTF("Notification parse failed: %s\n", _parse_buffer);
 }
 
@@ -712,7 +975,7 @@ void BT_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   //single transaction limited to remaining buffer space before wrap-around, because the HAL function has no "circular buffer" concept
   if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, BT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
     DEBUG_PRINTF("*** NOTIFICATION RECEIVE ERROR\n");
-    //TODO: handle error!! probably just a full reset?
+    BT_Init();
   }
 }
 
@@ -725,8 +988,14 @@ void BT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
  * MAIN DRIVER FUNCTIONS
  ******************************************************************************************/
 
+//enables the OTA firmware upgrade functionality, until the next MCU reset
+HAL_StatusTypeDef BT_EnableOTAUpgrade() {
+  bt_driver_ota_upgrade_enabled = true;
+  return BT_Init();
+}
+
 HAL_StatusTypeDef BT_Init() {
-  bool factory_reset = false; //TODO: determine based on multiple consecutive resets or something?
+  bool factory_reset = _init_force_factory_reset;
   HAL_StatusTypeDef res = HAL_OK;
 
   //reset module physically
@@ -744,11 +1013,28 @@ HAL_StatusTypeDef BT_Init() {
   _next_cmd_tick = 0;
   _cmd_timeout_tick = HAL_MAX_DELAY;
   _init_config_changed = false;
+  _init_force_factory_reset = false;
 
   _BT_ClearCommandQueue();
 
+  bt_driver_state.connectable = true;
+  bt_driver_state.discoverable = true; //TODO: change to false, once configured to not be discoverable at boot
+  bt_driver_state.connected_device_addr = 0;
+  bt_driver_state.connected_device_name[0] = '\0';
+  bt_driver_state.connected_device_rssi = 0;
+  bt_driver_state.connected_device_link_quality = 0;
+  bt_driver_state.a2dp_link_id = 0;
+  bt_driver_state.a2dp_stream_active = false;
+  bt_driver_state.a2dp_codec[0] = '\0';
+  bt_driver_state.avrcp_link_id = 0;
+  bt_driver_state.avrcp_playing = false;
+  bt_driver_state.avrcp_title[0] = '\0';
+  bt_driver_state.avrcp_artist[0] = '\0';
+  bt_driver_state.avrcp_album[0] = '\0';
+  bt_driver_state.abs_volume = 0;
+
   //take module out of reset after a small delay, or long delay for factory reset
-  HAL_Delay(factory_reset ? 1800 : 1);
+  HAL_Delay(factory_reset ? 1900 : 1);
   //start reception of notifications
   if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, BT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
     res = HAL_ERROR;
@@ -761,7 +1047,7 @@ HAL_StatusTypeDef BT_Init() {
   return res;
 }
 
-void BT_Update() {
+void BT_Update(uint32_t loop_counter) {
   uint32_t tick = HAL_GetTick();
 
   //handle received data
@@ -824,6 +1110,11 @@ void BT_Update() {
         }
       }
     }
+  }
+
+  //queue status read commands if it's time for that and driver is initialised
+  if (loop_counter % BT_STATUS_READ_PERIOD == 0 && bt_driver_init_complete) {
+    BT_Command_STATUS();
   }
 }
 
