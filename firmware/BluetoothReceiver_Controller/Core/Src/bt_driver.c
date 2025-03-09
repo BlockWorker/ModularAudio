@@ -6,6 +6,7 @@
  */
 
 #include "bt_driver.h"
+#include "uart_host.h"
 #include <stdlib.h>
 
 
@@ -17,6 +18,7 @@ typedef struct _cmd_queue_item {
   BT_Command command;
   char cmd_text[BT_CMDBUF_SIZE];
   uint32_t cmd_length;
+  uint8_t retransmit_attempts;
   struct _cmd_queue_item* next;
 } BT_CommandQueueItem;
 
@@ -71,11 +73,11 @@ static uint8_t _status_avrcp_link_id = 0;
 static uint64_t _status_avrcp_bt_addr = 0;
 static bool _status_avrcp_playing = false;
 
+//whether an interrupt handler has detected an error, requiring a reset
+static bool _interrupt_error = false;
+//whether HAL error interrupts should be suppressed (after MCU reset)
+static bool _suppress_error_interrupt = true;
 
-//whether the driver has been initialised successfully
-bool bt_driver_init_complete = false;
-//whether OTA firmware updates are enabled
-bool bt_driver_ota_upgrade_enabled = false;
 
 BT_DriverState bt_driver_state;
 
@@ -99,8 +101,10 @@ static HAL_StatusTypeDef _BT_QueueCommand(BT_Command command, int32_t length) {
 
   //populate queue item values
   new_item->command = command;
-  memcpy(new_item->cmd_text, _cmd_prep_buffer, length + 1);
+  memcpy(new_item->cmd_text, _cmd_prep_buffer, length);
+  new_item->cmd_text[length] = '\0';
   new_item->cmd_length = length;
+  new_item->retransmit_attempts = 0;
   new_item->next = NULL;
 
   if (_cmd_queue_head == NULL || _cmd_queue_tail == NULL) {
@@ -142,6 +146,7 @@ static void _BT_RequeueCommand(BT_CommandQueueItem* item) {
   if (_cmd_queue_head == NULL || _cmd_queue_tail == NULL) {
     //queue currently empty: make item the only item, i.e. also the tail
     _cmd_queue_tail = item;
+    item->next = NULL;
   } else {
     //queue not empty: append current head to the item
     item->next = _cmd_queue_head;
@@ -154,8 +159,9 @@ static void _BT_ClearCommandQueue() {
   //iterate through queue from head, freeing all items
   BT_CommandQueueItem* item = _cmd_queue_head;
   while (item != NULL) {
-    item = item->next;
+    BT_CommandQueueItem* next_item = item->next;
     free(item);
+    item = next_item;
   }
 
   //clear pointers to mark queue as empty
@@ -286,12 +292,19 @@ static HAL_StatusTypeDef BT_Command_WRITE() {
 }
 
 
+static void _BT_ErrorReset() {
+  if (BT_Init() != HAL_OK) {
+    //re-init fails completely: reset MCU
+    HAL_NVIC_SystemReset();
+  }
+}
+
 static void _BT_Command_Finish(BT_Error error) {
-  _current_command = CMD_NONE;
   _next_cmd_tick = HAL_GetTick() + BT_CMD_DELAY;
 
   if (error == BTERR_NONE) {
     //DEBUG_PRINTF("Command finished successfully\n");
+    _current_command = CMD_NONE;
     return;
   }
 
@@ -299,28 +312,38 @@ static void _BT_Command_Finish(BT_Error error) {
 
   if (((uint16_t)error & 0xFFF0U) == 0xF000U) {
     //"critical error", reset
+    _current_command = CMD_NONE;
     if (error == BTERR_WRONG_CONFIG) {
       //wrong config: force factory reset
       _init_force_factory_reset = true;
     }
-    BT_Init();
+    _BT_ErrorReset();
+    //report critical errors to host
+    UARTH_Notification_Event_Error((uint16_t)error, false);
     return;
   }
 
   if (_current_command == CMD_INIT || _current_command == CMD_CONFIG || _current_command == CMD_SET || _current_command == CMD_WRITE) {
     //error in init procedure: reset
-    BT_Init(); //TODO: consider full MCU reset?
+    _current_command = CMD_NONE;
+    _BT_ErrorReset();
     return;
   }
 
-  //TODO: handle other error cases
+  if (_current_command == CMD_CONNECTABLE || _current_command == CMD_DISCOVERABLE || _current_command == CMD_MUSIC || _current_command == CMD_TONE || _current_command == CMD_VOLUME) {
+    //error in host-triggered command: report error to host
+    DEBUG_PRINTF("BT error queued to UART\n");
+    UARTH_Notification_Event_Error((uint16_t)error, false);
+  }
+
+  _current_command = CMD_NONE;
 }
 
 static void _BT_Command_Timeout() {
   DEBUG_PRINTF("* Command timed out!\n");
   if (_current_command == CMD_INIT || _current_command == CMD_CONFIG || _current_command == CMD_SET || _current_command == CMD_WRITE) {
     //timeout in init procedure: reset
-    BT_Init(); //TODO: consider full MCU reset?
+    _BT_ErrorReset();
   } else {
     _BT_Command_Finish(BTERR_COMMAND_TIMEOUT);
   }
@@ -345,7 +368,7 @@ static void _BT_CheckConfigItem(const char* key, const char* value) {
 
       //populate value - for UI_CONFIG, insert firmware update setting; for all others, just copy
       if (strcmp(arr_key, "UI_CONFIG") == 0) {
-        const char* enable_ota = bt_driver_ota_upgrade_enabled ? "ON" : "OFF";
+        const char* enable_ota = bt_driver_state.ota_upgrade_enabled ? "ON" : "OFF";
         snprintf(arr_value, 128, _config_array[2 * i + 1], enable_ota, enable_ota);
       } else {
         strncpy(arr_value, _config_array[2 * i + 1], 127);
@@ -356,7 +379,7 @@ static void _BT_CheckConfigItem(const char* key, const char* value) {
         _init_config_changed = true;
         if (BT_Command_SET(arr_key, arr_value) != HAL_OK) {
           //failed to queue set command: reset
-          BT_Init(); //TODO: consider full MCU reset?
+          _BT_ErrorReset();
         }
       }
       return;
@@ -439,6 +462,8 @@ static bool _BT_ProcessStatusUpdate() {
     bt_driver_state.connected_device_name[0] = '\0';
     bt_driver_state.connected_device_rssi = 0;
     bt_driver_state.connected_device_link_quality = 0;
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   }
 
   return true;
@@ -454,18 +479,19 @@ static bool _BT_Parse_OK() {
       //config will be changed (set commands queued), so queue a write command at the end
       if (BT_Command_WRITE() != HAL_OK) {
         //failed to queue write command: reset
-        BT_Init(); //TODO: consider full MCU reset?
+        _BT_ErrorReset();
         return true;
       }
     } else {
       //config is correct, so init is done
-      bt_driver_init_complete = true;
+      bt_driver_state.init_complete = true;
       DEBUG_PRINTF("BT driver init completed successfully\n");
-      //TODO some kind of init complete notification? if necessary
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     }
   } else if (_current_command == CMD_WRITE) {
     //config write succeeded, so reset to (hopefully) correct config
-    BT_Init();
+    _BT_ErrorReset();
     return true;
   } else if (_current_command == CMD_STATUS) {
     //status update complete: process it
@@ -479,9 +505,14 @@ static bool _BT_Parse_OK() {
         BT_Command_RSSI(bt_driver_state.connected_device_addr);
         BT_Command_QUALITY(bt_driver_state.connected_device_addr);
       }
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       //invalid: queue close all
-      BT_Command_CLOSE_ALL();
+      if (BT_Command_CLOSE_ALL() != HAL_OK) {
+        //reset if close command fails
+        _BT_ErrorReset();
+      }
     }
   }
   _BT_Command_Finish(BTERR_NONE);
@@ -506,6 +537,8 @@ static bool _BT_Parse_NAME() {
   if (bt_driver_state.connected_device_addr == bt_addr) {
     strncpy(bt_driver_state.connected_device_name, _parse_str_0, BT_STATE_STR_LENGTH - 1);
     bt_driver_state.connected_device_name[BT_STATE_STR_LENGTH - 1] = '\0';
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else {
     DEBUG_PRINTF("* NAME response for different address (%012llX) than connected (%012llX)\n", bt_addr, bt_driver_state.connected_device_addr);
   }
@@ -521,6 +554,8 @@ static bool _BT_Parse_RSSI() {
   }
   if (bt_driver_state.connected_device_addr != 0) {
     bt_driver_state.connected_device_rssi = rssi;
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else {
     DEBUG_PRINTF("* RSSI response outside of connected state\n");
   }
@@ -535,6 +570,8 @@ static bool _BT_Parse_QUALITY() {
   }
   if (bt_driver_state.connected_device_addr != 0) {
     bt_driver_state.connected_device_link_quality = quality;
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else {
     DEBUG_PRINTF("* QUALITY response outside of connected state\n");
   }
@@ -566,6 +603,8 @@ static bool _BT_Parse_STATE() {
 
   bt_driver_state.connectable = (strcmp(_parse_str_0, "ON") == 0);
   bt_driver_state.discoverable = (strcmp(_parse_str_1, "ON") == 0);
+  //notify host of change if requested
+  UARTH_ForceCheckChangeNotification();
 
   //DEBUG_PRINTF("STATE response parsed\n");
   return true;
@@ -618,6 +657,8 @@ static bool _BT_Parse_VOLUME_READ() {
   if (strcmp(_parse_str_0, "A2DP") == 0) {
     if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
       bt_driver_state.abs_volume = volume & 0x7F;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("VOLUME A2DP readback reported unknown link %02X!\n", link_id);
     }
@@ -635,9 +676,11 @@ static bool _BT_Parse_Ready() {
     if (BT_Command_CONFIG() == HAL_OK) {
       //config command queued: finish init "command"
       _BT_Command_Finish(BTERR_NONE);
+      //stop suppressing UART errors (if not already seen)
+      _suppress_error_interrupt = false;
     } else {
       //failed to queue config command: reset
-      BT_Init(); //TODO: consider full MCU reset?
+      _BT_ErrorReset();
     }
   }
   //DEBUG_PRINTF("Ready notification parsed\n");
@@ -659,6 +702,8 @@ static bool _BT_Parse_A2DP_Event() {
   if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_START, &link_id) == 1) {
     if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
       bt_driver_state.a2dp_stream_active = true;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("A2DP_STREAM_START on unknown link %02X!\n", link_id);
     }
@@ -667,6 +712,8 @@ static bool _BT_Parse_A2DP_Event() {
   } else if (sscanf(_parse_buffer, BT_NOTIF_A2DP_STREAM_SUSPEND, &link_id) == 1) {
     if (bt_driver_state.a2dp_link_id != 0 && link_id == bt_driver_state.a2dp_link_id) {
       bt_driver_state.a2dp_stream_active = false;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("A2DP_STREAM_SUSPEND on unknown link %02X!\n", link_id);
     }
@@ -684,6 +731,8 @@ static bool _BT_Parse_ABS_VOL() {
   }
   if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
     bt_driver_state.abs_volume = volume & 0x7F;
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else {
     DEBUG_PRINTF("ABS_VOL on unknown link %02X!\n", link_id);
   }
@@ -704,6 +753,8 @@ static bool _BT_Parse_AVRCP_Command() {
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PAUSE, &link_id) == 1) {
     if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
       bt_driver_state.avrcp_playing = false;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("AVRCP_PAUSE on unknown link %02X!\n", link_id);
     }
@@ -712,6 +763,8 @@ static bool _BT_Parse_AVRCP_Command() {
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_PLAY, &link_id) == 1) {
     if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
       bt_driver_state.avrcp_playing = true;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("AVRCP_PLAY on unknown link %02X!\n", link_id);
     }
@@ -720,6 +773,8 @@ static bool _BT_Parse_AVRCP_Command() {
   } else if (sscanf(_parse_buffer, BT_NOTIF_AVRCP_STOP, &link_id) == 1) {
     if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
       bt_driver_state.avrcp_playing = false;
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       DEBUG_PRINTF("AVRCP_STOP on unknown link %02X!\n", link_id);
     }
@@ -735,6 +790,8 @@ static bool _BT_Parse_AVRCP_MediaInfo() {
     if (bt_driver_state.avrcp_link_id != 0) {
       strncpy(bt_driver_state.avrcp_title, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
       bt_driver_state.avrcp_title[BT_AVRCP_META_LENGTH - 1] = '\0';
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     }
     //DEBUG_PRINTF("AVRCP_MEDIA title notification parsed\n");
     return true;
@@ -742,6 +799,8 @@ static bool _BT_Parse_AVRCP_MediaInfo() {
     if (bt_driver_state.avrcp_link_id != 0) {
       strncpy(bt_driver_state.avrcp_artist, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
       bt_driver_state.avrcp_artist[BT_AVRCP_META_LENGTH - 1] = '\0';
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     }
     //DEBUG_PRINTF("AVRCP_MEDIA artist notification parsed\n");
     return true;
@@ -749,6 +808,8 @@ static bool _BT_Parse_AVRCP_MediaInfo() {
     if (bt_driver_state.avrcp_link_id != 0) {
       strncpy(bt_driver_state.avrcp_album, _parse_str_0, BT_AVRCP_META_LENGTH - 1);
       bt_driver_state.avrcp_album[BT_AVRCP_META_LENGTH - 1] = '\0';
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     }
     //DEBUG_PRINTF("AVRCP_MEDIA album notification parsed\n");
     return true;
@@ -774,12 +835,16 @@ static bool _BT_Parse_CLOSE_LOSS() {
     bt_driver_state.a2dp_link_id = 0;
     bt_driver_state.a2dp_stream_active = false;
     bt_driver_state.a2dp_codec[0] = '\0';
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else if (bt_driver_state.avrcp_link_id != 0 && link_id == bt_driver_state.avrcp_link_id) {
     bt_driver_state.avrcp_link_id = 0;
     bt_driver_state.avrcp_playing = false;
     bt_driver_state.avrcp_title[0] = '\0';
     bt_driver_state.avrcp_artist[0] = '\0';
     bt_driver_state.avrcp_album[0] = '\0';
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else {
     DEBUG_PRINTF("* Unknown link ID %02X closed (%s)!\n", link_id, _parse_str_0);
   }
@@ -790,6 +855,8 @@ static bool _BT_Parse_CLOSE_LOSS() {
     bt_driver_state.connected_device_name[0] = '\0';
     bt_driver_state.connected_device_rssi = 0;
     bt_driver_state.connected_device_link_quality = 0;
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   }
 
   return true;
@@ -811,6 +878,8 @@ static bool _BT_Parse_OPEN_OK() {
       BT_Command_NAME(bt_addr);
       BT_Command_RSSI(bt_addr);
       BT_Command_QUALITY(bt_addr);
+      //notify host of change if requested
+      UARTH_ForceCheckChangeNotification();
     } else {
       //already connected to other Bluetooth address: error, close all connections
       DEBUG_PRINTF("* Opened connection (%02X %s) with address %012llX, while already connected to %012llX!\n", link_id, _parse_str_0, bt_addr, bt_driver_state.connected_device_addr);
@@ -828,6 +897,8 @@ static bool _BT_Parse_OPEN_OK() {
     bt_driver_state.a2dp_codec[0] = '\0';
     //query volume upon connecting
     BT_Command_VOLUME_GET();
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   } else if (strcmp(_parse_str_0, "AVRCP") == 0) {
     bt_driver_state.avrcp_link_id = link_id;
     bt_driver_state.avrcp_playing = false;
@@ -836,6 +907,8 @@ static bool _BT_Parse_OPEN_OK() {
     bt_driver_state.avrcp_album[0] = '\0';
     //query volume upon connecting
     BT_Command_VOLUME_GET();
+    //notify host of change if requested
+    UARTH_ForceCheckChangeNotification();
   }
 
   if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
@@ -975,12 +1048,22 @@ void BT_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   //single transaction limited to remaining buffer space before wrap-around, because the HAL function has no "circular buffer" concept
   if (HAL_UARTEx_ReceiveToIdle_IT(&huart6, _rx_buffer + _rx_buffer_write_offset, BT_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
     DEBUG_PRINTF("*** NOTIFICATION RECEIVE ERROR\n");
-    BT_Init();
+    _interrupt_error = true;
   }
 }
 
 void BT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   DEBUG_PRINTF("[CMD] %s\n", _cmd_tx_buffer);
+}
+
+void BT_UART_ErrorCallback(UART_HandleTypeDef* huart) {
+  //ignore frame error at init
+  if (_suppress_error_interrupt && HAL_UART_GetError(&huart6) == HAL_UART_ERROR_FE) {
+    _suppress_error_interrupt = false;
+    return;
+  }
+  DEBUG_PRINTF("*** UART6 internal error!\n");
+  _interrupt_error = true;
 }
 
 
@@ -990,7 +1073,7 @@ void BT_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 
 //enables the OTA firmware upgrade functionality, until the next MCU reset
 HAL_StatusTypeDef BT_EnableOTAUpgrade() {
-  bt_driver_ota_upgrade_enabled = true;
+  bt_driver_state.ota_upgrade_enabled = true;
   return BT_Init();
 }
 
@@ -998,14 +1081,14 @@ HAL_StatusTypeDef BT_Init() {
   bool factory_reset = _init_force_factory_reset;
   HAL_StatusTypeDef res = HAL_OK;
 
+  _suppress_error_interrupt = true;
+
   //reset module physically
   HAL_GPIO_WritePin(BT_RST_N_GPIO_Port, BT_RST_N_Pin, GPIO_PIN_RESET);
 
   HAL_UART_Abort(&huart6);
 
   //reset all driver state
-  bt_driver_init_complete = false;
-
   _rx_buffer_write_offset = 0;
   _rx_buffer_read_offset = 0;
   _parse_buffer_write_offset = 0;
@@ -1014,11 +1097,13 @@ HAL_StatusTypeDef BT_Init() {
   _cmd_timeout_tick = HAL_MAX_DELAY;
   _init_config_changed = false;
   _init_force_factory_reset = false;
+  _interrupt_error = false;
 
   _BT_ClearCommandQueue();
 
+  bt_driver_state.init_complete = false;
   bt_driver_state.connectable = true;
-  bt_driver_state.discoverable = true; //TODO: change to false, once configured to not be discoverable at boot
+  bt_driver_state.discoverable = false;
   bt_driver_state.connected_device_addr = 0;
   bt_driver_state.connected_device_name[0] = '\0';
   bt_driver_state.connected_device_rssi = 0;
@@ -1041,6 +1126,9 @@ HAL_StatusTypeDef BT_Init() {
   }
   HAL_GPIO_WritePin(BT_RST_N_GPIO_Port, BT_RST_N_Pin, GPIO_PIN_SET);
 
+  //report reset to host
+  UARTH_Notification_Event_BTReset();
+
   //schedule init timeout
   _cmd_timeout_tick = HAL_GetTick() + BT_CMD_TIMEOUT;
 
@@ -1049,6 +1137,12 @@ HAL_StatusTypeDef BT_Init() {
 
 void BT_Update(uint32_t loop_counter) {
   uint32_t tick = HAL_GetTick();
+
+  //handle interrupt errors
+  if (_interrupt_error) {
+    _BT_ErrorReset();
+    return;
+  }
 
   //handle received data
   while (_rx_buffer_read_offset != _rx_buffer_write_offset) {
@@ -1103,17 +1197,25 @@ void BT_Update(uint32_t loop_counter) {
           _cmd_timeout_tick = tick + BT_CMD_TIMEOUT;
         } else {
           //error: reset to no command, update next command tick, requeue item to try again next time
-          _current_command = CMD_NONE;
-          _next_cmd_tick = tick;
-          _BT_RequeueCommand(item);
           DEBUG_PRINTF("*** Command transmit error on command %s\n", _cmd_tx_buffer);
+          if (item->retransmit_attempts >= BT_CMD_RETRANSMIT_ATTEMPTS) {
+            //maximum retransmit attempts exceeded: reset
+            _BT_ErrorReset();
+            return;
+          } else {
+            //attempt retransmit
+            _current_command = CMD_NONE;
+            _next_cmd_tick = tick;
+            item->retransmit_attempts++;
+            _BT_RequeueCommand(item);
+          }
         }
       }
     }
   }
 
   //queue status read commands if it's time for that and driver is initialised
-  if (loop_counter % BT_STATUS_READ_PERIOD == 0 && bt_driver_init_complete) {
+  if (loop_counter % BT_STATUS_READ_PERIOD == 0 && bt_driver_state.init_complete) {
     BT_Command_STATUS();
   }
 }

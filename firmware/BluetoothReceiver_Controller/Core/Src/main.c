@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
 #include "bt_driver.h"
+#include "uart_host.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,19 +90,31 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
 }
 #else
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
-  if (huart == &huart6) {
+  if (huart == &huart1) {
+    UARTH_UARTEx_RxEventCallback(huart, Size);
+  } else if (huart == &huart6) {
     BT_UARTEx_RxEventCallback(huart, Size);
   }
 }
-#endif
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
-  if (huart == &huart2) {
+  if (huart == &huart1) {
+    UARTH_UART_TxCpltCallback(huart);
+  } else if (huart == &huart2) {
     Retarget_UART_TxCpltCallback(huart);
   } else if (huart == &huart6) {
     BT_UART_TxCpltCallback(huart);
   }
 }
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+  if (huart == &huart1) {
+    UARTH_UART_ErrorCallback(huart);
+  } else if (huart == &huart6) {
+    BT_UART_ErrorCallback(huart);
+  }
+}
+#endif
 
 static __always_inline void _RefreshWatchdogs() {
   //HAL_WWDG_Refresh(&hwwdg);
@@ -156,12 +169,29 @@ int main(void)
 
   DEBUG_PRINTF("### MCU RESET ###\n");
 
-  bt_driver_ota_upgrade_enabled = false; //start with no upgrade capability
+  if (UARTH_Init() == HAL_OK) {
+    DEBUG_PRINTF("Host UART init started\n");
+  } else {
+    DEBUG_PRINTF("*** Host UART init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  _RefreshWatchdogs();
+
+  bt_driver_state.ota_upgrade_enabled = false; //start with no upgrade capability
   if (BT_Init() == HAL_OK) {
     DEBUG_PRINTF("BT driver init started\n");
   } else {
     DEBUG_PRINTF("*** BT driver init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
   }
+
+  _RefreshWatchdogs();
+
+  //notify UART host of MCU reset
+  UARTH_Notification_Event_MCUReset();
 
   _RefreshWatchdogs();
 
@@ -179,6 +209,7 @@ int main(void)
     uint32_t iteration_start_tick = HAL_GetTick();
 
     BT_Update(loop_counter);
+    UARTH_Update(loop_counter);
 
     loop_counter++;
 
