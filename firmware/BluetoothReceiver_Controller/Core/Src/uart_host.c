@@ -58,7 +58,7 @@ static bool _notif_transmit_ready = true;
 static bool _uart_error_since_last_status = false;
 
 //mask of enabled change notifications
-static uint16_t _change_notification_mask = 0;
+static uint16_t _change_notification_mask = UARTDEF_BTRX_NOTIF_MASK_DEFAULT_VALUE;
 //whether a change notification check is forced on the next update
 static bool _force_change_notification_check = false;
 //state seen at last change notification check
@@ -229,7 +229,7 @@ static HAL_StatusTypeDef _UARTH_Notification(uint8_t type, uint32_t param_length
 
 HAL_StatusTypeDef UARTH_Notification_Event_MCUReset() {
   //clear notification mask only on MCU reset
-  _change_notification_mask = 0;
+  _change_notification_mask = UARTDEF_BTRX_NOTIF_MASK_DEFAULT_VALUE;
 
   _notif_prep_buffer[1] = UARTDEF_BTRX_EVENT_MCU_RESET;
   return _UARTH_Notification(UARTDEF_BTRX_TYPE_EVENT, 1, true);
@@ -388,7 +388,7 @@ static HAL_StatusTypeDef _UARTH_ParseWrite(uint8_t reg_addr, uint32_t data_lengt
         return HAL_ERROR;
       }
 
-      //check error code
+      //check reset code
       temp_val = (_parse_buffer[2] & UARTDEF_BTRX_CONTROL_RESET_Msk) >> UARTDEF_BTRX_CONTROL_RESET_Pos;
       if (temp_val == UARTDEF_BTRX_CONTROL_RESET_VALUE) {
         //correct value: trigger reset
@@ -788,6 +788,11 @@ void UARTH_Update(uint32_t loop_counter) {
   //check if a change notification should be sent, if forced or it's time for that
   if (_force_change_notification_check || loop_counter % UARTH_CHANGE_NOTIF_CHECK_PERIOD == 0) {
     _UARTH_CheckChangeNotification();
+  }
+
+  //detect ready state if interrupt failed
+  if (!_notif_transmit_ready && (HAL_UART_GetState(&huart1) & 0xE5) == HAL_UART_STATE_READY) {
+    _notif_transmit_ready = true;
   }
 
   //send next notification if ready

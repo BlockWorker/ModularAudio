@@ -179,6 +179,9 @@ extern const uint8_t bms_i2c_data_reg_sizes[115];
 //whether CRC calculation is currently enabled for I2C communication
 extern bool bms_i2c_crc_active;
 
+//whether error notifications are suppressed
+extern bool bms_i2c_suppress_error_notifs;
+
 
 HAL_StatusTypeDef BMS_I2C_DirectCommandRead(BMS_I2C_DirectCommand command, uint8_t* buffer, uint8_t length, uint8_t max_tries);
 HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, const uint8_t* data, uint8_t length, uint8_t max_tries);

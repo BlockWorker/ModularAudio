@@ -58,7 +58,7 @@
  *    - 0x07: CONN_STATS: Bluetooth connection stats (4B, 2B(low) signed RSSI + 2B(high) unsigned quality, r)
  *    - 0x08: CODEC: Active A2DP codec (?B, text, r)
  *  * Notification registers
- *    - 0x20: NOTIF_MASK: Change notification mask (2B, bit field, rw, high = change notification enable)
+ *    - 0x20: NOTIF_MASK: Change notification mask (2B, bit field, rw, high = change notification enable), defaults to 0x0000 (no change notifications)
  *  * Control registers
  *    - 0x30: CONTROL: General control (1B, bit field, w)
  *    - 0x31: CONN_CONTROL: Connection control (1B, bit field, w)
@@ -212,6 +212,8 @@
 #define UARTDEF_BTRX_NOTIF_MASK_CONN_STATS_Msk (0x1 << UARTDEF_BTRX_NOTIF_MASK_CONN_STATS_Pos)
 #define UARTDEF_BTRX_NOTIF_MASK_CODEC_Pos UARTDEF_BTRX_CODEC
 #define UARTDEF_BTRX_NOTIF_MASK_CODEC_Msk (0x1 << UARTDEF_BTRX_NOTIF_MASK_CODEC_Pos)
+
+#define UARTDEF_BTRX_NOTIF_MASK_DEFAULT_VALUE 0x0000
 
 
 //Control registers

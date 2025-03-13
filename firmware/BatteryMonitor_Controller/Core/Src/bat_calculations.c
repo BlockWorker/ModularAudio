@@ -7,6 +7,7 @@
 
 
 #include "bat_calculations.h"
+#include <math.h>
 
 
 /********************************************************/
@@ -99,7 +100,7 @@ static float _BAT_CALC_DeBoor(float x, const float* t, uint8_t t_count, const fl
 //Estimate energy of a single cell in Wh, given its charge in Ah and the battery health fraction
 float BAT_CALC_CellChargeToEnergy(float cell_charge_ah, float battery_health) {
   //clamp battery health between 0 and 1
-  if (battery_health <= 0.0f) return 0.0f;
+  if (isnanf(battery_health) || battery_health <= 0.0f) return 0.0f;
   else if (battery_health > 1.0f) battery_health = 1.0f;
 
   //clamp charge between 0 and maximum
@@ -121,7 +122,7 @@ float BAT_CALC_CellChargeToEnergy(float cell_charge_ah, float battery_health) {
 //Approximately estimate charge of a single cell in Ah, given its voltage in V and the battery health fraction - valid up to bat_calc_voltageToCharge_max_valid_current
 float BAT_CALC_CellVoltageToCharge(float cell_voltage_v, float battery_health) {
   //clamp battery health between 0 and 1
-  if (battery_health <= 0.0f) return 0.0f;
+  if (isnanf(battery_health) || battery_health <= 0.0f) return 0.0f;
   else if (battery_health > 1.0f) battery_health = 1.0f;
 
   //calculate and return B-spline approximation, scaled by battery health
@@ -131,7 +132,7 @@ float BAT_CALC_CellVoltageToCharge(float cell_voltage_v, float battery_health) {
 //Approximately estimate energy of a single cell in Wh, given its voltage in V and the battery health fraction - valid up to bat_calc_voltageToEnergy_max_valid_current
 float BAT_CALC_CellVoltageToEnergy(float cell_voltage_v, float battery_health) {
   //clamp battery health between 0 and 1
-  if (battery_health <= 0.0f) return 0.0f;
+  if (isnanf(battery_health) || battery_health <= 0.0f) return 0.0f;
   else if (battery_health > 1.0f) battery_health = 1.0f;
 
   //calculate and return B-spline approximation, scaled by battery health

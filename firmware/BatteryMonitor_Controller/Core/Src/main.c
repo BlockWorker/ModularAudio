@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bms.h"
+#include "uart_host.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,13 +58,6 @@ UART_HandleTypeDef huart2;
 static uint8_t pwrsw_debounce_count = 0;
 static GPIO_PinState pwrsw_last_state = GPIO_PIN_SET;
 bool pwrsw_status = false;
-
-//whether the system should be turned off due to low battery voltage
-bool low_voltage_powerdown = false;
-//timer for system powerdown due to low battery voltage
-static uint32_t low_voltage_timer = MAIN_LVOFF_TIMEOUT;
-//whether low-voltage powerdown notifications have been sent to system
-static bool low_voltage_notif_sent = false;
 
 //whether the current main loop cycle follows stop mode
 static bool wakeup_from_stop = false;
@@ -130,6 +124,19 @@ static void _TestReadDataMem() {
 }
 
 
+GPIO_PinState GPIO_ReadOutputPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
+{
+  GPIO_PinState bitstatus;
+
+  if ((GPIOx->ODR & GPIO_Pin) != (uint32_t)GPIO_PIN_RESET) {
+    bitstatus = GPIO_PIN_SET;
+  } else {
+    bitstatus = GPIO_PIN_RESET;
+  }
+  return bitstatus;
+}
+
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   switch (GPIO_Pin) {
     case BMS_ALERT_N_Pin:
@@ -139,6 +146,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       pwrsw_last_state = HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin);
       pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
       break;
+  }
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+  if (huart == &huart1) {
+    UARTH_UART_TxCpltCallback(huart);
+  } else if (huart == &huart2) {
+    Retarget_UART_TxCpltCallback(huart);
   }
 }
 /* USER CODE END 0 */
@@ -179,36 +194,54 @@ int main(void)
   /* USER CODE BEGIN 2 */
   RetargetInit(&huart2);
 
-  HAL_Delay(10);
+  //HAL_Delay(10);
   _RefreshWatchdogs();
 
   DEBUG_PRINTF("Controller started\n");
 
-  HAL_Delay(1000);
+  //HAL_Delay(1000);
 
   pwrsw_debounce_count = 0;
   pwrsw_status = (HAL_GPIO_ReadPin(PWR_SWITCH_GPIO_Port, PWR_SWITCH_Pin) == GPIO_PIN_RESET);
   wakeup_from_stop = false;
-  low_voltage_powerdown = false;
-  low_voltage_timer = MAIN_LVOFF_TIMEOUT;
-  low_voltage_notif_sent = false;
 
   //configure for lowest power - not sure if compatible with stop mode, but won't hurt
   HAL_PWREx_EnableUltraLowPower();
   HAL_PWREx_EnableFastWakeUp();
 
-  if (BMS_Init() != HAL_OK) {
-    DEBUG_PRINTF("ERROR: BMS init failed!\n");
-    //Error_Handler();
+  if (UARTH_Init() == HAL_OK) {
+    DEBUG_PRINTF("Host UART init completed\n");
+  } else {
+    DEBUG_PRINTF("ERROR: Host UART init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
   }
-  DEBUG_PRINTF("BMS init completed\n");
 
-  HAL_Delay(100);
+  if (pwrsw_status) {
+    //if starting powered on: enable isolator and allow one UART hardware error
+    uarth_ignore_one_hardware_error = true;
+    HAL_GPIO_WritePin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin, GPIO_PIN_SET);
+  }
+  //queue MCU reset notification (will only go through if powered on at startup)
+  UARTH_Notification_Event_MCUReset();
+
+  _RefreshWatchdogs();
+
+  if (BMS_Init() == HAL_OK) {
+    DEBUG_PRINTF("BMS init completed\n");
+  } else {
+    DEBUG_PRINTF("ERROR: BMS init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  //HAL_Delay(10);
 
   _TestReadDataMem();
 
-  HAL_Delay(100);
+  //HAL_Delay(10);
 
+  _RefreshWatchdogs();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -233,11 +266,9 @@ int main(void)
         //last cycle: debounce is done, write switch status based on state
         pwrsw_status = (switch_state == GPIO_PIN_RESET);
 
-        //if power turned off: reset low-voltage powerdown logic
+        //if power turned off: reset timed shutdowns
         if (!pwrsw_status) {
-          low_voltage_powerdown = false;
-          low_voltage_timer = MAIN_LVOFF_TIMEOUT;
-          low_voltage_notif_sent = false;
+          BMS_ResetTimedShutdownState();
         }
       }
     } else if (pwrsw_status != (switch_state == GPIO_PIN_RESET)) {
@@ -247,39 +278,8 @@ int main(void)
       pwrsw_debounce_count = MAIN_PWRSW_DEBOUNCE_CYCLES;
     }
 
-    //handle low-voltage powerdown timeouts etc
-    if (low_voltage_timer == 0) {
-      //already reached powerdown time: enter or stay in powerdown
-      low_voltage_powerdown = true;
-    } else {
-      //not in powerdown yet: check if any cells are below threshold
-      bool any_cells_below_threshold = false;
-      int i;
-      for (i = 0; i < BMS_CELLS_SERIES; i++) {
-        if (bms_measurements.voltage_cells[i] < MAIN_LVOFF_THRESHOLD) {
-          any_cells_below_threshold = true;
-          break;
-        }
-      }
-
-      if (any_cells_below_threshold) {
-        //cells below threshold: decrement timer and potentially notify system
-        if (low_voltage_timer-- % MAIN_LVOFF_NOTIFY_PERIOD == 0) {
-          //TODO notify system
-          low_voltage_notif_sent = true;
-        }
-      } else {
-        //all cells are okay: reset timer, notify system of cancellation if notif was sent before
-        low_voltage_timer = MAIN_LVOFF_TIMEOUT;
-        if (low_voltage_notif_sent) {
-          low_voltage_notif_sent = false;
-          //TODO notify system of powerdown cancellation
-        }
-      }
-    }
-
     //apply power switch status to desired BMS state
-    bms_should_disable_fets = bms_should_deepsleep = (!pwrsw_status || low_voltage_powerdown);
+    bms_should_deepsleep = !pwrsw_status;
 
     if (wakeup_from_stop) {
       //exit deepsleep after wakeup, to allow measurements
@@ -288,10 +288,31 @@ int main(void)
 
     BMS_LoopUpdate(loop_count);
 
+    bool deepsleep_desired = BMS_GetDeepSleepDesiredState();
+
+    if (!deepsleep_desired) {
+      //not in deepsleep desired mode: check if isolator enabled
+      if (GPIO_ReadOutputPin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin) == GPIO_PIN_RESET) {
+        //isolator disabled: reinitialise host UART interface, then enable isolator and allow one more UART error
+        UARTH_Init();
+        uarth_ignore_one_hardware_error = true;
+        uarth_ignore_hardware_errors = false;
+        HAL_GPIO_WritePin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin, GPIO_PIN_SET);
+      }
+
+      //perform UART host updates
+      UARTH_Update(loop_count);
+    } else if (GPIO_ReadOutputPin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin) == GPIO_PIN_SET) {
+      //in deepsleep desired mode and isolator is enabled: abort any host UART transactions, then disable isolator and ignore UART errors
+      HAL_UART_Abort(&huart1);
+      uarth_ignore_hardware_errors = true;
+      HAL_GPIO_WritePin(I2C_ISO_EN_GPIO_Port, I2C_ISO_EN_Pin, GPIO_PIN_RESET);
+    }
+
     _RefreshWatchdogs();
 
-    //check whether to stop or continue to next loop, stop conditions: power switch off or powerdown due to low voltage, no ongoing debounce, BMS in deepsleep, BMS alert pin is high (no alert)
-    if ((!pwrsw_status || low_voltage_powerdown) && pwrsw_debounce_count == 0 && bms_status.mode == BMSMODE_DEEPSLEEP && HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_SET) {
+    //check whether to stop or continue to next loop, stop conditions: BMS trying to deepsleep, no ongoing debounce, BMS in deepsleep, BMS alert pin is high (no alert)
+    if (deepsleep_desired && pwrsw_debounce_count == 0 && bms_status.mode == BMSMODE_DEEPSLEEP && HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_SET) {
       //prepare everything for a check cycle after wakeup
       loop_count = 0;
       wakeup_from_stop = true;
@@ -491,7 +512,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 57600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

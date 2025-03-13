@@ -1,0 +1,6 @@
+*** 2025-03-13 21:11 --- Count: 0
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3813 3818 3814 3803 3802, Stack voltage: 15233, Current: 0
+SoC: Mode: 1, Energy: 107.81, Fraction: 0.6405, Health: 1.00
+Temps: Bat 27 Int 37, Charge: 0, Time: 1096, Balancing: 0x0A

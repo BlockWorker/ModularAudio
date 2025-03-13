@@ -6,6 +6,7 @@
  */
 
 #include "bms_i2c.h"
+#include "uart_host.h"
 #include <string.h>
 
 
@@ -28,74 +29,12 @@ const uint8_t bms_i2c_data_reg_sizes[115] = {
 
 //expected state of the config data memory, excluding calibration (0x9014 up to and including 0x905D)
 //calibration values (0x9000-0x9013 and 0x9071-0x9072) are preprogrammed by TI and omitted from here, do potential adjustments separately based on factory calibration
-const uint8_t bms_config_main_array[74] = {
-    BMS_SET_POWER_CONFIG,
-    BMS_SET_REGOUT_CONFIG,
-    BMS_SET_I2C_ADDRESS,
-    TwoBytes(BMS_SET_I2C_CONFIG),
-    TwoBytes(BMS_SET_DA_CONFIG),
-    BMS_SET_VCELL_MODE,
-    TwoBytes(BMS_SET_DEFAULT_ALARM_MASK),
-    BMS_SET_FET_OPTIONS,
-    BMS_SET_CHGDET_TIME,
-    BMS_SET_BAL_CONFIG,
-    BMS_SET_BAL_MINTEMP_TS,
-    BMS_SET_BAL_MAXTEMP_TS,
-    BMS_SET_BAL_MAXTEMP_INT,
-    BMS_PROT_ENABLE_A,
-    BMS_PROT_ENABLE_B,
-    BMS_PROT_DSGFET_A,
-    BMS_PROT_CHGFET_A,
-    BMS_PROT_BOTHFET_B,
-    TwoBytes(BMS_PROT_BODYDIODE_THRESHOLD),
-    BMS_PROT_COW_NORMAL_TIME,
-    BMS_PROT_COW_SLEEP_CONFIG,
-    BMS_PROT_HWD_TIMEOUT,
-    TwoBytes(BMS_PROT_CUV_THRESHOLD),
-    BMS_PROT_CUV_DELAY,
-    BMS_PROT_CUV_HYSTERESIS,
-    TwoBytes(BMS_PROT_COV_THRESHOLD),
-    BMS_PROT_COV_DELAY,
-    BMS_PROT_COV_HYSTERESIS,
-    BMS_PROT_OCC_THRESHOLD,
-    BMS_PROT_OCC_DELAY,
-    BMS_PROT_OCD1_THRESHOLD,
-    BMS_PROT_OCD1_DELAY,
-    BMS_PROT_OCD2_THRESHOLD,
-    BMS_PROT_OCD2_DELAY,
-    BMS_PROT_SCD_THRESHOLD,
-    BMS_PROT_SCD_DELAY,
-    BMS_PROT_CURR_LATCH_LIMIT,
-    BMS_PROT_CURR_RECOVERY_TIME,
-    BMS_PROT_OTC_THRESHOLD,
-    BMS_PROT_OTC_DELAY,
-    BMS_PROT_OTC_RECOVERY,
-    BMS_PROT_UTC_THRESHOLD,
-    BMS_PROT_UTC_DELAY,
-    BMS_PROT_UTC_RECOVERY,
-    BMS_PROT_OTD_THRESHOLD,
-    BMS_PROT_OTD_DELAY,
-    BMS_PROT_OTD_RECOVERY,
-    BMS_PROT_UTD_THRESHOLD,
-    BMS_PROT_UTD_DELAY,
-    BMS_PROT_UTD_RECOVERY,
-    BMS_PROT_OTINT_THRESHOLD,
-    BMS_PROT_OTINT_DELAY,
-    BMS_PROT_OTINT_RECOVERY,
-    TwoBytes(BMS_PWR_SLEEP_CURRENT),
-    BMS_PWR_SLEEP_VOLTAGE_TIME,
-    BMS_PWR_WAKEUP_CURRENT,
-    TwoBytes(BMS_PWR_SHUTDOWN_CELL_VOLTAGE),
-    TwoBytes(BMS_PWR_SHUTDOWN_STACK_VOLTAGE),
-    BMS_PWR_SHUTDOWN_INT_TEMP,
-    BMS_PWR_SHUTDOWN_AUTO_TIME,
-    BMS_SEC_CONFIG,
-    TwoBytes(BMS_SEC_FULLACCESS_KEY_1),
-    TwoBytes(BMS_SEC_FULLACCESS_KEY_2)
-};
+const uint8_t bms_config_main_array[74] = BMS_CONFIG_MAIN_ARRAY;
 
 
 bool bms_i2c_crc_active = false;
+
+bool bms_i2c_suppress_error_notifs = false;
 
 static uint8_t bms_i2c_buffer[BMS_I2C_BUFSIZE] = { 0 };
 
@@ -156,6 +95,9 @@ HAL_StatusTypeDef BMS_I2C_DirectCommandRead(BMS_I2C_DirectCommand command, uint8
   }
 
   //out of tries: return whatever error status we had
+  if (res != HAL_OK && !bms_i2c_suppress_error_notifs) {
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
+  }
   return res;
 }
 
@@ -193,6 +135,9 @@ HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, cons
   }
 
   //out of tries: return whatever error status we had
+  if (res != HAL_OK && !bms_i2c_suppress_error_notifs) {
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
+  }
   return res;
 }
 
@@ -260,6 +205,9 @@ HAL_StatusTypeDef BMS_I2C_SubcommandRead(BMS_I2C_SubCommand command, uint8_t* bu
   }
 
   //out of tries: return whatever error status we had
+  if (res != HAL_OK && !bms_i2c_suppress_error_notifs) {
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
+  }
   return res;
 }
 

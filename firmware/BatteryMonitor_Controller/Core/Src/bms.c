@@ -7,6 +7,7 @@
 
 #include "bms.h"
 #include "bat_calculations.h"
+#include "uart_host.h"
 #include <math.h>
 #include <string.h>
 
@@ -16,15 +17,11 @@ BMS_Measurements bms_measurements;
 
 //state-of-charge calculation status and results
 //battery health fraction (in [0, 1]) - may be modified externally, will apply on next update
-float bms_soc_battery_health = 1.0f;
-//precision level of current calculated values
-BMS_SoC_PrecisionLevel bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
-//calculated state-of-charge in terms of energy (in Wh) and fraction of full (in [0, 1])
-float bms_soc_energy = NAN;
-float bms_soc_fraction = NAN;
+float* const bms_soc_battery_health_ptr = (float*)(DATA_EEPROM_BASE + 4);
 
 bool bms_should_deepsleep = false;
-bool bms_should_disable_fets = false;
+//true should_deepsleep state after internal logic
+static bool _bms_should_deepsleep_internal = false;
 
 //set to true when an init-complete alert is detected
 static bool _bms_detected_initcomp = false;
@@ -33,8 +30,10 @@ static bool _bms_detected_shutdown_voltage = false;
 //set to true when a safety fault or alert is detected
 static bool _bms_detected_safety_event = false;
 
-//whether charge fet should be forced off until recovered by software or deepsleep
-static bool _bms_chg_force_off = false;
+//whether a timed shutdown has been triggered (i.e. BMS stays in deepsleep until reset function is called)
+static bool _bms_timed_shutdown_triggered = false;
+//whether the host has requested a shutdown (to see whether to cancel end-of-discharge shutdown or not)
+static bool _bms_shutdown_requested_by_host = false;
 
 //charge reference point in Ah (actual charge of a single cell when BMS charge register is zero), for SOC_CHARGE_ESTIMATED and SOC_CHARGE_FULL modes
 static float _bms_soc_charge_reference = 0.0f;
@@ -66,11 +65,13 @@ static HAL_StatusTypeDef _BMS_DetectCRCMode() {
   bms_i2c_crc_active = false;
 
   uint16_t dev_number_read;
+  bms_i2c_suppress_error_notifs = true;
   if (BMS_I2C_SubcommandRead(SUBCMD_DEVICE_NUMBER, (uint8_t*)&dev_number_read, 2, BMS_COMM_MAX_TRIES) == HAL_OK) {
     //successfully read something without CRC: check correctness
     if (dev_number_read == BMS_EXPECTED_DEVICE_NUMBER) {
       //correct number: everything is okay, we're in no-CRC mode
       DEBUG_PRINTF("INFO: Detected no-CRC mode\n");
+      bms_i2c_suppress_error_notifs = false;
       return HAL_OK;
     } else {
       //incorrect number: shouldn't really happen
@@ -86,6 +87,7 @@ static HAL_StatusTypeDef _BMS_DetectCRCMode() {
     if (dev_number_read == BMS_EXPECTED_DEVICE_NUMBER) {
       //correct number: everything is okay, we're in CRC mode
       DEBUG_PRINTF("INFO: Detected CRC mode\n");
+      bms_i2c_suppress_error_notifs = false;
       return HAL_OK;
     } else {
       //incorrect number: shouldn't really happen
@@ -93,7 +95,10 @@ static HAL_StatusTypeDef _BMS_DetectCRCMode() {
     }
   }
 
+  bms_i2c_suppress_error_notifs = false;
+
   //if we're here, both reads failed and/or we got incorrect values
+  UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
   return HAL_ERROR;
 }
 
@@ -124,7 +129,7 @@ static int16_t _BMS_GetThermistorTemp(int16_t adc_value) {
 //enter CFGUPDATE mode
 static HAL_StatusTypeDef _BMS_EnterCFGUPDATE() {
   //reset state-of-charge calculation to voltage-only mode, due to CFGUPDATE resetting integrated charge
-  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+  bms_measurements.soc_precisionlevel = SOC_VOLTAGE_ONLY;
 
   //disable all cell balancing
   _bms_bal_active_cells = 0;
@@ -147,13 +152,14 @@ static HAL_StatusTypeDef _BMS_EnterCFGUPDATE() {
   }
 
   DEBUG_PRINTF("ERROR: CFGUPDATE status bit not correct after enter attempt\n");
+  UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
   return HAL_ERROR;
 }
 
 //exit CFGUPDATE mode
 static HAL_StatusTypeDef _BMS_ExitCFGUPDATE() {
   //reset state-of-charge calculation to voltage-only mode, due to CFGUPDATE resetting integrated charge
-  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+  bms_measurements.soc_precisionlevel = SOC_VOLTAGE_ONLY;
 
   //send actual command
   _bms_detected_initcomp = false;
@@ -180,6 +186,7 @@ static HAL_StatusTypeDef _BMS_ExitCFGUPDATE() {
   }
 
   DEBUG_PRINTF("ERROR: CFGUPDATE status bit not correct after exit attempt\n");
+  UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
   return HAL_ERROR;
 }
 
@@ -278,6 +285,9 @@ static HAL_StatusTypeDef _BMS_CheckAndApplyConfig() {
     _BMS_DetectCRCMode();
   }
 
+  if (res != HAL_OK) {
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
+  }
   return res;
 }
 
@@ -316,8 +326,10 @@ static void _BMS_UpdateSoC() {
     }
   }
 
-  //if battery health is invalid, default to 100% health
-  if (bms_soc_battery_health <= 0.0f || bms_soc_battery_health > 1.0f) bms_soc_battery_health = 1.0f;
+  //if battery health is invalid or unreasonably bad (<10%), reset to default 100% health
+  if (isnanf(*bms_soc_battery_health_ptr) || *bms_soc_battery_health_ptr < 0.1f || *bms_soc_battery_health_ptr > 1.0f) {
+    BMS_SetBatteryHealth(1.0f);
+  }
 
   //run voltage-based charge estimation if smoothed current is small enough
   float estimated_charge = NAN;
@@ -333,15 +345,15 @@ static void _BMS_UpdateSoC() {
       //check if the battery is fully charged, reset BMS charge measurement if so
       if (min_voltage >= BMS_SOC_CELL_FULL_CHARGE_VOLTAGE_MIN && BMS_I2C_SubcommandOnly(SUBCMD_RESET_PASSQ, BMS_COMM_MAX_TRIES) == HAL_OK) {
         //fully charged: set charge reference point to full and go to SOC_CHARGE_FULL mode
-        _bms_soc_charge_reference = bat_calc_cellCharge_max * bms_soc_battery_health;
+        _bms_soc_charge_reference = bat_calc_cellCharge_max * (*bms_soc_battery_health_ptr);
         charge_delta = 0.0f;
-        bms_soc_precisionlevel = SOC_CHARGE_FULL;
+        bms_measurements.soc_precisionlevel = SOC_CHARGE_FULL;
       } else {
         //not full (normal operation): estimate charge of weakest cell
-        estimated_charge = BAT_CALC_CellVoltageToCharge(min_voltage, bms_soc_battery_health);
+        estimated_charge = BAT_CALC_CellVoltageToCharge(min_voltage, *bms_soc_battery_health_ptr);
 
         //save as new charge reference or check existing charge reference
-        switch (bms_soc_precisionlevel) {
+        switch (bms_measurements.soc_precisionlevel) {
           case SOC_CHARGE_ESTIMATED:
           case SOC_CHARGE_FULL:
             //check integrated charge
@@ -356,10 +368,10 @@ static void _BMS_UpdateSoC() {
             if (BMS_I2C_SubcommandOnly(SUBCMD_RESET_PASSQ, BMS_COMM_MAX_TRIES) == HAL_OK) {
               _bms_soc_charge_reference = estimated_charge;
               charge_delta = 0.0f;
-              bms_soc_precisionlevel = SOC_CHARGE_ESTIMATED;
+              bms_measurements.soc_precisionlevel = SOC_CHARGE_ESTIMATED;
             } else {
               //fall back to voltage-only if reset command fails somehow
-              bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+              bms_measurements.soc_precisionlevel = SOC_VOLTAGE_ONLY;
             }
             break;
         }
@@ -368,16 +380,16 @@ static void _BMS_UpdateSoC() {
   }
 
   //calculate estimated cell energy, depending on the mode
-  switch (bms_soc_precisionlevel) {
+  switch (bms_measurements.soc_precisionlevel) {
     default:
       //invalid mode: default to voltage only, fall through to that case
-      DEBUG_PRINTF("WARNING: BMS SoC estimation encountered invalid mode %u\n", (uint8_t)bms_soc_precisionlevel);
-      bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
+      DEBUG_PRINTF("WARNING: BMS SoC estimation encountered invalid mode %u\n", (uint8_t)bms_measurements.soc_precisionlevel);
+      bms_measurements.soc_precisionlevel = SOC_VOLTAGE_ONLY;
     case SOC_VOLTAGE_ONLY:
       if (fabsf(current) > bat_calc_voltageToEnergy_max_valid_current) {
         //current too high for valid voltage-to-energy estimation: report unknown energy and fraction (NaN)
-        bms_soc_energy = NAN;
-        bms_soc_fraction = NAN;
+        bms_measurements.soc_energy = NAN;
+        bms_measurements.soc_fraction = NAN;
         return;
       } else {
         //determine lowest cell voltage
@@ -388,13 +400,13 @@ static void _BMS_UpdateSoC() {
 
         if (min_voltage < BMS_SOC_CELL_VOLTAGE_MIN || min_voltage > BMS_SOC_CELL_VOLTAGE_MAX) {
           //unacceptable voltage: something went wrong, no estimation possible
-          bms_soc_energy = NAN;
-          bms_soc_fraction = NAN;
+          bms_measurements.soc_energy = NAN;
+          bms_measurements.soc_fraction = NAN;
           return;
         }
 
         //estimate energy of weakest cell
-        cell_energy = BAT_CALC_CellVoltageToEnergy(min_voltage, bms_soc_battery_health);
+        cell_energy = BAT_CALC_CellVoltageToEnergy(min_voltage, *bms_soc_battery_health_ptr);
       }
       break;
     case SOC_CHARGE_ESTIMATED:
@@ -402,16 +414,16 @@ static void _BMS_UpdateSoC() {
       //calculate integrated charge per cell
       charge = _bms_soc_charge_reference + charge_delta;
       //estimate energy of single cell
-      cell_energy = BAT_CALC_CellChargeToEnergy(charge, bms_soc_battery_health);
+      cell_energy = BAT_CALC_CellChargeToEnergy(charge, *bms_soc_battery_health_ptr);
       break;
   }
 
   //multiply single cell energy by cell count to get total energy
-  bms_soc_energy = BMS_CELLS_TOTAL * cell_energy;
+  bms_measurements.soc_energy = BMS_CELLS_TOTAL * cell_energy;
   //calculate fraction from cell energy and battery health, and clamp to [0, 1]
-  bms_soc_fraction = cell_energy / (bat_calc_cellEnergy_max * bms_soc_battery_health);
-  if (bms_soc_fraction < 0.0f) bms_soc_fraction = 0.0f;
-  else if (bms_soc_fraction > 1.0f) bms_soc_fraction = 1.0f;
+  bms_measurements.soc_fraction = cell_energy / (bat_calc_cellEnergy_max * (*bms_soc_battery_health_ptr));
+  if (bms_measurements.soc_fraction < 0.0f) bms_measurements.soc_fraction = 0.0f;
+  else if (bms_measurements.soc_fraction > 1.0f) bms_measurements.soc_fraction = 1.0f;
 }
 
 //check if any cells need balancing and enable/disable balancing accordingly
@@ -419,7 +431,7 @@ static HAL_StatusTypeDef _BMS_HandleBalancing() {
   int i;
 
   //check whether we're even in a state to do cell balancing
-  if (bms_status._deepsleep_bit || bms_status.safety_faults._all != 0 || !pwrsw_status) {
+  if (_bms_should_deepsleep_internal || bms_status._deepsleep_bit || bms_status.safety_faults._all != 0) {
     //no: disable all cell balancing
     _bms_bal_active_cells = 0;
     return BMS_I2C_SubcommandWrite(SUBCMD_CB_ACTIVE_CELLS, &_bms_bal_active_cells, 1, BMS_COMM_MAX_TRIES);
@@ -601,7 +613,7 @@ HAL_StatusTypeDef BMS_UpdateMeasurements(bool include_temps) {
   }
 
   //current, charge, time, state-of-charge are unnecessary when power is off
-  if (pwrsw_status) {
+  if (bms_status.chg_state || bms_status.dsg_state) {
     //read current
     if (BMS_I2C_DirectCommandRead(DIRCMD_CURRENT, read_buffer_u8, 2, BMS_COMM_MAX_TRIES) == HAL_OK) {
       bms_measurements.current = BMS_CONV_CUR_TO_MA_MULT * (int32_t)read_buffer_s16[0];
@@ -670,6 +682,7 @@ HAL_StatusTypeDef BMS_SetFETControl(bool fets_enabled) {
   //check if we have the right status and return
   if (bms_status.fets_enabled != fets_enabled) {
     DEBUG_PRINTF("ERROR: BMS FET enable readback incorrect (%u instead of %u)\n", bms_status.fets_enabled, fets_enabled);
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
     return HAL_ERROR;
   }
   return HAL_OK;
@@ -694,12 +707,13 @@ HAL_StatusTypeDef BMS_SetFETForceOff(bool force_off_dsg, bool force_off_chg) {
   ReturnOnError(BMS_I2C_DirectCommandRead(DIRCMD_FET_CONTROL, &read_state, 1, BMS_COMM_MAX_TRIES));
   if (read_state != desired_state) {
     DEBUG_PRINTF("ERROR: BMS FET control readback incorrect (0x%02X instead of 0x%02X)\n", read_state, desired_state);
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
     return HAL_ERROR;
   }
 
   //when forcing all off: recover from all latched faults
   if (force_off_dsg && force_off_chg) {
-    _bms_chg_force_off = false;
+    bms_status.chg_force_off = false;
     uint8_t recovery_byte = 0xFE;
     ReturnOnError(BMS_I2C_SubcommandWrite(SUBCMD_PROT_RECOVERY, &recovery_byte, 1, BMS_COMM_MAX_TRIES));
   }
@@ -730,6 +744,7 @@ HAL_StatusTypeDef BMS_EnterDeepSleep() {
   //check if we have the right status and return
   if (!bms_status._deepsleep_bit) {
     DEBUG_PRINTF("ERROR: BMS failed to enter deepsleep mode\n");
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
     return HAL_ERROR;
   }
   return HAL_OK;
@@ -755,6 +770,7 @@ HAL_StatusTypeDef BMS_ExitDeepSleep() {
   //check if we have the right status and return
   if (bms_status._deepsleep_bit) {
     DEBUG_PRINTF("ERROR: BMS failed to exit deepsleep mode\n");
+    UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_BMS_I2C_ERROR, false);
     return HAL_ERROR;
   }
   return HAL_OK;
@@ -784,9 +800,62 @@ HAL_StatusTypeDef BMS_EnterShutdown(bool instant) {
   if (instant) {
     //instant shutdown: stop everything and wait for shutdown to happen
     Error_Handler();
+  } else {
+    //non-instant shutdown: notify of timed shutdown
+    bms_status.timed_shutdown_type = BMSSHDN_FULL_SHUTDOWN;
+    bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_FULL;
   }
 
   return HAL_OK;
+}
+
+
+HAL_StatusTypeDef BMS_SetBatteryHealth(float health) {
+  if (isnanf(health) || health < 0.1f || health > 1.0f) {
+    return HAL_ERROR;
+  }
+
+  ReturnOnError(HAL_FLASHEx_DATAEEPROM_Unlock());
+  ReturnOnError(HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD, (uint32_t)bms_soc_battery_health_ptr, *((uint32_t*)&health)));
+  return HAL_FLASHEx_DATAEEPROM_Lock();
+}
+
+
+//start a timed shutdown (deepsleep) by host request
+void BMS_StartHostRequestedShutdown() {
+  _bms_shutdown_requested_by_host = true;
+
+  if (bms_status.timed_shutdown_type == BMSSHDN_NONE) {
+    bms_status.timed_shutdown_type = BMSSHDN_HOST_REQUEST;
+    bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_HOST;
+  }
+}
+
+//cancel a previously host-requested timed shutdown (deepsleep)
+void BMS_CancelHostRequestedShutdown() {
+  _bms_shutdown_requested_by_host = false;
+
+  if (bms_status.timed_shutdown_type == BMSSHDN_HOST_REQUEST) {
+    bms_status.timed_shutdown_type = BMSSHDN_NONE;
+    bms_status.timed_shutdown_time = UINT16_MAX;
+  }
+}
+
+bool BMS_GetHostRequestedShutdown() {
+  return _bms_shutdown_requested_by_host;
+}
+
+//reset internal timed shutdown state (e.g. after user turns off switch)
+void BMS_ResetTimedShutdownState() {
+  bms_status.timed_shutdown_type = BMSSHDN_NONE;
+  bms_status.timed_shutdown_time = UINT16_MAX;
+  _bms_timed_shutdown_triggered = false;
+  _bms_shutdown_requested_by_host = false;
+}
+
+
+bool BMS_GetDeepSleepDesiredState() {
+  return _bms_should_deepsleep_internal;
 }
 
 
@@ -816,16 +885,25 @@ void BMS_AlertInterrupt() {
 
 //actual initialisation attempt, may be retried multiple times by main init function
 static HAL_StatusTypeDef _BMS_InitAttempt() {
+  _bms_should_deepsleep_internal = bms_should_deepsleep;
+
   _bms_detected_initcomp = false;
   _bms_detected_safety_event = false;
   _bms_detected_shutdown_voltage = false;
 
-  _bms_chg_force_off = false;
+  bms_status.chg_force_off = false;
+  BMS_ResetTimedShutdownState();
 
-  bms_soc_battery_health = 1.0f;
-  bms_soc_precisionlevel = SOC_VOLTAGE_ONLY;
-  bms_soc_energy = NAN;
-  bms_soc_fraction = NAN;
+  bms_measurements.soc_precisionlevel = SOC_VOLTAGE_ONLY;
+  bms_measurements.soc_energy = NAN;
+  bms_measurements.soc_fraction = NAN;
+
+  //if battery health is invalid or unreasonably bad (<10%), reset to default 100% health
+  if (isnanf(*bms_soc_battery_health_ptr) || *bms_soc_battery_health_ptr < 0.1f || *bms_soc_battery_health_ptr > 1.0f) {
+    BMS_SetBatteryHealth(1.0f);
+  }
+
+  bms_i2c_suppress_error_notifs = false;
 
   //get current CRC mode and initialise config
   ReturnOnError(_BMS_DetectCRCMode());
@@ -839,13 +917,13 @@ static HAL_StatusTypeDef _BMS_InitAttempt() {
   ReturnOnError(BMS_UpdateMeasurements(true));
 
   //apply desired force-off status and enable FET control - also updates status
-  ReturnOnError(BMS_SetFETForceOff(bms_should_disable_fets, bms_should_disable_fets));
+  ReturnOnError(BMS_SetFETForceOff(_bms_should_deepsleep_internal, _bms_should_deepsleep_internal));
   ReturnOnError(BMS_SetFETControl(true));
 
   //enter/exit deepsleep depending on desired state
-  if (bms_should_deepsleep && !bms_status._deepsleep_bit) {
+  if (_bms_should_deepsleep_internal && !bms_status._deepsleep_bit) {
     ReturnOnError(BMS_EnterDeepSleep());
-  } else if (!bms_should_deepsleep && bms_status._deepsleep_bit) {
+  } else if (!_bms_should_deepsleep_internal && bms_status._deepsleep_bit) {
     ReturnOnError(BMS_ExitDeepSleep());
   }
 
@@ -874,6 +952,7 @@ HAL_StatusTypeDef BMS_Init() {
 }
 
 void BMS_LoopUpdate(uint32_t loop_count) {
+  int i;
 
 #ifdef MAIN_CURRENT_CALIBRATION
   static float cc1_mean = 0.0f;
@@ -909,6 +988,22 @@ void BMS_LoopUpdate(uint32_t loop_count) {
   }
 #endif
 
+  //handle active timed shutdown, if there is one
+  if (bms_status.timed_shutdown_type != BMSSHDN_NONE) {
+    if (bms_status.timed_shutdown_time == 0) {
+      //shutdown timer passed - trigger shutdown, except for forced one (that's automatically triggered by the BMS)
+      if (bms_status.timed_shutdown_type != BMSSHDN_FULL_SHUTDOWN) {
+        _bms_timed_shutdown_triggered = true;
+      }
+    } else {
+      //shutdown timer not passed yet - just count down
+      bms_status.timed_shutdown_time--;
+    }
+  }
+
+  //calculate internal desired deepsleep state
+  _bms_should_deepsleep_internal = bms_should_deepsleep || _bms_timed_shutdown_triggered;
+
   //update alerts if interrupt was somehow missed
   if (HAL_GPIO_ReadPin(BMS_ALERT_N_GPIO_Port, BMS_ALERT_N_Pin) == GPIO_PIN_RESET) {
     BMS_AlertInterrupt();
@@ -922,8 +1017,10 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     BMS_UpdateStatus();
 
     //if charge fault: latch chg fet off
-    if (bms_status.safety_faults.cov || bms_status.safety_faults.occ || bms_status.safety_faults.otc || bms_status.safety_faults.utc) {
-      _bms_chg_force_off = true;
+    if (!bms_status.chg_force_off && (bms_status.safety_faults.cov || bms_status.safety_faults.occ || bms_status.safety_faults.otc || bms_status.safety_faults.utc)) {
+      DEBUG_PRINTF("* BMS Charge fault detected and latched\n");
+      bms_status.chg_force_off = true;
+      UARTH_ForceCheckChangeNotification();
     }
 
     /*
@@ -933,19 +1030,58 @@ void BMS_LoopUpdate(uint32_t loop_count) {
       DEBUG_PRINTF("BMS Alert: 0x%04X\n", bms_status.safety_alerts._all);
     }
     */
-
-    //TODO communicate to system
   }
   if (_bms_detected_shutdown_voltage) {
     _bms_detected_shutdown_voltage = false;
-    DEBUG_PRINTF("***\n*** BMS FAULT: SHUTDOWN VOLTAGE DETECTED ***\n***\n");
-    //TODO communicate fault to system
+    //first detection: set forced undervoltage shutdown timer for host notification
+    if (bms_status.timed_shutdown_type != BMSSHDN_FULL_SHUTDOWN) {
+      DEBUG_PRINTF("***\n*** BMS FAULT: SHUTDOWN VOLTAGE DETECTED ***\n***\n");
+      bms_status.timed_shutdown_type = BMSSHDN_FULL_SHUTDOWN;
+      bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_FULL;
+      UARTH_ForceCheckChangeNotification();
+    }
   }
 
   //measurement update
   if (loop_count % BMS_LOOP_PERIOD_MEASUREMENTS == 0) {
     bool temps = (loop_count % BMS_LOOP_PERIOD_TEMPERATURES == 0);
     BMS_UpdateMeasurements(temps);
+
+    //only do end-of-discharge check if we're not already expecting a forced shutdown
+    if (bms_status.timed_shutdown_type != BMSSHDN_FULL_SHUTDOWN) {
+      //get lowest cell voltage for end-of-discharge check
+      int16_t min_cell_voltage = bms_measurements.voltage_cells[0];
+      for (i = 1; i < BMS_CELLS_SERIES; i++) {
+        if (bms_measurements.voltage_cells[i] < min_cell_voltage) {
+          min_cell_voltage = bms_measurements.voltage_cells[i];
+        }
+      }
+
+      if (bms_status.timed_shutdown_type == BMSSHDN_END_OF_DISCHARGE) {
+        //end-of-discharge shutdown already scheduled: check for voltage rise above hysteresis (which would cancel it)
+        if (min_cell_voltage > (BMS_MIN_DSG_VOLTAGE + BMS_MIN_DSG_HYSTERESIS)) {
+          //sufficient voltage rise: cancel end-of-discharge shutdown
+          if (_bms_shutdown_requested_by_host) {
+            //go back to host-requested shutdown
+            bms_status.timed_shutdown_type = BMSSHDN_HOST_REQUEST;
+            bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_HOST;
+          } else {
+            //no shutdown request by host: cancel shutdown entirely
+            bms_status.timed_shutdown_type = BMSSHDN_NONE;
+            bms_status.timed_shutdown_time = UINT16_MAX;
+          }
+          UARTH_ForceCheckChangeNotification();
+        }
+      } else {
+        //no end-of-discharge shutdown scheduled: check for voltage fall below end-of-discharge threshold
+        if (min_cell_voltage < BMS_MIN_DSG_VOLTAGE) {
+          //voltage fallen below threshold: initiate end-of-discharge shutdown
+          bms_status.timed_shutdown_type = BMSSHDN_END_OF_DISCHARGE;
+          bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_EOD;
+          UARTH_ForceCheckChangeNotification();
+        }
+      }
+    }
   }
 
   //status update and handling
@@ -964,20 +1100,20 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     }
 
     //if FETs should be forced off, do that before mode changes
-    if (bms_should_disable_fets || _bms_chg_force_off) {
-      BMS_SetFETForceOff(bms_should_disable_fets, true);
+    if (_bms_should_deepsleep_internal || bms_status.chg_force_off) {
+      BMS_SetFETForceOff(_bms_should_deepsleep_internal, true);
     }
 
     //do mode change into or out of deepsleep depending on requirement
-    if (bms_should_deepsleep && !bms_status._deepsleep_bit) {
+    if (_bms_should_deepsleep_internal && !bms_status._deepsleep_bit) {
       BMS_EnterDeepSleep();
-    } else if (!bms_should_deepsleep && bms_status._deepsleep_bit) {
+    } else if (!_bms_should_deepsleep_internal && bms_status._deepsleep_bit) {
       BMS_ExitDeepSleep();
     }
 
     //if at least one FET is off and they should not be forced off, unforce them after mode changes
-    if (!bms_should_disable_fets && (!bms_status.dsg_state || (!bms_status.chg_state && !_bms_chg_force_off))) {
-      BMS_SetFETForceOff(false, _bms_chg_force_off);
+    if (!_bms_should_deepsleep_internal && (!bms_status.dsg_state || (!bms_status.chg_state && !bms_status.chg_force_off))) {
+      BMS_SetFETForceOff(false, bms_status.chg_force_off);
     }
 
     //if FET control is disabled, enable it (should always be enabled)
@@ -1010,7 +1146,7 @@ void BMS_LoopUpdate(uint32_t loop_count) {
     DEBUG_PRINTF("FETs enabled: %u, FET state: DSG %u CHG %u\n", bms_status.fets_enabled, bms_status.dsg_state, bms_status.chg_state);
     DEBUG_PRINTF("Cell voltages: %d %d %d %d %d, Stack voltage: %u, Current: %ld\n", bms_measurements.voltage_cells[0], bms_measurements.voltage_cells[1],
                  bms_measurements.voltage_cells[2], bms_measurements.voltage_cells[3], bms_measurements.voltage_cells[4], bms_measurements.voltage_stack, bms_measurements.current);
-    DEBUG_PRINTF("SoC: Mode: %u, Energy: %.2f, Fraction: %.4f, Health: %.2f\n", (uint8_t)bms_soc_precisionlevel, bms_soc_energy, bms_soc_fraction, bms_soc_battery_health);
+    DEBUG_PRINTF("SoC: Mode: %u, Energy: %.2f, Fraction: %.4f, Health: %.2f\n", (uint8_t)bms_measurements.soc_precisionlevel, bms_measurements.soc_energy, bms_measurements.soc_fraction, *bms_soc_battery_health_ptr);
     DEBUG_PRINTF("Temps: Bat %d Int %d, Charge: %lld, Time: %lu, Balancing: 0x%02X\n", bms_measurements.bat_temp, bms_measurements.internal_temp, bms_measurements.accumulated_charge,
                  bms_measurements.charge_accumulation_time, _bms_bal_active_cells);
   }
