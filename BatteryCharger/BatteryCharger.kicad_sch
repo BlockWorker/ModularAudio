@@ -5287,6 +5287,16 @@
 	)
 	(wire
 		(pts
+			(xy 53.34 62.23) (xy 53.34 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fcba7eb1-e0b6-4a3c-a58e-f6adcbb5bdde")
+	)
+	(wire
+		(pts
 			(xy 128.27 146.05) (xy 101.6 146.05)
 		)
 		(stroke
@@ -5337,7 +5347,6 @@
 	)
 	(label "REGN"
 		(at 171.45 92.71 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5346,20 +5355,28 @@
 		)
 		(uuid "140dc144-e020-447c-add1-8f9d279b3119")
 	)
-	(label "SYS_PWR"
+	(label "ADAPTER_IN"
 		(at 41.91 148.59 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "96716878-9df8-4337-b62e-33e1fda727b7")
+		(uuid "1ca0c7a2-4c2b-47aa-bde6-8a3f5b8c38f5")
+	)
+	(label "ADAPTER_IN"
+		(at 53.34 62.23 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a47220ec-9e6e-4144-b261-b62941641104")
 	)
 	(label "SYS_PWR"
 		(at 236.22 62.23 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
