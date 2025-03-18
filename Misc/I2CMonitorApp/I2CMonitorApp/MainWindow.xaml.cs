@@ -28,5 +28,9 @@ namespace I2CMonitorApp {
         private void OpenChargerWindow(object sender, RoutedEventArgs e) {
             new ChargerWindow().Show();
         }
+
+        private void OpenBatteryWindow(object sender, RoutedEventArgs e) {
+            new BatteryMonitorWindow().Show();
+        }
     }
 }

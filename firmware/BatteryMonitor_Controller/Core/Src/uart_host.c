@@ -257,6 +257,7 @@ HAL_StatusTypeDef UARTH_Notification_Event_Error(uint16_t error_code, bool high_
 static HAL_StatusTypeDef _UARTH_Notification_Status(uint8_t type, uint8_t reg_addr) {
   uint32_t data_length;
   uint8_t temp_value_8;
+  uint16_t temp_value_16;
   uint32_t temp_value_32;
   int i;
 
@@ -343,7 +344,8 @@ static HAL_StatusTypeDef _UARTH_Notification_Status(uint8_t type, uint8_t reg_ad
       break;
     case UARTDEF_BMS_SHUTDOWN:
       _notif_prep_buffer[2] = (uint8_t)bms_status.timed_shutdown_type;
-      memcpy(_notif_prep_buffer + 3, &bms_status.timed_shutdown_time, sizeof(uint16_t));
+      temp_value_16 = bms_status.timed_shutdown_time * MAIN_LOOP_PERIOD_MS;
+      memcpy(_notif_prep_buffer + 3, &temp_value_16, sizeof(uint16_t));
       data_length = 3;
       break;
     case UARTDEF_BMS_NOTIF_MASK:

@@ -9,6 +9,7 @@
     <Grid>
         <Button Content="Amplifier" HorizontalAlignment="Left" Margin="51,48,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenAmpWindow"/>
         <Button Content="Charger" HorizontalAlignment="Left" Margin="51,99,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenChargerWindow"/>
+        <Button Content="Battery" HorizontalAlignment="Left" Margin="51,154,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenBatteryWindow"/>
 
     </Grid>
 </Window>
