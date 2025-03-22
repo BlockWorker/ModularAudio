@@ -139,22 +139,22 @@ void _SAFETY_DoLoopChecks() {
     if (imaxf || imaxl || pmaxf || pmaxl || amaxf || amaxl) {
       //DEBUG_PRINTF("ERROR: Safety loop - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
       if (imaxf) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_FAST;
       }
       if (imaxl) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_SLOW;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_SLOW;
       }
       if (pmaxf) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_FAST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_FAST;
       }
       if (pmaxl) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_SLOW;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_SLOW;
       }
       if (amaxf) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_FAST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_FAST;
       }
       if (amaxl) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_SLOW;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_SLOW;
       }
       safety_err_status |= safety_channel_err_bits[i];
       _SAFETY_TriggerSafetyShutdown();
@@ -172,22 +172,22 @@ void _SAFETY_DoLoopChecks() {
     if (iwarnf || iwarnl || pwarnf || pwarnl || awarnf || awarnl) {
       //DEBUG_PRINTF("WARNING: Safety loop - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current_0s1, real_power_0s1, apparent_power_0s1);
       if (iwarnf) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_FAST;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_FAST;
       }
       if (iwarnl) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_SLOW;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_SLOW;
       }
       if (pwarnf) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_FAST;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_FAST;
       }
       if (pwarnl) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_SLOW;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_SLOW;
       }
       if (awarnf) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_FAST;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_FAST;
       }
       if (awarnl) {
-	safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_SLOW;
+        safety_warn_status_loop |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_SLOW;
       }
       safety_warn_status_loop |= safety_channel_warn_bits[i];
       I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_SWARN_Msk);
@@ -319,13 +319,13 @@ void SAFETY_CheckADCInstValues() {
     if (imax || pmax || amax) {
       //DEBUG_PRINTF("ERROR: Safety inst value check - maximum exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
       if (imax) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_IRMS_INST;
       }
       if (pmax) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_INST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAVG_INST;
       }
       if (amax) {
-	safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_INST;
+        safety_err_status |= I2CDEF_POWERAMP_SERR_SOURCE_MTYPE_PAPP_INST;
       }
       safety_err_status |= safety_channel_err_bits[i];
       _SAFETY_TriggerSafetyShutdown();
@@ -340,13 +340,13 @@ void SAFETY_CheckADCInstValues() {
     if (iwarn || pwarn || awarn) {
       //DEBUG_PRINTF("WARNING: Safety inst value check - warn level exceeded, channel %d: %f A, %f W, %f VA\n", i, current, real_power, apparent_power);
       if (iwarn) {
-	safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_INST;
+        safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_IRMS_INST;
       }
       if (pwarn) {
-	safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_INST;
+        safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAVG_INST;
       }
       if (awarn) {
-	safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_INST;
+        safety_warn_status_inst |= I2CDEF_POWERAMP_SWARN_SOURCE_MTYPE_PAPP_INST;
       }
       safety_warn_status_inst |= safety_channel_warn_bits[i];
       I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_SWARN_Msk);

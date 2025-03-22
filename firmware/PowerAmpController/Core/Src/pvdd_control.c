@@ -228,11 +228,11 @@ void PVDD_LoopUpdate() {
   } else if (locked_out) { //not reducing, but in lockout
     //fast voltage update because we expect rapid changes during lockout time
     if (pvdd_remaining_lockout_cycles > 10) { //still in lockout for a while: instant update
-	pvdd_voltage_measured = direct_measured_voltage;
+      pvdd_voltage_measured = direct_measured_voltage;
     } else if (pvdd_remaining_lockout_cycles > 5) { //nearing end: apply light smoothing
-	pvdd_voltage_measured = 0.5f * pvdd_voltage_measured + 0.5f * direct_measured_voltage;
+      pvdd_voltage_measured = 0.5f * pvdd_voltage_measured + 0.5f * direct_measured_voltage;
     } else { //almost done: stronger smoothing
-	pvdd_voltage_measured = 0.9f * pvdd_voltage_measured + 0.1f * direct_measured_voltage;
+      pvdd_voltage_measured = 0.9f * pvdd_voltage_measured + 0.1f * direct_measured_voltage;
     }
   } else { //normal operation
     //use (slow) EMA for voltage measurement smoothing
@@ -249,11 +249,11 @@ void PVDD_LoopUpdate() {
     //check voltage error and apply correction if needed
     if (pvdd_voltage_measured - pvdd_voltage_target < -PVDD_VOLTAGE_ERROR_CORRECT && pvdd_voltage_request_offset < PVDD_VOLTAGE_OFFSET_MAX) { //voltage lower than requested: correct upwards, if we have headroom
       if (pvdd_voltage_request_offset + PVDD_VOLTAGE_OFFSET_STEP >= PVDD_VOLTAGE_OFFSET_MAX) { //hit maximum: set to maximum correction and warn
-	pvdd_voltage_request_offset = PVDD_VOLTAGE_OFFSET_MAX;
-	DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_target);
-	I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
+        pvdd_voltage_request_offset = PVDD_VOLTAGE_OFFSET_MAX;
+        DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_target);
+        I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
       } else { //not at maximum yet: increment offset by one step
-	pvdd_voltage_request_offset += PVDD_VOLTAGE_OFFSET_STEP;
+        pvdd_voltage_request_offset += PVDD_VOLTAGE_OFFSET_STEP;
       }
 
       //lock out of further changes for a short time
@@ -262,11 +262,11 @@ void PVDD_LoopUpdate() {
       _PVDD_WriteDACVoltage();
     } else if (pvdd_voltage_measured - pvdd_voltage_target > PVDD_VOLTAGE_ERROR_CORRECT && pvdd_voltage_request_offset > -PVDD_VOLTAGE_OFFSET_MAX) { //voltage higher than requested: correct downwards, if we have headroom
       if (pvdd_voltage_request_offset - PVDD_VOLTAGE_OFFSET_STEP <= -PVDD_VOLTAGE_OFFSET_MAX) { //hit maximum: set to maximum correction and warn
-	pvdd_voltage_request_offset = -PVDD_VOLTAGE_OFFSET_MAX;
-	DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_target);
-	I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
+        pvdd_voltage_request_offset = -PVDD_VOLTAGE_OFFSET_MAX;
+        DEBUG_PRINTF("WARNING: PVDD voltage offset hit maximum %f V (measured %f V, target %f V)\n", pvdd_voltage_request_offset, pvdd_voltage_measured, pvdd_voltage_target);
+        I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk);
       } else { //not at maximum yet: decrement offset by one step
-	pvdd_voltage_request_offset -= PVDD_VOLTAGE_OFFSET_STEP;
+        pvdd_voltage_request_offset -= PVDD_VOLTAGE_OFFSET_STEP;
       }
 
       //lock out of further changes for a short time

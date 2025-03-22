@@ -7,7 +7,6 @@
 
 #include "dac_control.h"
 #include "dac_spi.h"
-#include <stdio.h>
 
 /**
  * Check that the DAC chip ID is correct, confirming that the chip functions and can communicate
@@ -17,9 +16,7 @@ HAL_StatusTypeDef DAC_CheckChipID() {
 
   ReturnOnError(DAC_SPI_Read8(REG_CHIP_ID_READ, &chip_id));
 
-#ifdef DEBUG
-  printf("Chip ID: 0x%02X\n", chip_id);
-#endif
+  DEBUG_PRINTF("Chip ID: 0x%02X\n", chip_id);
 
   if (chip_id != DAC_EXPECTED_CHIP_ID) return HAL_ERROR;
 
@@ -123,9 +120,9 @@ void PrintAllRegisters() {
 #endif
 
 /**
- * Initialize the DAC chip with this application's basic settings
+ * Initialise the DAC chip with this application's basic settings
  */
-HAL_StatusTypeDef DAC_Initialize() {
+HAL_StatusTypeDef DAC_Init() {
 
   ReturnOnError(DAC_SPI_Write8(REG_SYSTEM_CONFIG, 0x80)); //perform soft reset
 

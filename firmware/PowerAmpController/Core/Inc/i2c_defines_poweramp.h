@@ -14,7 +14,7 @@
  *    - 0x10: INT_MASK: Interrupt mask (1B, bit field, rw, high = interrupt enable)
  *    - 0x11: INT_FLAGS: Interrupt flags (1B, bit field, rc, high = interrupt occurred)
  *  * PVDD registers
- *    - 0x20: PVDD_TARGET: PVDD targer voltage (4B, float little endian, rw)
+ *    - 0x20: PVDD_TARGET: PVDD target voltage (4B, float little endian, rw)
  *    - 0x21: PVDD_REQ: PVDD actual requested voltage (4B, float little endian, r)
  *    - 0x22: PVDD_MEASURED: PVDD measured voltage (4B, float little endian, r)
  *  * Output monitor registers

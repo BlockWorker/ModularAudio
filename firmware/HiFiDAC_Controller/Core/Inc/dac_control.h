@@ -20,7 +20,7 @@ HAL_StatusTypeDef DAC_CheckChipID();
 /**
  * Initialize the DAC chip with this application's basic settings
  */
-HAL_StatusTypeDef DAC_Initialize();
+HAL_StatusTypeDef DAC_Init();
 
 
 #endif /* INC_DAC_CONTROL_H_ */

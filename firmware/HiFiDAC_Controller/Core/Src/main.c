@@ -106,51 +106,43 @@ int main(void)
 
   HAL_Delay(1000);
 
-#ifdef DEBUG
-  printf("Controller init complete\n");
-#endif
+  DEBUG_PRINTF("Controller init complete\n");
 
   HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
 
   HAL_Delay(10);
 
-#ifdef DEBUG
-  printf("Enabling DAC...\n");
-#endif
+  DEBUG_PRINTF("Enabling DAC...\n");
 
   HAL_GPIO_WritePin(DAC_EN_GPIO_Port, DAC_EN_Pin, GPIO_PIN_SET);
 
   HAL_Delay(10);
 
   if (DAC_CheckChipID() != HAL_OK) {
-#ifdef DEBUG
-    printf("ERROR: INCORRECT DAC CHIP ID\n");
-#endif
+    DEBUG_PRINTF("ERROR: INCORRECT DAC CHIP ID\n");
+    HAL_Delay(100);
     Error_Handler();
   }
 
   HAL_Delay(10);
 
-  if (DAC_Initialize() != HAL_OK) {
-#ifdef DEBUG
-    printf("ERROR: DAC INIT FAILED\n");
-#endif
+  if (DAC_Init() != HAL_OK) {
+    DEBUG_PRINTF("ERROR: DAC INIT FAILED\n");
+    HAL_Delay(100);
     Error_Handler();
   }
 
-#ifdef DEBUG
   if (HAL_GPIO_ReadPin(GPIO1_GPIO_Port, GPIO1_Pin) == GPIO_PIN_SET) {
-    printf("Automute initially muted\n");
+    DEBUG_PRINTF("Automute initially muted\n");
   } else {
-    printf("Automute initially unmuted\n");
+    DEBUG_PRINTF("Automute initially unmuted\n");
   }
 
   if (HAL_GPIO_ReadPin(GPIO2_GPIO_Port, GPIO2_Pin) == GPIO_PIN_SET) {
-    printf("SRC initially locked\n");
+    DEBUG_PRINTF("SRC initially locked\n");
   } else {
-    printf("SRC initially not locked\n");
+    DEBUG_PRINTF("SRC initially not locked\n");
   }
-#endif
 
   /* USER CODE END 2 */
 
@@ -217,7 +209,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00802D3B;
+  hi2c1.Init.Timing = 0x40000A0B;
   hi2c1.Init.OwnAddress1 = 58;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;

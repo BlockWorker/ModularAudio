@@ -31,7 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -50,7 +51,23 @@ extern UART_HandleTypeDef huart1;
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+//quick error-return macro
+#define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
 
+//debug printout, disabled outside of debug mode
+#ifdef DEBUG
+#define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
+#else
+#define DEBUG_PRINTF(...) do { } while (0)
+#endif
+
+#ifndef MIN
+  #define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef MAX
+  #define MAX(x,y) ((x) > (y) ? (x) : (y))
+#endif
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -79,7 +96,8 @@ void Error_Handler(void);
 #define I2C_INT_N_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+//main loop period in milliseconds
+#define MAIN_LOOP_PERIOD_MS 10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

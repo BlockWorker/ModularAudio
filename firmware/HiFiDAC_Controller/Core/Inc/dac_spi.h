@@ -11,9 +11,6 @@
 #include "main.h"
 
 
-#define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
-
-
 typedef enum {
   REG_SYSTEM_CONFIG = 0x00,
   REG_SYS_MODE_CONFIG = 0x01,
@@ -87,6 +84,7 @@ typedef enum {
   REG_PROG_COEFF_OUT_READ = 0xF6,
   REG_SPDIF_DATA_READ = 0xFB
 } DAC_SPI_Register;
+
 
 /**
  * Write data to DAC register
