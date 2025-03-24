@@ -1,0 +1,121 @@
+﻿<Window x:Class="I2CMonitorApp.BluetoothReceiverWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:I2CMonitorApp"
+        mc:Ignorable="d"
+        Title="Bluetooth Receiver Controls" Height="470" Width="800" Closing="Window_Closing">
+    <Grid>
+        <Grid Margin="10,10,0,0" Width="400" Height="289" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="87"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.RowSpan="2"/>
+            <Label Content="Notif Mask" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="3" Grid.RowSpan="2"/>
+            <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="6"/>
+            <Label Content="Conn. Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="8"/>
+            <Label Content="Media Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="10"/>
+            <Label Content="Tone" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="12"/>
+            <local:BitField x:Name="statusHighField" LabelFontSize="12" Labels="OUE&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;UAE" Grid.Column="1"/>
+            <local:BitField x:Name="statusLowField" LabelFontSize="12" Labels="IND&#xA;CNE&#xA;DSE&#xA;CON&#xA;A2L&#xA;AVL&#xA;A2S&#xA;AVP" Grid.Row="1" Grid.Column="1"/>
+            <local:BitField x:Name="notifMaskHighField" LabelFontSize="12" Labels="COD&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="3" Grid.Column="1"/>
+            <local:BitField x:Name="notifMaskLowField" LabelFontSize="12" Labels="STS&#xA;VOL&#xA;TLE&#xA;ART&#xA;ALB&#xA;DVA&#xA;DVN&#xA;CNS" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
+            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="EOU&#xA;&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="6" Grid.Column="1"/>
+            <local:BitField x:Name="connControlField" LabelFontSize="12" Labels="CNN&#xA;CNF&#xA;DSN&#xA;DSF&#xA;DCN&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="8" Grid.Column="1"/>
+            <ComboBox x:Name="mediaControlBox" Grid.Row="10" Grid.Column="1">
+                <ComboBoxItem Content="PLAY"/>
+                <ComboBoxItem Content="PAUSE"/>
+                <ComboBoxItem Content="STOP"/>
+                <ComboBoxItem Content="FORWARD"/>
+                <ComboBoxItem Content="BACKWARD"/>
+                <ComboBoxItem Content="FF START"/>
+                <ComboBoxItem Content="FF END"/>
+                <ComboBoxItem Content="REW START"/>
+                <ComboBoxItem Content="REW END"/>
+            </ComboBox>
+            <TextBox x:Name="toneBox" Grid.Row="12" Grid.Column="1" VerticalContentAlignment="Center"/>
+            <Button Content="Apply" Grid.Row="3" Grid.Column="2" Grid.RowSpan="2" Margin="3 18" Click="DoNotifMaskApply"/>
+            <Button Content="Apply" Grid.Row="6" Grid.Column="2" Margin="3,3,3,3" Click="DoControlApply"/>
+            <Button Content="Apply" Grid.Row="8" Grid.Column="2" Margin="3,3,3,3" Click="DoConnControlApply"/>
+            <Button Content="Send" Grid.Row="10" Grid.Column="2" Margin="3,3,3,3" Click="DoMediaControlSend"/>
+            <Button Content="Play" Grid.Row="12" Grid.Column="2" Margin="3,3,3,3" Click="DoTonePlay"/>
+        </Grid>
+        <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="400" Height="31" Margin="10,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="connLabel" Content="Disconnected" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <Label x:Name="idLabel" Grid.Column="1" Content="0x00" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <Button x:Name="connButton" Grid.Column="3" Content="Connect" Margin="5" Click="OnConnectButtonClick"/>
+            <ComboBox x:Name="connPortBox" Grid.Column="2" Margin="3"/>
+        </Grid>
+        <ListBox x:Name="eventBox" Margin="0,0,10,10" Width="300" Height="110" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+        <Grid Margin="429,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="287" Width="361">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Volume" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Title" Grid.Row="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Artist" Grid.Row="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Album" Grid.Row="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Dev Addr" Grid.Row="8" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Dev Name" Grid.Row="10" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Quality" Grid.Row="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="RSSI" Grid.Row="14" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Codec" Grid.Row="16" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <TextBox x:Name="volumeBox" Text="0" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="titleBox" Text="" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="artistBox" Text="" Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="albumBox" Text="" Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="devAddrBox" Text="000000000000" Grid.Row="8" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="devNameBox" Text="" Grid.Row="10" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="qualityBox" Text="0" Grid.Row="12" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="rssiBox" Text="0" Grid.Row="14" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="codecBox" Text="" Grid.Row="16" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <Button Content="Apply" Grid.Column="2" Margin="3,3,3,3" Click="DoVolumeApply"/>
+            <Label Content="dB" Grid.Row="14" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+        </Grid>
+    </Grid>
+</Window>

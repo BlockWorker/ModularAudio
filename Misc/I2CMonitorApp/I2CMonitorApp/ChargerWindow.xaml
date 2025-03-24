@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:I2CMonitorApp"
         mc:Ignorable="d"
-        Title="ChargerWindow" Height="450" Width="800" Closing="OnWindowClosing">
+        Title="Charger Controls" Height="450" Width="800" Closing="OnWindowClosing">
     <Grid>
         <Grid Margin="10,10,0,0" Width="505" Height="277" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Grid.RowDefinitions>
@@ -48,14 +48,12 @@
         <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="400" Height="31" Margin="10,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"/>
-                <ColumnDefinition Width="50"/>
                 <ColumnDefinition Width="100"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Label x:Name="connLabel" Content="Disconnected" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-            <Label x:Name="idLabel" Grid.Column="1" Content="0x00" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-            <Button x:Name="connButton" Grid.Column="3" Content="Connect" Margin="5" Click="OnConnectButtonClick"/>
-            <ComboBox x:Name="connPortBox" Grid.Column="2" Margin="3"/>
+            <Button x:Name="connButton" Grid.Column="2" Content="Connect" Margin="5" Click="OnConnectButtonClick"/>
+            <ComboBox x:Name="connPortBox" Grid.Column="1" Margin="3"/>
         </Grid>
 
     </Grid>

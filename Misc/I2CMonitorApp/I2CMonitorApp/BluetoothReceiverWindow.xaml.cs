@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SerialPortLib;
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
@@ -12,16 +13,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using SerialPortLib;
 
 namespace I2CMonitorApp {
     /// <summary>
-    /// Interaction logic for BatteryMonitorWindow.xaml
+    /// Interaction logic for BluetoothReceiverWindow.xaml
     /// </summary>
-    public partial class BatteryMonitorWindow : Window {
+    public partial class BluetoothReceiverWindow : Window {
 
-        private const byte DEVICE_ID_CORRECT = 0xBD;
-        private readonly byte[] NOTIF_MASK_DEFAULT_WRITE = [0xFF, 0x0F];
+        private const byte DEVICE_ID_CORRECT = 0xB2;
+        private readonly byte[] NOTIF_MASK_DEFAULT_WRITE = [0xFF, 0x01];
 
         private readonly SerialPortInput port = new();
         private readonly Queue<byte> readBuffer = [];
@@ -31,7 +31,7 @@ namespace I2CMonitorApp {
 
         private readonly Timer timer;
 
-        public BatteryMonitorWindow() {
+        public BluetoothReceiverWindow() {
             InitializeComponent();
 
             port.MessageReceived += DataReceivedHandler;
@@ -58,7 +58,6 @@ namespace I2CMonitorApp {
 
             DoReadRegister(0xFE);
             DoReadRegister(0x20);
-            DoReadRegister(0x30);
             DoReadRegister(0x00);
         }
 
@@ -69,7 +68,7 @@ namespace I2CMonitorApp {
 
             List<byte> buf = [];
             buf.Add(0xF1);
-            foreach(var b in data) {
+            foreach (var b in data) {
                 if (b == 0xF1 || b == 0xFA || b == 0xFF) {
                     buf.Add(0xFF); //escape
                 }
@@ -154,7 +153,7 @@ namespace I2CMonitorApp {
                         return;
                     }
 
-                    port.SetPort((string)connPortBox.SelectedValue, 57600, StopBits.One, Parity.None, DataBits.Eight);
+                    port.SetPort((string)connPortBox.SelectedValue, 115200, StopBits.One, Parity.None, DataBits.Eight);
 
                     readBuffer.Clear();
                     parseBuffer.Clear();
@@ -169,7 +168,7 @@ namespace I2CMonitorApp {
                     }
 
                     ReadAndInitRegisters();
-                    
+
                     timer.Change(2000, 2000);
 
                     connLabel.Content = "Connected";
@@ -202,7 +201,6 @@ namespace I2CMonitorApp {
             DoWriteRegister(0x20, NOTIF_MASK_DEFAULT_WRITE);
             DoReadRegister(0x20);
             DoReadRegister(0xFE);
-            DoReadRegister(0x30);
             DoReadRegister(0x00);
             DoReadRegister(0x01);
             DoReadRegister(0x02);
@@ -212,9 +210,6 @@ namespace I2CMonitorApp {
             DoReadRegister(0x06);
             DoReadRegister(0x07);
             DoReadRegister(0x08);
-            DoReadRegister(0x09);
-            DoReadRegister(0x0A);
-            DoReadRegister(0x0B);
         }
 
         private void HandleReceivedNotification(byte[] data) {
@@ -225,7 +220,7 @@ namespace I2CMonitorApp {
                     switch (data[1]) {
                         case 0x00:
                             eventBox.Items.Add("MCU Reset");
-                            ReadAndInitRegisters();
+                            //ReadAndInitRegisters();
                             break;
                         case 0x01:
                             if (data.Length < 3) return;
@@ -234,6 +229,10 @@ namespace I2CMonitorApp {
                         case 0x02:
                             if (data.Length < 4) return;
                             eventBox.Items.Add($"Error 0x{data[3]:X2}{data[2]:X2}");
+                            break;
+                        case 0x03:
+                            eventBox.Items.Add("BT Module Reset");
+                            ReadAndInitRegisters();
                             break;
                         default:
                             eventBox.Items.Add($"Unknown event 0x{data[1]:X2}");
@@ -245,124 +244,53 @@ namespace I2CMonitorApp {
                     //data
                     switch (data[1]) {
                         case 0x00:
-                            if (data.Length < 3) return;
+                            if (data.Length < 4) return;
+                            statusLowField.Value = data[2];
                             if (data[0] == 0x01) {
-                                statusField.Value = (byte)((statusField.Value & 0xE0) | data[2]);
+                                statusHighField.Value = (byte)((statusHighField.Value & 0x80) | data[3]);
                             } else {
-                                statusField.Value = data[2];
+                                statusHighField.Value = data[3];
                             }
                             break;
                         case 0x01:
-                            if (data.Length < 4) return;
-                            stackBox.Text = BitConverter.ToUInt16(data, 2).ToString();
+                            if (data.Length < 3) return;
+                            if (!volumeBox.IsFocused) {
+                                volumeBox.Text = data[2].ToString();
+                            }
                             break;
                         case 0x02:
-                            if (data.Length < 10) return;
-                            cell1Box.Text = BitConverter.ToInt16(data, 2).ToString();
-                            cell2Box.Text = BitConverter.ToInt16(data, 4).ToString();
-                            cell3Box.Text = BitConverter.ToInt16(data, 6).ToString();
-                            cell4Box.Text = BitConverter.ToInt16(data, 8).ToString();
+                            if (data.Length < 3) return;
+                            titleBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x03:
-                            if (data.Length < 6) return;
-                            currentBox.Text = BitConverter.ToInt32(data, 2).ToString();
+                            if (data.Length < 3) return;
+                            artistBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x04:
-                            if (data.Length < 7) return;
-                            socPercentBox.Text = (BitConverter.ToSingle(data, 2) * 100.0f).ToString("F2");
-                            switch (data[6]) {
-                                case 0x01:
-                                    socLevelBox.Text = "Volt Only";
-                                    break;
-                                case 0x02:
-                                    socLevelBox.Text = "Est Ref";
-                                    break;
-                                case 0x03:
-                                    socLevelBox.Text = "Full Ref";
-                                    break;
-                                default:
-                                    eventBox.Items.Add($"Unknown SoC level 0x{data[6]:X2}");
-                                    goto case 0x00;
-                                case 0x00:
-                                    socLevelBox.Text = "Invalid";
-                                    break;
-                            }
+                            if (data.Length < 3) return;
+                            albumBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x05:
-                            if (data.Length < 7) return;
-                            socEnergyBox.Text = BitConverter.ToSingle(data, 2).ToString("F2");
-                            switch (data[6]) {
-                                case 0x01:
-                                    socLevelBox.Text = "Volt Only";
-                                    break;
-                                case 0x02:
-                                    socLevelBox.Text = "Est Ref";
-                                    break;
-                                case 0x03:
-                                    socLevelBox.Text = "Full Ref";
-                                    break;
-                                default:
-                                    eventBox.Items.Add($"Unknown SoC level 0x{data[6]:X2}");
-                                    goto case 0x00;
-                                case 0x00:
-                                    socLevelBox.Text = "Invalid";
-                                    break;
-                            }
+                            if (data.Length < 8) return;
+                            devAddrBox.Text = BitConverter.ToUInt64([.. data, 0, 0], 2).ToString("X12");
                             break;
                         case 0x06:
-                            if (data.Length < 6) return;
-                            if (!healthPercentBox.IsFocused) {
-                                healthPercentBox.Text = (BitConverter.ToSingle(data, 2) * 100.0f).ToString("F2");
-                            }
+                            if (data.Length < 3) return;
+                            devNameBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x07:
-                            if (data.Length < 4) return;
-                            batTempBox.Text = BitConverter.ToInt16(data, 2).ToString();
+                            if (data.Length < 6) return;
+                            rssiBox.Text = BitConverter.ToInt16(data, 2).ToString();
+                            qualityBox.Text = BitConverter.ToUInt16(data, 4).ToString();
                             break;
                         case 0x08:
-                            if (data.Length < 4) return;
-                            intTempBox.Text = BitConverter.ToInt16(data, 2).ToString();
-                            break;
-                        case 0x09:
-                            if (data.Length < 4) return;
-                            alertsLowField.Value = data[2];
-                            alertsHighField.Value = data[3];
-                            break;
-                        case 0x0A:
-                            if (data.Length < 4) return;
-                            faultsLowField.Value = data[2];
-                            faultsHighField.Value = data[3];
-                            break;
-                        case 0x0B:
-                            if (data.Length < 5) return;
-                            switch(data[2]) {
-                                case 0x00:
-                                    shutdownTypeBox.Text = "None";
-                                    break;
-                                case 0x01:
-                                    shutdownTypeBox.Text = "Full";
-                                    break;
-                                case 0x02:
-                                    shutdownTypeBox.Text = "EoD";
-                                    break;
-                                case 0x03:
-                                    shutdownTypeBox.Text = "User";
-                                    break;
-                                default:
-                                    eventBox.Items.Add($"Unknown shutdown type 0x{data[2]:X2}");
-                                    shutdownTypeBox.Text = "Unknown";
-                                    break;
-                            }
-                            shutdownTimeBox.Text = BitConverter.ToUInt16(data, 3).ToString();
+                            if (data.Length < 3) return;
+                            codecBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x20:
                             if (data.Length < 4) return;
                             notifMaskLowField.Value = data[2];
                             notifMaskHighField.Value = data[3];
-                            break;
-                        case 0x30:
-                            if (data.Length < 3) return;
-                            controlField.Value = data[2];
                             break;
                         case 0xFE:
                             if (data.Length < 3) return;
@@ -387,7 +315,7 @@ namespace I2CMonitorApp {
             byte[] data = [controlField.SwitchedValue];
             DoWriteRegister(0x30, data);
 
-            DoReadRegister(0x30);
+            controlField.ResetSwitches();
         }
 
         private void DoNotifMaskApply(object sender, RoutedEventArgs e) {
@@ -401,17 +329,58 @@ namespace I2CMonitorApp {
             DoReadRegister(0x20);
         }
 
-        private void DoHealthApply(object sender, RoutedEventArgs e) {
+        private void DoConnControlApply(object sender, RoutedEventArgs e) {
             if (!port.IsConnected) {
                 return;
             }
 
-            if (!float.TryParse(healthPercentBox.Text, out float health) || health < 0.1f || health > 1.0f) return;
+            byte[] data = [connControlField.SwitchedValue];
+            DoWriteRegister(0x31, data);
 
-            byte[] data = BitConverter.GetBytes(health);
-            DoWriteRegister(0x06, data);
+            connControlField.ResetSwitches();
+        }
 
-            DoReadRegister(0x06);
+        private void DoMediaControlSend(object sender, RoutedEventArgs e) {
+            if (!port.IsConnected) {
+                return;
+            }
+
+            if (mediaControlBox.SelectedIndex < 0 || mediaControlBox.SelectedIndex > 8) {
+                MessageBox.Show("Please select a media command first!");
+                return;
+            }
+
+            byte[] data = [(byte)(mediaControlBox.SelectedIndex + 1)];
+            DoWriteRegister(0x32, data);
+        }
+
+        private void DoTonePlay(object sender, RoutedEventArgs e) {
+            if (!port.IsConnected) {
+                return;
+            }
+
+            byte[] strBytes = [.. Encoding.ASCII.GetBytes(toneBox.Text), 0];
+
+            if (strBytes.Length >= 240) {
+                MessageBox.Show("Tone string too long! (240 bytes max)");
+                return;
+            }
+
+            DoWriteRegister(0x33, strBytes);
+        }
+
+        private void DoVolumeApply(object sender, RoutedEventArgs e) {
+            if (!port.IsConnected) {
+                return;
+            }
+
+            if (!byte.TryParse(volumeBox.Text, out var vol) || vol > 127) {
+                MessageBox.Show("Please enter a valid volume! (0-127)");
+                return;
+            }
+
+            byte[] data = [vol];
+            DoWriteRegister(0x01, data);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {

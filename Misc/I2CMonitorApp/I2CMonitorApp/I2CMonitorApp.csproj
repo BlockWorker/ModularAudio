@@ -14,6 +14,7 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="SerialPortLib" Version="1.2.2" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>
 

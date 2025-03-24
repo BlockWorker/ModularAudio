@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:I2CMonitorApp"
         mc:Ignorable="d"
-        Title="BatteryMonitorWindow" Height="450" Width="800" Closing="Window_Closing">
+        Title="Battery Monitor Controls" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
         <Grid Margin="10,10,0,0" Width="410" Height="281" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Grid.RowDefinitions>

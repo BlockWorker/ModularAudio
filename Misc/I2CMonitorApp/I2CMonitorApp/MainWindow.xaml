@@ -10,6 +10,7 @@
         <Button Content="Amplifier" HorizontalAlignment="Left" Margin="51,48,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenAmpWindow"/>
         <Button Content="Charger" HorizontalAlignment="Left" Margin="51,99,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenChargerWindow"/>
         <Button Content="Battery" HorizontalAlignment="Left" Margin="51,154,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenBatteryWindow"/>
+        <Button Content="Bluetooth" HorizontalAlignment="Left" Margin="51,0,0,0" VerticalAlignment="Center" Height="27" Width="73" Click="OpenBluetoothWindow"/>
 
     </Grid>
 </Window>

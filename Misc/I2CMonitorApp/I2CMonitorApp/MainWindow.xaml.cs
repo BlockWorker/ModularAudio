@@ -32,5 +32,9 @@ namespace I2CMonitorApp {
         private void OpenBatteryWindow(object sender, RoutedEventArgs e) {
             new BatteryMonitorWindow().Show();
         }
+
+        private void OpenBluetoothWindow(object sender, RoutedEventArgs e) {
+            new BluetoothReceiverWindow().Show();
+        }
     }
 }
