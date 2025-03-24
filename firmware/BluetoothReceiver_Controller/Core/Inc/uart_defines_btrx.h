@@ -53,7 +53,7 @@
  *    - 0x02: TITLE: Media title (?B, text, r)
  *    - 0x03: ARTIST: Media artist (?B, text, r)
  *    - 0x04: ALBUM: Media album (?B, text, r)
- *    - 0x05: DEVICE_ADDR: Connected Bluetooth device address (12B, hex, r)
+ *    - 0x05: DEVICE_ADDR: Connected Bluetooth device address (6B, hex, r)
  *    - 0x06: DEVICE_NAME: Connected Bluetooth device name (?B, text, r)
  *    - 0x07: CONN_STATS: Bluetooth connection stats (4B, 2B(low) signed RSSI + 2B(high) unsigned quality, r)
  *    - 0x08: CODEC: Active A2DP codec (?B, text, r)

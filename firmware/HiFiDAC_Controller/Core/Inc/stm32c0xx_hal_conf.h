@@ -40,7 +40,7 @@ extern "C" {
 /* #define HAL_CRYP_MODULE_ENABLED   */
 #define HAL_I2C_MODULE_ENABLED
 /* #define HAL_I2S_MODULE_ENABLED   */
-/* #define HAL_IWDG_MODULE_ENABLED   */
+#define HAL_IWDG_MODULE_ENABLED
 /* #define HAL_IRDA_MODULE_ENABLED   */
 /* #define HAL_PCD_MODULE_ENABLED   */
 /* #define HAL_RNG_MODULE_ENABLED   */
@@ -147,7 +147,7 @@ in voltage and temperature.*/
   * @brief This is the HAL system configuration section
   */
 #define  VDD_VALUE                    (3300UL)                                        /*!< Value of VDD in mv */
-#define  TICK_INT_PRIORITY            3U /*!< tick interrupt priority */
+#define  TICK_INT_PRIORITY            0U /*!< tick interrupt priority */
 #define  USE_RTOS                     0U
 #define  PREFETCH_ENABLE              0U
 #define  INSTRUCTION_CACHE_ENABLE     1U

@@ -22,6 +22,7 @@
 #include "stm32c0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -175,7 +176,10 @@ void EXTI4_15_IRQHandler(void)
 void I2C1_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C1_IRQn 0 */
-
+  if (READ_BIT(hi2c1.Instance->ISR, I2C_ISR_TIMEOUT)) {
+    __HAL_I2C_CLEAR_FLAG(&hi2c1, I2C_FLAG_TIMEOUT);
+    I2C_TimeoutISR();
+  }
   /* USER CODE END I2C1_IRQn 0 */
   if (hi2c1.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR)) {
     HAL_I2C_ER_IRQHandler(&hi2c1);

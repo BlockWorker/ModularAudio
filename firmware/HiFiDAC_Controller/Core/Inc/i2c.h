@@ -10,7 +10,7 @@
 
 
 #include "main.h"
-#include "i2c_defines_poweramp.h"
+#include "i2c_defines_hifidac.h"
 
 
 //size of virtual read/write buffers, in bytes - equals maximum virtual register size
@@ -32,6 +32,13 @@
 #else
 #define I2C_NONIDLE_TIMEOUT 3
 #endif
+
+//I2C instance to use
+#define I2C_INSTANCE hi2c1
+#define I2C_INT_PORT I2C_INT_N_GPIO_Port
+#define I2C_INT_PIN I2C_INT_N_Pin
+#define I2C_FORCE_RESET() __HAL_RCC_I2C1_FORCE_RESET()
+#define I2C_RELEASE_RESET() __HAL_RCC_I2C1_RELEASE_RESET()
 
 
 HAL_StatusTypeDef I2C_Init();

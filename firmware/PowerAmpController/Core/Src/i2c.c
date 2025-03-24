@@ -221,46 +221,46 @@ void _I2C_PrepareReadData() {
     switch (reg_addr) {
       case I2CDEF_POWERAMP_STATUS:
         ((uint16_t*)read_buf)[0] =
-	  ((HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_FAULT_Pos) |
-	  ((HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Pos) |
-	  (is_shutdown << I2CDEF_POWERAMP_STATUS_AMP_SD_Pos) |
-	  (pvdd_valid_voltage << I2CDEF_POWERAMP_STATUS_PVDD_VALID_Pos) |
-          (pvdd_reduction_ongoing << I2CDEF_POWERAMP_STATUS_PVDD_RED_Pos) |
-	  ((fabsf(pvdd_voltage_request_offset) > 1e-5f ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos) |
-	  ((fabsf(pvdd_voltage_request_offset) >= PVDD_VOLTAGE_OFFSET_MAX ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos) |
-	  (((safety_warn_status_inst | safety_warn_status_loop) != 0 ? 1 : 0) << I2CDEF_POWERAMP_STATUS_SWARN_Pos) |
-	  ((uint16_t)i2c_err_detected << I2CDEF_POWERAMP_STATUS_I2CERR_Pos);
-	i2c_err_detected = 0; //reset comm error detection after read
-	break;
+            ((HAL_GPIO_ReadPin(AMP_FAULT_N_GPIO_Port, AMP_FAULT_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_FAULT_Pos) |
+            ((HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET ? 1 : 0) << I2CDEF_POWERAMP_STATUS_AMP_CLIPOTW_Pos) |
+            (is_shutdown << I2CDEF_POWERAMP_STATUS_AMP_SD_Pos) |
+            (pvdd_valid_voltage << I2CDEF_POWERAMP_STATUS_PVDD_VALID_Pos) |
+            (pvdd_reduction_ongoing << I2CDEF_POWERAMP_STATUS_PVDD_RED_Pos) |
+            ((fabsf(pvdd_voltage_request_offset) > 1e-5f ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos) |
+            ((fabsf(pvdd_voltage_request_offset) >= PVDD_VOLTAGE_OFFSET_MAX ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos) |
+            (((safety_warn_status_inst | safety_warn_status_loop) != 0 ? 1 : 0) << I2CDEF_POWERAMP_STATUS_SWARN_Pos) |
+            ((uint16_t)i2c_err_detected << I2CDEF_POWERAMP_STATUS_I2CERR_Pos);
+        i2c_err_detected = 0; //reset comm error detection after read
+        break;
       case I2CDEF_POWERAMP_CONTROL:
-	read_buf[0] =
-	  (manual_shutdown << I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Pos) |
-	  (interrupts_enabled << I2CDEF_POWERAMP_CONTROL_INT_EN_Pos);
-	  //RESET bit always reads as 0
-	break;
+        read_buf[0] =
+            (manual_shutdown << I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Pos) |
+            (interrupts_enabled << I2CDEF_POWERAMP_CONTROL_INT_EN_Pos);
+            //RESET bit always reads as 0
+        break;
       case I2CDEF_POWERAMP_INT_MASK:
-	read_buf[0] = interrupt_mask;
-	break;
+        read_buf[0] = interrupt_mask;
+        break;
       case I2CDEF_POWERAMP_INT_FLAGS:
-	read_buf[0] = interrupt_flags;
+        read_buf[0] = interrupt_flags;
         if (init_interrupt_active) { //clear init interrupt
           init_interrupt_active = 0;
           _I2C_UpdateInterruptPin();
         }
-	break;
+        break;
       case I2CDEF_POWERAMP_PVDD_TARGET:
         ((float*)read_buf)[0] = pvdd_voltage_target;
         break;
       case I2CDEF_POWERAMP_PVDD_REQ:
-	((float*)read_buf)[0] = pvdd_voltage_requested;
-	break;
+        ((float*)read_buf)[0] = pvdd_voltage_requested;
+        break;
       case I2CDEF_POWERAMP_PVDD_MEASURED:
-	((float*)read_buf)[0] = pvdd_voltage_measured;
-	break;
+        ((float*)read_buf)[0] = pvdd_voltage_measured;
+        break;
       case I2CDEF_POWERAMP_SAFETY_STATUS:
       	read_buf[0] =
-	  (safety_shutdown << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_SERR_SD_Pos) |
-	  (manual_shutdown << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_MAN_SD_Pos);
+      	    (safety_shutdown << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_SERR_SD_Pos) |
+      	    (manual_shutdown << I2CDEF_POWERAMP_SAFETY_STATUS_SAFETY_MAN_SD_Pos);
       	break;
       case I2CDEF_POWERAMP_SERR_SOURCE:
       	((uint16_t*)read_buf)[0] = safety_err_status;
@@ -269,8 +269,8 @@ void _I2C_PrepareReadData() {
         ((uint16_t*)read_buf)[0] = safety_warn_status_inst | safety_warn_status_loop;
       	break;
       case I2CDEF_POWERAMP_MODULE_ID:
-	read_buf[0] = I2CDEF_POWERAMP_MODULE_ID_VALUE;
-	break;
+        read_buf[0] = I2CDEF_POWERAMP_MODULE_ID_VALUE;
+        break;
     }
   } else { //array registers
     if (reg_addr < I2CDEF_POWERAMP_SERR_IRMS_INST_A) { //ADC/monitor registers: split address into type and index
@@ -280,32 +280,32 @@ void _I2C_PrepareReadData() {
 
       //select array
       switch (type) {
-	case I2CDEF_POWERAMP_MON_VRMS_FAST_A:
-	  mon_array = rms_voltage_0s1;
-	  break;
-	case I2CDEF_POWERAMP_MON_IRMS_FAST_A:
-	  mon_array = rms_current_0s1;
-	  break;
-	case I2CDEF_POWERAMP_MON_PAVG_FAST_A:
-	  mon_array = avg_real_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_MON_PAPP_FAST_A:
-	  mon_array = avg_apparent_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_MON_VRMS_SLOW_A:
-	  mon_array = rms_voltage_1s0;
-	  break;
-	case I2CDEF_POWERAMP_MON_IRMS_SLOW_A:
-	  mon_array = rms_current_1s0;
-	  break;
-	case I2CDEF_POWERAMP_MON_PAVG_SLOW_A:
-	  mon_array = avg_real_power_1s0;
-	  break;
-	case I2CDEF_POWERAMP_MON_PAPP_SLOW_A:
-	  mon_array = avg_apparent_power_1s0;
-	  break;
-	default:
-	  i2c_err_detected = 1; //should never happen
+        case I2CDEF_POWERAMP_MON_VRMS_FAST_A:
+          mon_array = rms_voltage_0s1;
+          break;
+        case I2CDEF_POWERAMP_MON_IRMS_FAST_A:
+          mon_array = rms_current_0s1;
+          break;
+        case I2CDEF_POWERAMP_MON_PAVG_FAST_A:
+          mon_array = avg_real_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_MON_PAPP_FAST_A:
+          mon_array = avg_apparent_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_MON_VRMS_SLOW_A:
+          mon_array = rms_voltage_1s0;
+          break;
+        case I2CDEF_POWERAMP_MON_IRMS_SLOW_A:
+          mon_array = rms_current_1s0;
+          break;
+        case I2CDEF_POWERAMP_MON_PAVG_SLOW_A:
+          mon_array = avg_real_power_1s0;
+          break;
+        case I2CDEF_POWERAMP_MON_PAPP_SLOW_A:
+          mon_array = avg_apparent_power_1s0;
+          break;
+        default:
+          i2c_err_detected = 1; //should never happen
           return;
       }
 
@@ -317,60 +317,60 @@ void _I2C_PrepareReadData() {
 
       //select array by removing index
       switch(reg_addr - index) {
-	case I2CDEF_POWERAMP_SERR_IRMS_INST_A:
-	  safety_array = safety_max_current_inst;
-	  break;
-	case I2CDEF_POWERAMP_SERR_IRMS_FAST_A:
-	  safety_array = safety_max_current_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SERR_IRMS_SLOW_A:
-	  safety_array = safety_max_current_1s0;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAVG_INST_A:
-	  safety_array = safety_max_real_power_inst;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAVG_FAST_A:
-	  safety_array = safety_max_real_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAVG_SLOW_A:
-	  safety_array = safety_max_real_power_1s0;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAPP_INST_A:
-	  safety_array = safety_max_apparent_power_inst;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAPP_FAST_A:
-	  safety_array = safety_max_apparent_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SERR_PAPP_SLOW_A:
-	  safety_array = safety_max_apparent_power_1s0;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_IRMS_INST_A:
-	  safety_array = safety_warn_current_inst;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_IRMS_FAST_A:
-	  safety_array = safety_warn_current_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_IRMS_SLOW_A:
-	  safety_array = safety_warn_current_1s0;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAVG_INST_A:
-	  safety_array = safety_warn_real_power_inst;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAVG_FAST_A:
-	  safety_array = safety_warn_real_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAVG_SLOW_A:
-	  safety_array = safety_warn_real_power_1s0;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAPP_INST_A:
-	  safety_array = safety_warn_apparent_power_inst;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAPP_FAST_A:
-	  safety_array = safety_warn_apparent_power_0s1;
-	  break;
-	case I2CDEF_POWERAMP_SWARN_PAPP_SLOW_A:
-	  safety_array = safety_warn_apparent_power_1s0;
-	  break;
+        case I2CDEF_POWERAMP_SERR_IRMS_INST_A:
+          safety_array = safety_max_current_inst;
+          break;
+        case I2CDEF_POWERAMP_SERR_IRMS_FAST_A:
+          safety_array = safety_max_current_0s1;
+          break;
+        case I2CDEF_POWERAMP_SERR_IRMS_SLOW_A:
+          safety_array = safety_max_current_1s0;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAVG_INST_A:
+          safety_array = safety_max_real_power_inst;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAVG_FAST_A:
+          safety_array = safety_max_real_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAVG_SLOW_A:
+          safety_array = safety_max_real_power_1s0;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAPP_INST_A:
+          safety_array = safety_max_apparent_power_inst;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAPP_FAST_A:
+          safety_array = safety_max_apparent_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_SERR_PAPP_SLOW_A:
+          safety_array = safety_max_apparent_power_1s0;
+          break;
+        case I2CDEF_POWERAMP_SWARN_IRMS_INST_A:
+          safety_array = safety_warn_current_inst;
+          break;
+        case I2CDEF_POWERAMP_SWARN_IRMS_FAST_A:
+          safety_array = safety_warn_current_0s1;
+          break;
+        case I2CDEF_POWERAMP_SWARN_IRMS_SLOW_A:
+          safety_array = safety_warn_current_1s0;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAVG_INST_A:
+          safety_array = safety_warn_real_power_inst;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAVG_FAST_A:
+          safety_array = safety_warn_real_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAVG_SLOW_A:
+          safety_array = safety_warn_real_power_1s0;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAPP_INST_A:
+          safety_array = safety_warn_apparent_power_inst;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAPP_FAST_A:
+          safety_array = safety_warn_apparent_power_0s1;
+          break;
+        case I2CDEF_POWERAMP_SWARN_PAPP_SLOW_A:
+          safety_array = safety_warn_apparent_power_1s0;
+          break;
         default:
           i2c_err_detected = 1; //should never happen
           return;
@@ -426,9 +426,9 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       non_idle_timeout = I2C_NONIDLE_TIMEOUT;
 
       if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
-	DEBUG_PRINTF("I2C Error: Write start fail, address 0x%02X\n", reg_addr);
-	_I2C_HardwareReset();
-	_I2C_ErrorReset();
+        DEBUG_PRINTF("I2C Error: Write start fail, address 0x%02X\n", reg_addr);
+        _I2C_HardwareReset();
+        _I2C_ErrorReset();
       }
     } else {
       DEBUG_PRINTF("I2C Error: Transmit request in invalid state %u\n", state);
@@ -441,9 +441,9 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       non_idle_timeout = I2C_NONIDLE_TIMEOUT;
 
       if (HAL_I2C_Slave_Seq_Transmit_IT(hi2c, read_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
-	DEBUG_PRINTF("I2C Error: Read start fail, address 0x%02X\n", reg_addr);
-	_I2C_HardwareReset();
-	_I2C_ErrorReset();
+        DEBUG_PRINTF("I2C Error: Read start fail, address 0x%02X\n", reg_addr);
+        _I2C_HardwareReset();
+        _I2C_ErrorReset();
       }
     } else {
       DEBUG_PRINTF("I2C Error: Receive request in invalid state %u\n", state);

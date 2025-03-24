@@ -25,6 +25,7 @@
 #include "retarget.h"
 #include "dac_control.h"
 #include "dac_spi.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +47,8 @@
 
 I2C_HandleTypeDef hi2c1;
 
+IWDG_HandleTypeDef hiwdg;
+
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
@@ -60,13 +63,16 @@ static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_IWDG_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static __always_inline void _RefreshWatchdogs() {
+  HAL_IWDG_Refresh(&hiwdg);
+}
 /* USER CODE END 0 */
 
 /**
@@ -100,11 +106,12 @@ int main(void)
   MX_SPI1_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart1);
 
-  HAL_Delay(1000);
+  _RefreshWatchdogs();
 
   DEBUG_PRINTF("Controller init complete\n");
 
@@ -112,22 +119,44 @@ int main(void)
 
   HAL_Delay(10);
 
+  _RefreshWatchdogs();
+
   DEBUG_PRINTF("Enabling DAC...\n");
 
   HAL_GPIO_WritePin(DAC_EN_GPIO_Port, DAC_EN_Pin, GPIO_PIN_SET);
 
   HAL_Delay(10);
 
-  if (DAC_CheckChipID() != HAL_OK) {
-    DEBUG_PRINTF("ERROR: INCORRECT DAC CHIP ID\n");
+  _RefreshWatchdogs();
+
+  if (DAC_CheckChipID() == HAL_OK) {
+    DEBUG_PRINTF("DAC chip ID correct\n");
+  } else {
+    DEBUG_PRINTF("*** ERROR: INCORRECT DAC CHIP ID\n");
     HAL_Delay(100);
     Error_Handler();
   }
 
   HAL_Delay(10);
 
-  if (DAC_Init() != HAL_OK) {
-    DEBUG_PRINTF("ERROR: DAC INIT FAILED\n");
+  _RefreshWatchdogs();
+
+  if (DAC_Init() == HAL_OK) {
+    DEBUG_PRINTF("DAC init successful\n");
+  } else {
+    DEBUG_PRINTF("*** ERROR: DAC INIT FAILED\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  HAL_Delay(10);
+
+  _RefreshWatchdogs();
+
+  if (I2C_Init() == HAL_OK) {
+    DEBUG_PRINTF("I2C init successful\n");
+  } else {
+    DEBUG_PRINTF("*** ERROR: I2C INIT FAILED\n");
     HAL_Delay(100);
     Error_Handler();
   }
@@ -144,6 +173,7 @@ int main(void)
     DEBUG_PRINTF("SRC initially not locked\n");
   }
 
+  _RefreshWatchdogs();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -153,6 +183,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t iteration_start_tick = HAL_GetTick();
+
+    I2C_LoopUpdate();
+
+    _RefreshWatchdogs();
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
   /* USER CODE END 3 */
 }
@@ -169,10 +205,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV4;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -238,6 +276,35 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
 
 }
 
@@ -387,10 +454,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(I2C_INT_N_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
