@@ -31,13 +31,12 @@
  *  Bit field definitions:
  *  * STATUS (0x01, 1B):
  *    - 8: I2CERR: I2C communication error detected since last STATUS read
- *    - 6: MONITOR_ERROR: BCK/WS monitor has detected an error
- *    - 5: RAMP_DONE_CH2: Channel 2 soft start ramp is done
- *    - 4: RAMP_DONE_CH1: Channel 1 soft start ramp is done
- *    - 3: AUTOMUTE_CH2: Channel 2 is automuted
- *    - 2: AUTOMUTE_CH1: Channel 1 is automuted
- *    - 1: LOCK: Async mode SRC is locked to the input
- *    - 0: INIT_DONE: System init complete
+ *    - 5: MONITOR_ERROR: BCK/WS monitor has detected an error
+ *    - 4: RAMP_DONE_CH2: Channel 2 soft start ramp is done
+ *    - 3: RAMP_DONE_CH1: Channel 1 soft start ramp is done
+ *    - 2: AUTOMUTE_CH2: Channel 2 is automuted
+ *    - 1: AUTOMUTE_CH1: Channel 1 is automuted
+ *    - 0: LOCK: Async mode SRC is locked to the input
  *  * CONTROL (0x08, 1B):
  *    - 4-7: RESET: controller reset (write 0xA to trigger software reset)
  *    - 3: MASTER: I2C master mode (otherwise slave mode)
@@ -94,19 +93,17 @@
 //General registers
 #define I2CDEF_HIFIDAC_STATUS 0x01
 
-#define I2CDEF_HIFIDAC_STATUS_INIT_DONE_Pos 0
-#define I2CDEF_HIFIDAC_STATUS_INIT_DONE_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_INIT_DONE_Pos)
-#define I2CDEF_HIFIDAC_STATUS_LOCK_Pos 1
+#define I2CDEF_HIFIDAC_STATUS_LOCK_Pos 0
 #define I2CDEF_HIFIDAC_STATUS_LOCK_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_LOCK_Pos)
-#define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH1_Pos 2
+#define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH1_Pos 1
 #define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH1_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH1_Pos)
-#define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH2_Pos 3
+#define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH2_Pos 2
 #define I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH2_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH2_Pos)
-#define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH1_Pos 4
+#define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH1_Pos 3
 #define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH1_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH1_Pos)
-#define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Pos 5
+#define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Pos 4
 #define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Pos)
-#define I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Pos 6
+#define I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Pos 5
 #define I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Pos)
 #define I2CDEF_HIFIDAC_STATUS_I2CERR_Pos 8
 #define I2CDEF_HIFIDAC_STATUS_I2CERR_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_I2CERR_Pos)
