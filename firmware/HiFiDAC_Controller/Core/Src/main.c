@@ -185,6 +185,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
     uint32_t iteration_start_tick = HAL_GetTick();
 
+    DAC_LoopUpdate();
     I2C_LoopUpdate();
 
     _RefreshWatchdogs();
@@ -430,21 +431,21 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : GPIO1_Pin */
   GPIO_InitStruct.Pin = GPIO1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIO1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GPIO2_Pin */
-  GPIO_InitStruct.Pin = GPIO2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIO2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : GPIO3_Pin GPIO4_Pin */
-  GPIO_InitStruct.Pin = GPIO3_Pin|GPIO4_Pin;
+  /*Configure GPIO pins : GPIO2_Pin GPIO3_Pin */
+  GPIO_InitStruct.Pin = GPIO2_Pin|GPIO3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GPIO4_Pin */
+  GPIO_InitStruct.Pin = GPIO4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIO4_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : I2C_INT_N_Pin */
   GPIO_InitStruct.Pin = I2C_INT_N_Pin;
@@ -452,13 +453,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(I2C_INT_N_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

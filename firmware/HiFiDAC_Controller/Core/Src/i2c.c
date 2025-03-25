@@ -8,6 +8,7 @@
 #include "i2c.h"
 #include <stdio.h>
 #include <string.h>
+#include "dac_control.h"
 
 
 typedef enum {
@@ -62,19 +63,16 @@ void _I2C_UpdateInterruptPin() {
  * called at the end of a write transaction, processes the received data to update amp state
  */
 void _I2C_ProcessWriteData() {
-  //temp holding variables
-  uint8_t tb1, tb2, tb3;
-  float tf1;
+  uint8_t temp8;
 
   //DEBUG_PRINTF("I2C write trigger: address 0x%02X; size %u; value 0x%08lX (%f)\n", reg_addr, reg_size, *(uint32_t*)write_buf, *(float*)write_buf);
 
   switch (reg_addr) {
     case I2CDEF_HIFIDAC_CONTROL:
-      tb2 = (write_buf[0] & I2CDEF_HIFIDAC_CONTROL_INT_EN_Msk) > 0 ? 1 : 0;
-      tb3 = (write_buf[0] & I2CDEF_HIFIDAC_CONTROL_RESET_Msk) >> I2CDEF_HIFIDAC_CONTROL_RESET_Pos;
+      temp8 = (write_buf[0] & I2CDEF_HIFIDAC_CONTROL_RESET_Msk) >> I2CDEF_HIFIDAC_CONTROL_RESET_Pos;
 
-      if (tb3 != 0) { //check reset code
-        if (tb3 == I2CDEF_HIFIDAC_CONTROL_RESET_VALUE) { //correct: perform reset
+      if (temp8 != 0) { //check reset code
+        if (temp8 == I2CDEF_HIFIDAC_CONTROL_RESET_VALUE) { //correct: perform reset
           NVIC_SystemReset();
         } else { //incorrect: report error
           DEBUG_PRINTF("I2C write error: incorrect reset code\n");
@@ -82,8 +80,20 @@ void _I2C_ProcessWriteData() {
         }
       }
 
-      interrupts_enabled = tb2; //interrupt state
+      interrupts_enabled = (write_buf[0] & I2CDEF_HIFIDAC_CONTROL_INT_EN_Msk) != 0 ? 1 : 0; //interrupt state
       _I2C_UpdateInterruptPin();
+
+      if (DAC_WriteSysModeConfig((write_buf[0] & I2CDEF_HIFIDAC_CONTROL_SYNC_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+
+      if (DAC_WriteInputSelection((write_buf[0] & I2CDEF_HIFIDAC_CONTROL_MASTER_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+
+      if (DAC_WriteSysConfig((write_buf[0] & I2CDEF_HIFIDAC_CONTROL_DAC_EN_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
       break;
     case I2CDEF_HIFIDAC_INT_MASK:
       interrupt_mask = write_buf[0];
@@ -92,6 +102,80 @@ void _I2C_ProcessWriteData() {
     case I2CDEF_HIFIDAC_INT_FLAGS:
       interrupt_flags &= write_buf[0]; //clear bits received as 0
       _I2C_UpdateInterruptPin();
+      break;
+    case I2CDEF_HIFIDAC_VOLUME:
+      if (DAC_WriteChannelVolumes(write_buf[0], write_buf[1]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_MUTE:
+      if (DAC_WriteChannelMutes((write_buf[0] & I2CDEF_HIFIDAC_MUTE_MUTE_CH1_Msk) != 0, (write_buf[0] & I2CDEF_HIFIDAC_MUTE_MUTE_CH2_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_PATH:
+      if (DAC_WriteChannelAutomuteEnables((write_buf[0] & I2CDEF_HIFIDAC_PATH_AUTOMUTE_CH1_Msk) != 0, (write_buf[0] & I2CDEF_HIFIDAC_PATH_AUTOMUTE_CH2_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+
+      if (DAC_WriteChannelInverts((write_buf[0] & I2CDEF_HIFIDAC_PATH_INVERT_CH1_Msk) != 0, (write_buf[0] & I2CDEF_HIFIDAC_PATH_INVERT_CH2_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+
+      if (DAC_Write4XGains((write_buf[0] & I2CDEF_HIFIDAC_PATH_4XGAIN_CH1_Msk) != 0, (write_buf[0] & I2CDEF_HIFIDAC_PATH_4XGAIN_CH2_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+
+      if (DAC_WriteAutomuteTimeAndRamp((write_buf[0] & I2CDEF_HIFIDAC_PATH_MUTE_GND_RAMP_Msk) != 0) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_CLK_CFG:
+      if (DAC_WriteDACClockConfig(write_buf[0]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_MASTER_DIV:
+      if (DAC_WriteMasterClockConfig(write_buf[0]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_TDM_SLOT_NUM:
+      if (write_buf[0] > 31) {
+        i2c_err_detected = 1;
+        break;
+      }
+      if (DAC_WriteTDMSlotNum(write_buf[0]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_CH_SLOTS:
+      if (write_buf[0] > 31 || write_buf[1] > 31) {
+        i2c_err_detected = 1;
+        break;
+      }
+      if (DAC_WriteChannelTDMSlots(write_buf[0], write_buf[1]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_FILTER_SHAPE:
+      if (write_buf[0] > 7) {
+        i2c_err_detected = 1;
+        break;
+      }
+      if (DAC_WriteFilterShape(write_buf[0]) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_THD_C2:
+      if (DAC_WriteTHDC2((int16_t)write_buf[0] | (int16_t)write_buf[1] << 8, (int16_t)write_buf[2] | (int16_t)write_buf[3] << 8) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_HIFIDAC_THD_C3:
+      if (DAC_WriteTHDC3((int16_t)write_buf[0] | (int16_t)write_buf[1] << 8, (int16_t)write_buf[2] | (int16_t)write_buf[3] << 8) != HAL_OK) {
+        i2c_err_detected = 1;
+      }
       break;
     default:
       DEBUG_PRINTF("I2C write error: attempted write to non-writable register\n");
@@ -108,10 +192,22 @@ void _I2C_PrepareReadData() {
 
   switch (reg_addr) {
     case I2CDEF_HIFIDAC_STATUS:
-      ((uint16_t*)read_buf)[0] =
-          0 |
-          ((uint16_t)i2c_err_detected << I2CDEF_HIFIDAC_STATUS_I2CERR_Pos);
+      read_buf[0] =
+          (dac_status.src_lock ? I2CDEF_HIFIDAC_STATUS_LOCK_Msk : 0) |
+          (dac_status.automute_ch1 ? I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH1_Msk : 0) |
+          (dac_status.automute_ch2 ? I2CDEF_HIFIDAC_STATUS_AUTOMUTE_CH2_Msk : 0) |
+          (dac_status.full_ramp_ch1 ? I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH1_Msk : 0) |
+          (dac_status.full_ramp_ch2 ? I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Msk : 0) |
+          (dac_status.monitor_error ? I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Msk : 0) |
+          (i2c_err_detected != 0 ? I2CDEF_HIFIDAC_STATUS_I2CERR_Msk : 0);
       i2c_err_detected = 0; //reset comm error detection after read
+      break;
+    case I2CDEF_HIFIDAC_CONTROL:
+      read_buf[0] =
+          (interrupts_enabled != 0 ? I2CDEF_HIFIDAC_CONTROL_INT_EN_Msk : 0) |
+          (dac_status.enabled ? I2CDEF_HIFIDAC_CONTROL_DAC_EN_Msk : 0) |
+          (dac_status.sync ? I2CDEF_HIFIDAC_CONTROL_SYNC_Msk : 0) |
+          (dac_status.master ? I2CDEF_HIFIDAC_CONTROL_MASTER_Msk : 0);
       break;
     case I2CDEF_HIFIDAC_INT_MASK:
       read_buf[0] = interrupt_mask;
@@ -122,6 +218,53 @@ void _I2C_PrepareReadData() {
         init_interrupt_active = 0;
         _I2C_UpdateInterruptPin();
       }
+      break;
+    case I2CDEF_HIFIDAC_VOLUME:
+      read_buf[0] = dac_status.volume_ch1;
+      read_buf[1] = dac_status.volume_ch2;
+      break;
+    case I2CDEF_HIFIDAC_MUTE:
+      read_buf[0] =
+          (dac_status.manual_mute_ch1 ? I2CDEF_HIFIDAC_MUTE_MUTE_CH1_Msk : 0) |
+          (dac_status.manual_mute_ch2 ? I2CDEF_HIFIDAC_MUTE_MUTE_CH2_Msk : 0);
+      break;
+    case I2CDEF_HIFIDAC_PATH:
+      read_buf[0] =
+          (dac_status.automute_enabled_ch1 ? I2CDEF_HIFIDAC_PATH_AUTOMUTE_CH1_Msk : 0) |
+          (dac_status.automute_enabled_ch2 ? I2CDEF_HIFIDAC_PATH_AUTOMUTE_CH2_Msk : 0) |
+          (dac_status.invert_ch1 ? I2CDEF_HIFIDAC_PATH_INVERT_CH1_Msk : 0) |
+          (dac_status.invert_ch2 ? I2CDEF_HIFIDAC_PATH_INVERT_CH2_Msk : 0) |
+          (dac_status.en4xgain_ch1 ? I2CDEF_HIFIDAC_PATH_4XGAIN_CH1_Msk : 0) |
+          (dac_status.en4xgain_ch2 ? I2CDEF_HIFIDAC_PATH_4XGAIN_CH2_Msk : 0) |
+          (dac_status.mute_gnd_ramp ? I2CDEF_HIFIDAC_PATH_MUTE_GND_RAMP_Msk : 0);
+      break;
+    case I2CDEF_HIFIDAC_CLK_CFG:
+      read_buf[0] = dac_status.clk_config;
+      break;
+    case I2CDEF_HIFIDAC_MASTER_DIV:
+      read_buf[0] = dac_status.master_div;
+      break;
+    case I2CDEF_HIFIDAC_TDM_SLOT_NUM:
+      read_buf[0] = dac_status.tdm_slot_num;
+      break;
+    case I2CDEF_HIFIDAC_CH_SLOTS:
+      read_buf[0] = dac_status.tdm_slot_ch1;
+      read_buf[1] = dac_status.tdm_slot_ch2;
+      break;
+    case I2CDEF_HIFIDAC_FILTER_SHAPE:
+      read_buf[0] = dac_status.filter_shape;
+      break;
+    case I2CDEF_HIFIDAC_THD_C2:
+      read_buf[0] = (uint8_t)(dac_status.thd_c2_ch1 & 0xFF);
+      read_buf[1] = (uint8_t)((dac_status.thd_c2_ch1 >> 8) & 0xFF);
+      read_buf[2] = (uint8_t)(dac_status.thd_c2_ch2 & 0xFF);
+      read_buf[3] = (uint8_t)((dac_status.thd_c2_ch2 >> 8) & 0xFF);
+      break;
+    case I2CDEF_HIFIDAC_THD_C3:
+      read_buf[0] = (uint8_t)(dac_status.thd_c3_ch1 & 0xFF);
+      read_buf[1] = (uint8_t)((dac_status.thd_c3_ch1 >> 8) & 0xFF);
+      read_buf[2] = (uint8_t)(dac_status.thd_c3_ch2 & 0xFF);
+      read_buf[3] = (uint8_t)((dac_status.thd_c3_ch2 >> 8) & 0xFF);
       break;
     case I2CDEF_HIFIDAC_MODULE_ID:
       read_buf[0] = I2CDEF_HIFIDAC_MODULE_ID_VALUE;

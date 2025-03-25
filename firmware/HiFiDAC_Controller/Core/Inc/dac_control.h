@@ -13,7 +13,6 @@
 //expected value of chip ID register
 #define DAC_EXPECTED_CHIP_ID 0x63
 
-
 //base value for the sys mode config register - assuming sync = 0
 #define DAC_SYS_MODE_CFG_BASE_VALUE 0xB1
 //base value for the filter shape register - assuming filter shape = 0
@@ -25,9 +24,12 @@
 //base value for the automute time register - assuming mute ramp to ground = 0
 #define DAC_AUTOMUTE_TIME_BASE_VALUE 0x000F
 
+//period between manual register reads in main loop cycles
+#define DAC_MANUAL_UPDATE_PERIOD 50
+
 //calibrated volume offsets (reduction) in 0.5dB steps - TODO: perform tests with pcb changes
-#define DAC_VOL_CAL_CH1 0
-#define DAC_VOL_CAL_CH2 0
+#define DAC_VOL_CAL_CH1 3
+#define DAC_VOL_CAL_CH2 3
 //initial volume setting (reduction) after reset/init in 0.5dB steps - here: set to -20dB
 #define DAC_VOL_INIT_CH1 40
 #define DAC_VOL_INIT_CH2 40
@@ -50,6 +52,8 @@ typedef struct {
   bool full_ramp_ch2;
 
   bool monitor_error; //whether the BCK/WS monitor has detected any errors
+
+  bool src_lock; //whether the async SRC is locked
 
 
   bool manual_mute_ch1; //whether channels are manually muted
@@ -92,22 +96,22 @@ extern DAC_Status dac_status;
 //Check that the DAC chip ID is correct, confirming that the chip functions and can communicate
 HAL_StatusTypeDef DAC_CheckChipID();
 
-HAL_StatusTypeDef DAC_WriteSysConfig();
-HAL_StatusTypeDef DAC_WriteSysModeConfig();
-HAL_StatusTypeDef DAC_WriteDACClockConfig();
-HAL_StatusTypeDef DAC_WriteMasterClockConfig();
-HAL_StatusTypeDef DAC_Write4XGains();
-HAL_StatusTypeDef DAC_WriteInputSelection();
-HAL_StatusTypeDef DAC_WriteTDMSlotNum();
-HAL_StatusTypeDef DAC_WriteChannelTDMSlots();
-HAL_StatusTypeDef DAC_WriteChannelVolumes();
-HAL_StatusTypeDef DAC_WriteChannelMutes();
-HAL_StatusTypeDef DAC_WriteChannelInverts();
-HAL_StatusTypeDef DAC_WriteFilterShape();
-HAL_StatusTypeDef DAC_WriteTHDC2();
-HAL_StatusTypeDef DAC_WriteTHDC3();
-HAL_StatusTypeDef DAC_WriteChannelAutomuteEnables();
-HAL_StatusTypeDef DAC_WriteAutomuteTimeAndRamp();
+HAL_StatusTypeDef DAC_WriteSysConfig(bool enable);
+HAL_StatusTypeDef DAC_WriteSysModeConfig(bool sync);
+HAL_StatusTypeDef DAC_WriteDACClockConfig(uint8_t config);
+HAL_StatusTypeDef DAC_WriteMasterClockConfig(uint8_t div);
+HAL_StatusTypeDef DAC_Write4XGains(bool ch1gain, bool ch2gain);
+HAL_StatusTypeDef DAC_WriteInputSelection(bool master);
+HAL_StatusTypeDef DAC_WriteTDMSlotNum(uint8_t num);
+HAL_StatusTypeDef DAC_WriteChannelTDMSlots(uint8_t ch1slot, uint8_t ch2slot);
+HAL_StatusTypeDef DAC_WriteChannelVolumes(uint8_t ch1vol, uint8_t ch2vol);
+HAL_StatusTypeDef DAC_WriteChannelMutes(bool ch1mute, bool ch2mute);
+HAL_StatusTypeDef DAC_WriteChannelInverts(bool ch1invert, bool ch2invert);
+HAL_StatusTypeDef DAC_WriteFilterShape(uint8_t shape);
+HAL_StatusTypeDef DAC_WriteTHDC2(int16_t ch1c2, int16_t ch2c2);
+HAL_StatusTypeDef DAC_WriteTHDC3(int16_t ch1c3, int16_t ch2c3);
+HAL_StatusTypeDef DAC_WriteChannelAutomuteEnables(bool ch1automute, bool ch2automute);
+HAL_StatusTypeDef DAC_WriteAutomuteTimeAndRamp(bool mute_gnd_ramp);
 
 HAL_StatusTypeDef DAC_Init();
 void DAC_LoopUpdate();

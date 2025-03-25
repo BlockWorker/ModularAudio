@@ -7,7 +7,10 @@
 
 #include "dac_control.h"
 #include "dac_spi.h"
+#include "i2c.h"
 
+
+static uint16_t _dac_interrupts_triggered = 0;
 
 DAC_Status dac_status;
 
@@ -156,9 +159,9 @@ HAL_StatusTypeDef DAC_CheckChipID() {
   return HAL_OK;
 }
 
-HAL_StatusTypeDef DAC_WriteSysConfig() {
+HAL_StatusTypeDef DAC_WriteSysConfig(bool enable) {
   uint16_t readback;
-  uint16_t value = dac_status.enabled ? 0x02 : 0x00;
+  uint16_t value = enable ? 0x02 : 0x00;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_SYSTEM_CONFIG, false, value, &readback);
 
@@ -167,9 +170,9 @@ HAL_StatusTypeDef DAC_WriteSysConfig() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteSysModeConfig() {
+HAL_StatusTypeDef DAC_WriteSysModeConfig(bool sync) {
   uint16_t readback;
-  uint16_t value = DAC_SYS_MODE_CFG_BASE_VALUE | (dac_status.sync ? 0x40 : 0x00);
+  uint16_t value = DAC_SYS_MODE_CFG_BASE_VALUE | (sync ? 0x40 : 0x00);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_SYS_MODE_CONFIG, false, value, &readback);
 
@@ -178,9 +181,9 @@ HAL_StatusTypeDef DAC_WriteSysModeConfig() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteDACClockConfig() {
+HAL_StatusTypeDef DAC_WriteDACClockConfig(uint8_t config) {
   uint16_t readback;
-  uint16_t value = dac_status.clk_config;
+  uint16_t value = (uint16_t)config;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_DAC_CLOCK_CONFIG, false, value, &readback);
 
@@ -189,9 +192,9 @@ HAL_StatusTypeDef DAC_WriteDACClockConfig() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteMasterClockConfig() {
+HAL_StatusTypeDef DAC_WriteMasterClockConfig(uint8_t div) {
   uint16_t readback;
-  uint16_t value = dac_status.master_div;
+  uint16_t value = (uint16_t)div;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_CLOCK_CONFIG, false, value, &readback);
 
@@ -200,9 +203,9 @@ HAL_StatusTypeDef DAC_WriteMasterClockConfig() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_Write4XGains() {
+HAL_StatusTypeDef DAC_Write4XGains(bool ch1gain, bool ch2gain) {
   uint16_t readback;
-  uint16_t value = (dac_status.en4xgain_ch1 ? 0x01 : 0x00) | (dac_status.en4xgain_ch2 ? 0x02 : 0x00);
+  uint16_t value = (ch1gain ? 0x01 : 0x00) | (ch2gain ? 0x02 : 0x00);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_PCM_4X_GAIN, false, value, &readback);
 
@@ -212,9 +215,9 @@ HAL_StatusTypeDef DAC_Write4XGains() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteInputSelection() {
+HAL_StatusTypeDef DAC_WriteInputSelection(bool master) {
   uint16_t readback;
-  uint16_t value = dac_status.master ? 0x10 : 0x00;
+  uint16_t value = master ? 0x10 : 0x00;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_INPUT_SELECTION, false, value, &readback);
 
@@ -223,9 +226,9 @@ HAL_StatusTypeDef DAC_WriteInputSelection() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteTDMSlotNum() {
+HAL_StatusTypeDef DAC_WriteTDMSlotNum(uint8_t num) {
   uint16_t readback;
-  uint16_t value = dac_status.tdm_slot_num & 0x1F;
+  uint16_t value = num & 0x1F;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_TDM_CONFIG, false, value, &readback);
 
@@ -234,9 +237,9 @@ HAL_StatusTypeDef DAC_WriteTDMSlotNum() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteChannelTDMSlots() {
+HAL_StatusTypeDef DAC_WriteChannelTDMSlots(uint8_t ch1slot, uint8_t ch2slot) {
   uint16_t readback;
-  uint16_t value = dac_status.tdm_slot_ch1 & 0x1F;
+  uint16_t value = ch1slot & 0x1F;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_CH1_SLOT_CONFIG, false, value, &readback);
 
@@ -246,7 +249,7 @@ HAL_StatusTypeDef DAC_WriteChannelTDMSlots() {
     return result;
   }
 
-  value = dac_status.tdm_slot_ch2 & 0x1F;
+  value = ch2slot & 0x1F;
 
   result = _DAC_WriteAndCheckRegister(REG_CH2_SLOT_CONFIG, false, value, &readback);
 
@@ -255,12 +258,12 @@ HAL_StatusTypeDef DAC_WriteChannelTDMSlots() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteChannelVolumes() {
+HAL_StatusTypeDef DAC_WriteChannelVolumes(uint8_t ch1vol, uint8_t ch2vol) {
   //set volume hold
   ReturnOnError(DAC_SPI_WriteConfirm8(REG_IIR_BANDWIDTH_SPDIF_SEL, DAC_IIRBW_SPDIFSEL_BASE_VALUE | 0x08));
 
   uint16_t readback1, readback2;
-  uint16_t value = dac_status.volume_ch1 + DAC_VOL_CAL_CH1;
+  uint16_t value = ch1vol + DAC_VOL_CAL_CH1;
   if (value > 0xFF) {
     value = 0xFF;
   }
@@ -271,7 +274,7 @@ HAL_StatusTypeDef DAC_WriteChannelVolumes() {
     return result;
   }
 
-  value = dac_status.volume_ch2 + DAC_VOL_CAL_CH2;
+  value = ch2vol + DAC_VOL_CAL_CH2;
   if (value > 0xFF) {
     value = 0xFF;
   }
@@ -294,9 +297,9 @@ HAL_StatusTypeDef DAC_WriteChannelVolumes() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteChannelMutes() {
+HAL_StatusTypeDef DAC_WriteChannelMutes(bool ch1mute, bool ch2mute) {
   uint16_t readback;
-  uint16_t value = (dac_status.manual_mute_ch1 ? 0x01 : 0x00) | (dac_status.manual_mute_ch2 ? 0x02 : 0x00);
+  uint16_t value = (ch1mute ? 0x01 : 0x00) | (ch2mute ? 0x02 : 0x00);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_DAC_MUTE, false, value, &readback);
 
@@ -306,9 +309,9 @@ HAL_StatusTypeDef DAC_WriteChannelMutes() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteChannelInverts() {
+HAL_StatusTypeDef DAC_WriteChannelInverts(bool ch1invert, bool ch2invert) {
   uint16_t readback;
-  uint16_t value = (dac_status.invert_ch1 ? 0x01 : 0x00) | (dac_status.invert_ch2 ? 0x02 : 0x00);
+  uint16_t value = (ch1invert ? 0x01 : 0x00) | (ch2invert ? 0x02 : 0x00);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_DAC_INVERT, false, value, &readback);
 
@@ -318,9 +321,9 @@ HAL_StatusTypeDef DAC_WriteChannelInverts() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteFilterShape() {
+HAL_StatusTypeDef DAC_WriteFilterShape(uint8_t shape) {
   uint16_t readback;
-  uint16_t value = DAC_FILTER_SHAPE_BASE_VALUE | (dac_status.filter_shape & 0x07);
+  uint16_t value = DAC_FILTER_SHAPE_BASE_VALUE | (shape & 0x07);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_FILTER_SHAPE, false, value, &readback);
 
@@ -329,9 +332,9 @@ HAL_StatusTypeDef DAC_WriteFilterShape() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteTHDC2() {
+HAL_StatusTypeDef DAC_WriteTHDC2(int16_t ch1c2, int16_t ch2c2) {
   uint16_t readback;
-  uint16_t value = (uint16_t)dac_status.thd_c2_ch1;
+  uint16_t value = (uint16_t)ch1c2;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_THD_C2_CH1, true, value, &readback);
 
@@ -341,18 +344,18 @@ HAL_StatusTypeDef DAC_WriteTHDC2() {
     return result;
   }
 
-  value = (uint16_t)dac_status.thd_c2_ch2;
+  value = (uint16_t)ch2c2;
 
-  HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_THD_C2_CH2, true, value, &readback);
+  result = _DAC_WriteAndCheckRegister(REG_THD_C2_CH2, true, value, &readback);
 
   dac_status.thd_c2_ch2 = (int16_t)readback;
 
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteTHDC3() {
+HAL_StatusTypeDef DAC_WriteTHDC3(int16_t ch1c3, int16_t ch2c3) {
   uint16_t readback;
-  uint16_t value = (uint16_t)dac_status.thd_c3_ch1;
+  uint16_t value = (uint16_t)ch1c3;
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_THD_C3_CH1, true, value, &readback);
 
@@ -362,18 +365,18 @@ HAL_StatusTypeDef DAC_WriteTHDC3() {
     return result;
   }
 
-  value = (uint16_t)dac_status.thd_c3_ch2;
+  value = (uint16_t)ch2c3;
 
-  HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_THD_C3_CH2, true, value, &readback);
+  result = _DAC_WriteAndCheckRegister(REG_THD_C3_CH2, true, value, &readback);
 
   dac_status.thd_c3_ch2 = (int16_t)readback;
 
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteChannelAutomuteEnables() {
+HAL_StatusTypeDef DAC_WriteChannelAutomuteEnables(bool ch1automute, bool ch2automute) {
   uint16_t readback;
-  uint16_t value = DAC_AUTOMUTE_EN_BASE_VALUE | (dac_status.automute_enabled_ch1 ? 0x01 : 0x00) | (dac_status.automute_enabled_ch2 ? 0x02 : 0x00);
+  uint16_t value = DAC_AUTOMUTE_EN_BASE_VALUE | (ch1automute ? 0x01 : 0x00) | (ch2automute ? 0x02 : 0x00);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_AUTOMUTE_ENABLE, false, value, &readback);
 
@@ -383,9 +386,9 @@ HAL_StatusTypeDef DAC_WriteChannelAutomuteEnables() {
   return result;
 }
 
-HAL_StatusTypeDef DAC_WriteAutomuteTimeAndRamp() {
+HAL_StatusTypeDef DAC_WriteAutomuteTimeAndRamp(bool mute_gnd_ramp) {
   uint16_t readback;
-  uint16_t value = DAC_AUTOMUTE_TIME_BASE_VALUE | (dac_status.mute_gnd_ramp ? 0x0800 : 0x0000);
+  uint16_t value = DAC_AUTOMUTE_TIME_BASE_VALUE | (mute_gnd_ramp ? 0x0800 : 0x0000);
 
   HAL_StatusTypeDef result = _DAC_WriteAndCheckRegister(REG_AUTOMUTE_TIME, true, value, &readback);
 
@@ -476,6 +479,7 @@ HAL_StatusTypeDef DAC_Init() {
   dac_status.full_ramp_ch1 = true;
   dac_status.full_ramp_ch2 = true;
   dac_status.monitor_error = false;
+  dac_status.src_lock = (HAL_GPIO_ReadPin(GPIO2_GPIO_Port, GPIO2_Pin) == GPIO_PIN_SET);
 
   dac_status.manual_mute_ch1 = false;
   dac_status.manual_mute_ch2 = false;
@@ -500,6 +504,8 @@ HAL_StatusTypeDef DAC_Init() {
   dac_status.thd_c3_ch1 = 0;
   dac_status.thd_c3_ch2 = 0;
 
+  _dac_interrupts_triggered = 0;
+
 #ifdef DEBUG
   PrintAllRegisters();
 #endif
@@ -508,5 +514,74 @@ HAL_StatusTypeDef DAC_Init() {
 }
 
 void DAC_LoopUpdate() {
+  static uint32_t loop_count = 0;
 
+  if (HAL_GPIO_ReadPin(GPIO4_GPIO_Port, GPIO4_Pin) == GPIO_PIN_SET) {
+    //interrupt detected
+    if (DAC_SPI_Read16(REG_INTERRUPT_STATES, &_dac_interrupts_triggered) == HAL_OK) {
+      //read success: clear interrupts
+      DAC_SPI_Write16(REG_INTERRUPT_CLEAR, 0xFFFF);
+      DAC_SPI_Write16(REG_INTERRUPT_CLEAR, 0x0000);
+    } else {
+      //read failed somehow: assume no interrupts, but don't clear yet
+      _dac_interrupts_triggered = 0;
+    }
+  }
+
+  bool new_lock = (HAL_GPIO_ReadPin(GPIO2_GPIO_Port, GPIO2_Pin) == GPIO_PIN_SET);
+  if (new_lock != dac_status.src_lock) {
+    dac_status.src_lock = new_lock;
+    I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_LOCK_Msk);
+  }
+
+  if (loop_count++ % DAC_MANUAL_UPDATE_PERIOD == 0) {
+    //manual update time: simulate as if all interrupts triggered
+    _dac_interrupts_triggered = 0xFFFF;
+  }
+
+  if (_dac_interrupts_triggered != 0) {
+    //interrupts triggered - handle updates
+    uint8_t temp8;
+    uint16_t temp16;
+    bool tempB;
+
+    if ((_dac_interrupts_triggered & 0x000C) != 0) {
+      //automute (channel 1 or 2)
+      if (DAC_SPI_Read8(REG_AUTOMUTE_READ, &temp8) == HAL_OK) {
+        tempB = ((temp8 & 0x01) != 0);
+        if (dac_status.automute_ch1 != tempB) {
+          dac_status.automute_ch1 = tempB;
+          I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_AUTOMUTE_Msk);
+        }
+        tempB = ((temp8 & 0x02) != 0);
+        if (dac_status.automute_ch2 != tempB) {
+          dac_status.automute_ch2 = tempB;
+          I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_AUTOMUTE_Msk);
+        }
+      }
+    }
+    if ((_dac_interrupts_triggered & 0x00B0) != 0) {
+      //full ramp (channel 1 or 2) or monitor fail flag
+      if (DAC_SPI_Read16(REG_INTERRUPT_SOURCES, &temp16) == HAL_OK) {
+        tempB = ((temp16 & 0x0010) != 0);
+        if (dac_status.full_ramp_ch1 != tempB) {
+          dac_status.full_ramp_ch1 = tempB;
+          I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_RAMP_Msk);
+        }
+        tempB = ((temp16 & 0x0020) != 0);
+        if (dac_status.full_ramp_ch2 != tempB) {
+          dac_status.full_ramp_ch2 = tempB;
+          I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_RAMP_Msk);
+        }
+        tempB = ((temp16 & 0x0080) != 0);
+        if (dac_status.monitor_error != tempB) {
+          dac_status.monitor_error = tempB;
+          I2C_TriggerInterrupt(I2CDEF_HIFIDAC_INT_FLAGS_INT_MONITOR_Msk);
+        }
+      }
+    }
+
+    //reset interrupt flags
+    _dac_interrupts_triggered = 0;
+  }
 }

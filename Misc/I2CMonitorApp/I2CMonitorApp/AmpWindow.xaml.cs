@@ -39,8 +39,7 @@ namespace I2CMonitorApp {
 
         private void TimerTick() {
             if (!i2c_connected || App.i2cd.connected == 0) {
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
-                readAllCycles = READ_ALL_PERIOD;
+                DisconnectReset();
                 return;
             }
 
@@ -188,6 +187,7 @@ namespace I2CMonitorApp {
 
                 if (!App.I2CConnect(this, portname)) {
                     MessageBox.Show("Connection failed...");
+                    DisconnectReset();
                     return;
                 }
 

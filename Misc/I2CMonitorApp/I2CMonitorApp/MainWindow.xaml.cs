@@ -36,5 +36,9 @@ namespace I2CMonitorApp {
         private void OpenBluetoothWindow(object sender, RoutedEventArgs e) {
             new BluetoothReceiverWindow().Show();
         }
+
+        private void OpenDACWindow(object sender, RoutedEventArgs e) {
+            new DACWindow().Show();
+        }
     }
 }

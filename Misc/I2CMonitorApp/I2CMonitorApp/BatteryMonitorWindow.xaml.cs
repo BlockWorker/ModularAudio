@@ -52,7 +52,7 @@ namespace I2CMonitorApp {
 
         private void TimerTick() {
             if (!port.IsConnected) {
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
+                DisconnectReset();
                 return;
             }
 
@@ -165,6 +165,7 @@ namespace I2CMonitorApp {
 
                     if (!port.Connect()) {
                         MessageBox.Show("Connection failed...");
+                        DisconnectReset();
                         return;
                     }
 

@@ -30,7 +30,7 @@
  *
  *  Bit field definitions:
  *  * STATUS (0x01, 1B):
- *    - 8: I2CERR: I2C communication error detected since last STATUS read
+ *    - 7: I2CERR: I2C communication error detected since last STATUS read
  *    - 5: MONITOR_ERROR: BCK/WS monitor has detected an error
  *    - 4: RAMP_DONE_CH2: Channel 2 soft start ramp is done
  *    - 3: RAMP_DONE_CH1: Channel 1 soft start ramp is done
@@ -105,7 +105,7 @@
 #define I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_RAMP_DONE_CH2_Pos)
 #define I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Pos 5
 #define I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_MONITOR_ERROR_Pos)
-#define I2CDEF_HIFIDAC_STATUS_I2CERR_Pos 8
+#define I2CDEF_HIFIDAC_STATUS_I2CERR_Pos 7
 #define I2CDEF_HIFIDAC_STATUS_I2CERR_Msk (0x1 << I2CDEF_HIFIDAC_STATUS_I2CERR_Pos)
 
 #define I2CDEF_HIFIDAC_CONTROL 0x08

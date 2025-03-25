@@ -7,10 +7,24 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button Content="Amplifier" HorizontalAlignment="Left" Margin="51,48,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenAmpWindow"/>
-        <Button Content="Charger" HorizontalAlignment="Left" Margin="51,99,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenChargerWindow"/>
-        <Button Content="Battery" HorizontalAlignment="Left" Margin="51,154,0,0" VerticalAlignment="Top" Height="27" Width="73" Click="OpenBatteryWindow"/>
-        <Button Content="Bluetooth" HorizontalAlignment="Left" Margin="51,0,0,0" VerticalAlignment="Center" Height="27" Width="73" Click="OpenBluetoothWindow"/>
+        <Grid Margin="40,40,0,0" HorizontalAlignment="Left" Width="143" Height="226" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Button Content="Amplifier" Margin="3" Click="OpenAmpWindow"/>
+            <Button Content="Charger" Grid.Row="2" Margin="3" Click="OpenChargerWindow"/>
+            <Button Content="Battery" Grid.Row="4" Margin="3" Click="OpenBatteryWindow"/>
+            <Button Content="Bluetooth" Grid.Row="6" Margin="3" Click="OpenBluetoothWindow"/>
+            <Button Content="DAC" Grid.Row="8" Margin="3" Click="OpenDACWindow"/>
+        </Grid>
 
     </Grid>
 </Window>
