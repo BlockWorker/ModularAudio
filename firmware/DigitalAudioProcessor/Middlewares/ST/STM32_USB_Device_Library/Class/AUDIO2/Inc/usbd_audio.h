@@ -214,15 +214,17 @@ typedef struct
 
 typedef struct
 {
-    int8_t  (*Init)         (uint32_t  audioFreq, int16_t volume, uint8_t options);
-    int8_t  (*DeInit)       (uint8_t options);
-    int8_t  (*AudioCmd)     (uint16_t* pbuf, uint32_t size, uint8_t cmd);
-    int8_t  (*VolumeCtl)    (int16_t vol);
+    int8_t  (*Init)         (uint32_t audioFreq, uint32_t volume, uint32_t options);
+    int8_t  (*DeInit)       (uint32_t options);
+    int8_t  (*AudioCmd)     (uint8_t* pbuf, uint32_t size, uint8_t cmd);
+    int8_t  (*VolumeCtl)    (uint8_t vol);
     int8_t  (*MuteCtl)      (uint8_t cmd);
-    int8_t  (*PeriodicTC)   (uint8_t cmd);
+    int8_t  (*PeriodicTC)   (uint8_t *pbuf, uint32_t size, uint8_t cmd);
     int8_t  (*GetState)     (void);
 } USBD_AUDIO_ItfTypeDef;
 
+//TODO: undefine after debug done
+#define DEBUG_FEEDBACK_ENDPOINT
 #ifdef DEBUG_FEEDBACK_ENDPOINT
 extern volatile uint32_t  DbgMinWritableSamples;
 extern volatile uint32_t  DbgMaxWritableSamples;

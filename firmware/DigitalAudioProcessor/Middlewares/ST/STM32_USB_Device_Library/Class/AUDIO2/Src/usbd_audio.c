@@ -483,16 +483,15 @@ static uint8_t USBD_AUDIO_Setup(USBD_HandleTypeDef* pdev,
             if ((uint8_t)(req->wValue) <= USBD_MAX_NUM_INTERFACES) {
               /* Do things only when alt_setting changes */
               if (haudio->alt_setting != (uint8_t)(req->wValue)) {
-		printf("alt setting change %lu to %u\n", haudio->alt_setting, (uint8_t)(req->wValue));
+                printf("alt setting change %lu to %u\n", haudio->alt_setting, (uint8_t)(req->wValue));
                 haudio->alt_setting = (uint8_t)(req->wValue);
                 if (haudio->alt_setting == 0U) {
                 	AUDIO_OUT_StopAndReset(pdev);
-                	}
-                else {
+                } else {
                 	haudio->bit_depth = USBD_AUDIO_BIT_DEPTH_DEFAULT;
-                  	AUDIO_OUT_Restart(pdev);
-                	}
-              	}
+                  AUDIO_OUT_Restart(pdev);
+                }
+              }
               USBD_LL_FlushEP(pdev, AUDIO_IN_EP);
             } else {
               /* Call the error management function (command will be nacked */
@@ -580,7 +579,7 @@ static uint8_t USBD_AUDIO_SOF(USBD_HandleTypeDef* pdev)
 	DbgSofCounter++;
 #endif
 	// Update audio read pointer
-    haudio->rd_ptr = AUDIO_TOTAL_BUF_SIZE - (LL_DMA_ReadReg(DMA1_Stream4, NDTR) & 0xFFFF);
+    haudio->rd_ptr = AUDIO_TOTAL_BUF_SIZE - (LL_DMA_ReadReg(BDMA_Channel0, CNDTR) & 0xFFFF); //TODO: needs correct DMA stream!
 
     // Calculate remaining writable buffer samples
     uint32_t audio_buf_writable_samples = haudio->rd_ptr < haudio->wr_ptr ?
@@ -794,8 +793,9 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 			sample.b[3] = sample.b[2] & 0x80 ? 0xFF : 0x00; // sign extend to 32bits
 			sample.s = USBD_AUDIO_Volume_Ctrl(sample.s,haudio->vol_3dB_shift);
 
-			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
 			haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
+			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
+			//haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
 
 			sample.b[0] = tmpbuf[tmpbuf_ptr+3]; // lsb
 			sample.b[1] = tmpbuf[tmpbuf_ptr+4];
@@ -804,8 +804,9 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 
 			sample.s = USBD_AUDIO_Volume_Ctrl(sample.s,haudio->vol_3dB_shift);
 
-			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
 			haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
+			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
+			//haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
 
 			tmpbuf_ptr += 6;
 
@@ -828,7 +829,7 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 					audio_buf_writable_samples_last = (AUDIO_TOTAL_BUF_SIZE - haudio->wr_ptr)/6;
 					}
 
-				((USBD_AUDIO_ItfTypeDef*)pdev->pUserData[pdev->classId])->AudioCmd(&haudio->buffer[0], AUDIO_TOTAL_BUF_SIZE * 2, AUDIO_CMD_START);
+				((USBD_AUDIO_ItfTypeDef*)pdev->pUserData[pdev->classId])->AudioCmd((uint8_t*)&haudio->buffer[0], AUDIO_TOTAL_BUF_SIZE * 2, AUDIO_CMD_START);
 				}
 			}
 

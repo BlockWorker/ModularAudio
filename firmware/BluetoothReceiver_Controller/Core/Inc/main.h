@@ -52,7 +52,7 @@ extern UART_HandleTypeDef huart6;
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-  //quick error-return macro
+//quick error-return macro
 #define ReturnOnError(x) do { HAL_StatusTypeDef __res = (x); if (__res != HAL_OK) return __res; } while (0)
 
 //debug printout, disabled outside of debug mode

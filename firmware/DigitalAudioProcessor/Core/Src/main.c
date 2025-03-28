@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "retarget.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -127,6 +127,9 @@ int main(void)
   MX_UART4_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+
+  RetargetInit(&huart4);
+  DEBUG_PRINTF("Controller started\n");
 
   /* USER CODE END 2 */
 
@@ -490,7 +493,7 @@ static void MX_BDMA_Init(void)
 
   /* DMA interrupt init */
   /* BDMA_Channel0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(BDMA_Channel0_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(BDMA_Channel0_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(BDMA_Channel0_IRQn);
 
 }

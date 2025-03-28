@@ -22,7 +22,7 @@
 #include "usbd_audio_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "main.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -153,9 +153,27 @@ USBD_AUDIO_ItfTypeDef USBD_AUDIO_fops_HS =
 static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t options)
 {
   /* USER CODE BEGIN 9 */
-  UNUSED(AudioFreq);
-  UNUSED(Volume);
-  UNUSED(options);
+  DEBUG_PRINTF("audio init %lu %lu %lu\n", AudioFreq, Volume, options);
+
+  switch (AudioFreq) {
+    case 96000:
+      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_96K;
+      break;
+    case 48000:
+      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
+      break;
+    case 44100:
+      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
+      break;
+    default:
+      return USBD_FAIL;
+  }
+
+  if (HAL_SAI_Init(&hsai_BlockB4) != HAL_OK)
+  {
+    return USBD_FAIL;
+  }
+
   return (USBD_OK);
   /* USER CODE END 9 */
 }
@@ -168,6 +186,7 @@ static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t option
 static int8_t AUDIO_DeInit_HS(uint32_t options)
 {
   /* USER CODE BEGIN 10 */
+  HAL_SAI_DMAStop(&hsai_BlockB4);
   UNUSED(options);
   return (USBD_OK);
   /* USER CODE END 10 */
@@ -186,10 +205,14 @@ static int8_t AUDIO_AudioCmd_HS(uint8_t* pbuf, uint32_t size, uint8_t cmd)
   switch(cmd)
   {
     case AUDIO_CMD_START:
-    break;
+      DEBUG_PRINTF("cmd_start\n");
+      HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
+      break;
 
     case AUDIO_CMD_PLAY:
-    break;
+      //DEBUG_PRINTF("cmd_play\n");
+      HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
+      break;
   }
   UNUSED(pbuf);
   UNUSED(size);
@@ -273,7 +296,19 @@ void HalfTransfer_CallBack_HS(void)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
+  TransferComplete_CallBack_HS();
+  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+}
 
+void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai) {
+  HalfTransfer_CallBack_HS();
+  //HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+}
+
+void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai) {
+  DEBUG_PRINTF("sai error: %lu", HAL_SAI_GetError(hsai));
+}
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**
