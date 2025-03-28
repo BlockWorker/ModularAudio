@@ -507,7 +507,7 @@ HAL_StatusTypeDef DAC_Init() {
   _dac_interrupts_triggered = 0;
 
 #ifdef DEBUG
-  PrintAllRegisters();
+  //PrintAllRegisters();
 #endif
 
   return HAL_OK;

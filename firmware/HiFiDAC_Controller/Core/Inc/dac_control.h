@@ -27,7 +27,7 @@
 //period between manual register reads in main loop cycles
 #define DAC_MANUAL_UPDATE_PERIOD 50
 
-//calibrated volume offsets (reduction) in 0.5dB steps - TODO: perform tests with pcb changes
+//calibrated volume offsets (reduction) in 0.5dB steps - prototype tests showed -1.5dB as an okay level with ~9.2Vpp
 #define DAC_VOL_CAL_CH1 3
 #define DAC_VOL_CAL_CH2 3
 //initial volume setting (reduction) after reset/init in 0.5dB steps - here: set to -20dB

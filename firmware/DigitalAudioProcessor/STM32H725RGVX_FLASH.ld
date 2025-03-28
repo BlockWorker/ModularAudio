@@ -161,6 +161,66 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM_D1
+  
+  /* Extra blocks for D2, D3, and DTCM RAM availability */
+  ._d2_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginD2Bss = .;
+    KEEP(*(.d2_bss))
+    . = ALIGN(4);
+    _EndD2Bss = .;
+  } > RAM_D2
+  
+  ._d2_data_block :
+  {
+    . = ALIGN(4);
+    _BeginD2Data = .;
+    KEEP(*(.d2_data))
+    . = ALIGN(4);
+    _EndD2Data = .;
+  } > RAM_D2 AT> FLASH
+  _InitD2Data = LOADADDR (._d2_data_block);
+  
+  ._d3_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginD3Bss = .;
+    KEEP(*(.d3_bss))
+    . = ALIGN(4);
+    _EndD3Bss = .;
+  } > RAM_D3
+  
+  ._d3_data_block :
+  {
+    . = ALIGN(4);
+    _BeginD3Data = .;
+    KEEP(*(.d3_data))
+    . = ALIGN(4);
+    _EndD3Data = .;
+  } > RAM_D3 AT> FLASH
+  _InitD3Data = LOADADDR (._d3_data_block);
+  
+  ._dtcm_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginDTCMBss = .;
+    KEEP(*(.dtcm_bss))
+    . = ALIGN(4);
+    _EndDTCMBss = .;
+  } > DTCMRAM
+  
+  ._dtcm_data_block :
+  {
+    . = ALIGN(4);
+    _BeginDTCMData = .;
+    KEEP(*(.dtcm_data))
+    . = ALIGN(4);
+    _EndDTCMData = .;
+  } > DTCMRAM AT> FLASH
+  _InitDTCMData = LOADADDR (._dtcm_data_block);
+  
+  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

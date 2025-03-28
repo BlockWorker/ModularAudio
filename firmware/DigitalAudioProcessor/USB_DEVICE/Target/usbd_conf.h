@@ -35,7 +35,9 @@
 #include "stm32h7xx_hal.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#define USBD_AUDIO_FREQ_DEFAULT               96000
+#define USBD_AUDIO_FREQ_MAX                   96000
+#define USBD_AUDIO_BIT_DEPTH_DEFAULT          24
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER

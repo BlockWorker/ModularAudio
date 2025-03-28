@@ -93,6 +93,70 @@ LoopFillZerobss:
   cmp r2, r4
   bcc FillZerobss
 
+/* Initializers for other RAM segment BSS/Data sections */
+  ldr r0, =_BeginD2Bss
+  ldr r1, =_EndD2Bss
+  ldr r2, =0
+  b LoopFillD2Bss
+FillD2Bss:
+  str r2, [r0], #4
+LoopFillD2Bss:
+  cmp r0, r1
+  blo FillD2Bss
+
+  ldr r0, =_BeginD2Data
+  ldr r1, =_EndD2Data
+  ldr r2, =_InitD2Data
+  b LoopCopyD2Data
+CopyD2Data:
+  ldr r3, [r2], #4
+  str r3, [r0], #4
+LoopCopyD2Data:
+  cmp r0, r1
+  blo CopyD2Data
+
+  ldr r0, =_BeginD3Bss
+  ldr r1, =_EndD3Bss
+  ldr r2, =0
+  b LoopFillD3Bss
+FillD3Bss:
+  str r2, [r0], #4
+LoopFillD3Bss:
+  cmp r0, r1
+  blo FillD3Bss
+
+  ldr r0, =_BeginD3Data
+  ldr r1, =_EndD3Data
+  ldr r2, =_InitD3Data
+  b LoopCopyD3Data
+CopyD3Data:
+  ldr r3, [r2], #4
+  str r3, [r0], #4
+LoopCopyD3Data:
+  cmp r0, r1
+  blo CopyD3Data
+
+  ldr r0, =_BeginDTCMBss
+  ldr r1, =_EndDTCMBss
+  ldr r2, =0
+  b LoopFillDTCMBss
+FillDTCMBss:
+  str r2, [r0], #4
+LoopFillDTCMBss:
+  cmp r0, r1
+  blo FillDTCMBss
+
+  ldr r0, =_BeginDTCMData
+  ldr r1, =_EndDTCMData
+  ldr r2, =_InitDTCMData
+  b LoopCopyDTCMData
+CopyDTCMData:
+  ldr r3, [r2], #4
+  str r3, [r0], #4
+LoopCopyDTCMData:
+  cmp r0, r1
+  blo CopyDTCMData
+
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/
