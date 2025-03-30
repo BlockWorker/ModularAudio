@@ -157,6 +157,17 @@ LoopCopyDTCMData:
   cmp r0, r1
   blo CopyDTCMData
 
+  ldr r0, =_BeginITCMText
+  ldr r1, =_EndITCMText
+  ldr r2, =_InitITCMText
+  b LoopCopyITCMText
+CopyITCMText:
+  ldr r3, [r2], #4
+  str r3, [r0], #4
+LoopCopyITCMText:
+  cmp r0, r1
+  blo CopyITCMText
+
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/

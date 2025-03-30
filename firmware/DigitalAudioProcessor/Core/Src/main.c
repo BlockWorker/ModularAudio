@@ -51,6 +51,15 @@ DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi2_rx;
 DMA_HandleTypeDef hdma_spi3_rx;
 
+RAMECC_HandleTypeDef hramecc1_m1;
+RAMECC_HandleTypeDef hramecc1_m2;
+RAMECC_HandleTypeDef hramecc1_m3;
+RAMECC_HandleTypeDef hramecc1_m4;
+RAMECC_HandleTypeDef hramecc1_m6;
+RAMECC_HandleTypeDef hramecc2_m1;
+RAMECC_HandleTypeDef hramecc2_m2;
+RAMECC_HandleTypeDef hramecc3_m1;
+
 SAI_HandleTypeDef hsai_BlockB4;
 DMA_HandleTypeDef hdma_sai4_b;
 
@@ -66,6 +75,7 @@ UART_HandleTypeDef huart4;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_BDMA_Init(void);
 static void MX_DMA_Init(void);
@@ -76,6 +86,7 @@ static void MX_SAI4_Init(void);
 static void MX_SPDIFRX1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_UART4_Init(void);
+static void MX_RAMECC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -94,6 +105,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+
+  /* MPU Configuration--------------------------------------------------------*/
+  MPU_Config();
 
   /* Enable I-Cache---------------------------------------------------------*/
   SCB_EnableICache();
@@ -126,6 +140,7 @@ int main(void)
   MX_I2C1_Init();
   MX_UART4_Init();
   MX_USB_DEVICE_Init();
+  MX_RAMECC_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart4);
@@ -361,6 +376,91 @@ static void MX_I2S3_Init(void)
 }
 
 /**
+  * @brief RAMECC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RAMECC_Init(void)
+{
+
+  /* USER CODE BEGIN RAMECC_Init 0 */
+
+  /* USER CODE END RAMECC_Init 0 */
+
+  /* USER CODE BEGIN RAMECC_Init 1 */
+
+  /* USER CODE END RAMECC_Init 1 */
+
+  /** Initialize RAMECC1 M1 : AXI SRAM
+  */
+  hramecc1_m1.Instance = RAMECC1_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc1_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M2 : ITCM-RAM
+  */
+  hramecc1_m2.Instance = RAMECC1_Monitor2;
+  if (HAL_RAMECC_Init(&hramecc1_m2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M3 : D0TCM-RAM
+  */
+  hramecc1_m3.Instance = RAMECC1_Monitor3;
+  if (HAL_RAMECC_Init(&hramecc1_m3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M4 : D1TCM-RAM
+  */
+  hramecc1_m4.Instance = RAMECC1_Monitor4;
+  if (HAL_RAMECC_Init(&hramecc1_m4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M6 : SRAM
+  */
+  hramecc1_m6.Instance = RAMECC1_Monitor6;
+  if (HAL_RAMECC_Init(&hramecc1_m6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC2 M1 : SRAM1_0
+  */
+  hramecc2_m1.Instance = RAMECC2_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc2_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC2 M2 : SRAM2_0
+  */
+  hramecc2_m2.Instance = RAMECC2_Monitor2;
+  if (HAL_RAMECC_Init(&hramecc2_m2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC3 M1 : SRAM4
+  */
+  hramecc3_m1.Instance = RAMECC3_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc3_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RAMECC_Init 2 */
+
+  /* USER CODE END RAMECC_Init 2 */
+
+}
+
+/**
   * @brief SAI4 Initialization Function
   * @param None
   * @retval None
@@ -567,6 +667,62 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* MPU Configuration */
+
+void MPU_Config(void)
+{
+  MPU_Region_InitTypeDef MPU_InitStruct = {0};
+
+  /* Disables the MPU */
+  HAL_MPU_Disable();
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.BaseAddress = 0x0;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512MB;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER2;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_64KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO_URO;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER3;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  /* Enables the MPU */
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
