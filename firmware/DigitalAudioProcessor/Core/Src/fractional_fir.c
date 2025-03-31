@@ -23,14 +23,15 @@ HAL_StatusTypeDef FFIR_Init(FFIR_Instance* ffir) {
   //set up phase FIR filter instance structs
   int i;
   for (i = 0; i < ffir->num_phases; i++) {
-    arm_fir_instance_q31* phase = ffir->phase_instances + i;
+    armext_fir_single_instance_q31* phase = ffir->phase_instances + i;
     phase->numTaps = ffir->phase_length;
     phase->pState = ffir->filter_state;
     phase->pCoeffs = ffir->coeff_array[i];
+    phase->stateOffset = 0;
   }
 
   //zero-fill the shared FIR filter state
-  memset(ffir->filter_state, 0, ffir->phase_length * sizeof(q31_t));
+  memset(ffir->filter_state, 0, 2 * (ffir->phase_length - 1) * sizeof(q31_t));
 
   //reset the initial phase to zero
   ffir->_current_phase_int = 0;
@@ -42,7 +43,7 @@ HAL_StatusTypeDef FFIR_Init(FFIR_Instance* ffir) {
 //process samples through the given filter using the given input/output buffers and step sizes
 //processing stops once the given end pointer of either the input or output is reached - whichever happens first
 //returns the number of processed samples
-uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, q31_t* in_start, q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step) {
+uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, const q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step) {
   //check for valid struct and phase steps
   if (ffir == NULL || ffir->phase_step_fract < 0.0f || ffir->phase_step_fract > (float)UINT16_MAX || isnanf(ffir->phase_step_fract) ||
       in_start == NULL || in_step < 1 || out_start == NULL || out_step < 1) {
@@ -54,16 +55,50 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, q31_t* in_start, q31_t* in
     return 0;
   }
 
-  //loop through samples to process - produce output samples one at a time
+  //counter for processed samples
   uint32_t sample_counter = 0;
-  q31_t* in_ptr = in_start;
+  //pointers for sample processing
+  const q31_t* in_ptr = in_start;
   q31_t* out_ptr;
+
+  //nested function to read input samples and decrement the current phase until it's in [0, num_phases)
+  //returns false if end of input is reached, otherwise true
+  bool __RAM_FUNC __read_input_until_phase_valid() {
+    //if our phase is outside [0, num_phases), "wrap around" to next input sample, repeat until we're in a valid range
+    while (ffir->_current_phase_int >= ffir->num_phases) {
+      //shift current input sample into the filter state buffer, as we're moving to the next sample
+      //(doesn't matter which phase's FIR instance we use here, since the state is shared)
+      armext_fir_single_shiftonly_q31(ffir->phase_instances, in_ptr);
+
+      //phase "wraps around" to the start
+      ffir->_current_phase_int -= ffir->num_phases;
+
+      //increment input sample pointer
+      in_ptr += in_step;
+      if (in_ptr >= in_end) {
+        //input end reached: we're done here
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  //start by correcting the phase (by reading input samples) if necessary
+  if (!__read_input_until_phase_valid()) {
+    //ran out of input: return no samples processed
+    return 0;
+  }
+
+  //loop through samples to process - produce output samples one at a time
   for (out_ptr = out_start; out_ptr < out_end; out_ptr += out_step) {
-    //produce one output sample using FIR filter corresponding to current (integer) phase
-    arm_fir_fast_q31(ffir->phase_instances[ffir->_current_phase_int], in_ptr, out_ptr, 1);
+    //produce one output sample using FIR filter corresponding to current (integer) phase - state buffer remains unmodified for now
+    armext_fir_fast_single_noshift_q31(ffir->phase_instances + ffir->_current_phase_int, in_ptr, out_ptr);
+    sample_counter++;
 
     //increment phase - integer step first
     ffir->_current_phase_int += ffir->phase_step_int;
+    //check if we're doing fractional phase steps
     if (ffir->phase_step_fract > 0.0f) {
       //fractional step is needed: add step to fractional phase and check if it's still in [0, 1)
       ffir->_current_phase_fract += ffir->phase_step_fract;
@@ -75,8 +110,11 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, q31_t* in_start, q31_t* in
       }
     }
 
-    //process input samples
-    //TODO: problem when reusing one input sample multiple times... shouldn't be getting shifted into state multiple times then... fix that here
+    //correct the phase to range [0, num_phases) by reading input samples, if necessary
+    if (!__read_input_until_phase_valid()) {
+      //ran out of input: stop processing and return
+      return sample_counter;
+    }
   }
 
   return sample_counter;
