@@ -81,6 +81,14 @@ extern UART_HandleTypeDef huart4;
 #ifndef MAX
   #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
+
+//memory allocation macros
+#define __BSS_D2 __attribute__((section(".d2_bss")))
+#define __DATA_D2 __attribute__((section(".d2_data")))
+#define __BSS_D3 __attribute__((section(".d3_bss")))
+#define __DATA_D3 __attribute__((section(".d3_data")))
+#define __BSS_DTCM __attribute__((section(".dtcm_bss")))
+#define __DATA_DTCM __attribute__((section(".dtcm_data")))
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

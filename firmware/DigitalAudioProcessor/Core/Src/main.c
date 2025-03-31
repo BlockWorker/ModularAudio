@@ -478,7 +478,7 @@ static void MX_SAI4_Init(void)
   hsai_BlockB4.Instance = SAI4_Block_B;
   hsai_BlockB4.Init.AudioMode = SAI_MODEMASTER_TX;
   hsai_BlockB4.Init.Synchro = SAI_ASYNCHRONOUS;
-  hsai_BlockB4.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
+  hsai_BlockB4.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
   hsai_BlockB4.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
   hsai_BlockB4.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
   hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_96K;

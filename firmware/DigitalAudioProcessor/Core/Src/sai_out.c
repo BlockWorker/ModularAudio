@@ -1,0 +1,51 @@
+/*
+ * sai_out.c
+ *
+ *  Created on: Mar 31, 2025
+ *      Author: Alex
+ *
+ *  Handles the buffer and HAL state of the SAI I2C output
+ */
+
+#include "sai_out.h"
+#include "arm_math.h"
+
+
+//output data DMA buffer
+static volatile q31_t __BSS_D3 _sai_out_buffer[SAI_OUT_BUF_SAMPLES];
+
+
+//calculates a batch of output samples into the buffer at the given offset; writes zeros if there are insufficient input samples to process
+static void _SAI_OUT_CalculateBatch(uint32_t buffer_offset) {
+
+}
+
+
+void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
+  //transfer reached end point (second batch in buffer sent): calculate new second batch into buffer while first batch is transmitting
+  _SAI_OUT_CalculateBatch(SAI_OUT_TOTAL_BATCH_SAMPLES);
+}
+
+void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai) {
+  //transfer reached halfway point (first batch in buffer sent): calculate new first batch into buffer while second batch is transmitting
+  _SAI_OUT_CalculateBatch(0);
+}
+
+void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai) {
+  //error: abort and re-init
+  DEBUG_PRINTF("*** SAI Error: %lu", HAL_SAI_GetError(hsai));
+  SAI_OUT_Init();
+}
+
+
+HAL_StatusTypeDef SAI_OUT_Init() {
+  //abort any potential ongoing transfer
+  HAL_SAI_Abort(&hsai_BlockB4);
+
+  //fill the buffer with initial data - using zeros if insufficient input data
+  _SAI_OUT_CalculateBatch(0);
+  _SAI_OUT_CalculateBatch(SAI_OUT_TOTAL_BATCH_SAMPLES);
+
+  //start the circular DMA transfer
+  return HAL_SAI_Transmit_DMA(&hsai_BlockB4, (uint8_t*)_sai_out_buffer, SAI_OUT_BUF_SAMPLES);
+}

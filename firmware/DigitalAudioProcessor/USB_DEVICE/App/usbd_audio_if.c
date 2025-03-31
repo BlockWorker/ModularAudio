@@ -296,7 +296,7 @@ void HalfTransfer_CallBack_HS(void)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
-void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
+/*void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
   TransferComplete_CallBack_HS();
   //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
@@ -308,7 +308,7 @@ void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai) {
 
 void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai) {
   DEBUG_PRINTF("sai error: %lu", HAL_SAI_GetError(hsai));
-}
+}*/
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**
