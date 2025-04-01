@@ -242,13 +242,24 @@ SECTIONS
   } > DTCMRAM AT> FLASH
   _InitDTCMData = LOADADDR (._dtcm_data_block);
   
-    /* User_stack section, used to check that there is enough DTCMRAM left */
+  /* User_stack section, used to check that there is enough DTCMRAM left */
   ._user_stack (NOLOAD) :
   {
     . = ALIGN(8);
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } > DTCMRAM
+  
+  /* ITCM data block; intended for read-only data (but could theoretically house read-write data too) */
+  ._itcm_data_block :
+  {
+    . = ALIGN(4);
+    _BeginITCMData = .;
+    KEEP(*(.itcm_data))
+    . = ALIGN(4);
+    _EndITCMData = .;
+  } > ITCMRAM AT> FLASH
+  _InitITCMData = LOADADDR (._itcm_data_block);
   
 
   /* Remove information from the standard libraries */

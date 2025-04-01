@@ -1,0 +1,60 @@
+/*
+ * sample_rate_conv.h
+ *
+ *  Created on: Apr 1, 2025
+ *      Author: Alex
+ *
+ *  Handles audio sample rate conversion (fixed and adaptive)
+ */
+
+#ifndef INC_SAMPLE_RATE_CONV_H_
+#define INC_SAMPLE_RATE_CONV_H_
+
+#include "main.h"
+#include "arm_math.h"
+
+
+//maximum number of audio channels for sample rate conversion
+#define SRC_MAX_CHANNELS 2
+//output samples per batch per channel
+#define SRC_CHANNEL_BATCH_SAMPLES 96
+//ideal fill level of adaptive resampling buffer, in output batches
+#define SRC_BUF_IDEAL_BATCHES 3
+//maximum input samples per channel that are supported per call
+#define SRC_INPUT_CHANNEL_SAMPLES_MAX 256
+
+//adative resampling buffer size, in samples per channel
+#define SRC_BUF_TOTAL_CHANNEL_SAMPLES (2 * SRC_BUF_IDEAL_BATCHES * SRC_CHANNEL_BATCH_SAMPLES)
+//ideal fill level of adaptive resampling buffer, in samples per channel
+#define SRC_BUF_IDEAL_CHANNEL_SAMPLES (SRC_BUF_IDEAL_BATCHES * SRC_CHANNEL_BATCH_SAMPLES)
+
+
+typedef enum {
+  SR_UNKNOWN = 0,
+  SR_44K = 44100,
+  SR_48K = 48000,
+  SR_96K = 96000
+} SRC_SampleRate;
+
+
+//initialise the SRC's internal filter variables - only needs to be called once
+HAL_StatusTypeDef SRC_Init();
+
+//reset the SRC's internal state and prepare for the conversion of a new input signal at the given sample rate
+HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate);
+//get the currently configured input sample rate
+SRC_SampleRate SRC_GetCurrentInputRate();
+
+//process `in_channels` input channels with `in_samples` samples per channel
+//must be at the currently configured input sample rate; to switch sample rate, a re-init is required
+//channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`
+HAL_StatusTypeDef SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples);
+
+//produce `out_channels` output channels with `SRC_CHANNEL_BATCH_SAMPLES` samples per channel
+//output buffer(s) must have enough space for a full batch of samples!
+//channels may be in separate buffers or interleaved, starting at `out_bufs[channel]`, each with step size `out_step`
+//will return HAL_BUSY if the SRC is not ready to produce an output batch (will not process anything then)
+HAL_StatusTypeDef SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t out_step, uint16_t out_channels);
+
+
+#endif /* INC_SAMPLE_RATE_CONV_H_ */

@@ -168,6 +168,17 @@ LoopCopyITCMText:
   cmp r0, r1
   blo CopyITCMText
 
+  ldr r0, =_BeginITCMData
+  ldr r1, =_EndITCMData
+  ldr r2, =_InitITCMData
+  b LoopCopyITCMData
+CopyITCMData:
+  ldr r3, [r2], #4
+  str r3, [r0], #4
+LoopCopyITCMData:
+  cmp r0, r1
+  blo CopyITCMData
+
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/

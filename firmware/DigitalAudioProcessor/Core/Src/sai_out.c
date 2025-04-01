@@ -12,7 +12,7 @@
 
 
 //output data DMA buffer
-static volatile q31_t __BSS_D3 _sai_out_buffer[SAI_OUT_BUF_SAMPLES];
+static volatile q31_t __D3_BSS _sai_out_buffer[SAI_OUT_BUF_SAMPLES];
 
 
 //calculates a batch of output samples into the buffer at the given offset; writes zeros if there are insufficient input samples to process

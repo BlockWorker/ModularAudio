@@ -4,7 +4,7 @@
  *  Created on: Mar 31, 2025
  *      Author: Alex
  *
- *  Implements fractional polyphase FIR filtering
+ *  Implements fractional polyphase FIR filtering (sample rate conversion)
  */
 
 #include "fractional_fir.h"
@@ -27,17 +27,33 @@ HAL_StatusTypeDef FFIR_Init(FFIR_Instance* ffir) {
     phase->numTaps = ffir->phase_length;
     phase->pState = ffir->filter_state;
     phase->pCoeffs = ffir->coeff_array[i];
-    phase->stateOffset = 0;
+    phase->pStateOffset = &ffir->filter_state_offset;
+  }
+
+  //Reset the filter states
+  FFIR_Reset(ffir);
+
+  return HAL_OK;
+}
+
+//reset the given FFIR filter instance's internal state
+void FFIR_Reset(FFIR_Instance* ffir) {
+  //check validity of relevant instance parameters just in case
+  if (ffir == NULL || ffir->num_phases < 2 || ffir->phase_length < 2 ||
+      ffir->phase_instances == NULL || ffir->filter_state == NULL) {
+    DEBUG_PRINTF("* Attempted to reset an invalid FFIR instance!\n");
+    return;
   }
 
   //zero-fill the shared FIR filter state
   memset(ffir->filter_state, 0, 2 * (ffir->phase_length - 1) * sizeof(q31_t));
 
+  //reset phase FIR filter instance state offset
+  ffir->filter_state_offset = 0;
+
   //reset the initial phase to zero
   ffir->_current_phase_int = 0;
   ffir->_current_phase_fract = 0.0f;
-
-  return HAL_OK;
 }
 
 //process samples through the given filter using the given input/output buffers and step sizes

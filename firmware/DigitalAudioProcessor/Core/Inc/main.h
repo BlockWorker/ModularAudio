@@ -83,12 +83,13 @@ extern UART_HandleTypeDef huart4;
 #endif
 
 //memory allocation macros
-#define __BSS_D2 __attribute__((section(".d2_bss")))
-#define __DATA_D2 __attribute__((section(".d2_data")))
-#define __BSS_D3 __attribute__((section(".d3_bss")))
-#define __DATA_D3 __attribute__((section(".d3_data")))
-#define __BSS_DTCM __attribute__((section(".dtcm_bss")))
-#define __DATA_DTCM __attribute__((section(".dtcm_data")))
+#define __D2_BSS __attribute__((section(".d2_bss")))
+#define __D2_DATA __attribute__((section(".d2_data")))
+#define __D3_BSS __attribute__((section(".d3_bss")))
+#define __D3_DATA __attribute__((section(".d3_data")))
+#define __DTCM_BSS __attribute__((section(".dtcm_bss")))
+#define __DTCM_DATA __attribute__((section(".dtcm_data")))
+#define __ITCM_DATA __attribute__((section(".itcm_data")))
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

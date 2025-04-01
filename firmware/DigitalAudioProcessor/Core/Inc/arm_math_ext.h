@@ -41,7 +41,7 @@ typedef struct {
   uint16_t numTaps;         /**< number of filter coefficients in the filter. */
   q31_t *pState;            /**< points to the state variable array. The array is of length 2*(numTaps-1). */
   const q31_t *pCoeffs;     /**< points to the coefficient array. The array is of length numTaps. */
-  uint32_t stateOffset;     /**< offset of the current state in the state variable array. Initialise to 0. */
+  uint32_t* pStateOffset;   /**< points to offset of the current state in the state variable array. Initialise offset to 0. */
 } armext_fir_single_instance_q31;
 
 

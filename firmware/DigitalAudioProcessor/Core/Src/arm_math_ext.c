@@ -32,13 +32,13 @@
 //like arm_fir_fast_q31, but only processes one sample and doesn't shift it into the state buffer, requires numTaps > 1
 //implements single-sample-optimised state buffer; for this, the state buffer must be 2*(numTaps-1) long
 void __RAM_FUNC armext_fir_fast_single_noshift_q31(const armext_fir_single_instance_q31* S, const q31_t* pSrc, q31_t* pDst) {
-  q31_t* pState = S->pState + S->stateOffset;     /* State pointer */
-  const q31_t* pCoeffs = S->pCoeffs;              /* Coefficient pointer */
-  q31_t acc0;                                     /* Accumulator */
-  uint32_t numTaps = S->numTaps;                  /* Number of filter coefficients in the filter */
+  q31_t* pState = S->pState + *(S->pStateOffset);   /* State pointer */
+  const q31_t* pCoeffs = S->pCoeffs;                /* Coefficient pointer */
+  q31_t acc0;                                       /* Accumulator */
+  uint32_t numTaps = S->numTaps;                    /* Number of filter coefficients in the filter */
 
 #if defined(ARM_MATH_EXT_LOOPUNROLL)
-  uint32_t tapCnt;                                /* Auxiliary loop counter */
+  uint32_t tapCnt;                                  /* Auxiliary loop counter */
 #endif
 
   /* Set the accumulator to zero */
@@ -82,16 +82,16 @@ void __RAM_FUNC armext_fir_fast_single_noshift_q31(const armext_fir_single_insta
 //implements single-sample-optimised state buffer; for this, the state buffer must be 2*(numTaps-1) long
 void __RAM_FUNC armext_fir_single_shiftonly_q31(armext_fir_single_instance_q31* S, const q31_t* pSrc) {
   //check whether we've reached the end of the state buffer yet
-  if (S->stateOffset >= (uint32_t)(S->numTaps - 1)) {
+  if (*(S->pStateOffset) >= (uint32_t)(S->numTaps - 1)) {
     //end reached: copy last numTaps-2 samples (located at end of buffer) to start of state buffer
     memcpy(S->pState, S->pState + S->numTaps, (S->numTaps - 2) * sizeof(q31_t));
     //reset the state offset
-    S->stateOffset = 0;
+    *(S->pStateOffset) = 0;
   } else {
     //end not reached yet: just increment the state offset
-    S->stateOffset++;
+    (*(S->pStateOffset))++;
   }
 
   //insert new sample at the end of the new-offset state
-  S->pState[S->stateOffset + S->numTaps - 2] = *pSrc;
+  S->pState[*(S->pStateOffset) + S->numTaps - 2] = *pSrc;
 }
