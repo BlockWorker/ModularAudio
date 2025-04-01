@@ -21,7 +21,9 @@
 //ideal fill level of adaptive resampling buffer, in output batches
 #define SRC_BUF_IDEAL_BATCHES 3
 //maximum input samples per channel that are supported per call
-#define SRC_INPUT_CHANNEL_SAMPLES_MAX 256
+#define SRC_INPUT_CHANNEL_SAMPLES_MAX 128
+//size of scratch buffers, in samples per channel - set here to be enough for maximum input samples after interpolation
+#define SRC_SCRATCH_CHANNEL_SAMPLES (2 * SRC_INPUT_CHANNEL_SAMPLES_MAX)
 
 //adative resampling buffer size, in samples per channel
 #define SRC_BUF_TOTAL_CHANNEL_SAMPLES (2 * SRC_BUF_IDEAL_BATCHES * SRC_CHANNEL_BATCH_SAMPLES)

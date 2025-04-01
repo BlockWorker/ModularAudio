@@ -60,18 +60,89 @@ static q31_t                            __DTCM_BSS  _src_ffir_adap_states       
 static FFIR_Instance                    __DTCM_BSS  _src_ffir_adap_instances        [SRC_MAX_CHANNELS];
 
 
+/********************************************************/
+/*                    SRC VARIABLES                     */
+/********************************************************/
+
 //currently configured input sample rate
 static SRC_SampleRate _src_input_rate = SR_UNKNOWN;
 //whether the SRC is ready to produce outputs (i.e. adaptive buffer has been pre-filled)
 static bool _src_output_ready = false;
 
+//semi-circular sample buffers for adaptive resampling, one per channel, read/write pointers are shared/synchronised
+//each length (2 * buflength - 1), read/write pointers are always in [0, buflength), and the entries in [buflength, 2 * buflength - 1) are a copy of entries [0, buflength - 1)
+//this allows circular buffer behaviour *and* contiguous reads/writes, at any point; just needs extra copies on write (_SRC_FinishBufferWrite function)
+static q31_t __DTCM_BSS _src_buffers[SRC_MAX_CHANNELS][2 * SRC_BUF_TOTAL_CHANNEL_SAMPLES - 1];
+//buffer read and write pointers
+static volatile uint32_t __DTCM_BSS _src_buffer_read_ptr;
+static volatile uint32_t __DTCM_BSS _src_buffer_write_ptr;
+//macros for determining available data and free space in buffer
+#define _src_buffer_available_data() ((_src_buffer_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES - _src_buffer_read_ptr) % SRC_BUF_TOTAL_CHANNEL_SAMPLES)
+#define _src_buffer_free_space() (SRC_BUF_TOTAL_CHANNEL_SAMPLES - _src_buffer_available_data() - 1)
+
+//temporary scratch buffers for processing
+static q31_t __DTCM_BSS _src_scratch_a[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAMPLES];
+static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAMPLES];
+
+
+/********************************************************/
+/*                 INTERNAL FUNCTIONS                   */
+/********************************************************/
+
+//should be called after every (block) write to the semi-circular buffer, specifying written channels and number of written samples per channel
+//handles copying newly written data (to maintain semi-circular buffer properties) and updating the write pointer accordingly
+static void _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t written_samples) {
+  int i;
+
+  if (active_channels < 1 || active_channels > SRC_MAX_CHANNELS || written_samples < 1 || written_samples >= SRC_BUF_TOTAL_CHANNEL_SAMPLES) {
+    //nothing to do or invalid parameters
+    return;
+  }
+
+  //buffer offset of end of write (points to first unmodified byte)
+  uint32_t write_end_offset = _src_buffer_write_ptr + written_samples;
+
+  //copy from first half of buffer to second half, if necessary (which it usually is)
+  uint32_t num_copy_to_second_half = (SRC_BUF_TOTAL_CHANNEL_SAMPLES - 1) - _src_buffer_write_ptr;
+  if (num_copy_to_second_half > 0) {
+    for (i = 0; i < active_channels; i++) {
+      memcpy(_src_buffers[i] + _src_buffer_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
+             _src_buffers[i] + _src_buffer_write_ptr,
+             num_copy_to_second_half * sizeof(q31_t));
+    }
+  }
+
+  //copy from second half of buffer to first half, if necessary
+  int32_t num_copy_to_first_half = (int32_t)write_end_offset - SRC_BUF_TOTAL_CHANNEL_SAMPLES;
+  if (num_copy_to_first_half > 0) {
+    for (i = 0; i < active_channels; i++) {
+      memcpy(_src_buffers[i],
+             _src_buffers[i] + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
+             num_copy_to_first_half * sizeof(q31_t));
+    }
+  }
+
+  //advance write pointer with wrap-around
+  _src_buffer_write_ptr = write_end_offset % SRC_BUF_TOTAL_CHANNEL_SAMPLES;
+
+  //mark SRC as ready to output if we have surpassed the ideal number of samples
+  if (!_src_output_ready && _src_buffer_available_data() > SRC_BUF_IDEAL_CHANNEL_SAMPLES) {
+    _src_output_ready = true;
+  }
+}
+
+
+/********************************************************/
+/*                    API FUNCTIONS                     */
+/********************************************************/
 
 //initialise the SRC's internal filter variables - only needs to be called once
 HAL_StatusTypeDef SRC_Init() {
   //reset SRC's own state - not configured for any sample rate at first
   _src_input_rate = SR_UNKNOWN;
   _src_output_ready = false;
-  //TODO: buffer state init etc
+  _src_buffer_read_ptr = 0;
+  _src_buffer_write_ptr = 0;
 
   //clear 2x interpolator states - doesn't happen automatically because we don't call any init function for them
   memset(_src_fir_int2_states, 0, sizeof(_src_fir_int2_states));
@@ -122,6 +193,9 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
     return HAL_ERROR;
   }
 
+  //reset must happen atomically
+  __disable_irq();
+
   //disable output until buffer is refilled
   _src_output_ready = false;
 
@@ -147,7 +221,11 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
     FFIR_Reset(ffir_adap);
   }
 
-  //TODO: reset buffer states etc
+  //reset adaptive resampling buffer to empty
+  _src_buffer_read_ptr = 0;
+  _src_buffer_write_ptr = 0;
+
+  __enable_irq();
 
   return HAL_OK;
 }
@@ -160,19 +238,101 @@ SRC_SampleRate SRC_GetCurrentInputRate() {
 //process `in_channels` input channels with `in_samples` samples per channel
 //must be at the currently configured input sample rate; to switch sample rate, a re-init is required
 //channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`
+//if the SRC can't accept all given input samples, old samples will be silently discarded
 HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples) {
-  //check for valid input rate
-  if (_src_input_rate != SR_44K && _src_input_rate != SR_48K && _src_input_rate != SR_96K) {
-    DEBUG_PRINTF("* Attempted SRC input processing with invalid configured sample rate %lu\n", (uint32_t)_src_input_rate);
-    return HAL_ERROR;
-  }
+  int i, j;
+
   //check parameters for validity
   if (in_bufs == NULL || in_step < 1 || in_channels < 1 || in_channels > SRC_MAX_CHANNELS || in_samples > SRC_INPUT_CHANNEL_SAMPLES_MAX) {
     DEBUG_PRINTF("* Attempted SRC input processing with invalid parameters %p %u %u %u\n", in_bufs, in_step, in_channels, in_samples);
     return HAL_ERROR;
   }
 
-  //TODO
+  //calculate required space for the given input samples
+  uint32_t required_space;
+  switch (_src_input_rate) {
+    case SR_44K:
+      required_space = (uint32_t)in_samples * 320 / 147 + 1;
+      break;
+    case SR_48K:
+      required_space = (uint32_t)in_samples * 2;
+      break;
+    case SR_96K:
+      required_space = (uint32_t)in_samples;
+      break;
+    default:
+      DEBUG_PRINTF("* Attempted SRC input processing with invalid configured sample rate %lu\n", (uint32_t)_src_input_rate);
+      return HAL_ERROR;
+  }
+  //check available space and potentially make space by discarding - must happen atomically
+  __disable_irq();
+  uint32_t available_space = _src_buffer_free_space();
+  if (available_space < required_space) {
+    //insufficient space for input samples: silently discard excess samples by advancing the read pointer (must happen atomically)
+    uint32_t discard_count = required_space - available_space;
+    _src_buffer_read_ptr = (_src_buffer_read_ptr + discard_count) % SRC_BUF_TOTAL_CHANNEL_SAMPLES;
+  }
+  __enable_irq();
+
+  //pointers to buffers to be used as the actual inputs
+  q31_t* true_input_buffers[SRC_MAX_CHANNELS];
+  //number of samples per channel written into the adaptive resampling buffer
+  uint32_t written_samples;
+
+  //further processing needs non-interleaved samples
+  if (in_step == 1) {
+    //inputs already not interleaved: use them directly
+    for (i = 0; i < in_channels; i++) {
+      true_input_buffers[i] = (q31_t*)in_bufs[i];
+    }
+  } else {
+    //inputs are interleaved: de-interleave into scratch A, then use that
+    for (i = 0; i < in_channels; i++) {
+      q31_t* scratch = _src_scratch_a[i];
+      const q31_t* inp = in_bufs[i];
+      for (j = 0; j < in_samples; j++) {
+        scratch[i] = *inp;
+        inp += in_step;
+      }
+      true_input_buffers[i] = scratch;
+    }
+  }
+
+  //process any potential fixed-ratio resampling, according to input sample rate
+  if (_src_input_rate == SR_96K) {
+    //already at target 96k rate: only adaptive resampling needed, so just copy the inputs into the buffer
+    for (i = 0; i < in_channels; i++) {
+      memcpy(_src_buffers[i] + _src_buffer_write_ptr, true_input_buffers[i], in_samples * sizeof(q31_t));
+    }
+    written_samples = in_samples;
+  } else {
+    //both 44.1k and 48k rates need 2x interpolation: perform 2x interpolation from input buffers
+    for (i = 0; i < in_channels; i++) {
+      //select output buffer depending on sample rate: for 44.1k, use scratch B for further processing; for 48k, use the adaptive resampling buffer directly
+      q31_t* out = (_src_input_rate == SR_44K) ? (_src_scratch_b[i]) : (_src_buffers[i] + _src_buffer_write_ptr);
+      arm_fir_interpolate_q31(_src_fir_int2_instances + i, true_input_buffers[i], out, in_samples);
+    }
+    written_samples = 2 * in_samples;
+
+    //fractional resampling step for 44.1k rate
+    if (_src_input_rate == SR_44K) {
+      //perform fractional resampling from scratch B into adaptive resampling buffer
+      for (i = 0; i < in_channels; i++) {
+        q31_t* inp = _src_scratch_b[i];
+        q31_t* out = _src_buffers[i] + _src_buffer_write_ptr;
+
+        uint32_t out_samples = FFIR_Process(_src_ffir_160147_instances + i, inp, inp + (2 * in_samples), 1, out, out + required_space, 1);
+
+        //all channels should produce same number of samples from resampling, but take the maximum just in case
+        if (out_samples > written_samples) {
+          written_samples = out_samples;
+        }
+      }
+    }
+  }
+
+  //perform final buffer processing for the written samples
+  _SRC_FinishBufferWrite(in_channels, written_samples);
 
   return HAL_OK;
 }
