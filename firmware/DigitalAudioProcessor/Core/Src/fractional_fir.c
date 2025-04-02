@@ -26,7 +26,7 @@ HAL_StatusTypeDef FFIR_Init(FFIR_Instance* ffir) {
     armext_fir_single_instance_q31* phase = ffir->phase_instances + i;
     phase->numTaps = ffir->phase_length;
     phase->pState = ffir->filter_state;
-    phase->pCoeffs = ffir->coeff_array[i];
+    phase->pCoeffs = ffir->coeff_array + (i * ffir->phase_length);
     phase->pStateOffset = &ffir->filter_state_offset;
   }
 
@@ -84,7 +84,7 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, con
 
   //nested function to read input samples and decrement the current phase until it's in [0, num_phases)
   //returns false if end of input is reached, otherwise true
-  bool __RAM_FUNC __read_input_until_phase_valid() {
+  inline bool __read_input_until_phase_valid() {
     //if our phase is outside [0, num_phases), "wrap around" to next input sample, repeat until we're in a valid range
     while (ffir->_current_phase_int >= ffir->num_phases) {
       //shift current input sample into the filter state buffer, as we're moving to the next sample

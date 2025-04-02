@@ -40,6 +40,9 @@
 #define SRC_ADAPTIVE_EMA_ALPHA 0.25f
 #define SRC_ADAPTIVE_EMA_1MALPHA (1.0f - SRC_ADAPTIVE_EMA_ALPHA)
 
+//bit shift of output samples - negative means shifted right
+#define SRC_OUTPUT_SHIFT -4
+
 
 typedef enum {
   SR_UNKNOWN = 0,
@@ -57,10 +60,10 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate);
 //get the currently configured input sample rate
 SRC_SampleRate SRC_GetCurrentInputRate();
 
-//process `in_channels` input channels with `in_samples` samples per channel
+//process `in_channels` input channels with `in_samples` samples per channel; where inputs were previously shifted to `in_shift` (negative = shifted right)
 //must be at the currently configured input sample rate; to switch sample rate, a re-init is required
 //channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`
-HAL_StatusTypeDef SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples);
+HAL_StatusTypeDef SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift);
 
 //produce `out_channels` output channels with `SRC_CHANNEL_BATCH_SAMPLES` samples per channel
 //output buffer(s) must have enough space for a full batch of samples!

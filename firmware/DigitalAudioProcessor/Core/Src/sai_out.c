@@ -8,16 +8,31 @@
  */
 
 #include "sai_out.h"
-#include "arm_math.h"
+#include "sample_rate_conv.h"
 
 
 //output data DMA buffer
-static volatile q31_t __D3_BSS _sai_out_buffer[SAI_OUT_BUF_SAMPLES];
+static q31_t __D3_BSS _sai_out_buffer[SAI_OUT_BUF_SAMPLES];
 
 
 //calculates a batch of output samples into the buffer at the given offset; writes zeros if there are insufficient input samples to process
 static void _SAI_OUT_CalculateBatch(uint32_t buffer_offset) {
+  int i;
 
+  //prepare buffer pointers for the sample batch
+  q31_t* buf_pointers[SAI_OUT_CHANNELS];
+  for (i = 0; i < SAI_OUT_CHANNELS; i++) {
+    buf_pointers[i] = _sai_out_buffer + buffer_offset + i;
+  }
+
+  //try to process SRC output batch
+  if (SRC_ProduceOutputBatch(buf_pointers, SAI_OUT_CHANNELS, SAI_OUT_CHANNELS) == HAL_OK) {
+    //output produced successfully: unshift results to be at full scale again
+    arm_shift_q31(_sai_out_buffer + buffer_offset, -SRC_OUTPUT_SHIFT, _sai_out_buffer + buffer_offset, SAI_OUT_TOTAL_BATCH_SAMPLES);
+  } else {
+    //failed to produce output: zero-fill batch
+    memset(_sai_out_buffer + buffer_offset, 0, SAI_OUT_TOTAL_BATCH_SAMPLES * sizeof(q31_t));
+  }
 }
 
 

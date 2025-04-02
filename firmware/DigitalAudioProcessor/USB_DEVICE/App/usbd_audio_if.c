@@ -23,6 +23,7 @@
 
 /* USER CODE BEGIN INCLUDE */
 #include "main.h"
+#include "sample_rate_conv.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -157,22 +158,25 @@ static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t option
 
   switch (AudioFreq) {
     case 96000:
-      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_96K;
+      SRC_Configure(SR_96K);
+      //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_96K;
       break;
     case 48000:
-      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
+      SRC_Configure(SR_48K);
+      //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
       break;
     case 44100:
-      hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
+      SRC_Configure(SR_44K);
+      //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
       break;
     default:
       return USBD_FAIL;
   }
 
-  if (HAL_SAI_Init(&hsai_BlockB4) != HAL_OK)
+  /*if (HAL_SAI_Init(&hsai_BlockB4) != HAL_OK)
   {
     return USBD_FAIL;
-  }
+  }*/
 
   return (USBD_OK);
   /* USER CODE END 9 */
@@ -186,7 +190,7 @@ static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t option
 static int8_t AUDIO_DeInit_HS(uint32_t options)
 {
   /* USER CODE BEGIN 10 */
-  HAL_SAI_DMAStop(&hsai_BlockB4);
+  //HAL_SAI_DMAStop(&hsai_BlockB4);
   UNUSED(options);
   return (USBD_OK);
   /* USER CODE END 10 */
@@ -206,12 +210,12 @@ static int8_t AUDIO_AudioCmd_HS(uint8_t* pbuf, uint32_t size, uint8_t cmd)
   {
     case AUDIO_CMD_START:
       DEBUG_PRINTF("cmd_start\n");
-      HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
+      //HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
       break;
 
     case AUDIO_CMD_PLAY:
       //DEBUG_PRINTF("cmd_play\n");
-      HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
+      //HAL_SAI_Transmit_DMA(&hsai_BlockB4, pbuf, size/4);
       break;
   }
   UNUSED(pbuf);

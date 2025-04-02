@@ -223,8 +223,7 @@ typedef struct
     int8_t  (*GetState)     (void);
 } USBD_AUDIO_ItfTypeDef;
 
-//TODO: undefine after debug done
-#define DEBUG_FEEDBACK_ENDPOINT
+//#define DEBUG_FEEDBACK_ENDPOINT
 #ifdef DEBUG_FEEDBACK_ENDPOINT
 extern volatile uint32_t  DbgMinWritableSamples;
 extern volatile uint32_t  DbgMaxWritableSamples;

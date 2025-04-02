@@ -20,7 +20,7 @@ typedef struct {
   uint16_t phase_step_int;                          //phase step per output sample (= decimation factor), integer - may be modified between processing calls
   float phase_step_fract;                           //phase step per output sample (= decimation factor), fractional - may be modified between processing calls
 
-  const q31_t** coeff_array;                        //2D array of `num_phases` x `phase_length` coefficient values - phase coefficients (second index) must be in reverse order
+  const q31_t* coeff_array;                         //row-major array of `num_phases` x `phase_length` coefficient values as rows of phase coefficients - rows must be in reverse order
 
   armext_fir_single_instance_q31* phase_instances;  //array of `num_phases` instance structures of the individual phase FIR filters - contents will be initialised by the FFIR_Init function
   q31_t* filter_state;                              //filter state array of length 2*(`phase_length`-1), shared by all phase FIR filters - contents will be initialised by the FFIR_Init function

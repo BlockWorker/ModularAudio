@@ -13,14 +13,23 @@
 
 //filter parameter constants
 #define SRC_FIR_INT2_PHASE_LENGTH 110
+#define SRC_FIR_INT2_SHIFT -1
+
 #define SRC_FFIR_160147_PHASE_COUNT 160
 #define SRC_FFIR_160147_PHASE_LENGTH 20
 #define SRC_FFIR_160147_PHASE_STEP 147
+#define SRC_FFIR_160147_SHIFT -4
+
 #define SRC_FFIR_ADAP_PHASE_COUNT 96
 #define SRC_FFIR_ADAP_PHASE_LENGTH 50
+#define SRC_FFIR_ADAP_SHIFT -4
 
 #if SRC_FFIR_ADAP_PHASE_COUNT != SRC_BATCH_CHANNEL_SAMPLES
 #error "SRC adaptive FFIR must have as many phases as there are samples per channel per output batch"
+#endif
+
+#if SRC_OUTPUT_SHIFT != MIN(MIN(SRC_FFIR_ADAP_SHIFT, SRC_FFIR_160147_SHIFT), SRC_FIR_INT2_SHIFT)
+#error "SRC: Mismatch between sample shift required by filters and specified SRC output shift"
 #endif
 
 
@@ -35,12 +44,12 @@ static const q31_t __ITCM_DATA _src_fir_int2_coeffs[2 * SRC_FIR_INT2_PHASE_LENGT
 
 #pragma GCC diagnostic ignored "-Wmissing-braces" //disable missing braces warning - initialising 2D arrays from contiguous list works fine
 //filter coefficients for fixed 160/147 fractional FIR resampler
-static const q31_t __ITCM_DATA _src_ffir_160147_coeffs[SRC_FFIR_160147_PHASE_COUNT][SRC_FFIR_160147_PHASE_LENGTH] = {
+static const q31_t __ITCM_DATA _src_ffir_160147_coeffs[SRC_FFIR_160147_PHASE_COUNT * SRC_FFIR_160147_PHASE_LENGTH] = {
 #include "../Data/ffir_160_147_coeffs.txt"
 };
 
 //filter coefficients for adaptive fractional FIR resampler
-static const q31_t __ITCM_DATA _src_ffir_adap_coeffs[SRC_FFIR_ADAP_PHASE_COUNT][SRC_FFIR_ADAP_PHASE_LENGTH] = {
+static const q31_t __ITCM_DATA _src_ffir_adap_coeffs[SRC_FFIR_ADAP_PHASE_COUNT * SRC_FFIR_ADAP_PHASE_LENGTH] = {
 #include "../Data/ffir_adaptive_coeffs.txt"
 };
 #pragma GCC diagnostic pop //re-enable missing braces warning
@@ -85,13 +94,21 @@ static q31_t __DTCM_BSS _src_scratch_a[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAM
 static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAMPLES];
 
 
+//debug access to internal state
+#ifdef DEBUG
+float* const src_adap_phase_step = &(_src_ffir_adap_instances[0].phase_step_fract);
+volatile uint32_t* const src_buf_read_ptr = &_src_buffer_read_ptr;
+volatile uint32_t* const src_buf_write_ptr = &_src_buffer_write_ptr;
+#endif
+
+
 /********************************************************/
 /*                 INTERNAL FUNCTIONS                   */
 /********************************************************/
 
 //should be called after every (block) write to the semi-circular buffer, specifying written channels and number of written samples per channel
 //handles copying newly written data (to maintain semi-circular buffer properties) and updating the write pointer accordingly
-static void _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t written_samples) {
+static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t written_samples) {
   int i;
 
   if (active_channels < 1 || active_channels > SRC_MAX_CHANNELS || written_samples < 1 || written_samples >= SRC_BUF_TOTAL_CHANNEL_SAMPLES) {
@@ -127,7 +144,7 @@ static void _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t written_sa
 
   //mark SRC as ready to output if we have surpassed the ideal number of samples
   if (!_src_output_ready && _src_buffer_available_data() > SRC_BUF_IDEAL_CHANNEL_SAMPLES) {
-    DEBUG_PRINTF("SRC ready: buffer filled to %d samples\n", _src_buffer_available_data());
+    DEBUG_PRINTF("SRC ready: buffer filled to %lu samples\n", _src_buffer_available_data());
     _src_output_ready = true;
   }
 }
@@ -164,7 +181,7 @@ HAL_StatusTypeDef SRC_Init() {
     ffir_160147->phase_length = SRC_FFIR_160147_PHASE_LENGTH;
     ffir_160147->phase_step_int = SRC_FFIR_160147_PHASE_STEP;
     ffir_160147->phase_step_fract = 0.0f;
-    ffir_160147->coeff_array = (const q31_t**)_src_ffir_160147_coeffs;
+    ffir_160147->coeff_array = _src_ffir_160147_coeffs;
     ffir_160147->phase_instances = _src_ffir_160147_phase_instances[i];
     ffir_160147->filter_state = _src_ffir_160147_states[i];
     ReturnOnError(FFIR_Init(ffir_160147));
@@ -175,7 +192,7 @@ HAL_StatusTypeDef SRC_Init() {
     ffir_adap->phase_length = SRC_FFIR_ADAP_PHASE_LENGTH;
     ffir_adap->phase_step_int = 0;
     ffir_adap->phase_step_fract = (float)SRC_FFIR_ADAP_PHASE_COUNT; //start with 1:1 resampling ratio initially
-    ffir_adap->coeff_array = (const q31_t**)_src_ffir_adap_coeffs;
+    ffir_adap->coeff_array = _src_ffir_adap_coeffs;
     ffir_adap->phase_instances = _src_ffir_adap_phase_instances[i];
     ffir_adap->filter_state = _src_ffir_adap_states[i];
     ReturnOnError(FFIR_Init(ffir_adap));
@@ -236,11 +253,11 @@ SRC_SampleRate SRC_GetCurrentInputRate() {
   return _src_input_rate;
 }
 
-//process `in_channels` input channels with `in_samples` samples per channel
+//process `in_channels` input channels with `in_samples` samples per channel; where inputs were previously shifted to `in_shift` (negative = shifted right)
 //must be at the currently configured input sample rate; to switch sample rate, a re-init is required
 //channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`
 //if the SRC can't accept all given input samples, old samples will be silently discarded
-HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples) {
+HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift) {
   int i, j;
 
   //check parameters for validity
@@ -301,9 +318,9 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
 
   //process any potential fixed-ratio resampling, according to input sample rate
   if (_src_input_rate == SR_96K) {
-    //already at target 96k rate: only adaptive resampling needed, so just copy the inputs into the buffer
+    //already at target 96k rate: only adaptive resampling needed, so just copy the inputs into the buffer while applying the necessary shift
     for (i = 0; i < in_channels; i++) {
-      memcpy(_src_buffers[i] + _src_buffer_write_ptr, true_input_buffers[i], in_samples * sizeof(q31_t));
+      arm_shift_q31(true_input_buffers[i], SRC_OUTPUT_SHIFT - in_shift, _src_buffers[i] + _src_buffer_write_ptr, in_samples);
     }
     written_samples = in_samples;
   } else {
@@ -311,7 +328,10 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
     for (i = 0; i < in_channels; i++) {
       //select output buffer depending on sample rate: for 44.1k, use scratch B for further processing; for 48k, use the adaptive resampling buffer directly
       q31_t* out = (_src_input_rate == SR_44K) ? (_src_scratch_b[i]) : (_src_buffers[i] + _src_buffer_write_ptr);
-      arm_fir_interpolate_q31(_src_fir_int2_instances + i, true_input_buffers[i], out, in_samples);
+
+      //perform necessary shift first (into scratch A), then interpolate
+      arm_shift_q31(true_input_buffers[i], SRC_OUTPUT_SHIFT - in_shift, _src_scratch_a[i], in_samples);
+      arm_fir_interpolate_q31(_src_fir_int2_instances + i, _src_scratch_a[i], out, in_samples);
     }
     written_samples = 2 * in_samples;
 
@@ -361,9 +381,18 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
 
   //get the margin above the ideal buffer fill level, in samples per channel
   int32_t samples_above_ideal = (int32_t)available_input_samples - SRC_BUF_IDEAL_CHANNEL_SAMPLES;
+
   //compute adaptive resampler's phase step (decimation factor) as the average fill margin (exponential moving average), starting with the first channel
   _src_ffir_adap_instances[0].phase_step_fract =
       (SRC_ADAPTIVE_EMA_ALPHA * (float)samples_above_ideal) + (SRC_ADAPTIVE_EMA_1MALPHA * _src_ffir_adap_instances[0].phase_step_fract);
+
+  //clamp the phase step to the valid range
+  if (_src_ffir_adap_instances[0].phase_step_fract < (float)SRC_BATCH_INPUT_SAMPLES_MIN) {
+    _src_ffir_adap_instances[0].phase_step_fract = (float)SRC_BATCH_INPUT_SAMPLES_MIN;
+  } else if (_src_ffir_adap_instances[0].phase_step_fract > (float)SRC_BATCH_INPUT_SAMPLES_MAX) {
+    _src_ffir_adap_instances[0].phase_step_fract = (float)SRC_BATCH_INPUT_SAMPLES_MAX;
+  }
+
   //copy same phase step to all other active channels - we want to keep all channels synchronised
   for (i = 1; i < out_channels; i++) {
     _src_ffir_adap_instances[i].phase_step_fract = _src_ffir_adap_instances[0].phase_step_fract;

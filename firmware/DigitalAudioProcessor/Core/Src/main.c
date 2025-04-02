@@ -23,6 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+#include "sample_rate_conv.h"
+#include "sai_out.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -126,6 +128,15 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+  //init SRC before USB to receive samples right away - TODO: may be unnecessary to do this early, once we actually select inputs
+  if (SRC_Init() != HAL_OK) {
+    Error_Handler();
+  }
+
+  if (SRC_Configure(SR_96K) != HAL_OK) {
+    Error_Handler();
+  }
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -146,15 +157,41 @@ int main(void)
   RetargetInit(&huart4);
   DEBUG_PRINTF("Controller started\n");
 
+  if (SAI_OUT_Init() == HAL_OK) {
+    DEBUG_PRINTF("SAI initialised\n");
+  } else {
+    DEBUG_PRINTF("*** SAI init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  //loop iteration counter - even if extremely unlikely wrap-around happens, it shouldn't be critical
+  uint32_t loop_count = 0;
   while (1)
   {
+    uint32_t iteration_start_tick = HAL_GetTick();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#ifdef DEBUG
+    //SRC debug printouts
+    if (loop_count % 200 == 0) {
+      extern float* const src_adap_phase_step;
+      extern volatile uint32_t* const src_buf_read_ptr;
+      extern volatile uint32_t* const src_buf_write_ptr;
+
+      uint32_t buf_data = ((*src_buf_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES - *src_buf_read_ptr) % SRC_BUF_TOTAL_CHANNEL_SAMPLES);
+
+      DEBUG_PRINTF("Adaptive SRC: buffer health %3lu  phase step %.4f\n", buf_data, *src_adap_phase_step);
+    }
+#endif
+
+    loop_count++;
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
   /* USER CODE END 3 */
 }
