@@ -58,8 +58,12 @@ void FFIR_Reset(FFIR_Instance* ffir) {
 
 //process samples through the given filter using the given input/output buffers and step sizes
 //processing stops once the given end pointer of either the input or output is reached - whichever happens first
-//returns the number of processed samples
-uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, const q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step) {
+//returns the number of processed samples; as well as optionally the number of used input samples, in `in_count_p`
+uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, const q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step, uint32_t* in_count_p) {
+  if (in_count_p != NULL) {
+    *in_count_p = 0;
+  }
+
   //check for valid struct and phase steps
   if (ffir == NULL || ffir->phase_step_fract < 0.0f || ffir->phase_step_fract > (float)UINT16_MAX || isnanf(ffir->phase_step_fract) ||
       in_start == NULL || in_step < 1 || out_start == NULL || out_step < 1) {
@@ -71,8 +75,9 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, con
     return 0;
   }
 
-  //counter for processed samples
+  //counter for processed samples and input samples
   uint32_t sample_counter = 0;
+  uint32_t in_counter = 0;
   //pointers for sample processing
   const q31_t* in_ptr = in_start;
   q31_t* out_ptr;
@@ -91,6 +96,7 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, con
 
       //increment input sample pointer
       in_ptr += in_step;
+      in_counter++;
       if (in_ptr >= in_end) {
         //input end reached: we're done here
         return false;
@@ -129,10 +135,16 @@ uint32_t __RAM_FUNC FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, con
     //correct the phase to range [0, num_phases) by reading input samples, if necessary
     if (!__read_input_until_phase_valid()) {
       //ran out of input: stop processing and return
+      if (in_count_p != NULL) {
+        *in_count_p = in_counter;
+      }
       return sample_counter;
     }
   }
 
+  if (in_count_p != NULL) {
+    *in_count_p = in_counter;
+  }
   return sample_counter;
 }
 

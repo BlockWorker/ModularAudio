@@ -38,8 +38,8 @@ void FFIR_Reset(FFIR_Instance* ffir);
 
 //process samples through the given filter using the given input/output buffers and step sizes
 //processing stops once the given end pointer of either the input or output is reached - whichever happens first
-//returns the number of processed samples
-uint32_t FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, const q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step);
+//returns the number of processed samples; as well as optionally the number of used input samples, in `in_count_p`
+uint32_t FFIR_Process(FFIR_Instance* ffir, const q31_t* in_start, const q31_t* in_end, uint16_t in_step, q31_t* out_start, q31_t* out_end, uint16_t out_step, uint32_t* in_count_p);
 
 
 #endif /* INC_FRACTIONAL_FIR_H_ */

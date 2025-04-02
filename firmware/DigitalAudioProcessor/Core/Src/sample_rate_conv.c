@@ -19,7 +19,7 @@
 #define SRC_FFIR_ADAP_PHASE_COUNT 96
 #define SRC_FFIR_ADAP_PHASE_LENGTH 50
 
-#if SRC_FFIR_ADAP_PHASE_COUNT != SRC_CHANNEL_BATCH_SAMPLES
+#if SRC_FFIR_ADAP_PHASE_COUNT != SRC_BATCH_CHANNEL_SAMPLES
 #error "SRC adaptive FFIR must have as many phases as there are samples per channel per output batch"
 #endif
 
@@ -127,6 +127,7 @@ static void _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t written_sa
 
   //mark SRC as ready to output if we have surpassed the ideal number of samples
   if (!_src_output_ready && _src_buffer_available_data() > SRC_BUF_IDEAL_CHANNEL_SAMPLES) {
+    DEBUG_PRINTF("SRC ready: buffer filled to %d samples\n", _src_buffer_available_data());
     _src_output_ready = true;
   }
 }
@@ -321,7 +322,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
         q31_t* inp = _src_scratch_b[i];
         q31_t* out = _src_buffers[i] + _src_buffer_write_ptr;
 
-        uint32_t out_samples = FFIR_Process(_src_ffir_160147_instances + i, inp, inp + (2 * in_samples), 1, out, out + required_space, 1);
+        uint32_t out_samples = FFIR_Process(_src_ffir_160147_instances + i, inp, inp + (2 * in_samples), 1, out, out + required_space, 1, NULL);
 
         //all channels should produce same number of samples from resampling, but take the maximum just in case
         if (out_samples > written_samples) {
@@ -342,12 +343,55 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
 //channels may be in separate buffers or interleaved, starting at `out_bufs[channel]`, each with step size `out_step`
 //will return HAL_BUSY if the SRC is not ready to produce an output batch (will not process anything then)
 HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t out_step, uint16_t out_channels) {
+  int i;
+
   //check if we're even ready to output
   if (!_src_output_ready) {
     return HAL_BUSY;
   }
 
-  //TODO
+  //check how many input samples we have
+  uint32_t available_input_samples = _src_buffer_available_data();
+  if (available_input_samples < SRC_BUF_CRITICAL_CHANNEL_SAMPLES) {
+    //buffer level is critically low: reset to "not ready" until buffer is refilled sufficiently
+    DEBUG_PRINTF("SRC buffer critical (%lu samples), disabling until refilled\n", available_input_samples);
+    _src_output_ready = false;
+    return HAL_BUSY;
+  }
+
+  //get the margin above the ideal buffer fill level, in samples per channel
+  int32_t samples_above_ideal = (int32_t)available_input_samples - SRC_BUF_IDEAL_CHANNEL_SAMPLES;
+  //compute adaptive resampler's phase step (decimation factor) as the average fill margin (exponential moving average), starting with the first channel
+  _src_ffir_adap_instances[0].phase_step_fract =
+      (SRC_ADAPTIVE_EMA_ALPHA * (float)samples_above_ideal) + (SRC_ADAPTIVE_EMA_1MALPHA * _src_ffir_adap_instances[0].phase_step_fract);
+  //copy same phase step to all other active channels - we want to keep all channels synchronised
+  for (i = 1; i < out_channels; i++) {
+    _src_ffir_adap_instances[i].phase_step_fract = _src_ffir_adap_instances[0].phase_step_fract;
+  }
+
+  //perform adaptive resampling for all active channels, producing the desired output data
+  uint32_t input_samples_consumed = 0;
+  for (i = 0; i < out_channels; i++) {
+    q31_t* in_start_ptr = _src_buffers[i] + _src_buffer_read_ptr;
+    q31_t* in_end_ptr = in_start_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES; //allow resampler to read as many samples as it needs
+    q31_t* out_start_ptr = out_bufs[i];
+    q31_t* out_end_ptr = out_start_ptr + (out_step * SRC_BATCH_CHANNEL_SAMPLES); //produce exactly one batch of output samples
+
+    uint32_t in_samples;
+    uint32_t out_samples = FFIR_Process(_src_ffir_adap_instances + i, in_start_ptr, in_end_ptr, 1, out_start_ptr, out_end_ptr, out_step, &in_samples);
+    //make sure that we got the expected number of output samples
+    if (out_samples != SRC_BATCH_CHANNEL_SAMPLES) {
+      DEBUG_PRINTF("* SRC adaptive resampler channel %d produced %lu samples instead of the expected %d!\n", i, out_samples, SRC_BATCH_CHANNEL_SAMPLES);
+      return HAL_ERROR;
+    }
+    //save the maximum number of consumed input samples - should all be the same; force maximum anyway for channel synchronisation
+    if (in_samples > input_samples_consumed) {
+      input_samples_consumed = in_samples;
+    }
+  }
+
+  //update the buffer read pointer in accordance with the number of input samples we used
+  _src_buffer_read_ptr = (_src_buffer_read_ptr + input_samples_consumed) % SRC_BUF_TOTAL_CHANNEL_SAMPLES;
 
   return HAL_OK;
 }
