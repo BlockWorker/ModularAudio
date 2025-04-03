@@ -11,6 +11,10 @@
 #include "fractional_fir.h"
 
 
+#undef SRC_DEBUG_TRACK
+#define SRC_DEBUG_TRACK
+
+
 //filter parameter constants
 #define SRC_FIR_INT2_PHASE_LENGTH 110
 #define SRC_FIR_INT2_SHIFT -1
@@ -99,6 +103,13 @@ static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAM
 float* const src_adap_phase_step = &(_src_ffir_adap_instances[0].phase_step_fract);
 volatile uint32_t* const src_buf_read_ptr = &_src_buffer_read_ptr;
 volatile uint32_t* const src_buf_write_ptr = &_src_buffer_write_ptr;
+
+#ifdef SRC_DEBUG_TRACK
+#define SRC_DEBUG_HISTORY_SIZE (1 << 11)
+uint32_t __DTCM_BSS src_debug_buf_health_history[SRC_DEBUG_HISTORY_SIZE];
+float __DTCM_BSS src_debug_phase_step_history[SRC_DEBUG_HISTORY_SIZE];
+uint32_t __DTCM_BSS src_debug_history_pos;
+#endif
 #endif
 
 
@@ -244,6 +255,12 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
   _src_buffer_write_ptr = 0;
 
   __enable_irq();
+
+#ifdef SRC_DEBUG_TRACK
+  memset(src_debug_buf_health_history, 0, sizeof(src_debug_buf_health_history));
+  memset(src_debug_phase_step_history, 0, sizeof(src_debug_phase_step_history));
+  src_debug_history_pos = 0;
+#endif
 
   return HAL_OK;
 }
@@ -397,6 +414,12 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   for (i = 1; i < out_channels; i++) {
     _src_ffir_adap_instances[i].phase_step_fract = _src_ffir_adap_instances[0].phase_step_fract;
   }
+
+#ifdef SRC_DEBUG_TRACK
+  src_debug_buf_health_history[src_debug_history_pos] = available_input_samples;
+  src_debug_phase_step_history[src_debug_history_pos] = _src_ffir_adap_instances[0].phase_step_fract;
+  src_debug_history_pos = (src_debug_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
+#endif
 
   //perform adaptive resampling for all active channels, producing the desired output data
   uint32_t input_samples_consumed = 0;

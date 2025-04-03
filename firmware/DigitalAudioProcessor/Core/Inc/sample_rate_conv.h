@@ -20,8 +20,8 @@
 //output samples per batch per channel
 #define SRC_BATCH_CHANNEL_SAMPLES 96
 //minimum and maximum number of input samples per output batch
-#define SRC_BATCH_INPUT_SAMPLES_MIN (SRC_BATCH_CHANNEL_SAMPLES - 10)
-#define SRC_BATCH_INPUT_SAMPLES_MAX (SRC_BATCH_CHANNEL_SAMPLES + 10)
+#define SRC_BATCH_INPUT_SAMPLES_MIN (SRC_BATCH_CHANNEL_SAMPLES - 1)
+#define SRC_BATCH_INPUT_SAMPLES_MAX (SRC_BATCH_CHANNEL_SAMPLES + 1)
 //critical fill level of adaptive resampling buffer, in samples - set to be definitely enough to produce one output batch
 #define SRC_BUF_CRITICAL_CHANNEL_SAMPLES (SRC_BATCH_INPUT_SAMPLES_MAX + 1)
 //ideal fill level of adaptive resampling buffer, in output batches
@@ -37,7 +37,7 @@
 #define SRC_SCRATCH_CHANNEL_SAMPLES (2 * SRC_INPUT_CHANNEL_SAMPLES_MAX)
 
 //exponential moving average coefficients for adaptive resampling rate smoothing - TODO: if this turns out to be unstable, consider PID control?
-#define SRC_ADAPTIVE_EMA_ALPHA 0.25f
+#define SRC_ADAPTIVE_EMA_ALPHA 0.00390625f
 #define SRC_ADAPTIVE_EMA_1MALPHA (1.0f - SRC_ADAPTIVE_EMA_ALPHA)
 
 //bit shift of output samples - negative means shifted right

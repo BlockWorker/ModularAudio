@@ -60,6 +60,8 @@ extern DMA_HandleTypeDef hdma_spdif_rx_cs;
 extern DMA_HandleTypeDef hdma_spdif_rx_dt;
 
 extern UART_HandleTypeDef huart4;
+
+extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

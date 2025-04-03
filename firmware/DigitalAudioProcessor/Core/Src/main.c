@@ -71,6 +71,7 @@ DMA_HandleTypeDef hdma_spdif_rx_dt;
 
 UART_HandleTypeDef huart4;
 
+MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -81,13 +82,14 @@ static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_BDMA_Init(void);
 static void MX_DMA_Init(void);
-static void MX_I2S1_Init(void);
+static void MX_MDMA_Init(void);
 static void MX_I2S2_Init(void);
 static void MX_I2S3_Init(void);
 static void MX_SAI4_Init(void);
 static void MX_SPDIFRX1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_UART4_Init(void);
+static void MX_I2S1_Init(void);
 static void MX_RAMECC_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -143,7 +145,7 @@ int main(void)
   MX_GPIO_Init();
   MX_BDMA_Init();
   MX_DMA_Init();
-  MX_I2S1_Init();
+  MX_MDMA_Init();
   MX_I2S2_Init();
   MX_I2S3_Init();
   MX_SAI4_Init();
@@ -151,6 +153,7 @@ int main(void)
   MX_I2C1_Init();
   MX_UART4_Init();
   MX_USB_DEVICE_Init();
+  MX_I2S1_Init();
   MX_RAMECC_Init();
   /* USER CODE BEGIN 2 */
 
@@ -630,7 +633,7 @@ static void MX_BDMA_Init(void)
 
   /* DMA interrupt init */
   /* BDMA_Channel0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(BDMA_Channel0_IRQn, 1, 0);
+  HAL_NVIC_SetPriority(BDMA_Channel0_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(BDMA_Channel0_IRQn);
 
 }
@@ -660,6 +663,47 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
+
+}
+
+/**
+  * Enable MDMA controller clock
+  * Configure MDMA for global transfers
+  *   hmdma_mdma_channel40_sw_0
+  */
+static void MX_MDMA_Init(void)
+{
+
+  /* MDMA controller clock enable */
+  __HAL_RCC_MDMA_CLK_ENABLE();
+  /* Local variables */
+
+  /* Configure MDMA channel MDMA_Channel0 */
+  /* Configure MDMA request hmdma_mdma_channel40_sw_0 on MDMA_Channel0 */
+  hmdma_mdma_channel40_sw_0.Instance = MDMA_Channel0;
+  hmdma_mdma_channel40_sw_0.Init.Request = MDMA_REQUEST_SW;
+  hmdma_mdma_channel40_sw_0.Init.TransferTriggerMode = MDMA_BLOCK_TRANSFER;
+  hmdma_mdma_channel40_sw_0.Init.Priority = MDMA_PRIORITY_LOW;
+  hmdma_mdma_channel40_sw_0.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+  hmdma_mdma_channel40_sw_0.Init.SourceInc = MDMA_SRC_INC_WORD;
+  hmdma_mdma_channel40_sw_0.Init.DestinationInc = MDMA_DEST_INC_WORD;
+  hmdma_mdma_channel40_sw_0.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
+  hmdma_mdma_channel40_sw_0.Init.DestDataSize = MDMA_DEST_DATASIZE_WORD;
+  hmdma_mdma_channel40_sw_0.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+  hmdma_mdma_channel40_sw_0.Init.BufferTransferLength = 4;
+  hmdma_mdma_channel40_sw_0.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+  hmdma_mdma_channel40_sw_0.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
+  hmdma_mdma_channel40_sw_0.Init.SourceBlockAddressOffset = 0;
+  hmdma_mdma_channel40_sw_0.Init.DestBlockAddressOffset = 0;
+  if (HAL_MDMA_Init(&hmdma_mdma_channel40_sw_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* MDMA interrupt initialization */
+  /* MDMA_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(MDMA_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(MDMA_IRQn);
 
 }
 
