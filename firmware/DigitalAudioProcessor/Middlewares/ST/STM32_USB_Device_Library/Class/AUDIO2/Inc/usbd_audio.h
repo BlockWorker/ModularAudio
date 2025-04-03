@@ -71,7 +71,8 @@
 
 #define SOF_RATE                                      0x02U
 
-#define USB_AUDIO_CONFIG_DESC_SIZ                     124
+//#define USB_AUDIO_CONFIG_DESC_SIZ                     124
+#define USB_AUDIO_CONFIG_DESC_SIZ                     115
 
 #define AUDIO_INTERFACE_DESC_SIZE                     0x09U
 #define USB_AUDIO_DESC_SIZ                            0x09U
@@ -154,6 +155,7 @@
 #define AUDIO_BUF_SAFEZONE_SAMPLES                    ((USBD_AUDIO_FREQ_MAX / 1000U) + 1)
 
 
+#define USBD_EP_TYPE_ISOC_ADAPTIVE                      0x09U
 #define USBD_EP_TYPE_ISOC_ASYNC                         0x05U
 
 

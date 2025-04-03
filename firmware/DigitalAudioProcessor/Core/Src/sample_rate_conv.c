@@ -100,15 +100,13 @@ static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAM
 
 //debug access to internal state
 #ifdef DEBUG
-float* const src_adap_phase_step = &(_src_ffir_adap_instances[0].phase_step_fract);
-volatile uint32_t* const src_buf_read_ptr = &_src_buffer_read_ptr;
-volatile uint32_t* const src_buf_write_ptr = &_src_buffer_write_ptr;
-
 #ifdef SRC_DEBUG_TRACK
+#include "stdlib.h"
 #define SRC_DEBUG_HISTORY_SIZE (1 << 11)
 uint32_t __DTCM_BSS src_debug_buf_health_history[SRC_DEBUG_HISTORY_SIZE];
 float __DTCM_BSS src_debug_phase_step_history[SRC_DEBUG_HISTORY_SIZE];
-uint32_t __DTCM_BSS src_debug_history_pos;
+uint32_t __DTCM_BSS src_debug_out_history_pos;
+uint32_t __DTCM_BSS src_debug_in_history_pos;
 #endif
 #endif
 
@@ -259,7 +257,7 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
 #ifdef SRC_DEBUG_TRACK
   memset(src_debug_buf_health_history, 0, sizeof(src_debug_buf_health_history));
   memset(src_debug_phase_step_history, 0, sizeof(src_debug_phase_step_history));
-  src_debug_history_pos = 0;
+  src_debug_out_history_pos = 0;
 #endif
 
   return HAL_OK;
@@ -310,7 +308,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   __enable_irq();
 
   //pointers to buffers to be used as the actual inputs
-  q31_t* true_input_buffers[SRC_MAX_CHANNELS];
+  const q31_t* true_input_buffers[SRC_MAX_CHANNELS];
   //number of samples per channel written into the adaptive resampling buffer
   uint32_t written_samples;
 
@@ -318,7 +316,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   if (in_step == 1) {
     //inputs already not interleaved: use them directly
     for (i = 0; i < in_channels; i++) {
-      true_input_buffers[i] = (q31_t*)in_bufs[i];
+      true_input_buffers[i] = in_bufs[i];
     }
   } else {
     //inputs are interleaved: de-interleave into scratch A, then use that
@@ -332,6 +330,10 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
       true_input_buffers[i] = scratch;
     }
   }
+
+#ifdef SRC_DEBUG_TRACK
+  src_debug_in_history_pos = (src_debug_in_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
+#endif
 
   //process any potential fixed-ratio resampling, according to input sample rate
   if (_src_input_rate == SR_96K) {
@@ -416,9 +418,9 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   }
 
 #ifdef SRC_DEBUG_TRACK
-  src_debug_buf_health_history[src_debug_history_pos] = available_input_samples;
-  src_debug_phase_step_history[src_debug_history_pos] = _src_ffir_adap_instances[0].phase_step_fract;
-  src_debug_history_pos = (src_debug_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
+  src_debug_buf_health_history[src_debug_out_history_pos] = available_input_samples;
+  src_debug_phase_step_history[src_debug_out_history_pos] = _src_ffir_adap_instances[0].phase_step_fract;
+  src_debug_out_history_pos = (src_debug_out_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
 #endif
 
   //perform adaptive resampling for all active channels, producing the desired output data

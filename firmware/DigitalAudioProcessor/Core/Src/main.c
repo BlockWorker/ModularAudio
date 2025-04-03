@@ -183,13 +183,13 @@ int main(void)
 #ifdef DEBUG
     //SRC debug printouts
     if (loop_count % 200 == 0) {
-      extern float* const src_adap_phase_step;
-      extern volatile uint32_t* const src_buf_read_ptr;
-      extern volatile uint32_t* const src_buf_write_ptr;
+      extern uint32_t src_debug_buf_health_history[2048];
+      extern float src_debug_phase_step_history[2048];
+      extern uint32_t src_debug_out_history_pos;
 
-      uint32_t buf_data = ((*src_buf_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES - *src_buf_read_ptr) % SRC_BUF_TOTAL_CHANNEL_SAMPLES);
+      uint32_t last_pos = (src_debug_out_history_pos + 2047) % 2048;
 
-      DEBUG_PRINTF("Adaptive SRC: buffer health %3lu  phase step %.4f\n", buf_data, *src_adap_phase_step);
+      DEBUG_PRINTF("Adaptive SRC: buffer health %3lu  phase step %.4f\n", src_debug_buf_health_history[last_pos], src_debug_phase_step_history[last_pos]);
     }
 #endif
 
@@ -702,7 +702,7 @@ static void MX_MDMA_Init(void)
 
   /* MDMA interrupt initialization */
   /* MDMA_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(MDMA_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(MDMA_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(MDMA_IRQn);
 
 }
