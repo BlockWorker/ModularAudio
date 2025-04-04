@@ -97,6 +97,17 @@ static volatile uint32_t __DTCM_BSS _src_buffer_write_ptr;
 static q31_t __DTCM_BSS _src_scratch_a[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAMPLES];
 static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAMPLES];
 
+//averaging histories, history positions, and sums for input rate error and buffer fill level error
+static int16_t _src_input_rate_error_history[SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES];
+static uint32_t _src_input_rate_error_history_position;
+static int32_t _src_input_rate_error_sum;
+static int16_t _src_buffer_fill_error_history[SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES];
+static uint32_t _src_buffer_fill_error_history_position;
+static int32_t _src_buffer_fill_error_sum;
+static float _src_last_buffer_fill_error_avg;
+//counter of input samples since the last output batch
+static volatile uint16_t _src_input_samples_since_last_output;
+
 
 //debug access to internal state
 #ifdef DEBUG
@@ -107,6 +118,13 @@ uint32_t __DTCM_BSS src_debug_buf_health_history[SRC_DEBUG_HISTORY_SIZE];
 float __DTCM_BSS src_debug_phase_step_history[SRC_DEBUG_HISTORY_SIZE];
 uint32_t __DTCM_BSS src_debug_out_history_pos;
 uint32_t __DTCM_BSS src_debug_in_history_pos;
+
+static inline void _PrintLogData(float d1, float d2, float d3) {
+  int32_t d1i = (int32_t)(1000.0f * d1);
+  int32_t d2i = (int32_t)(1000.0f * d2);
+  int32_t d3i = (int32_t)(1000.0f * d3);
+  printf("%ld %ld %ld\n", d1i, d2i, d3i);
+}
 #endif
 #endif
 
@@ -154,6 +172,16 @@ static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t
   //mark SRC as ready to output if we have surpassed the ideal number of samples
   if (!_src_output_ready && _src_buffer_available_data() > SRC_BUF_IDEAL_CHANNEL_SAMPLES) {
     DEBUG_PRINTF("SRC ready: buffer filled to %lu samples\n", _src_buffer_available_data());
+
+    //reset averaging data
+    memset(_src_input_rate_error_history, 0, sizeof(_src_input_rate_error_history));
+    _src_input_rate_error_history_position = 0;
+    _src_input_rate_error_sum = 0;
+    memset(_src_buffer_fill_error_history, 0, sizeof(_src_buffer_fill_error_history));
+    _src_buffer_fill_error_history_position = 0;
+    _src_buffer_fill_error_sum = 0;
+    _src_last_buffer_fill_error_avg = 0.0f;
+
     _src_output_ready = true;
   }
 }
@@ -170,6 +198,16 @@ HAL_StatusTypeDef SRC_Init() {
   _src_output_ready = false;
   _src_buffer_read_ptr = 0;
   _src_buffer_write_ptr = 0;
+
+  //reset averaging data
+  memset(_src_input_rate_error_history, 0, sizeof(_src_input_rate_error_history));
+  _src_input_rate_error_history_position = 0;
+  _src_input_rate_error_sum = 0;
+  memset(_src_buffer_fill_error_history, 0, sizeof(_src_buffer_fill_error_history));
+  _src_buffer_fill_error_history_position = 0;
+  _src_buffer_fill_error_sum = 0;
+  _src_last_buffer_fill_error_avg = 0.0f;
+
 
   //clear 2x interpolator states - doesn't happen automatically because we don't call any init function for them
   memset(_src_fir_int2_states, 0, sizeof(_src_fir_int2_states));
@@ -374,6 +412,11 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   //perform final buffer processing for the written samples
   _SRC_FinishBufferWrite(in_channels, written_samples);
 
+  //update number of samples since last output batch (atomically)
+  __disable_irq();
+  _src_input_samples_since_last_output += written_samples;
+  __enable_irq();
+
   return HAL_OK;
 }
 
@@ -386,6 +429,10 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
 
   //check if we're even ready to output
   if (!_src_output_ready) {
+    _PrintLogData((float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES,
+                  (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
+                  _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
+    _src_input_samples_since_last_output = 0;
     return HAL_BUSY;
   }
 
@@ -394,16 +441,47 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   if (available_input_samples < SRC_BUF_CRITICAL_CHANNEL_SAMPLES) {
     //buffer level is critically low: reset to "not ready" until buffer is refilled sufficiently
     DEBUG_PRINTF("SRC buffer critical (%lu samples), disabling until refilled\n", available_input_samples);
+    _PrintLogData((float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES,
+                  (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
+                  _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
     _src_output_ready = false;
+    _src_input_samples_since_last_output = 0;
     return HAL_BUSY;
   }
 
-  //get the margin above the ideal buffer fill level, in samples per channel
-  int32_t samples_above_ideal = (int32_t)available_input_samples - SRC_BUF_IDEAL_CHANNEL_SAMPLES;
+  //update average input rate error
+  int16_t input_rate_error = (int16_t)_src_input_samples_since_last_output - SRC_BATCH_CHANNEL_SAMPLES;
+  _src_input_samples_since_last_output = 0;
+  _src_input_rate_error_sum -= _src_input_rate_error_history[_src_input_rate_error_history_position];
+  _src_input_rate_error_sum += input_rate_error;
+  _src_input_rate_error_history[_src_input_rate_error_history_position] = input_rate_error;
+  //update average buffer fill error
+  int16_t buffer_fill_error = (int16_t)available_input_samples - SRC_BUF_IDEAL_CHANNEL_SAMPLES;
+  _src_buffer_fill_error_sum -= _src_buffer_fill_error_history[_src_buffer_fill_error_history_position];
+  _src_buffer_fill_error_sum += buffer_fill_error;
+  _src_buffer_fill_error_history[_src_buffer_fill_error_history_position] = buffer_fill_error;
+  //update positions for averaging history
+  _src_input_rate_error_history_position = (_src_input_rate_error_history_position + 1) % SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES;
+  _src_buffer_fill_error_history_position = (_src_buffer_fill_error_history_position + 1) % SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES;
+
 
   //compute adaptive resampler's phase step (decimation factor) as the average fill margin (exponential moving average), starting with the first channel
+  /*_src_ffir_adap_instances[0].phase_step_fract =
+      (SRC_ADAPTIVE_EMA_ALPHA * (float)samples_above_ideal) + (SRC_ADAPTIVE_EMA_1MALPHA * _src_ffir_adap_instances[0].phase_step_fract);*/
+  //compute averaged input rate error, averaged buffer fill error, and derivative of the latter (for predictive correction)
+  float input_rate_error_avg = (float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES;
+  float buffer_fill_error_avg = (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES;
+  float buffer_fill_error_d = buffer_fill_error_avg - _src_last_buffer_fill_error_avg;
+  //update "last value" variable for buffer fill error, for next derivative calculation
+  _src_last_buffer_fill_error_avg = buffer_fill_error_avg;
+
+  //compute adaptive resampler's phase step (decimation factor) from the errors, starting with the first channel
   _src_ffir_adap_instances[0].phase_step_fract =
-      (SRC_ADAPTIVE_EMA_ALPHA * (float)samples_above_ideal) + (SRC_ADAPTIVE_EMA_1MALPHA * _src_ffir_adap_instances[0].phase_step_fract);
+      (float)SRC_BATCH_CHANNEL_SAMPLES +
+      input_rate_error_avg +
+      SRC_ADAPTIVE_BUF_FILL_COEFF_P * buffer_fill_error_avg +
+      SRC_ADAPTIVE_BUF_FILL_COEFF_D * buffer_fill_error_d;
+
 
   //clamp the phase step to the valid range
   if (_src_ffir_adap_instances[0].phase_step_fract < (float)SRC_BATCH_INPUT_SAMPLES_MIN) {
@@ -421,6 +499,10 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   src_debug_buf_health_history[src_debug_out_history_pos] = available_input_samples;
   src_debug_phase_step_history[src_debug_out_history_pos] = _src_ffir_adap_instances[0].phase_step_fract;
   src_debug_out_history_pos = (src_debug_out_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
+
+  _PrintLogData(input_rate_error_avg,
+                buffer_fill_error_avg,
+                _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
 #endif
 
   //perform adaptive resampling for all active channels, producing the desired output data

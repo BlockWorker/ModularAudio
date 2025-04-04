@@ -839,11 +839,11 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum) {
       }
     }*/
 
+    USBD_LL_PrepareReceive(pdev, AUDIO_OUT_EP, tmpbuf, AUDIO_OUT_PACKET_24B);
+
 		dma_sample_count = num_samples;
     HAL_MDMA_RegisterCallback(&hmdma_mdma_channel40_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_MDMA_CompleteCallback);
     HAL_MDMA_Start_IT(&hmdma_mdma_channel40_sw_0, (uint32_t)sample_bufs[0], (uint32_t)dma_sample_bufs[0], sizeof(sample_bufs), 1);
-
-		USBD_LL_PrepareReceive(pdev, AUDIO_OUT_EP, tmpbuf, AUDIO_OUT_PACKET_24B);
 
 		/*const q31_t* buf_pointers[2] = { sample_bufs[0], sample_bufs[1] };
     SRC_ProcessInputSamples(buf_pointers, 1, 2, num_samples, 0);*/

@@ -33,7 +33,7 @@
 
 UART_HandleTypeDef *gHuart;
 
-static uint8_t sendBuf[4096] = { 0 };
+static uint8_t sendBuf[16384] = { 0 };
 static uint16_t buf_writePos = 0;
 static uint16_t buf_lastReadPos = 0;
 
