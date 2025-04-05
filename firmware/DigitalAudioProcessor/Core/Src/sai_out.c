@@ -28,7 +28,7 @@ static void _SAI_OUT_CalculateBatch(uint32_t buffer_offset) {
   //try to process signal processor output batch
   if (SP_ProduceOutputBatch(buf_pointers, SAI_OUT_CHANNELS, SAI_OUT_CHANNELS) != HAL_OK) {
     //failed to produce output: zero-fill batch
-    memset(_sai_out_buffer + buffer_offset, 0, SAI_OUT_TOTAL_BATCH_SAMPLES * sizeof(q31_t));
+    arm_fill_q31(0, _sai_out_buffer + buffer_offset, SAI_OUT_TOTAL_BATCH_SAMPLES);
   }
 }
 

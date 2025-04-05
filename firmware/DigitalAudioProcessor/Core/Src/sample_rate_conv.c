@@ -156,9 +156,12 @@ static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t
   uint32_t num_copy_to_second_half = (SRC_BUF_TOTAL_CHANNEL_SAMPLES - 1) - _src_buffer_write_ptr;
   if (num_copy_to_second_half > 0) {
     for (i = 0; i < active_channels; i++) {
-      memcpy(_src_buffers[i] + _src_buffer_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
+      arm_copy_q31(_src_buffers[i] + _src_buffer_write_ptr,
+                   _src_buffers[i] + _src_buffer_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
+                   num_copy_to_second_half);
+      /*memcpy(_src_buffers[i] + _src_buffer_write_ptr + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
              _src_buffers[i] + _src_buffer_write_ptr,
-             num_copy_to_second_half * sizeof(q31_t));
+             num_copy_to_second_half * sizeof(q31_t));*/
     }
   }
 
@@ -166,9 +169,12 @@ static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t
   int32_t num_copy_to_first_half = (int32_t)write_end_offset - SRC_BUF_TOTAL_CHANNEL_SAMPLES;
   if (num_copy_to_first_half > 0) {
     for (i = 0; i < active_channels; i++) {
-      memcpy(_src_buffers[i],
+      arm_copy_q31(_src_buffers[i] + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
+                   _src_buffers[i],
+                   num_copy_to_first_half);
+      /*memcpy(_src_buffers[i],
              _src_buffers[i] + SRC_BUF_TOTAL_CHANNEL_SAMPLES,
-             num_copy_to_first_half * sizeof(q31_t));
+             num_copy_to_first_half * sizeof(q31_t));*/
     }
   }
 

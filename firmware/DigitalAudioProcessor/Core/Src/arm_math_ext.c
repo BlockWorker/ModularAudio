@@ -84,7 +84,8 @@ void __RAM_FUNC armext_fir_single_shiftonly_q31(armext_fir_single_instance_q31* 
   //check whether we've reached the end of the state buffer yet
   if (*(S->pStateOffset) >= (uint32_t)(S->numTaps - 1)) {
     //end reached: copy last numTaps-2 samples (located at end of buffer) to start of state buffer
-    memcpy(S->pState, S->pState + S->numTaps, (S->numTaps - 2) * sizeof(q31_t));
+    arm_copy_q31(S->pState + S->numTaps, S->pState, S->numTaps - 2);
+    //memcpy(S->pState, S->pState + S->numTaps, (S->numTaps - 2) * sizeof(q31_t));
     //reset the state offset
     *(S->pStateOffset) = 0;
   } else {
