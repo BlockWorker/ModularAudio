@@ -69,7 +69,7 @@ SRC_SampleRate SRC_GetCurrentInputRate();
 //channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`
 HAL_StatusTypeDef SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift);
 
-//produce `out_channels` output channels with `SRC_CHANNEL_BATCH_SAMPLES` samples per channel
+//produce `out_channels` output channels with `SRC_BATCH_CHANNEL_SAMPLES` samples per channel
 //output buffer(s) must have enough space for a full batch of samples!
 //channels may be in separate buffers or interleaved, starting at `out_bufs[channel]`, each with step size `out_step`
 //will return HAL_BUSY if the SRC is not ready to produce an output batch (will not process anything then)

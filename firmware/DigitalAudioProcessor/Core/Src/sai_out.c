@@ -8,7 +8,7 @@
  */
 
 #include "sai_out.h"
-#include "sample_rate_conv.h"
+#include "signal_processing.h"
 
 
 //output data DMA buffer
@@ -25,11 +25,8 @@ static void _SAI_OUT_CalculateBatch(uint32_t buffer_offset) {
     buf_pointers[i] = _sai_out_buffer + buffer_offset + i;
   }
 
-  //try to process SRC output batch
-  if (SRC_ProduceOutputBatch(buf_pointers, SAI_OUT_CHANNELS, SAI_OUT_CHANNELS) == HAL_OK) {
-    //output produced successfully: unshift results to be at full scale again
-    arm_shift_q31(_sai_out_buffer + buffer_offset, -SRC_OUTPUT_SHIFT, _sai_out_buffer + buffer_offset, SAI_OUT_TOTAL_BATCH_SAMPLES);
-  } else {
+  //try to process signal processor output batch
+  if (SP_ProduceOutputBatch(buf_pointers, SAI_OUT_CHANNELS, SAI_OUT_CHANNELS) != HAL_OK) {
     //failed to produce output: zero-fill batch
     memset(_sai_out_buffer + buffer_offset, 0, SAI_OUT_TOTAL_BATCH_SAMPLES * sizeof(q31_t));
   }

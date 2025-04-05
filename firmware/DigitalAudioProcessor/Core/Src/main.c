@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
 #include "sample_rate_conv.h"
+#include "signal_processing.h"
 #include "sai_out.h"
 /* USER CODE END Includes */
 
@@ -53,8 +54,6 @@ DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi2_rx;
 DMA_HandleTypeDef hdma_spi3_rx;
 
-IWDG_HandleTypeDef hiwdg1;
-
 RAMECC_HandleTypeDef hramecc1_m1;
 RAMECC_HandleTypeDef hramecc1_m2;
 RAMECC_HandleTypeDef hramecc1_m3;
@@ -70,6 +69,9 @@ DMA_HandleTypeDef hdma_sai4_b;
 SPDIFRX_HandleTypeDef hspdif1;
 DMA_HandleTypeDef hdma_spdif_rx_cs;
 DMA_HandleTypeDef hdma_spdif_rx_dt;
+
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart4;
 
@@ -93,7 +95,8 @@ static void MX_I2C1_Init(void);
 static void MX_UART4_Init(void);
 static void MX_I2S1_Init(void);
 static void MX_RAMECC_Init(void);
-static void MX_IWDG1_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -101,7 +104,7 @@ static void MX_IWDG1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 static __always_inline void _RefreshWatchdogs() {
-  HAL_IWDG_Refresh(&hiwdg1);
+  //HAL_IWDG_Refresh(&hiwdg1);
 }
 /* USER CODE END 0 */
 
@@ -135,15 +138,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-  //init SRC before USB to receive samples right away - TODO: may be unnecessary to do this early, once we actually select inputs
-  if (SRC_Init() != HAL_OK) {
-    Error_Handler();
-  }
-
-  if (SRC_Configure(SR_96K) != HAL_OK) {
-    Error_Handler();
-  }
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -160,13 +154,39 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_I2S1_Init();
   MX_RAMECC_Init();
-  MX_IWDG1_Init();
+  MX_TIM2_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart4);
   DEBUG_PRINTF("Controller started\n");
 
   _RefreshWatchdogs();
+
+  //init SRC before USB to receive samples right away
+  if (SRC_Init() == HAL_OK) {
+    DEBUG_PRINTF("SRC initialised\n");
+  } else {
+    DEBUG_PRINTF("*** SRC init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  if (SRC_Configure(SR_96K) == HAL_OK) {
+    DEBUG_PRINTF("SRC configured for 96K\n");
+  } else {
+    DEBUG_PRINTF("*** SRC config failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  if (SP_Init() == HAL_OK) {
+    DEBUG_PRINTF("SP initialised\n");
+  } else {
+    DEBUG_PRINTF("*** SP init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
 
   if (SAI_OUT_Init() == HAL_OK) {
     DEBUG_PRINTF("SAI initialised\n");
@@ -180,11 +200,10 @@ int main(void)
 
 #ifdef DEBUG
   //initialise cycle counter and let it run, for tracking idle cycles
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  *(uint32_t*)0xE0001FB0 = 0xC5ACCE55;
+  /*CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->LAR = 0xC5ACCE55;
   DWT->CYCCNT = 0;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-  CLEAR_BIT(SCB->SCR, SCB_SCR_SLEEPDEEP_Msk);
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;*/
 
   uint32_t idle_cycles = 0;
   float avg_idle_cycles = 0.0f;
@@ -216,14 +235,7 @@ int main(void)
     _RefreshWatchdogs();
     while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS) { //replaces HAL_Delay() to not wait any unnecessary extra ticks
 #ifdef DEBUG
-      //attempt at an idle measurement - should really have a __WFI() in there, but that stops the CPU clock on CM7... this does still seem to indicate *something* at least
-      __disable_irq();
-      uint32_t t1 = DWT->CYCCNT;
-      __DSB();
-      uint32_t t2 = DWT->CYCCNT;
-      __enable_irq();
-      __ISB();
-      idle_cycles += (t2 - t1);
+
 #endif
     }
   }
@@ -252,11 +264,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
-                              |RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = 64;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
@@ -449,35 +459,6 @@ static void MX_I2S3_Init(void)
 }
 
 /**
-  * @brief IWDG1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_IWDG1_Init(void)
-{
-
-  /* USER CODE BEGIN IWDG1_Init 0 */
-
-  /* USER CODE END IWDG1_Init 0 */
-
-  /* USER CODE BEGIN IWDG1_Init 1 */
-
-  /* USER CODE END IWDG1_Init 1 */
-  hiwdg1.Instance = IWDG1;
-  hiwdg1.Init.Prescaler = IWDG_PRESCALER_8;
-  hiwdg1.Init.Window = 4095;
-  hiwdg1.Init.Reload = 4095;
-  if (HAL_IWDG_Init(&hiwdg1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN IWDG1_Init 2 */
-
-  /* USER CODE END IWDG1_Init 2 */
-
-}
-
-/**
   * @brief RAMECC Initialization Function
   * @param None
   * @retval None
@@ -633,6 +614,96 @@ static void MX_SPDIFRX1_Init(void)
   /* USER CODE BEGIN SPDIFRX1_Init 2 */
 
   /* USER CODE END SPDIFRX1_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 25;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM5_Init(void)
+{
+
+  /* USER CODE BEGIN TIM5_Init 0 */
+
+  /* USER CODE END TIM5_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM5_Init 1 */
+
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM5;
+  htim5.Init.Prescaler = 25;
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 4294967295;
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM5_Init 2 */
+
+  /* USER CODE END TIM5_Init 2 */
 
 }
 

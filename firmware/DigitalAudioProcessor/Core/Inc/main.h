@@ -52,7 +52,7 @@ extern DMA_HandleTypeDef hdma_spi1_rx;
 extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi3_rx;
 
-extern IWDG_HandleTypeDef hiwdg1;
+//extern IWDG_HandleTypeDef hiwdg1;
 
 extern SAI_HandleTypeDef hsai_BlockB4;
 extern DMA_HandleTypeDef hdma_sai4_b;
@@ -60,6 +60,9 @@ extern DMA_HandleTypeDef hdma_sai4_b;
 extern SPDIFRX_HandleTypeDef hspdif1;
 extern DMA_HandleTypeDef hdma_spdif_rx_cs;
 extern DMA_HandleTypeDef hdma_spdif_rx_dt;
+
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim5;
 
 extern UART_HandleTypeDef huart4;
 

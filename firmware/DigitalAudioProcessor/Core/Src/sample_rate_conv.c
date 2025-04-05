@@ -47,7 +47,6 @@ static const q31_t __ITCM_DATA _src_fir_int2_coeffs[2 * SRC_FIR_INT2_PHASE_LENGT
 #include "../Data/fir_interp2_coeffs.txt"
 };
 
-#pragma GCC diagnostic ignored "-Wmissing-braces" //disable missing braces warning - initialising 2D arrays from contiguous list works fine
 //filter coefficients for fixed 160/147 fractional FIR resampler
 static const q31_t __ITCM_DATA _src_ffir_160147_coeffs[SRC_FFIR_160147_PHASE_COUNT * SRC_FFIR_160147_PHASE_LENGTH] = {
 #include "../Data/ffir_160_147_coeffs.txt"
@@ -57,7 +56,6 @@ static const q31_t __ITCM_DATA _src_ffir_160147_coeffs[SRC_FFIR_160147_PHASE_COU
 static const q31_t __ITCM_DATA _src_ffir_adap_coeffs[SRC_FFIR_ADAP_PHASE_COUNT * SRC_FFIR_ADAP_PHASE_LENGTH] = {
 #include "../Data/ffir_adaptive_coeffs.txt"
 };
-#pragma GCC diagnostic pop //re-enable missing braces warning
 
 //2x FIR interpolator instances (with state of length blockSize + phaseLength - 1 per channel, as required by CMSIS-DSP)
 static q31_t                            __DTCM_BSS  _src_fir_int2_states    [SRC_MAX_CHANNELS][SRC_INPUT_CHANNEL_SAMPLES_MAX + SRC_FIR_INT2_PHASE_LENGTH - 1];
@@ -112,7 +110,6 @@ static volatile uint16_t _src_input_samples_since_last_output;
 
 
 //debug access to internal state
-#ifdef DEBUG
 #ifdef SRC_DEBUG_ADAPTIVE
 static inline void _PrintLogData(float d1, float d2, float d3) {
   int32_t d1i = (int32_t)(1000.0f * d1);
@@ -126,7 +123,7 @@ volatile unsigned int *DWT_CYCCNT   = (volatile unsigned int *)0xE0001004; //add
 volatile unsigned int *DWT_CONTROL  = (volatile unsigned int *)0xE0001000; //address of the register
 volatile unsigned int *DWT_LAR      = (volatile unsigned int *)0xE0001FB0; //address of the register
 volatile unsigned int *SCB_DEMCR    = (volatile unsigned int *)0xE000EDFC; //address of the register
-#define SRC_DEBUG_TIMING_EMA_ALPHA 0.01f
+#define SRC_DEBUG_TIMING_EMA_ALPHA 1.0f
 #define SRC_DEBUG_TIMING_EMA_1MALPHA (1.0f - SRC_DEBUG_TIMING_EMA_ALPHA)
 static float _src_debug_time_in_avg = 0;
 static float _src_debug_time_out_avg = 0;
@@ -135,7 +132,6 @@ static inline void _PrintLogData(float d1, float d2) {
   int32_t d2i = (int32_t)(d2);
   printf("%ld %ld\n", d1i, d2i);
 }
-#endif
 #endif
 
 
@@ -304,6 +300,11 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
 
   __enable_irq();
 
+#ifdef SRC_DEBUG_TIMING
+  HAL_TIM_Base_Start(&htim2);
+  HAL_TIM_Base_Start(&htim5);
+#endif
+
   return HAL_OK;
 }
 
@@ -320,10 +321,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   int i, j;
 
 #ifdef SRC_DEBUG_TIMING
-  *SCB_DEMCR |= 0x01000000;
-  *DWT_LAR = 0xC5ACCE55; // enable access
-  *DWT_CYCCNT = 0; // reset the counter
-  *DWT_CONTROL |= 1 ; // enable the counter
+  htim2.Instance->CNT = 0;
 #endif
 
   //check parameters for validity
@@ -427,7 +425,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   __enable_irq();
 
 #ifdef SRC_DEBUG_TIMING
-  _src_debug_time_in_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)*DWT_CYCCNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_in_avg;
+  _src_debug_time_in_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)htim2.Instance->CNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_in_avg;
 #endif
 
   return HAL_OK;
@@ -441,11 +439,14 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   int i;
 
 #ifdef SRC_DEBUG_TIMING
-  *SCB_DEMCR |= 0x01000000;
-  *DWT_LAR = 0xC5ACCE55; // enable access
-  *DWT_CYCCNT = 0; // reset the counter
-  *DWT_CONTROL |= 1 ; // enable the counter
+  htim5.Instance->CNT = 0;
 #endif
+
+  //check parameters for validity
+  if (out_bufs == NULL || out_step < 1 || out_channels < 1 || out_channels > SRC_MAX_CHANNELS) {
+    DEBUG_PRINTF("* Attempted SRC output processing with invalid parameters %p %u %u\n", out_bufs, out_step, out_channels);
+    return HAL_ERROR;
+  }
 
   //check if we're even ready to output
   if (!_src_output_ready) {
@@ -555,7 +556,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   _src_buffer_read_ptr = (_src_buffer_read_ptr + input_samples_consumed) % SRC_BUF_TOTAL_CHANNEL_SAMPLES;
 
 #ifdef SRC_DEBUG_TIMING
-  _src_debug_time_out_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)*DWT_CYCCNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_out_avg;
+  _src_debug_time_out_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)htim5.Instance->CNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_out_avg;
   static uint32_t sampcounter = 0;
   if (sampcounter++ >= 10) {
     _PrintLogData(_src_debug_time_in_avg, _src_debug_time_out_avg);
