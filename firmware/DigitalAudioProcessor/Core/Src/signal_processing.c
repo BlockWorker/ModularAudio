@@ -11,7 +11,7 @@
 #include "sample_rate_conv.h"
 
 
-#define SP_FIR_TEST_LENGTH 128
+#define SP_FIR_TEST_LENGTH 384
 static q31_t __DTCM_BSS _sp_fir_test_coeff[SP_FIR_TEST_LENGTH];
 
 //2x FIR interpolator instances (with state of length blockSize + phaseLength - 1 per channel, as required by CMSIS-DSP)

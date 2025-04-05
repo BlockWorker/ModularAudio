@@ -115,7 +115,11 @@ static __always_inline void _RefreshWatchdogs() {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  /*CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->LAR = 0xC5ACCE55;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= (DWT_CTRL_CYCCNTENA_Msk | DWT_CTRL_EXCTRCENA_Msk | DWT_CTRL_CPIEVTENA_Msk |
+      DWT_CTRL_EXCEVTENA_Msk | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk);*/
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/

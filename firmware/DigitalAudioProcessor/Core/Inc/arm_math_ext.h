@@ -33,7 +33,7 @@
 
 //enable this define if (manual) loop unrolling is desired
 #undef ARM_MATH_EXT_LOOPUNROLL
-//#define ARM_MATH_EXT_LOOPUNROLL
+#define ARM_MATH_EXT_LOOPUNROLL
 
 
 //instance structure for single-sample-optimised algorithms below; like arm_fir_instance_q31 but with an extra state buffer offset field

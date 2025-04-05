@@ -14,7 +14,7 @@
 #undef SRC_DEBUG_ADAPTIVE
 //#define SRC_DEBUG_ADAPTIVE
 #undef SRC_DEBUG_TIMING
-//#define SRC_DEBUG_TIMING
+#define SRC_DEBUG_TIMING
 
 //filter parameter constants
 #define SRC_FIR_INT2_PHASE_LENGTH 110
