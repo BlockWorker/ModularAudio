@@ -53,6 +53,8 @@ DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi2_rx;
 DMA_HandleTypeDef hdma_spi3_rx;
 
+IWDG_HandleTypeDef hiwdg1;
+
 RAMECC_HandleTypeDef hramecc1_m1;
 RAMECC_HandleTypeDef hramecc1_m2;
 RAMECC_HandleTypeDef hramecc1_m3;
@@ -91,13 +93,16 @@ static void MX_I2C1_Init(void);
 static void MX_UART4_Init(void);
 static void MX_I2S1_Init(void);
 static void MX_RAMECC_Init(void);
+static void MX_IWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static __always_inline void _RefreshWatchdogs() {
+  HAL_IWDG_Refresh(&hiwdg1);
+}
 /* USER CODE END 0 */
 
 /**
@@ -155,10 +160,13 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_I2S1_Init();
   MX_RAMECC_Init();
+  MX_IWDG1_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart4);
   DEBUG_PRINTF("Controller started\n");
+
+  _RefreshWatchdogs();
 
   if (SAI_OUT_Init() == HAL_OK) {
     DEBUG_PRINTF("SAI initialised\n");
@@ -167,6 +175,20 @@ int main(void)
     HAL_Delay(100);
     Error_Handler();
   }
+
+  _RefreshWatchdogs();
+
+#ifdef DEBUG
+  //initialise cycle counter and let it run, for tracking idle cycles
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  *(uint32_t*)0xE0001FB0 = 0xC5ACCE55;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  CLEAR_BIT(SCB->SCR, SCB_SCR_SLEEPDEEP_Msk);
+
+  uint32_t idle_cycles = 0;
+  float avg_idle_cycles = 0.0f;
+#endif
 
   /* USER CODE END 2 */
 
@@ -181,20 +203,29 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 #ifdef DEBUG
+    avg_idle_cycles = 0.125f * (float)idle_cycles + 0.875f * avg_idle_cycles;
+    idle_cycles = 0;
+
     //SRC debug printouts
-    if (loop_count % 200 == 0) {
-      extern uint32_t src_debug_buf_health_history[2048];
-      extern float src_debug_phase_step_history[2048];
-      extern uint32_t src_debug_out_history_pos;
-
-      uint32_t last_pos = (src_debug_out_history_pos + 2047) % 2048;
-
-      DEBUG_PRINTF("Adaptive SRC: buffer health %3lu  phase step %.4f\n", src_debug_buf_health_history[last_pos], src_debug_phase_step_history[last_pos]);
+    if (loop_count % 100 == 0) {
+      DEBUG_PRINTF("Avg idle: %.1f\n", avg_idle_cycles);
     }
 #endif
 
     loop_count++;
-    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
+    _RefreshWatchdogs();
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS) { //replaces HAL_Delay() to not wait any unnecessary extra ticks
+#ifdef DEBUG
+      //attempt at an idle measurement - should really have a __WFI() in there, but that stops the CPU clock on CM7... this does still seem to indicate *something* at least
+      __disable_irq();
+      uint32_t t1 = DWT->CYCCNT;
+      __DSB();
+      uint32_t t2 = DWT->CYCCNT;
+      __enable_irq();
+      __ISB();
+      idle_cycles += (t2 - t1);
+#endif
+    }
   }
   /* USER CODE END 3 */
 }
@@ -221,9 +252,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
+                              |RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = 64;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
@@ -416,6 +449,35 @@ static void MX_I2S3_Init(void)
 }
 
 /**
+  * @brief IWDG1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG1_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG1_Init 0 */
+
+  /* USER CODE END IWDG1_Init 0 */
+
+  /* USER CODE BEGIN IWDG1_Init 1 */
+
+  /* USER CODE END IWDG1_Init 1 */
+  hiwdg1.Instance = IWDG1;
+  hiwdg1.Init.Prescaler = IWDG_PRESCALER_8;
+  hiwdg1.Init.Window = 4095;
+  hiwdg1.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG1_Init 2 */
+
+  /* USER CODE END IWDG1_Init 2 */
+
+}
+
+/**
   * @brief RAMECC Initialization Function
   * @param None
   * @retval None
@@ -590,7 +652,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 256000;
+  huart4.Init.BaudRate = 115200;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;

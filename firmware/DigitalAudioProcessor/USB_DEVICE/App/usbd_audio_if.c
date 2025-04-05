@@ -154,7 +154,7 @@ USBD_AUDIO_ItfTypeDef USBD_AUDIO_fops_HS =
 static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t options)
 {
   /* USER CODE BEGIN 9 */
-  DEBUG_PRINTF("audio init %lu %lu %lu\n", AudioFreq, Volume, options);
+  DEBUG_PRINTF("audio init %lu %ld %lu\n", AudioFreq, (int32_t)Volume, options);
 
   switch (AudioFreq) {
     case 96000:

@@ -33,7 +33,8 @@
 
 UART_HandleTypeDef *gHuart;
 
-static uint8_t sendBuf[16384] = { 0 };
+#define RETARGET_BUF_SIZE 24576
+static uint8_t sendBuf[RETARGET_BUF_SIZE] = { 0 };
 static uint16_t buf_writePos = 0;
 static uint16_t buf_lastReadPos = 0;
 
@@ -59,6 +60,12 @@ int _write(int fd, char* ptr, int len) {
   if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
     __disable_irq();
 
+    uint32_t space = RETARGET_BUF_SIZE - buf_writePos;
+    if (len > space) {
+      __enable_irq();
+      return EIO;
+    }
+
     memcpy(sendBuf + buf_writePos, ptr, len);
     buf_writePos += len;
 
@@ -67,9 +74,9 @@ int _write(int fd, char* ptr, int len) {
       buf_lastReadPos = buf_writePos;
       __enable_irq();
       if (hstatus == HAL_OK)
-	return len;
+        return len;
       else
-	return EIO;
+        return EIO;
     } else {
       __enable_irq();
       return len;

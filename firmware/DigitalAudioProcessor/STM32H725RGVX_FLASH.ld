@@ -81,7 +81,8 @@ SECTIONS
     *(.RamFunc)                     /* .RamFunc sections */
     *(.RamFunc*)                    /* .RamFunc* sections */
     *libCMSIS-DSP*:*(.text .text*)  /* CMSIS DSP library (for performance) */
-    /**(.text.memcpy)                 /* Standard C memcpy function - disabled for now, TODO: see if moving makes sense; or any others */
+    *(.text.memcpy)                 /* Standard C memcpy function */
+    *(.text.memset)                 /* Standard C memset function */
     . = ALIGN(4);
     _EndITCMText = .;
   } > ITCMRAM AT> FLASH

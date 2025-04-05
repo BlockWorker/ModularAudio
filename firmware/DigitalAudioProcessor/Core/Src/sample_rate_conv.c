@@ -11,9 +11,10 @@
 #include "fractional_fir.h"
 
 
-#undef SRC_DEBUG_TRACK
-#define SRC_DEBUG_TRACK
-
+#undef SRC_DEBUG_ADAPTIVE
+//#define SRC_DEBUG_ADAPTIVE
+#undef SRC_DEBUG_TIMING
+//#define SRC_DEBUG_TIMING
 
 //filter parameter constants
 #define SRC_FIR_INT2_PHASE_LENGTH 110
@@ -100,6 +101,7 @@ static q31_t __DTCM_BSS _src_scratch_b[SRC_MAX_CHANNELS][SRC_SCRATCH_CHANNEL_SAM
 //averaging histories, history positions, and sums for input rate error and buffer fill level error
 static int16_t _src_input_rate_error_history[SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES];
 static uint32_t _src_input_rate_error_history_position;
+static uint32_t _src_input_rate_error_length;
 static int32_t _src_input_rate_error_sum;
 static int16_t _src_buffer_fill_error_history[SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES];
 static uint32_t _src_buffer_fill_error_history_position;
@@ -111,19 +113,27 @@ static volatile uint16_t _src_input_samples_since_last_output;
 
 //debug access to internal state
 #ifdef DEBUG
-#ifdef SRC_DEBUG_TRACK
-#include "stdlib.h"
-#define SRC_DEBUG_HISTORY_SIZE (1 << 11)
-uint32_t __DTCM_BSS src_debug_buf_health_history[SRC_DEBUG_HISTORY_SIZE];
-float __DTCM_BSS src_debug_phase_step_history[SRC_DEBUG_HISTORY_SIZE];
-uint32_t __DTCM_BSS src_debug_out_history_pos;
-uint32_t __DTCM_BSS src_debug_in_history_pos;
-
+#ifdef SRC_DEBUG_ADAPTIVE
 static inline void _PrintLogData(float d1, float d2, float d3) {
   int32_t d1i = (int32_t)(1000.0f * d1);
   int32_t d2i = (int32_t)(1000.0f * d2);
   int32_t d3i = (int32_t)(1000.0f * d3);
   printf("%ld %ld %ld\n", d1i, d2i, d3i);
+}
+#endif
+#ifdef SRC_DEBUG_TIMING
+volatile unsigned int *DWT_CYCCNT   = (volatile unsigned int *)0xE0001004; //address of the register
+volatile unsigned int *DWT_CONTROL  = (volatile unsigned int *)0xE0001000; //address of the register
+volatile unsigned int *DWT_LAR      = (volatile unsigned int *)0xE0001FB0; //address of the register
+volatile unsigned int *SCB_DEMCR    = (volatile unsigned int *)0xE000EDFC; //address of the register
+#define SRC_DEBUG_TIMING_EMA_ALPHA 0.01f
+#define SRC_DEBUG_TIMING_EMA_1MALPHA (1.0f - SRC_DEBUG_TIMING_EMA_ALPHA)
+static float _src_debug_time_in_avg = 0;
+static float _src_debug_time_out_avg = 0;
+static inline void _PrintLogData(float d1, float d2) {
+  int32_t d1i = (int32_t)(d1);
+  int32_t d2i = (int32_t)(d2);
+  printf("%ld %ld\n", d1i, d2i);
 }
 #endif
 #endif
@@ -176,6 +186,7 @@ static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t
     //reset averaging data
     memset(_src_input_rate_error_history, 0, sizeof(_src_input_rate_error_history));
     _src_input_rate_error_history_position = 0;
+    _src_input_rate_error_length = SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES_INITIAL;
     _src_input_rate_error_sum = 0;
     memset(_src_buffer_fill_error_history, 0, sizeof(_src_buffer_fill_error_history));
     _src_buffer_fill_error_history_position = 0;
@@ -202,6 +213,7 @@ HAL_StatusTypeDef SRC_Init() {
   //reset averaging data
   memset(_src_input_rate_error_history, 0, sizeof(_src_input_rate_error_history));
   _src_input_rate_error_history_position = 0;
+  _src_input_rate_error_length = SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES_INITIAL;
   _src_input_rate_error_sum = 0;
   memset(_src_buffer_fill_error_history, 0, sizeof(_src_buffer_fill_error_history));
   _src_buffer_fill_error_history_position = 0;
@@ -292,12 +304,6 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
 
   __enable_irq();
 
-#ifdef SRC_DEBUG_TRACK
-  memset(src_debug_buf_health_history, 0, sizeof(src_debug_buf_health_history));
-  memset(src_debug_phase_step_history, 0, sizeof(src_debug_phase_step_history));
-  src_debug_out_history_pos = 0;
-#endif
-
   return HAL_OK;
 }
 
@@ -312,6 +318,13 @@ SRC_SampleRate SRC_GetCurrentInputRate() {
 //if the SRC can't accept all given input samples, old samples will be silently discarded
 HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift) {
   int i, j;
+
+#ifdef SRC_DEBUG_TIMING
+  *SCB_DEMCR |= 0x01000000;
+  *DWT_LAR = 0xC5ACCE55; // enable access
+  *DWT_CYCCNT = 0; // reset the counter
+  *DWT_CONTROL |= 1 ; // enable the counter
+#endif
 
   //check parameters for validity
   if (in_bufs == NULL || in_step < 1 || in_channels < 1 || in_channels > SRC_MAX_CHANNELS || in_samples > SRC_INPUT_CHANNEL_SAMPLES_MAX) {
@@ -369,10 +382,6 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
     }
   }
 
-#ifdef SRC_DEBUG_TRACK
-  src_debug_in_history_pos = (src_debug_in_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
-#endif
-
   //process any potential fixed-ratio resampling, according to input sample rate
   if (_src_input_rate == SR_96K) {
     //already at target 96k rate: only adaptive resampling needed, so just copy the inputs into the buffer while applying the necessary shift
@@ -417,6 +426,10 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
   _src_input_samples_since_last_output += written_samples;
   __enable_irq();
 
+#ifdef SRC_DEBUG_TIMING
+  _src_debug_time_in_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)*DWT_CYCCNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_in_avg;
+#endif
+
   return HAL_OK;
 }
 
@@ -427,11 +440,20 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
 HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t out_step, uint16_t out_channels) {
   int i;
 
+#ifdef SRC_DEBUG_TIMING
+  *SCB_DEMCR |= 0x01000000;
+  *DWT_LAR = 0xC5ACCE55; // enable access
+  *DWT_CYCCNT = 0; // reset the counter
+  *DWT_CONTROL |= 1 ; // enable the counter
+#endif
+
   //check if we're even ready to output
   if (!_src_output_ready) {
-    _PrintLogData((float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES,
+#ifdef SRC_DEBUG_ADAPTIVE
+    _PrintLogData((float)_src_input_rate_error_sum / (float)_src_input_rate_error_length,
                   (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
                   _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
+#endif
     _src_input_samples_since_last_output = 0;
     return HAL_BUSY;
   }
@@ -441,21 +463,28 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   if (available_input_samples < SRC_BUF_CRITICAL_CHANNEL_SAMPLES) {
     //buffer level is critically low: reset to "not ready" until buffer is refilled sufficiently
     DEBUG_PRINTF("SRC buffer critical (%lu samples), disabling until refilled\n", available_input_samples);
-    _PrintLogData((float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES,
+#ifdef SRC_DEBUG_ADAPTIVE
+    _PrintLogData((float)_src_input_rate_error_sum / (float)_src_input_rate_error_length,
                   (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
                   _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
+#endif
     _src_output_ready = false;
     _src_input_samples_since_last_output = 0;
     return HAL_BUSY;
   }
 
-  //update average input rate error
+  //update average input rate error - average length grows after startup
   int16_t input_rate_error = (int16_t)_src_input_samples_since_last_output - SRC_BATCH_CHANNEL_SAMPLES;
   _src_input_samples_since_last_output = 0;
-  _src_input_rate_error_sum -= _src_input_rate_error_history[_src_input_rate_error_history_position];
+  if (_src_input_rate_error_length >= SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES) {
+    _src_input_rate_error_length = SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES;
+    _src_input_rate_error_sum -= _src_input_rate_error_history[_src_input_rate_error_history_position];
+  } else {
+    _src_input_rate_error_length++;
+  }
   _src_input_rate_error_sum += input_rate_error;
   _src_input_rate_error_history[_src_input_rate_error_history_position] = input_rate_error;
-  //update average buffer fill error
+  //update average buffer fill error - average length is constant
   int16_t buffer_fill_error = (int16_t)available_input_samples - SRC_BUF_IDEAL_CHANNEL_SAMPLES;
   _src_buffer_fill_error_sum -= _src_buffer_fill_error_history[_src_buffer_fill_error_history_position];
   _src_buffer_fill_error_sum += buffer_fill_error;
@@ -469,7 +498,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   /*_src_ffir_adap_instances[0].phase_step_fract =
       (SRC_ADAPTIVE_EMA_ALPHA * (float)samples_above_ideal) + (SRC_ADAPTIVE_EMA_1MALPHA * _src_ffir_adap_instances[0].phase_step_fract);*/
   //compute averaged input rate error, averaged buffer fill error, and derivative of the latter (for predictive correction)
-  float input_rate_error_avg = (float)_src_input_rate_error_sum / (float)SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES;
+  float input_rate_error_avg = (float)_src_input_rate_error_sum / (float)_src_input_rate_error_length;
   float buffer_fill_error_avg = (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES;
   float buffer_fill_error_d = buffer_fill_error_avg - _src_last_buffer_fill_error_avg;
   //update "last value" variable for buffer fill error, for next derivative calculation
@@ -495,11 +524,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
     _src_ffir_adap_instances[i].phase_step_fract = _src_ffir_adap_instances[0].phase_step_fract;
   }
 
-#ifdef SRC_DEBUG_TRACK
-  src_debug_buf_health_history[src_debug_out_history_pos] = available_input_samples;
-  src_debug_phase_step_history[src_debug_out_history_pos] = _src_ffir_adap_instances[0].phase_step_fract;
-  src_debug_out_history_pos = (src_debug_out_history_pos + 1) % SRC_DEBUG_HISTORY_SIZE;
-
+#ifdef SRC_DEBUG_ADAPTIVE
   _PrintLogData(input_rate_error_avg,
                 buffer_fill_error_avg,
                 _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
@@ -528,6 +553,15 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
 
   //update the buffer read pointer in accordance with the number of input samples we used
   _src_buffer_read_ptr = (_src_buffer_read_ptr + input_samples_consumed) % SRC_BUF_TOTAL_CHANNEL_SAMPLES;
+
+#ifdef SRC_DEBUG_TIMING
+  _src_debug_time_out_avg = SRC_DEBUG_TIMING_EMA_ALPHA * (float)*DWT_CYCCNT + SRC_DEBUG_TIMING_EMA_1MALPHA * _src_debug_time_out_avg;
+  static uint32_t sampcounter = 0;
+  if (sampcounter++ >= 10) {
+    _PrintLogData(_src_debug_time_in_avg, _src_debug_time_out_avg);
+    sampcounter = 0;
+  }
+#endif
 
   return HAL_OK;
 }

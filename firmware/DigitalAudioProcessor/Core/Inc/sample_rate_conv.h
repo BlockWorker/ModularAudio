@@ -20,12 +20,12 @@
 //output samples per batch per channel
 #define SRC_BATCH_CHANNEL_SAMPLES 96
 //minimum and maximum number of input samples per output batch
-#define SRC_BATCH_INPUT_SAMPLES_MIN (SRC_BATCH_CHANNEL_SAMPLES - 1)
-#define SRC_BATCH_INPUT_SAMPLES_MAX (SRC_BATCH_CHANNEL_SAMPLES + 1)
+#define SRC_BATCH_INPUT_SAMPLES_MIN (SRC_BATCH_CHANNEL_SAMPLES - 2)
+#define SRC_BATCH_INPUT_SAMPLES_MAX (SRC_BATCH_CHANNEL_SAMPLES + 2)
 //critical fill level of adaptive resampling buffer, in samples - set to be definitely enough to produce one output batch
 #define SRC_BUF_CRITICAL_CHANNEL_SAMPLES (SRC_BATCH_INPUT_SAMPLES_MAX + 1)
 //ideal fill level of adaptive resampling buffer (after read), in output batches
-#define SRC_BUF_IDEAL_BATCHES 3
+#define SRC_BUF_IDEAL_BATCHES 4
 //ideal fill level of adaptive resampling buffer (before read), in samples per channel
 #define SRC_BUF_IDEAL_CHANNEL_SAMPLES ((SRC_BUF_IDEAL_BATCHES + 1) * SRC_BATCH_CHANNEL_SAMPLES)
 //adative resampling buffer size, in samples per channel
@@ -37,7 +37,8 @@
 #define SRC_SCRATCH_CHANNEL_SAMPLES (2 * SRC_INPUT_CHANNEL_SAMPLES_MAX)
 
 //error averaging lengths (in batches) for adaptive resampling rate
-#define SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES 4096
+#define SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES_INITIAL 8
+#define SRC_ADAPTIVE_RATE_ERROR_AVG_BATCHES 6144
 #define SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES 8192
 //proportional and derivative influence coefficients of the buffer fill error on the adaptive resampling rate
 #define SRC_ADAPTIVE_BUF_FILL_COEFF_P (1.0f / 4096.0f)

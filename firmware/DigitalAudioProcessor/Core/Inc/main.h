@@ -52,6 +52,8 @@ extern DMA_HandleTypeDef hdma_spi1_rx;
 extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi3_rx;
 
+extern IWDG_HandleTypeDef hiwdg1;
+
 extern SAI_HandleTypeDef hsai_BlockB4;
 extern DMA_HandleTypeDef hdma_sai4_b;
 
@@ -71,7 +73,7 @@ extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 
 //debug printout, disabled outside of debug mode
 #ifdef DEBUG
-#define DEBUG_PRINTF(...) do { /*printf(__VA_ARGS__);*/ } while (0)
+#define DEBUG_PRINTF(...) do { printf(__VA_ARGS__); } while (0)
 #else
 #define DEBUG_PRINTF(...)
 #endif
