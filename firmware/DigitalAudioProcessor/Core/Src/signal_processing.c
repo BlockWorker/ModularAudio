@@ -146,10 +146,12 @@ HAL_StatusTypeDef SP_SetupBiquads(uint8_t* filter_counts, uint8_t* post_shifts) 
 
   //check parameters for validity
   if (filter_counts == NULL || post_shifts == NULL) {
+    DEBUG_PRINTF("* SP biquad setup got null pointer as a parameter\n");
     return HAL_ERROR;
   }
   for (i = 0; i < SP_MAX_CHANNELS; i++) {
     if (filter_counts[i] > SP_MAX_BIQUADS || post_shifts[i] > 31) {
+      DEBUG_PRINTF("* SP biquad setup got invalid count %u or shift %u on filter %d\n", filter_counts[i], post_shifts[i], i);
       return HAL_ERROR;
     }
   }
@@ -171,10 +173,12 @@ HAL_StatusTypeDef SP_SetupFIRs(uint16_t* filter_lengths) {
 
   //check parameters for validity
   if (filter_lengths == NULL) {
+    DEBUG_PRINTF("* SP FIR setup got null pointer as a parameter\n");
     return HAL_ERROR;
   }
   for (i = 0; i < SP_MAX_CHANNELS; i++) {
     if (filter_lengths[i] > SP_MAX_FIR_LENGTH) {
+      DEBUG_PRINTF("* SP FIR setup got invalid length %u on filter %d\n", filter_lengths[i], i);
       return HAL_ERROR;
     }
   }
