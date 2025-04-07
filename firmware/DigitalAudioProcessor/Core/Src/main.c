@@ -75,6 +75,8 @@ TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart4;
 
+WWDG_HandleTypeDef hwwdg1;
+
 MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 /* USER CODE BEGIN PV */
 
@@ -82,6 +84,7 @@ MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_BDMA_Init(void);
@@ -97,6 +100,7 @@ static void MX_I2S1_Init(void);
 static void MX_RAMECC_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM5_Init(void);
+static void MX_WWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -105,6 +109,7 @@ static void MX_TIM5_Init(void);
 /* USER CODE BEGIN 0 */
 static __always_inline void _RefreshWatchdogs() {
   //HAL_IWDG_Refresh(&hiwdg1);
+  HAL_WWDG_Refresh(&hwwdg1);
 }
 /* USER CODE END 0 */
 
@@ -140,6 +145,9 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+/* Configure the peripherals common clocks */
+  PeriphCommonClock_Config();
+
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -160,6 +168,7 @@ int main(void)
   MX_RAMECC_Init();
   MX_TIM2_Init();
   MX_TIM5_Init();
+  MX_WWDG1_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart4);
@@ -184,6 +193,8 @@ int main(void)
     Error_Handler();
   }
 
+  _RefreshWatchdogs();
+
   if (SP_Init() == HAL_OK) {
     DEBUG_PRINTF("SP initialised\n");
   } else {
@@ -207,10 +218,10 @@ int main(void)
   /*CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->LAR = 0xC5ACCE55;
   DWT->CYCCNT = 0;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;*/
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
   uint32_t idle_cycles = 0;
-  float avg_idle_cycles = 0.0f;
+  float avg_idle_cycles = 0.0f;*/
 #endif
 
   /* USER CODE END 2 */
@@ -226,12 +237,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 #ifdef DEBUG
-    avg_idle_cycles = 0.125f * (float)idle_cycles + 0.875f * avg_idle_cycles;
-    idle_cycles = 0;
+    /*avg_idle_cycles = 0.125f * (float)idle_cycles + 0.875f * avg_idle_cycles;
+    idle_cycles = 0;*/
 
     //SRC debug printouts
     if (loop_count % 100 == 0) {
-      DEBUG_PRINTF("Avg idle: %.1f\n", avg_idle_cycles);
+      //DEBUG_PRINTF("Avg idle: %.1f\n", avg_idle_cycles);
     }
 #endif
 
@@ -301,6 +312,34 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief Peripherals Common Clock Configuration
+  * @retval None
+  */
+void PeriphCommonClock_Config(void)
+{
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  /** Initializes the peripherals clock
+  */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4B|RCC_PERIPHCLK_SPI3
+                              |RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_SPI1;
+  PeriphClkInitStruct.PLL3.PLL3M = 25;
+  PeriphClkInitStruct.PLL3.PLL3N = 96;
+  PeriphClkInitStruct.PLL3.PLL3P = 10;
+  PeriphClkInitStruct.PLL3.PLL3Q = 2;
+  PeriphClkInitStruct.PLL3.PLL3R = 2;
+  PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
+  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+  PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL3;
+  PeriphClkInitStruct.Sai4BClockSelection = RCC_SAI4BCLKSOURCE_PLL3;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
@@ -756,6 +795,36 @@ static void MX_UART4_Init(void)
   /* USER CODE BEGIN UART4_Init 2 */
 
   /* USER CODE END UART4_Init 2 */
+
+}
+
+/**
+  * @brief WWDG1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_WWDG1_Init(void)
+{
+
+  /* USER CODE BEGIN WWDG1_Init 0 */
+
+  /* USER CODE END WWDG1_Init 0 */
+
+  /* USER CODE BEGIN WWDG1_Init 1 */
+
+  /* USER CODE END WWDG1_Init 1 */
+  hwwdg1.Instance = WWDG1;
+  hwwdg1.Init.Prescaler = WWDG_PRESCALER_128;
+  hwwdg1.Init.Window = 127;
+  hwwdg1.Init.Counter = 127;
+  hwwdg1.Init.EWIMode = WWDG_EWI_DISABLE;
+  if (HAL_WWDG_Init(&hwwdg1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN WWDG1_Init 2 */
+
+  /* USER CODE END WWDG1_Init 2 */
 
 }
 

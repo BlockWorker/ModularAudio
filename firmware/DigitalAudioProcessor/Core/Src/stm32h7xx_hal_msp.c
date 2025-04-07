@@ -170,22 +170,11 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 void HAL_I2S_MspInit(I2S_HandleTypeDef* hi2s)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   if(hi2s->Instance==SPI1)
   {
   /* USER CODE BEGIN SPI1_MspInit 0 */
 
   /* USER CODE END SPI1_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
-    PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PIN;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
     /* Peripheral clock enable */
     __HAL_RCC_SPI1_CLK_ENABLE();
 
@@ -230,16 +219,6 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* hi2s)
   /* USER CODE BEGIN SPI2_MspInit 0 */
 
   /* USER CODE END SPI2_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2;
-    PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PIN;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
     /* Peripheral clock enable */
     __HAL_RCC_SPI2_CLK_ENABLE();
 
@@ -284,16 +263,6 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* hi2s)
   /* USER CODE BEGIN SPI3_MspInit 0 */
 
   /* USER CODE END SPI3_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI3;
-    PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PIN;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
     /* Peripheral clock enable */
     __HAL_RCC_SPI3_CLK_ENABLE();
 
@@ -689,6 +658,29 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 
 }
 
+/**
+* @brief WWDG MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hwwdg: WWDG handle pointer
+* @retval None
+*/
+void HAL_WWDG_MspInit(WWDG_HandleTypeDef* hwwdg)
+{
+  if(hwwdg->Instance==WWDG1)
+  {
+  /* USER CODE BEGIN WWDG1_MspInit 0 */
+
+  /* USER CODE END WWDG1_MspInit 0 */
+    /* Peripheral clock enable */
+    HAL_RCCEx_WWDGxSysResetConfig(RCC_WWDG1);
+    __HAL_RCC_WWDG1_CLK_ENABLE();
+  /* USER CODE BEGIN WWDG1_MspInit 1 */
+
+  /* USER CODE END WWDG1_MspInit 1 */
+  }
+
+}
+
 extern DMA_HandleTypeDef hdma_sai4_b;
 
 static uint32_t SAI4_client =0;
@@ -697,29 +689,10 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 /* SAI4 */
     if(hsai->Instance==SAI4_Block_B)
     {
       /* Peripheral clock enable */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4B;
-    PeriphClkInitStruct.PLL3.PLL3M = 25;
-    PeriphClkInitStruct.PLL3.PLL3N = 96;
-    PeriphClkInitStruct.PLL3.PLL3P = 10;
-    PeriphClkInitStruct.PLL3.PLL3Q = 2;
-    PeriphClkInitStruct.PLL3.PLL3R = 2;
-    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
-    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
-    PeriphClkInitStruct.Sai4BClockSelection = RCC_SAI4BCLKSOURCE_PLL3;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
       if (SAI4_client == 0)
       {
        __HAL_RCC_SAI4_CLK_ENABLE();

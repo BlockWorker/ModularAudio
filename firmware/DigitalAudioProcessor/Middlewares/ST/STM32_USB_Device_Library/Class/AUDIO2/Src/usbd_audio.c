@@ -239,7 +239,7 @@ __ALIGN_BEGIN static uint8_t USBD_AUDIO_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALI
     AUDIO_ENDPOINT_GENERAL,             /* bDescriptor */
     0x01,                               /* bmAttributes - Sampling Frequency control is supported. See UAC Spec 1.0 p.62 */
     0x01,//0x00,                        /* bLockDelayUnits */
-    0x03,//0x00,                        /* wLockDelay */
+    0x10,//0x00,                        /* wLockDelay */
     0x00,
     // 07 byte
 
