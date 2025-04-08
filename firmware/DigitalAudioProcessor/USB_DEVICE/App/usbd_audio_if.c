@@ -23,7 +23,7 @@
 
 /* USER CODE BEGIN INCLUDE */
 #include "main.h"
-#include "sample_rate_conv.h"
+#include "inputs.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -158,16 +158,17 @@ static int8_t AUDIO_Init_HS(uint32_t AudioFreq, uint32_t Volume, uint32_t option
 
   switch (AudioFreq) {
     case 96000:
-      SRC_Configure(SR_96K);
+      //SRC_Configure(SR_96K);
       //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_96K;
-      break;
+      //break;
     case 48000:
-      SRC_Configure(SR_48K);
+      //SRC_Configure(SR_48K);
       //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_48K;
-      break;
+      //break;
     case 44100:
-      SRC_Configure(SR_44K);
+      //SRC_Configure(SR_44K);
       //hsai_BlockB4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_44K;
+      INPUT_UpdateSampleRate(INPUT_USB);
       break;
     default:
       return USBD_FAIL;

@@ -26,6 +26,7 @@
 #include "sample_rate_conv.h"
 #include "signal_processing.h"
 #include "sai_out.h"
+#include "inputs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -213,6 +214,16 @@ int main(void)
 
   _RefreshWatchdogs();
 
+  if (INPUT_Init() == HAL_OK) {
+    DEBUG_PRINTF("Inputs initialised\n");
+  } else {
+    DEBUG_PRINTF("*** Input init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
+  _RefreshWatchdogs();
+
 #ifdef DEBUG
   //initialise cycle counter and let it run, for tracking idle cycles
   /*CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -245,6 +256,8 @@ int main(void)
       //DEBUG_PRINTF("Avg idle: %.1f\n", avg_idle_cycles);
     }
 #endif
+
+    INPUT_LoopUpdate();
 
     loop_count++;
     _RefreshWatchdogs();

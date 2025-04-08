@@ -35,7 +35,7 @@
 #include "usbd_ctlreq.h"
 #include "main.h"
 #include "stm32h7xx_ll_dma.h"
-#include "sample_rate_conv.h"
+#include "inputs.h"
 
 
 #define AUDIO_SAMPLE_FREQ(frq) (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
@@ -293,8 +293,6 @@ static uint8_t tmpbuf[1024];
 
 #define SAMPLEBUF_CH_SAMPLE_COUNT (AUDIO_OUT_PACKET_24B / 6 + 1)
 static q31_t sample_bufs[2][SAMPLEBUF_CH_SAMPLE_COUNT];
-static q31_t __DTCM_BSS dma_sample_bufs[2][SAMPLEBUF_CH_SAMPLE_COUNT];
-static uint32_t dma_sample_count = 0;
 
 
 // FNSOF is critical for frequency changing to work
@@ -745,14 +743,6 @@ typedef union UN32_ {
 	return sample_atten;
 }
 
-
-static void _MDMA_CompleteCallback(MDMA_HandleTypeDef* mdma) {
-  if (mdma == &hmdma_mdma_channel40_sw_0) {
-    const q31_t* buf_pointers[2] = { dma_sample_bufs[0], dma_sample_bufs[1] };
-    SRC_ProcessInputSamples(buf_pointers, 1, 2, dma_sample_count, 0);
-  }
-}
-
 /**
   * @brief  USBD_AUDIO_DataOut
   *         handle data OUT Stage
@@ -841,12 +831,7 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum) {
 
     USBD_LL_PrepareReceive(pdev, AUDIO_OUT_EP, tmpbuf, AUDIO_OUT_PACKET_24B);
 
-		dma_sample_count = num_samples;
-    HAL_MDMA_RegisterCallback(&hmdma_mdma_channel40_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_MDMA_CompleteCallback);
-    HAL_MDMA_Start_IT(&hmdma_mdma_channel40_sw_0, (uint32_t)sample_bufs[0], (uint32_t)dma_sample_bufs[0], sizeof(sample_bufs), 1);
-
-		/*const q31_t* buf_pointers[2] = { sample_bufs[0], sample_bufs[1] };
-    SRC_ProcessInputSamples(buf_pointers, 1, 2, num_samples, 0);*/
+    INPUT_ProcessSamples(INPUT_USB, sample_bufs[0], 1, 2, num_samples, SAMPLEBUF_CH_SAMPLE_COUNT, 0);
   }
 
 	return USBD_OK;

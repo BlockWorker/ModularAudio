@@ -9,6 +9,7 @@
 
 #include "sample_rate_conv.h"
 #include "fractional_fir.h"
+#include "inputs.h"
 
 
 #undef SRC_DEBUG_ADAPTIVE
@@ -306,6 +307,8 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
 
   __enable_irq();
 
+  DEBUG_PRINTF("SRC configured to input sample rate %u\n", _src_input_rate);
+
 #ifdef SRC_DEBUG_TIMING
   HAL_TIM_Base_Start(&htim2);
   HAL_TIM_Base_Start(&htim5);
@@ -461,6 +464,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
                   (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
                   _src_ffir_adap_instances[0].phase_step_fract - (float)SRC_BATCH_CHANNEL_SAMPLES);
 #endif
+
     _src_input_samples_since_last_output = 0;
     return HAL_BUSY;
   }
@@ -470,6 +474,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
   if (available_input_samples < SRC_BUF_CRITICAL_CHANNEL_SAMPLES) {
     //buffer level is critically low: reset to "not ready" until buffer is refilled sufficiently
     DEBUG_PRINTF("SRC buffer critical (%lu samples), disabling until refilled\n", available_input_samples);
+
 #ifdef SRC_DEBUG_ADAPTIVE
     _PrintLogData((float)_src_input_rate_error_sum / (float)_src_input_rate_error_length,
                   (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES,
@@ -477,6 +482,12 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
 #endif
     _src_output_ready = false;
     _src_input_samples_since_last_output = 0;
+
+    //stop currently active input (if valid)
+    if (input_active > INPUT_NONE && input_active < _INPUT_COUNT) {
+      INPUT_Stop(input_active);
+    }
+
     return HAL_BUSY;
   }
 

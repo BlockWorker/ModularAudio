@@ -21,6 +21,39 @@ bool inputs_available[_INPUT_COUNT];
 //sources that are available but have been silent for at least one main loop cycle
 static bool _inputs_silent[_INPUT_COUNT];
 
+//parameters of the sample batch currently being transferred over MDMA
+static q31_t    __DTCM_BSS  _input_dma_sample_buf     [INPUT_MAX_CHANNELS * INPUT_MAX_BATCH_CHANNEL_SAMPLES];
+static uint16_t             _input_dma_step           = 0;
+static uint16_t             _input_dma_channels       = 0;
+static uint16_t             _input_dma_samples        = 0;
+static uint16_t             _input_dma_buf_sample_cap = 0;
+static int8_t               _input_dma_shift          = 0;
+
+
+//handle completion of MDMA transfer of active input samples
+static void _INPUT_MDMA_CompleteCallback(MDMA_HandleTypeDef* mdma) {
+  int i;
+
+  if (mdma == &hmdma_mdma_channel40_sw_0) {
+    //derive buffer pointers depending on the given step size
+    const q31_t* buf_pointers[INPUT_MAX_CHANNELS];
+    if (_input_dma_step == 1) {
+      //step size 1: contiguous channel buffers
+      for (i = 0; i < _input_dma_channels; i++) {
+        buf_pointers[i] = _input_dma_sample_buf + i * _input_dma_buf_sample_cap;
+      }
+    } else {
+      //step size >1: interleaved channels in a single buffer
+      for (i = 0; i < _input_dma_channels; i++) {
+        buf_pointers[i] = _input_dma_sample_buf + i;
+      }
+    }
+
+    //pass the transferred sample batch to the SRC
+    SRC_ProcessInputSamples(buf_pointers, _input_dma_step, _input_dma_channels, _input_dma_samples, _input_dma_shift);
+  }
+}
+
 
 //initialise inputs - only needs to be called once
 HAL_StatusTypeDef INPUT_Init() {
@@ -33,6 +66,10 @@ HAL_StatusTypeDef INPUT_Init() {
     _inputs_silent[i] = false;
   }
 
+  //abort any potentially ongoing MDMA transfer and register the MDMA transfer complete callback for sample handling
+  HAL_MDMA_Abort(&hmdma_mdma_channel40_sw_0);
+  ReturnOnError(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel40_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_INPUT_MDMA_CompleteCallback));
+
   return HAL_OK;
 }
 
@@ -41,7 +78,7 @@ void INPUT_LoopUpdate() {
   int i;
 
   //check all inputs for silence
-  for (i = 0; i < _INPUT_COUNT; i++) {
+  for (i = 1; i < _INPUT_COUNT; i++) {
     //skip unavailable inputs
     if (!inputs_available[i]) {
       continue;
@@ -77,7 +114,7 @@ void INPUT_Stop(INPUT_Source input) {
   //handle input switching if the input was active
   if (input_active == input) {
     //find another available input to switch to
-    for (i = 0; i < _INPUT_COUNT; i++) {
+    for (i = 1; i < _INPUT_COUNT; i++) {
       if (inputs_available[i]) {
         //found available input: switch to it and finish processing if successful
         if (INPUT_Activate((INPUT_Source)i) == HAL_OK) {
@@ -103,6 +140,8 @@ HAL_StatusTypeDef INPUT_Activate(INPUT_Source input) {
 
   //update input's sample rate (including setting up the SRC for it)
   INPUT_UpdateSampleRate(input_active);
+
+  DEBUG_PRINTF("Input %u has been activated\n", input);
 
   return HAL_OK;
 }
@@ -161,8 +200,40 @@ HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input) {
 }
 
 //handle reception of the given samples on the given input - also marks the input as available, and activates it if there isn't already an active input
-HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift) {
+//buffer may contain consecutive contiguous channels (in_step = 1) or be interleaved (in_step >= in_channels > 1), with given pre-shift (negative = data is shifted right)
+HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t* in_buf, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, uint16_t in_buf_sample_cap, int8_t in_shift) {
+  //check parameters for validity
+  if (input <= INPUT_NONE || input >= _INPUT_COUNT || in_buf == NULL || in_channels < 1 || in_channels > INPUT_MAX_CHANNELS ||
+      (in_step < in_channels && in_step != 1) || in_step > INPUT_MAX_CHANNELS || in_samples < 1 || in_samples > INPUT_MAX_BATCH_CHANNEL_SAMPLES ||
+      in_buf_sample_cap < 1 || in_buf_sample_cap > INPUT_MAX_BATCH_CHANNEL_SAMPLES || in_samples > in_buf_sample_cap) {
+    DEBUG_PRINTF("* Input attempted to process samples with invalid parameters %u %p %u %u %u %u %d\n", input, in_buf, in_step, in_channels, in_samples, in_buf_sample_cap, in_shift);
+    return HAL_ERROR;
+  }
 
+  //mark this input as available and not silent
+  if (!inputs_available[input]) {
+    inputs_available[input] = true;
+    DEBUG_PRINTF("Input %u has become available\n", input);
+  }
+  _inputs_silent[input] = false;
+
+  //if there's no valid active input, activate this input
+  if (input_active <= INPUT_NONE || input_active >= _INPUT_COUNT) {
+    ReturnOnError(INPUT_Activate(input));
+  }
+
+  //do actual sample processing only if this input is active
+  if (input == input_active) {
+    _input_dma_step = in_step;
+    _input_dma_channels = in_channels;
+    _input_dma_samples = in_samples;
+    _input_dma_buf_sample_cap = in_buf_sample_cap;
+    _input_dma_shift = in_shift;
+
+    //calculate size of transfer in bytes and start MDMA transfer
+    uint32_t transfer_bytes = (uint32_t)in_buf_sample_cap * (uint32_t)(MAX(in_step, in_channels)) * sizeof(q31_t);
+    HAL_MDMA_Start_IT(&hmdma_mdma_channel40_sw_0, (uint32_t)in_buf, (uint32_t)_input_dma_sample_buf, transfer_bytes, 1);
+  }
 
   return HAL_OK;
 }

@@ -52,6 +52,7 @@ HAL_StatusTypeDef INPUT_Activate(INPUT_Source input);
 HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input);
 
 //handle reception of the given samples on the given input - also marks the input as available, and activates it if there isn't already an active input
-HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t** in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, int8_t in_shift);
+//buffer may contain consecutive contiguous channels (in_step = 1) or be interleaved (in_step >= in_channels > 1), with given pre-shift (negative = data is shifted right)
+HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t* in_bufs, uint16_t in_step, uint16_t in_channels, uint16_t in_samples, uint16_t in_buf_sample_cap, int8_t in_shift);
 
 #endif /* INC_INPUTS_H_ */
