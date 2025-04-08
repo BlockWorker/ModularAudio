@@ -52,7 +52,7 @@ extern DMA_HandleTypeDef hdma_spi1_rx;
 extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi3_rx;
 
-//extern IWDG_HandleTypeDef hiwdg1;
+extern IWDG_HandleTypeDef hiwdg1;
 
 extern SAI_HandleTypeDef hsai_BlockB4;
 extern DMA_HandleTypeDef hdma_sai4_b;
@@ -65,6 +65,8 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim5;
 
 extern UART_HandleTypeDef huart4;
+
+extern WWDG_HandleTypeDef hwwdg1;
 
 extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 /* USER CODE END EC */
