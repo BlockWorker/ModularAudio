@@ -55,8 +55,6 @@ DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi2_rx;
 DMA_HandleTypeDef hdma_spi3_rx;
 
-IWDG_HandleTypeDef hiwdg1;
-
 RAMECC_HandleTypeDef hramecc1_m1;
 RAMECC_HandleTypeDef hramecc1_m2;
 RAMECC_HandleTypeDef hramecc1_m3;
@@ -104,7 +102,6 @@ static void MX_RAMECC_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_WWDG1_Init(void);
-static void MX_IWDG1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -112,7 +109,7 @@ static void MX_IWDG1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 static __always_inline void _RefreshWatchdogs() {
-  HAL_IWDG_Refresh(&hiwdg1);
+  //HAL_IWDG_Refresh(&hiwdg1);
   HAL_WWDG_Refresh(&hwwdg1);
 }
 /* USER CODE END 0 */
@@ -173,7 +170,6 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM5_Init();
   MX_WWDG1_Init();
-  MX_IWDG1_Init();
   /* USER CODE BEGIN 2 */
 
   RetargetInit(&huart4);
@@ -256,8 +252,9 @@ int main(void)
     idle_cycles = 0;*/
 
     //SRC debug printouts
-    if (loop_count % 100 == 0) {
-      //DEBUG_PRINTF("Avg idle: %.1f\n", avg_idle_cycles);
+    if (loop_count % 200 == 0) {
+      extern float* const src_debug_adaptive_decimation_ptr;
+      DEBUG_PRINTF("Adaptive decm factor: %.4f\n", *src_debug_adaptive_decimation_ptr);
     }
 #endif
 
@@ -296,11 +293,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
-                              |RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = 64;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
@@ -346,8 +341,8 @@ void PeriphCommonClock_Config(void)
 
   /** Initializes the peripherals clock
   */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4B|RCC_PERIPHCLK_SPI3
-                              |RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_SPI1;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI3|RCC_PERIPHCLK_SPI2
+                              |RCC_PERIPHCLK_SPI1;
   PeriphClkInitStruct.PLL3.PLL3M = 25;
   PeriphClkInitStruct.PLL3.PLL3N = 96;
   PeriphClkInitStruct.PLL3.PLL3P = 10;
@@ -357,7 +352,6 @@ void PeriphCommonClock_Config(void)
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
   PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL3;
-  PeriphClkInitStruct.Sai4BClockSelection = RCC_SAI4BCLKSOURCE_PLL3;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -436,14 +430,15 @@ static void MX_I2S1_Init(void)
   hi2s1.Init.CPOL = I2S_CPOL_LOW;
   hi2s1.Init.FirstBit = I2S_FIRSTBIT_MSB;
   hi2s1.Init.WSInversion = I2S_WS_INVERSION_DISABLE;
-  hi2s1.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_RIGHT;
+  hi2s1.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_LEFT;
   hi2s1.Init.MasterKeepIOState = I2S_MASTER_KEEP_IO_STATE_DISABLE;
   if (HAL_I2S_Init(&hi2s1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN I2S1_Init 2 */
-
+  //swap SDI/SDO pins to match IOC definition and hardware
+  SET_BIT(hi2s1.Instance->CFG2, SPI_CFG2_IOSWP);
   /* USER CODE END I2S1_Init 2 */
 
 }
@@ -472,14 +467,15 @@ static void MX_I2S2_Init(void)
   hi2s2.Init.CPOL = I2S_CPOL_LOW;
   hi2s2.Init.FirstBit = I2S_FIRSTBIT_MSB;
   hi2s2.Init.WSInversion = I2S_WS_INVERSION_DISABLE;
-  hi2s2.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_RIGHT;
+  hi2s2.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_LEFT;
   hi2s2.Init.MasterKeepIOState = I2S_MASTER_KEEP_IO_STATE_DISABLE;
   if (HAL_I2S_Init(&hi2s2) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN I2S2_Init 2 */
-
+  //swap SDI/SDO pins to match IOC definition and hardware
+  SET_BIT(hi2s2.Instance->CFG2, SPI_CFG2_IOSWP);
   /* USER CODE END I2S2_Init 2 */
 
 }
@@ -508,44 +504,16 @@ static void MX_I2S3_Init(void)
   hi2s3.Init.CPOL = I2S_CPOL_LOW;
   hi2s3.Init.FirstBit = I2S_FIRSTBIT_MSB;
   hi2s3.Init.WSInversion = I2S_WS_INVERSION_DISABLE;
-  hi2s3.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_RIGHT;
+  hi2s3.Init.Data24BitAlignment = I2S_DATA_24BIT_ALIGNMENT_LEFT;
   hi2s3.Init.MasterKeepIOState = I2S_MASTER_KEEP_IO_STATE_DISABLE;
   if (HAL_I2S_Init(&hi2s3) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN I2S3_Init 2 */
-
+  //swap SDI/SDO pins to match IOC definition and hardware
+  SET_BIT(hi2s3.Instance->CFG2, SPI_CFG2_IOSWP);
   /* USER CODE END I2S3_Init 2 */
-
-}
-
-/**
-  * @brief IWDG1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_IWDG1_Init(void)
-{
-
-  /* USER CODE BEGIN IWDG1_Init 0 */
-
-  /* USER CODE END IWDG1_Init 0 */
-
-  /* USER CODE BEGIN IWDG1_Init 1 */
-
-  /* USER CODE END IWDG1_Init 1 */
-  hiwdg1.Instance = IWDG1;
-  hiwdg1.Init.Prescaler = IWDG_PRESCALER_4;
-  hiwdg1.Init.Window = 4095;
-  hiwdg1.Init.Reload = 4095;
-  if (HAL_IWDG_Init(&hiwdg1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN IWDG1_Init 2 */
-
-  /* USER CODE END IWDG1_Init 2 */
 
 }
 
@@ -903,19 +871,19 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
   /* DMA1_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
   /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
   /* DMA1_Stream4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
 }

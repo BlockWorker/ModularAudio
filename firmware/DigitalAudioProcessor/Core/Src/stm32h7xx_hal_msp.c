@@ -689,10 +689,21 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 /* SAI4 */
     if(hsai->Instance==SAI4_Block_B)
     {
       /* Peripheral clock enable */
+
+  /** Initializes the peripherals clock
+  */
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4B;
+    PeriphClkInitStruct.Sai4BClockSelection = RCC_SAI4BCLKSOURCE_PIN;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
       if (SAI4_client == 0)
       {
        __HAL_RCC_SAI4_CLK_ENABLE();

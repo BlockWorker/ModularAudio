@@ -18,6 +18,13 @@
 #define INPUT_MAX_CHANNELS 2
 //maximum number of samples per channel in a single input batch
 #define INPUT_MAX_BATCH_CHANNEL_SAMPLES 128
+//number of samples per channel per I2S receive batch
+#define INPUT_I2S_RX_BATCH_CHANNEL_SAMPLES 96
+
+//number of samples per I2S receive batch in total (over both channels)
+#define INPUT_I2S_RX_BATCH_TOTAL_SAMPLES (2 * INPUT_I2S_RX_BATCH_CHANNEL_SAMPLES)
+//size of each I2S receive buffer in samples - 2 batches to match DMA half-transfer callbacks
+#define INPUT_I2S_RX_BUF_SAMPLES (2 * INPUT_I2S_RX_BATCH_TOTAL_SAMPLES)
 
 
 typedef enum {

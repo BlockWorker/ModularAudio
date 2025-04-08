@@ -111,8 +111,14 @@ static volatile uint16_t _src_input_samples_since_last_output;
 
 
 //debug access to internal state
+#ifdef DEBUG
+float* const src_debug_adaptive_decimation_ptr = &(_src_ffir_adap_instances[0].phase_step_fract);
+#endif
 #ifdef SRC_DEBUG_ADAPTIVE
 static inline void _PrintLogData(float d1, float d2, float d3) {
+  static uint32_t sampcounter = 0;
+  if (sampcounter++ < 10) return;
+  sampcounter = 0;
   int32_t d1i = (int32_t)(1000.0f * d1);
   int32_t d2i = (int32_t)(1000.0f * d2);
   int32_t d3i = (int32_t)(1000.0f * d3);
@@ -382,7 +388,7 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProcessInputSamples(const q31_t** in_bufs, uint
       q31_t* scratch = _src_scratch_a[i];
       const q31_t* inp = in_bufs[i];
       for (j = 0; j < in_samples; j++) {
-        scratch[i] = *inp;
+        scratch[j] = *inp;
         inp += in_step;
       }
       true_input_buffers[i] = scratch;

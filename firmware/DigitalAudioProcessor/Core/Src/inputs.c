@@ -29,6 +29,11 @@ static uint16_t             _input_dma_samples        = 0;
 static uint16_t             _input_dma_buf_sample_cap = 0;
 static int8_t               _input_dma_shift          = 0;
 
+//I2S DMA receive buffers
+static q31_t _i2s1_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
+static q31_t _i2s2_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
+static q31_t _i2s3_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
+
 
 //handle completion of MDMA transfer of active input samples
 static void _INPUT_MDMA_CompleteCallback(MDMA_HandleTypeDef* mdma) {
@@ -54,6 +59,90 @@ static void _INPUT_MDMA_CompleteCallback(MDMA_HandleTypeDef* mdma) {
   }
 }
 
+//handle reception of I2S data (buffer half at given offset)
+static void _INPUT_HandleI2SRx(I2S_HandleTypeDef* hi2s, uint32_t buf_offset) {
+  //select correct input and buffer
+  INPUT_Source input;
+  q31_t* buf;
+  if (hi2s == &hi2s1) {
+    input = INPUT_I2S1;
+    buf = _i2s1_rx_buffer;
+  } else if (hi2s == &hi2s2) {
+    input = INPUT_I2S2;
+    buf = _i2s2_rx_buffer;
+  } else if (hi2s == &hi2s3) {
+    input = INPUT_I2S3;
+    buf = _i2s3_rx_buffer;
+  } else {
+    return;
+  }
+
+  //pass received samples to the input processing function - interleaved, 2 channels, one batch of samples, no shift
+  INPUT_ProcessSamples(input, buf + buf_offset, 2, 2, INPUT_I2S_RX_BATCH_CHANNEL_SAMPLES, INPUT_I2S_RX_BATCH_CHANNEL_SAMPLES, 0);
+}
+
+//reset the given I2S input for new reception
+static void _INPUT_ResetI2S(INPUT_Source input) {
+  //select correct I2S instance and buffer
+  I2S_HandleTypeDef* hi2s;
+  q31_t* buf;
+  switch (input) {
+    case INPUT_I2S1:
+      hi2s = &hi2s1;
+      buf = _i2s1_rx_buffer;
+      break;
+    case INPUT_I2S2:
+      hi2s = &hi2s2;
+      buf = _i2s2_rx_buffer;
+      break;
+    case INPUT_I2S3:
+      hi2s = &hi2s3;
+      buf = _i2s3_rx_buffer;
+      break;
+    default:
+      return;
+  }
+
+  HAL_I2S_DMAStop(hi2s);
+  HAL_I2S_Receive_DMA(hi2s, (uint16_t*)buf, INPUT_I2S_RX_BUF_SAMPLES);
+}
+
+
+//I2S receive first buffer half callback
+void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s) {
+  _INPUT_HandleI2SRx(hi2s, 0);
+}
+
+//I2S receive second buffer half callback
+void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s) {
+  _INPUT_HandleI2SRx(hi2s, INPUT_I2S_RX_BATCH_TOTAL_SAMPLES);
+}
+
+//handle I2S reception errors
+void HAL_I2S_ErrorCallback(I2S_HandleTypeDef *hi2s) {
+  //select correct input and buffer
+  INPUT_Source input;
+  q31_t* buf;
+  if (hi2s == &hi2s1) {
+    input = INPUT_I2S1;
+    buf = _i2s1_rx_buffer;
+  } else if (hi2s == &hi2s2) {
+    input = INPUT_I2S2;
+    buf = _i2s2_rx_buffer;
+  } else if (hi2s == &hi2s3) {
+    input = INPUT_I2S3;
+    buf = _i2s3_rx_buffer;
+  } else {
+    return;
+  }
+
+  DEBUG_PRINTF("*** I2S %u Error: %lu", input, HAL_I2S_GetError(hi2s));
+
+  //stop and restart reception
+  HAL_I2S_DMAStop(hi2s);
+  HAL_I2S_Receive_DMA(hi2s, (uint16_t*)buf, INPUT_I2S_RX_BUF_SAMPLES);
+}
+
 
 //initialise inputs - only needs to be called once
 HAL_StatusTypeDef INPUT_Init() {
@@ -69,6 +158,14 @@ HAL_StatusTypeDef INPUT_Init() {
   //abort any potentially ongoing MDMA transfer and register the MDMA transfer complete callback for sample handling
   HAL_MDMA_Abort(&hmdma_mdma_channel40_sw_0);
   ReturnOnError(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel40_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_INPUT_MDMA_CompleteCallback));
+
+  //stop any potentially ongoing I2S reception and start receiving on all I2S interfaces
+  HAL_I2S_DMAStop(&hi2s1);
+  HAL_I2S_DMAStop(&hi2s2);
+  HAL_I2S_DMAStop(&hi2s3);
+  HAL_I2S_Receive_DMA(&hi2s1, (uint16_t*)_i2s1_rx_buffer, INPUT_I2S_RX_BUF_SAMPLES);
+  HAL_I2S_Receive_DMA(&hi2s2, (uint16_t*)_i2s2_rx_buffer, INPUT_I2S_RX_BUF_SAMPLES);
+  HAL_I2S_Receive_DMA(&hi2s3, (uint16_t*)_i2s3_rx_buffer, INPUT_I2S_RX_BUF_SAMPLES);
 
   return HAL_OK;
 }
@@ -125,6 +222,11 @@ void INPUT_Stop(INPUT_Source input) {
     //no available input found: default to none
     input_active = INPUT_NONE;
   }
+
+  //for I2S inputs: reset for new reception, to avoid data misalignment next time
+  if (input == INPUT_I2S1 || input == INPUT_I2S2 || input == INPUT_I2S3) {
+    _INPUT_ResetI2S(input);
+  }
 }
 
 //make the given input active (it must be available)
@@ -140,6 +242,11 @@ HAL_StatusTypeDef INPUT_Activate(INPUT_Source input) {
 
   //update input's sample rate (including setting up the SRC for it)
   INPUT_UpdateSampleRate(input_active);
+
+  //for I2S inputs: reset for new reception, to avoid data misalignment - unnecessary in most cases, but mightt help some edge cases
+  if (input == INPUT_I2S1 || input == INPUT_I2S2 || input == INPUT_I2S3) {
+    _INPUT_ResetI2S(input);
+  }
 
   DEBUG_PRINTF("Input %u has been activated\n", input);
 
