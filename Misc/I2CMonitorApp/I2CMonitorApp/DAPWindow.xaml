@@ -1,0 +1,162 @@
+﻿<Window x:Class="I2CMonitorApp.DAPWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:I2CMonitorApp"
+        mc:Ignorable="d"
+        Title="DAPWindow" Height="480" Width="900">
+    <Grid>
+        <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="400" Height="31" Margin="10,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="connLabel" Content="Disconnected" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <Label x:Name="idLabel" Grid.Column="1" Content="0x00" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <Button x:Name="connButton" Grid.Column="3" Content="Connect" Margin="5" Click="OnConnectButtonClick"/>
+            <ComboBox x:Name="connPortBox" Grid.Column="2" Margin="3"/>
+        </Grid>
+        <Grid Margin="10,10,0,0" Width="423" Height="359" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="2"/>
+            <Label Content="Int Mask" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="4"/>
+            <Label Content="Int Flags" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="6"/>
+            <Label Content="Active Input" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="8"/>
+            <Label Content="Avail. Inputs" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="10"/>
+            <Label Content="I2S1 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="12"/>
+            <Label Content="I2S2 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="13"/>
+            <Label Content="I2S3 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14"/>
+            <local:BitField x:Name="statusField" LabelFontSize="12" Labels="STR&#xA;SCR&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;I2E" Grid.Column="1"/>
+            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="ITE&#xA;SPE&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
+            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
+            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
+            <ComboBox x:Name="inputBox" Grid.Row="8" Grid.Column="1" VerticalContentAlignment="Center">
+                <ComboBoxItem Content="I2S1"/>
+                <ComboBoxItem Content="I2S2"/>
+                <ComboBoxItem Content="I2S3"/>
+                <ComboBoxItem Content="USB"/>
+                <ComboBoxItem Content="SPDIF"/>
+            </ComboBox>
+            <local:BitField x:Name="availableInputField" LabelFontSize="12" Labels="I2S1&#xA;I2S2&#xA;I2S3&#xA;USB&#xA;SPDF&#xA;&#xA;&#xA;" Grid.Row="10" Grid.Column="1"/>
+            <TextBox x:Name="i2s1SampleRateBox" Text="0" Grid.Row="12" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="i2s2SampleRateBox" Text="0" Grid.Row="13" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="i2s3SampleRateBox" Text="0" Grid.Row="14" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Content="Apply" Grid.Row="2" Grid.Column="2" Margin="3" Click="DoControlApply"/>
+            <Button Content="Apply" Grid.Row="4" Grid.Column="2" Margin="3" Click="DoIntMaskApply"/>
+            <Button Content="Clear" Grid.Row="6" Grid.Column="2" Margin="3" Click="DoIntFlagsClear"/>
+            <Button Content="Apply" Grid.Row="8" Grid.Column="2" Margin="3" Click="DoInputApply"/>
+            <Button Content="Apply" Grid.Row="12" Grid.Column="2" Margin="3" Click="DoI2SRateApply" Tag="1"/>
+            <Button Content="Apply" Grid.Row="13" Grid.Column="2" Margin="3" Click="DoI2SRateApply" Tag="2"/>
+            <Button Content="Apply" Grid.Row="14" Grid.Column="2" Margin="3" Click="DoI2SRateApply" Tag="3"/>
+        </Grid>
+        <Grid Margin="0,0,10,10" Width="415" Height="324" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Out Ch 1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" Padding="1"/>
+            <Label Content="Out Ch 2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="2" Padding="1"/>
+            <Label Content="Mixer Ch 1" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="1"/>
+            <Label Content="Mixer Ch 2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="2"/>
+            <Label Content="Volume (dB)" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="4"/>
+            <Label Content="Loudness (dB)" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="6"/>
+            <Label Content="Biquad Count" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="8"/>
+            <Label Content="Biquad Shift" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="9"/>
+            <Label Content="FIR Length" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="11"/>
+            <Label Content="Biquad Coeffs" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="13"/>
+            <Label Content="FIR Coeffs" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14"/>
+            <TextBox x:Name="mixerIn1Out1Box" Text="0.0" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="mixerIn1Out2Box" Text="0.0" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="mixerIn2Out1Box" Text="0.0" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="mixerIn2Out2Box" Text="0.0" Grid.Row="2" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="volume1Box" Text="0.0" Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="volume2Box" Text="0.0" Grid.Row="4" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="loudness1Box" Text="0.0" Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="loudness2Box" Text="0.0" Grid.Row="6" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="biquadCount1Box" Text="0" Grid.Row="8" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="biquadCount2Box" Text="0" Grid.Row="8" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="biquadShift1Box" Text="0" Grid.Row="9" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="biquadShift2Box" Text="0" Grid.Row="9" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="firLength1Box" Text="0" Grid.Row="11" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="firLength2Box" Text="0" Grid.Row="11" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Content="LP" Grid.Row="13" Grid.Column="1" Margin="3,3,70,3" Click="DoBiquadLPSend"/>
+            <Button Content="HP" Grid.Row="13" Grid.Column="1" Margin="70,3,3,3" Click="DoBiquadHPSend"/>
+            <Button Content="LP" Grid.Row="13" Grid.Column="2" Margin="3,3,70,3" Click="DoBiquadLPSend"/>
+            <Button Content="HP" Grid.Row="13" Grid.Column="2" Margin="70,3,3,3" Click="DoBiquadHPSend"/>
+            <Button Content="1" Grid.Row="14" Grid.Column="1" Margin="3,3,70,3" Click="DoFIR1Send"/>
+            <Button Content="2" Grid.Row="14" Grid.Column="1" Margin="70,3,3,3" Click="DoFIR2Send"/>
+            <Button Content="1" Grid.Row="14" Grid.Column="2" Margin="3,3,70,3" Click="DoFIR1Send"/>
+            <Button Content="2" Grid.Row="14" Grid.Column="2" Margin="70,3,3,3" Click="DoFIR2Send"/>
+            <Button Content="Apply" Grid.Row="1" Grid.RowSpan="2" Grid.Column="3" Margin="3 20" Click="DoMixerApply"/>
+            <Button Content="Apply" Grid.Row="4" Grid.Column="3" Margin="3" Click="DoVolumeApply"/>
+            <Button Content="Apply" Grid.Row="6" Grid.Column="3" Margin="3" Click="DoLoudnessApply"/>
+            <Button Content="Apply" Grid.Row="8" Grid.RowSpan="2" Grid.Column="3" Margin="3 20" Click="DoBiquadApply"/>
+            <Button Content="Apply" Grid.Row="11" Grid.Column="3" Margin="3" Click="DoFIRApply"/>
+            <Button Content="Read" Grid.Row="13" Grid.Column="3" Margin="3" Click="DoBiquadRead"/>
+            <Button Content="Read" Grid.Row="14" Grid.Column="3" Margin="3" Click="DoFIRRead"/>
+        </Grid>
+        <Grid Margin="0,14,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="71" Width="383">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="22"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Adaptive sample rate converter" Grid.ColumnSpan="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Input Rate" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Rate Error" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <Label Content="Buffer Error (Sa.)" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="1"/>
+            <TextBox x:Name="srcInputRateBox" Text="0" Grid.Row="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="srcRateErrorBox" Text="0.000 %" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="srcBufferErrorBox" Text="0.0" Grid.Row="2" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+        </Grid>
+    </Grid>
+</Window>

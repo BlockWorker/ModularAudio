@@ -64,10 +64,14 @@ void SP_Reset();
 //setup the biquad filter parameters: number of filters and post-shift for each channel
 //post-shift n effectively scales the biquad coefficients for that channel by 2^n (for all cascaded filters in that channel!)
 //should always be followed by a reset for correct filter behaviour
-HAL_StatusTypeDef SP_SetupBiquads(uint8_t* filter_counts, uint8_t* post_shifts);
+HAL_StatusTypeDef SP_SetupBiquads(const uint8_t* filter_counts, const uint8_t* post_shifts);
 //setup the FIR filter lengths for each channel
 //should always be followed by a reset for correct filter behaviour
-HAL_StatusTypeDef SP_SetupFIRs(uint16_t* filter_lengths);
+HAL_StatusTypeDef SP_SetupFIRs(const uint16_t* filter_lengths);
+//get current biquad setup
+void SP_GetBiquadSetup(uint8_t* filter_counts, uint8_t* post_shifts);
+//get current FIR setup
+void SP_GetFIRSetup(uint16_t* filter_lengths);
 
 //produce `out_channels` output channels with `SP_BATCH_CHANNEL_SAMPLES` samples per channel
 //output buffer(s) must have enough space for a full batch of samples!

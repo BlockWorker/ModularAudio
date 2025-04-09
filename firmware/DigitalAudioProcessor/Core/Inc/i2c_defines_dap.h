@@ -1,7 +1,7 @@
 /*
  * i2c_defines_dap.h
  *
- *  Created on: Mar 21, 2025
+ *  Created on: Apr 9, 2025
  *      Author: Alex
  *
  *  Digital Audio Processor I2C register definitions
@@ -24,7 +24,7 @@
  *    - 0x31: SRC_RATE_ERROR: Average relative input sample rate error (4B, float, r)
  *    - 0x32: SRC_BUFFER_ERROR: Average buffer fill level error in samples (4B, float, r)
  *  * Signal processor registers - filter setups and coefficients are only writable when signal processor is disabled
- *    - 0x40: MIXER_GAINS: Mixer gain matrix: out0in0, out0in1, out1in0, out1in1, each half of true gain (16B, 4 * 4B fixed point Q31, rw)
+ *    - 0x40: MIXER_GAINS: Mixer gain matrix: out1in1, out1in2, out2in1, out2in2, each half of true gain (16B, 4 * 4B fixed point Q31, rw)
  *    - 0x41: VOLUME_GAINS: Volume gains per output channel in dB, in range [-120, 0] (8B, 2 * 4B float, rw)
  *    - 0x42: LOUDNESS_GAINS: Loudness compensation gain per output channel in dB - active in range [-30, 0], lower to disable (8B, 2 * 4B float, rw)
  *    - 0x43: BIQUAD_SETUP: Number of active biquad filters per channel and their post-shift values (4B, 2 * 1B unsigned count + 2 * 1B unsigned shift, rw)

@@ -27,6 +27,7 @@
 #include "signal_processing.h"
 #include "sai_out.h"
 #include "inputs.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -222,6 +223,14 @@ int main(void)
     Error_Handler();
   }
 
+  if (I2C_Init() == HAL_OK) {
+    DEBUG_PRINTF("I2C initialised\n");
+  } else {
+    DEBUG_PRINTF("*** I2C init failed!\n");
+    HAL_Delay(100);
+    Error_Handler();
+  }
+
   _RefreshWatchdogs();
 
 #ifdef DEBUG
@@ -254,11 +263,12 @@ int main(void)
     //SRC debug printouts
     if (loop_count % 200 == 0) {
       extern float* const src_debug_adaptive_decimation_ptr;
-      DEBUG_PRINTF("Adaptive decm factor: %.4f\n", *src_debug_adaptive_decimation_ptr);
+      DEBUG_PRINTF("Adaptive decm factor: %.4f  rate err: %.5f  buffer err: %.1f\n", *src_debug_adaptive_decimation_ptr, SRC_GetAverageRateError(), SRC_GetAverageBufferFillError());
     }
 #endif
 
     INPUT_LoopUpdate();
+    I2C_LoopUpdate();
 
     loop_count++;
     _RefreshWatchdogs();

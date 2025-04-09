@@ -39,8 +39,8 @@ static uint8_t reg_addr = 0;
 //size of selected virtual register (for reads/writes)
 static uint16_t reg_size = 0;
 //virtual data buffers (read and write)
-static uint8_t read_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
-static uint8_t write_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
+static uint8_t __attribute__((aligned(4))) read_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
+static uint8_t __attribute__((aligned(4))) write_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
 
 //whether a comm error has been detected since the last status read
 static uint8_t i2c_err_detected = 0;
@@ -74,9 +74,19 @@ void _I2C_UpdateInterruptPin() {
  * called at the end of a write transaction, processes the received data to update amp state
  */
 void _I2C_ProcessWriteData() {
+  int i;
   uint8_t temp8;
+  uint32_t temp32;
+  float tempF;
 
   //DEBUG_PRINTF("I2C write trigger: address 0x%02X; size %u; value 0x%08lX (%f)\n", reg_addr, reg_size, *(uint32_t*)write_buf, *(float*)write_buf);
+
+  //disallow filter setup or coefficient writes when signal processor is enabled
+  if (reg_addr >= I2CDEF_DAP_BIQUAD_SETUP && reg_addr <= I2CDEF_DAP_FIR_COEFFS_CH2 && sp_enabled) {
+    DEBUG_PRINTF("I2C write error: attempted write to signal processor filter setup or coefficients while SP is enabled\n");
+    i2c_err_detected = 1;
+    return;
+  }
 
   switch (reg_addr) {
     case I2CDEF_DAP_CONTROL:
@@ -91,6 +101,14 @@ void _I2C_ProcessWriteData() {
         }
       }
 
+      //signal processor enabled state
+      bool sp_enabled_new = (write_buf[0] & I2CDEF_DAP_CONTROL_SP_EN_Msk) != 0;
+      if (!sp_enabled && sp_enabled_new) {
+        //was disabled, enabling now: reset internal state
+        SP_Reset();
+      }
+      sp_enabled = sp_enabled_new;
+
       interrupts_enabled = (write_buf[0] & I2CDEF_DAP_CONTROL_INT_EN_Msk) != 0 ? 1 : 0; //interrupt state
       _I2C_UpdateInterruptPin();
       break;
@@ -102,8 +120,90 @@ void _I2C_ProcessWriteData() {
       interrupt_flags &= write_buf[0]; //clear bits received as 0
       _I2C_UpdateInterruptPin();
       break;
+    case I2CDEF_DAP_INPUT_ACTIVE:
+      //attempt to activate given input, does its own internal checks for input validity
+      if (INPUT_Activate((INPUT_Source)write_buf[0]) != HAL_OK) {
+        //failed (due to invalid given input): report error
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_DAP_I2S1_SAMPLE_RATE:
+    case I2CDEF_DAP_I2S2_SAMPLE_RATE:
+    case I2CDEF_DAP_I2S3_SAMPLE_RATE:
+      //get sample rate value and check for validity
+      temp32 = *(uint32_t*)write_buf;
+      if (temp32 == SR_44K || temp32 == SR_48K || temp32 == SR_96K) {
+        //sample rate good: get index of I2S interface
+        temp8 = reg_addr - I2CDEF_DAP_I2S1_SAMPLE_RATE;
+        //store sample rate and update it
+        input_i2s_sample_rates[temp8] = (SRC_SampleRate)temp32;
+        INPUT_UpdateSampleRate((INPUT_Source)(INPUT_I2S1 + temp8));
+      } else {
+        //bad sample rate: report error
+        DEBUG_PRINTF("I2C write error: attempted to write bad sample rate %lu\n", temp32);
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_DAP_MIXER_GAINS:
+      //copy directly to SP mixer gain array
+      memcpy(sp_mixer_gains, write_buf, sizeof(sp_mixer_gains));
+      break;
+    case I2CDEF_DAP_VOLUME_GAINS:
+      for (i = 0; i < SP_MAX_CHANNELS; i++) {
+        //get float value
+        tempF = ((float*)write_buf)[i];
+        if (!isnanf(tempF) && tempF >= SP_MIN_VOL_GAIN && tempF <= SP_MAX_VOL_GAIN) {
+          //valid gain: write
+          sp_volume_gains_dB[i] = tempF;
+        } else {
+          //invalid gain: report error
+          i2c_err_detected = 1;
+        }
+      }
+      break;
+    case I2CDEF_DAP_LOUDNESS_GAINS:
+      for (i = 0; i < SP_MAX_CHANNELS; i++) {
+        //get float value
+        tempF = ((float*)write_buf)[i];
+        if (!isnanf(tempF) && tempF <= SP_MAX_LOUDNESS_GAIN) {
+          //valid gain: write
+          sp_loudness_gains_dB[i] = tempF;
+        } else {
+          //invalid gain: report error
+          i2c_err_detected = 1;
+        }
+      }
+      break;
+    case I2CDEF_DAP_BIQUAD_SETUP:
+      //attempt to perform biquad setup, does its own internal checks for validity
+      if (SP_SetupBiquads(write_buf, write_buf + SP_MAX_CHANNELS) != HAL_OK) {
+        //failed (due to invalid parameters): report error
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_DAP_FIR_SETUP:
+      //attempt to perform FIR setup, does its own internal checks for validity
+      if (SP_SetupFIRs((uint16_t*)write_buf) != HAL_OK) {
+        //failed (due to invalid parameters): report error
+        i2c_err_detected = 1;
+      }
+      break;
+    case I2CDEF_DAP_BIQUAD_COEFFS_CH1:
+    case I2CDEF_DAP_BIQUAD_COEFFS_CH2:
+      //get channel
+      temp8 = reg_addr - I2CDEF_DAP_BIQUAD_COEFFS_CH1;
+      //copy to corresponding buffer
+      memcpy(sp_biquad_coeffs[temp8], write_buf, SP_MAX_BIQUADS * 5 * sizeof(q31_t)); //TODO: actual written size?
+      break;
+    case I2CDEF_DAP_FIR_COEFFS_CH1:
+    case I2CDEF_DAP_FIR_COEFFS_CH2:
+      //get channel
+      temp8 = reg_addr - I2CDEF_DAP_FIR_COEFFS_CH1;
+      //copy to corresponding buffer
+      memcpy(sp_fir_coeffs[temp8], write_buf, SP_MAX_FIR_LENGTH * sizeof(q31_t)); //TODO: actual written size?
+      break;
     default:
-      DEBUG_PRINTF("I2C write error: attempted write to non-writable register\n");
+      DEBUG_PRINTF("I2C write error: attempted write to non-writable register 0x%02X\n", reg_addr);
       i2c_err_detected = 1; //attempting to write to read-only register - report error
       break;
   }
@@ -113,17 +213,24 @@ void _I2C_ProcessWriteData() {
  * called at the start of a read transaction, prepares the data to be sent
  */
 void _I2C_PrepareReadData() {
+  bool tempB;
+  uint8_t temp8;
+
   memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE);
 
   switch (reg_addr) {
     case I2CDEF_DAP_STATUS:
+      tempB = SRC_IsReady();
       read_buf[0] =
+          (tempB && sp_enabled ? I2CDEF_DAP_STATUS_STREAMING_Msk : 0) |
+          (tempB ? I2CDEF_DAP_STATUS_SRC_READY_Msk : 0) |
           (i2c_err_detected != 0 ? I2CDEF_DAP_STATUS_I2CERR_Msk : 0);
       i2c_err_detected = 0; //reset comm error detection after read
       break;
     case I2CDEF_DAP_CONTROL:
       read_buf[0] =
-          (interrupts_enabled != 0 ? I2CDEF_DAP_CONTROL_INT_EN_Msk : 0);
+          (interrupts_enabled != 0 ? I2CDEF_DAP_CONTROL_INT_EN_Msk : 0) |
+          (sp_enabled ? I2CDEF_DAP_CONTROL_SP_EN_Msk : 0);
       break;
     case I2CDEF_DAP_INT_MASK:
       read_buf[0] = interrupt_mask;
@@ -138,7 +245,68 @@ void _I2C_PrepareReadData() {
         read_buf[0] = interrupt_flags;
       }
       break;
-
+    case I2CDEF_DAP_INPUT_ACTIVE:
+      read_buf[0] = (uint8_t)input_active;
+      break;
+    case I2CDEF_DAP_INPUTS_AVAILABLE:
+      read_buf[0] =
+          (inputs_available[INPUT_I2S1] ? I2CDEF_DAP_INPUTS_AVAILABLE_I2S1_Msk : 0) |
+          (inputs_available[INPUT_I2S2] ? I2CDEF_DAP_INPUTS_AVAILABLE_I2S2_Msk : 0) |
+          (inputs_available[INPUT_I2S3] ? I2CDEF_DAP_INPUTS_AVAILABLE_I2S3_Msk : 0) |
+          (inputs_available[INPUT_USB] ? I2CDEF_DAP_INPUTS_AVAILABLE_USB_Msk : 0) |
+          (inputs_available[INPUT_SPDIF] ? I2CDEF_DAP_INPUTS_AVAILABLE_SPDIF_Msk : 0);
+      break;
+    case I2CDEF_DAP_I2S1_SAMPLE_RATE:
+    case I2CDEF_DAP_I2S2_SAMPLE_RATE:
+    case I2CDEF_DAP_I2S3_SAMPLE_RATE:
+      //get index of I2S interface
+      temp8 = reg_addr - I2CDEF_DAP_I2S1_SAMPLE_RATE;
+      //get sample rate
+      ((uint32_t*)read_buf)[0] = (uint32_t)input_i2s_sample_rates[temp8];
+      break;
+    case I2CDEF_DAP_SRC_INPUT_RATE:
+      ((uint32_t*)read_buf)[0] = (uint32_t)SRC_GetCurrentInputRate();
+      break;
+    case I2CDEF_DAP_SRC_RATE_ERROR:
+      ((float*)read_buf)[0] = SRC_GetAverageRateError();
+      break;
+    case I2CDEF_DAP_SRC_BUFFER_ERROR:
+      ((float*)read_buf)[0] = SRC_GetAverageBufferFillError();
+      break;
+    case I2CDEF_DAP_MIXER_GAINS:
+      //copy directly from SP mixer gain array
+      memcpy(read_buf, sp_mixer_gains, sizeof(sp_mixer_gains));
+      break;
+    case I2CDEF_DAP_VOLUME_GAINS:
+      //copy directly from SP volume gain array
+      memcpy(read_buf, sp_volume_gains_dB, sizeof(sp_volume_gains_dB));
+      break;
+      break;
+    case I2CDEF_DAP_LOUDNESS_GAINS:
+      //copy directly from SP loudness gain array
+      memcpy(read_buf, sp_loudness_gains_dB, sizeof(sp_loudness_gains_dB));
+      break;
+      break;
+    case I2CDEF_DAP_BIQUAD_SETUP:
+      SP_GetBiquadSetup(read_buf, read_buf + SP_MAX_CHANNELS);
+      break;
+    case I2CDEF_DAP_FIR_SETUP:
+      SP_GetFIRSetup((uint16_t*)read_buf);
+      break;
+    case I2CDEF_DAP_BIQUAD_COEFFS_CH1:
+    case I2CDEF_DAP_BIQUAD_COEFFS_CH2:
+      //get channel
+      temp8 = reg_addr - I2CDEF_DAP_BIQUAD_COEFFS_CH1;
+      //copy from corresponding buffer
+      memcpy(read_buf, sp_biquad_coeffs[temp8], SP_MAX_BIQUADS * 5 * sizeof(q31_t));
+      break;
+    case I2CDEF_DAP_FIR_COEFFS_CH1:
+    case I2CDEF_DAP_FIR_COEFFS_CH2:
+      //get channel
+      temp8 = reg_addr - I2CDEF_DAP_FIR_COEFFS_CH1;
+      //copy from corresponding buffer
+      memcpy(read_buf, sp_fir_coeffs[temp8], SP_MAX_FIR_LENGTH * sizeof(q31_t));
+      break;
     case I2CDEF_DAP_MODULE_ID:
       read_buf[0] = I2CDEF_DAP_MODULE_ID_VALUE;
       break;
@@ -157,7 +325,7 @@ static __always_inline void _I2C_HardwareReset() {
   HAL_I2C_DeInit(&I2C_INSTANCE);
   I2C_FORCE_RESET();
   int i;
-  for (i = 0; i < 50; i++) __NOP();
+  for (i = 0; i < 10; i++) __NOP();
   I2C_RELEASE_RESET();
   HAL_I2C_Init(&I2C_INSTANCE);
   //enable I2C timeouts

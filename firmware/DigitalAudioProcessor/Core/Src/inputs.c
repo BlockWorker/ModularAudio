@@ -10,6 +10,7 @@
 #include "inputs.h"
 #include "signal_processing.h"
 #include "usbd_audio.h"
+#include "i2c.h"
 
 
 //currently active input source
@@ -213,6 +214,8 @@ void INPUT_Stop(INPUT_Source input) {
   inputs_available[input] = false;
   _inputs_silent[input] = false;
 
+  I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_INPUT_AVAILABLE_Msk);
+
   DEBUG_PRINTF("Input %u has been stopped\n", input);
 
   //handle input switching if the input was active
@@ -228,6 +231,7 @@ void INPUT_Stop(INPUT_Source input) {
     }
     //no available input found: default to none
     input_active = INPUT_NONE;
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_ACTIVE_INPUT_Msk);
   }
 
   //for I2S inputs: reset for new reception, to avoid data misalignment next time
@@ -254,6 +258,8 @@ HAL_StatusTypeDef INPUT_Activate(INPUT_Source input) {
   if (input == INPUT_I2S1 || input == INPUT_I2S2 || input == INPUT_I2S3) {
     _INPUT_ResetI2S(input);
   }
+
+  I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_ACTIVE_INPUT_Msk);
 
   DEBUG_PRINTF("Input %u has been activated\n", input);
 
@@ -308,6 +314,8 @@ HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input) {
     ReturnOnError(SRC_Configure(rate));
     //reset signal processor due to the SRC data stream reset
     SP_Reset();
+
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_INPUT_RATE_Msk);
   }
 
   return HAL_OK;
@@ -328,6 +336,7 @@ HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t* in_buf, 
   if (!inputs_available[input]) {
     inputs_available[input] = true;
     DEBUG_PRINTF("Input %u has become available\n", input);
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_INPUT_AVAILABLE_Msk);
   }
   _inputs_silent[input] = false;
 

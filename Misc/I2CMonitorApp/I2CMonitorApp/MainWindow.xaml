@@ -7,8 +7,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Grid Margin="40,40,0,0" HorizontalAlignment="Left" Width="143" Height="226" VerticalAlignment="Top">
+        <Grid Margin="40,40,0,0" HorizontalAlignment="Left" Width="143" Height="271" VerticalAlignment="Top">
             <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="10"/>
                 <RowDefinition/>
                 <RowDefinition Height="10"/>
                 <RowDefinition/>
@@ -24,6 +26,7 @@
             <Button Content="Battery" Grid.Row="4" Margin="3" Click="OpenBatteryWindow"/>
             <Button Content="Bluetooth" Grid.Row="6" Margin="3" Click="OpenBluetoothWindow"/>
             <Button Content="DAC" Grid.Row="8" Margin="3" Click="OpenDACWindow"/>
+            <Button Content="DAP" Grid.Row="10" Margin="3" Click="OpenDAPWindow"/>
         </Grid>
 
     </Grid>

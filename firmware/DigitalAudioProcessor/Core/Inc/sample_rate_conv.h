@@ -59,6 +59,9 @@ typedef enum {
 //initialise the SRC's internal filter variables - only needs to be called once
 HAL_StatusTypeDef SRC_Init();
 
+//get whether the SRC is ready to produce output
+bool SRC_IsReady();
+
 //reset the SRC's internal state and prepare for the conversion of a new input signal at the given sample rate
 HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate);
 //get the currently configured input sample rate

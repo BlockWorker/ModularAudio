@@ -10,6 +10,7 @@
 #include "sample_rate_conv.h"
 #include "fractional_fir.h"
 #include "inputs.h"
+#include "i2c.h"
 
 
 #undef SRC_DEBUG_ADAPTIVE
@@ -202,6 +203,7 @@ static void __RAM_FUNC _SRC_FinishBufferWrite(uint16_t active_channels, uint32_t
     _src_last_buffer_fill_error_avg = 0.0f;
 
     _src_output_ready = true;
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_SRC_READY_Msk);
   }
 }
 
@@ -268,6 +270,11 @@ HAL_StatusTypeDef SRC_Init() {
   return HAL_OK;
 }
 
+//get whether the SRC is ready to produce output
+bool SRC_IsReady() {
+  return _src_output_ready;
+}
+
 //reset the SRC's internal state and prepare for the conversion of a new input signal at the given sample rate
 HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
   int i;
@@ -282,7 +289,10 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
   __disable_irq();
 
   //disable output until buffer is refilled
-  _src_output_ready = false;
+  if (_src_output_ready) {
+    _src_output_ready = false;
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_SRC_READY_Msk);
+  }
 
   //switch to new input rate
   _src_input_rate = input_rate;
@@ -506,6 +516,8 @@ HAL_StatusTypeDef __RAM_FUNC SRC_ProduceOutputBatch(q31_t** out_bufs, uint16_t o
     if (input_active > INPUT_NONE && input_active < _INPUT_COUNT) {
       INPUT_Stop(input_active);
     }
+
+    I2C_TriggerInterrupt(I2CDEF_DAP_INT_FLAGS_INT_SRC_READY_Msk);
 
     return HAL_BUSY;
   }

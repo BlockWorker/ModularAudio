@@ -150,7 +150,7 @@ void SP_Reset() {
 //setup the biquad filter parameters: number of filters and post-shift for each channel
 //post-shift n effectively scales the biquad coefficients for that channel by 2^n (for all cascaded filters in that channel!)
 //should always be followed by a reset for correct filter behaviour
-HAL_StatusTypeDef SP_SetupBiquads(uint8_t* filter_counts, uint8_t* post_shifts) {
+HAL_StatusTypeDef SP_SetupBiquads(const uint8_t* filter_counts, const uint8_t* post_shifts) {
   int i;
 
   //check parameters for validity
@@ -177,7 +177,7 @@ HAL_StatusTypeDef SP_SetupBiquads(uint8_t* filter_counts, uint8_t* post_shifts) 
 
 //setup the FIR filter lengths for each channel
 //should always be followed by a reset for correct filter behaviour
-HAL_StatusTypeDef SP_SetupFIRs(uint16_t* filter_lengths) {
+HAL_StatusTypeDef SP_SetupFIRs(const uint16_t* filter_lengths) {
   int i;
 
   //check parameters for validity
@@ -201,6 +201,25 @@ HAL_StatusTypeDef SP_SetupFIRs(uint16_t* filter_lengths) {
   return HAL_OK;
 }
 
+//get current biquad setup
+void SP_GetBiquadSetup(uint8_t* filter_counts, uint8_t* post_shifts) {
+  int i;
+  for (i = 0; i < SP_MAX_CHANNELS; i++) {
+    arm_biquad_casd_df1_inst_q31* inst = _sp_biquad_instances + i;
+    filter_counts[i] = inst->numStages;
+    post_shifts[i] = inst->postShift;
+  }
+}
+
+//get current FIR setup
+void SP_GetFIRSetup(uint16_t* filter_lengths) {
+  int i;
+  for (i = 0; i < SP_MAX_CHANNELS; i++) {
+    arm_fir_instance_q31* inst = _sp_fir_instances + i;
+    filter_lengths[i] = inst->numTaps;
+  }
+}
+
 //produce `out_channels` output channels with `SP_BATCH_CHANNEL_SAMPLES` samples per channel
 //output buffer(s) must have enough space for a full batch of samples!
 //channels may be in separate buffers or interleaved, starting at `out_bufs[channel]`, each with step size `out_step`
@@ -220,6 +239,11 @@ HAL_StatusTypeDef __RAM_FUNC SP_ProduceOutputBatch(q31_t** out_bufs, uint16_t ou
     src_output_bufs[i] = _sp_scratch_a[i];
   }
   ReturnOnError(SRC_ProduceOutputBatch(src_output_bufs, 1, SRC_MAX_CHANNELS));
+
+  //stop at this point if the SP is disabled - samples are still consumed but not processed
+  if (!sp_enabled) {
+    return HAL_BUSY;
+  }
 
   //perform mixer calculations to map SRC channels to SP channels
   arm_mat_mult_fast_q31(&_sp_mixer_gain_matrix, &_sp_scratch_a_mixer_matrix, &_sp_scratch_b_mixer_matrix);
