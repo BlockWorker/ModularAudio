@@ -59,7 +59,7 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
 extern DMA_HandleTypeDef hdma_spi1_rx;
 extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi3_rx;
-extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
+extern MDMA_HandleTypeDef hmdma_mdma_channel0_sw_0;
 extern DMA_HandleTypeDef hdma_sai4_b;
 extern DMA_HandleTypeDef hdma_spdif_rx_cs;
 extern DMA_HandleTypeDef hdma_spdif_rx_dt;
@@ -312,7 +312,7 @@ void MDMA_IRQHandler(void)
   /* USER CODE BEGIN MDMA_IRQn 0 */
 
   /* USER CODE END MDMA_IRQn 0 */
-  HAL_MDMA_IRQHandler(&hmdma_mdma_channel40_sw_0);
+  HAL_MDMA_IRQHandler(&hmdma_mdma_channel0_sw_0);
   /* USER CODE BEGIN MDMA_IRQn 1 */
 
   /* USER CODE END MDMA_IRQn 1 */

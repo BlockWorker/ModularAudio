@@ -39,7 +39,7 @@ static q31_t _i2s3_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
 static void _INPUT_MDMA_CompleteCallback(MDMA_HandleTypeDef* mdma) {
   int i;
 
-  if (mdma == &hmdma_mdma_channel40_sw_0) {
+  if (mdma == &hmdma_mdma_channel0_sw_0) {
     //derive buffer pointers depending on the given step size
     const q31_t* buf_pointers[INPUT_MAX_CHANNELS];
     if (_input_dma_step == 1) {
@@ -156,8 +156,8 @@ HAL_StatusTypeDef INPUT_Init() {
   }
 
   //abort any potentially ongoing MDMA transfer and register the MDMA transfer complete callback for sample handling
-  HAL_MDMA_Abort(&hmdma_mdma_channel40_sw_0);
-  ReturnOnError(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel40_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_INPUT_MDMA_CompleteCallback));
+  HAL_MDMA_Abort(&hmdma_mdma_channel0_sw_0);
+  ReturnOnError(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel0_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_INPUT_MDMA_CompleteCallback));
 
   //stop any potentially ongoing I2S reception and start receiving on all I2S interfaces
   HAL_I2S_DMAStop(&hi2s1);
@@ -339,7 +339,7 @@ HAL_StatusTypeDef INPUT_ProcessSamples(INPUT_Source input, const q31_t* in_buf, 
 
     //calculate size of transfer in bytes and start MDMA transfer
     uint32_t transfer_bytes = (uint32_t)in_buf_sample_cap * (uint32_t)(MAX(in_step, in_channels)) * sizeof(q31_t);
-    HAL_MDMA_Start_IT(&hmdma_mdma_channel40_sw_0, (uint32_t)in_buf, (uint32_t)_input_dma_sample_buf, transfer_bytes, 1);
+    HAL_MDMA_Start_IT(&hmdma_mdma_channel0_sw_0, (uint32_t)in_buf, (uint32_t)_input_dma_sample_buf, transfer_bytes, 1);
   }
 
   return HAL_OK;

@@ -68,7 +68,7 @@ extern UART_HandleTypeDef huart4;
 
 extern WWDG_HandleTypeDef hwwdg1;
 
-extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
+extern MDMA_HandleTypeDef hmdma_mdma_channel0_sw_0;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
