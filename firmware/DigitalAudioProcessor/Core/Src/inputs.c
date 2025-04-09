@@ -8,7 +8,6 @@
  */
 
 #include "inputs.h"
-#include "sample_rate_conv.h"
 #include "signal_processing.h"
 #include "usbd_audio.h"
 
@@ -33,6 +32,9 @@ static int8_t               _input_dma_shift          = 0;
 static q31_t _i2s1_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
 static q31_t _i2s2_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
 static q31_t _i2s3_rx_buffer[INPUT_I2S_RX_BUF_SAMPLES];
+
+//I2S input sample rates
+SRC_SampleRate input_i2s_sample_rates[3];
 
 
 //handle completion of MDMA transfer of active input samples
@@ -155,6 +157,11 @@ HAL_StatusTypeDef INPUT_Init() {
     _inputs_silent[i] = false;
   }
 
+  //initialise I2S sample rates with defaults specified in hardware config
+  input_i2s_sample_rates[0] = hi2s1.Init.AudioFreq;
+  input_i2s_sample_rates[1] = hi2s2.Init.AudioFreq;
+  input_i2s_sample_rates[2] = hi2s3.Init.AudioFreq;
+
   //abort any potentially ongoing MDMA transfer and register the MDMA transfer complete callback for sample handling
   HAL_MDMA_Abort(&hmdma_mdma_channel0_sw_0);
   ReturnOnError(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel0_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &_INPUT_MDMA_CompleteCallback));
@@ -267,13 +274,13 @@ HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input) {
   SRC_SampleRate rate;
   switch (input) {
     case INPUT_I2S1:
-      rate = hi2s1.Init.AudioFreq;
+      rate = input_i2s_sample_rates[0];
       break;
     case INPUT_I2S2:
-      rate = hi2s2.Init.AudioFreq;
+      rate = input_i2s_sample_rates[1];
       break;
     case INPUT_I2S3:
-      rate = hi2s3.Init.AudioFreq;
+      rate = input_i2s_sample_rates[2];
       break;
     case INPUT_USB:
       haudio = (USBD_AUDIO_HandleTypeDef*)hUsbDeviceHS.pClassDataCmsit[hUsbDeviceHS.classId];

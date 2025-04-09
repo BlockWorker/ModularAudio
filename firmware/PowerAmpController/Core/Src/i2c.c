@@ -57,7 +57,7 @@ static uint8_t interrupt_flags = 0;
 
 
 void _I2C_UpdateInterruptPin() {
-  if (interrupts_enabled && (interrupt_flags & interrupt_mask) != 0) {
+  if (init_interrupt_active || (interrupts_enabled && (interrupt_flags & interrupt_mask) != 0)) {
     HAL_GPIO_WritePin(I2C3_INT_N_GPIO_Port, I2C3_INT_N_Pin, GPIO_PIN_RESET);
   } else {
     HAL_GPIO_WritePin(I2C3_INT_N_GPIO_Port, I2C3_INT_N_Pin, GPIO_PIN_SET);
@@ -242,10 +242,13 @@ void _I2C_PrepareReadData() {
         read_buf[0] = interrupt_mask;
         break;
       case I2CDEF_POWERAMP_INT_FLAGS:
-        read_buf[0] = interrupt_flags;
-        if (init_interrupt_active) { //clear init interrupt
+        if (init_interrupt_active) {
+          //init interrupt: report no flags (to signal init), then clear init interrupt
+          read_buf[0] = 0;
           init_interrupt_active = 0;
           _I2C_UpdateInterruptPin();
+        } else {
+          read_buf[0] = interrupt_flags;
         }
         break;
       case I2CDEF_POWERAMP_PVDD_TARGET:

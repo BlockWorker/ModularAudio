@@ -10,27 +10,27 @@
 
 
 #include "main.h"
-#include "i2c_defines_hifidac.h"
+#include "i2c_defines_dap.h"
 
 
 //size of virtual read/write buffers, in bytes - equals maximum virtual register size
-#define I2C_VIRT_BUFFER_SIZE 4
+#define I2C_VIRT_BUFFER_SIZE I2CDEF_DAP_REG_SIZE_SP_FIR
 
 //timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)
-//initial values calculated for 12 MHz I2CCLK: stretch timeout 8ms in release, 16ms in debug, low timeout 16ms in release, 65ms in debug
+//initial values calculated for 8 MHz I2CCLK: stretch timeout 8ms in release, 16ms in debug, low timeout 16ms in release, 64ms in debug
 #ifdef DEBUG
-#define I2C_SCL_STRETCH_TIMEOUT (95 << I2C_TIMEOUTR_TIMEOUTB_Pos)
-#define I2C_SCL_LOW_TIMEOUT (383 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#define I2C_SCL_STRETCH_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (255 << I2C_TIMEOUTR_TIMEOUTA_Pos)
 #else
-#define I2C_SCL_STRETCH_TIMEOUT (47 << I2C_TIMEOUTR_TIMEOUTB_Pos)
-#define I2C_SCL_LOW_TIMEOUT (95 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#define I2C_SCL_STRETCH_TIMEOUT (31 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTA_Pos)
 #endif
 
 //timeout for non-idle state, in main loop cycles
 #ifdef DEBUG
-#define I2C_NONIDLE_TIMEOUT 10
+#define I2C_NONIDLE_TIMEOUT 20
 #else
-#define I2C_NONIDLE_TIMEOUT 3
+#define I2C_NONIDLE_TIMEOUT 20
 #endif
 
 //I2C instance to use

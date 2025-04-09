@@ -37,6 +37,9 @@
 #define SP_OUTPUT_SHIFT 0
 
 
+//whether the signal processor is enabled (ready to provide output data)
+extern bool sp_enabled;
+
 //mixer gain matrix - rows = output channels (for further processing), columns = input/SRC channels, effective gains are matrix values * 2 (to allow for bigger range)
 extern q31_t sp_mixer_gains[SP_MAX_CHANNELS][SRC_MAX_CHANNELS];
 

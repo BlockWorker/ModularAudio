@@ -109,7 +109,6 @@ static float _src_last_buffer_fill_error_avg;
 //counter of input samples since the last output batch
 static volatile uint16_t _src_input_samples_since_last_output;
 
-
 //debug access to internal state
 #ifdef DEBUG
 float* const src_debug_adaptive_decimation_ptr = &(_src_ffir_adap_instances[0].phase_step_fract);
@@ -326,6 +325,20 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
 //get the currently configured input sample rate
 SRC_SampleRate SRC_GetCurrentInputRate() {
   return _src_input_rate;
+}
+
+//get the average relative input rate error
+float SRC_GetAverageRateError() {
+  //average error, in samples per batch
+  float sample_error = (float)_src_input_rate_error_sum / (float)_src_input_rate_error_length;
+  //convert to relative error and return
+  return sample_error / (float)SRC_BATCH_CHANNEL_SAMPLES;
+}
+
+//get the average buffer fill error in samples
+float SRC_GetAverageBufferFillError() {
+  //calculate and return error in samples directly
+  return (float)_src_buffer_fill_error_sum / (float)SRC_ADAPTIVE_BUF_ERROR_AVG_BATCHES;
 }
 
 //process `in_channels` input channels with `in_samples` samples per channel; where inputs were previously shifted to `in_shift` (negative = shifted right)

@@ -12,6 +12,7 @@
 
 #include "main.h"
 #include "arm_math.h"
+#include "sample_rate_conv.h"
 
 
 //maximum number of input channels
@@ -43,6 +44,9 @@ extern INPUT_Source input_active;
 
 //available/connected input sources
 extern bool inputs_available[_INPUT_COUNT];
+
+//I2S input sample rates
+extern SRC_SampleRate input_i2s_sample_rates[3];
 
 
 //initialise inputs - only needs to be called once

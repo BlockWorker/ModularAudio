@@ -64,6 +64,11 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate);
 //get the currently configured input sample rate
 SRC_SampleRate SRC_GetCurrentInputRate();
 
+//get the average relative input rate error
+float SRC_GetAverageRateError();
+//get the average buffer fill error in samples
+float SRC_GetAverageBufferFillError();
+
 //process `in_channels` input channels with `in_samples` samples per channel; where inputs were previously shifted to `in_shift` (negative = shifted right)
 //must be at the currently configured input sample rate; to switch sample rate, a re-init is required
 //channels may be in separate buffers or interleaved, starting at `in_bufs[channel]`, each with step size `in_step`

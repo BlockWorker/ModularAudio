@@ -31,6 +31,9 @@ static const q31_t __ITCM_DATA _sp_loudness_coeffs[5 * SP_LOUDNESS_BIQUAD_STAGES
 };
 
 
+//whether the signal processor is enabled (ready to provide output data)
+bool sp_enabled = false;
+
 //mixer gain matrix - rows = output channels (for further processing), columns = input/SRC channels, effective gains are matrix values * 2 (to allow for bigger range)
         q31_t                   __DTCM_BSS  sp_mixer_gains          [SP_MAX_CHANNELS][SRC_MAX_CHANNELS];
 static  arm_matrix_instance_q31 __DTCM_DATA _sp_mixer_gain_matrix = { SP_MAX_CHANNELS, SRC_MAX_CHANNELS, sp_mixer_gains[0] };
@@ -81,6 +84,9 @@ static inline void _SP_ApplyGain(q31_t* in_buf, q31_t* out_buf, float gain_linea
 HAL_StatusTypeDef SP_Init() {
   int i, j;
 
+  //disable signal processor for now
+  sp_enabled = false;
+
   //initialise mixer gains to keep SRC channels as they are (identity matrix, taking 2x factor into account)
   memset(sp_mixer_gains, 0, sizeof(sp_mixer_gains));
   for (i = 0; i < SRC_MAX_CHANNELS; i++) {
@@ -127,6 +133,9 @@ HAL_StatusTypeDef SP_Init() {
   }
 
   SP_Reset();
+
+  //enable signal processor at the end of init
+  sp_enabled = true;
 
   return HAL_OK;
 }
