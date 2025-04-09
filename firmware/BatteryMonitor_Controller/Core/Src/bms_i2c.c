@@ -67,9 +67,11 @@ HAL_StatusTypeDef BMS_I2C_DirectCommandRead(BMS_I2C_DirectCommand command, uint8
     if (res != HAL_OK) continue;
 
     if (bms_i2c_crc_active) {
-      //insert initial CRC data before first byte
+      //insert initial CRC data before first byte, ignore "overflow" warning due to uint32_t pointer (as that gets cast back to uint8_t anyway)
+#pragma GCC diagnostic ignored "-Wstringop-overflow="
       uint8_t initial_crc_buf[] = { BMS_I2C_ADDR, command, BMS_I2C_ADDR | 1 };
       HAL_CRC_Calculate(&hcrc, (uint32_t*)initial_crc_buf, sizeof(initial_crc_buf));
+#pragma GCC diagnostic pop
 
       //handle data bytes one by one
       int i;
@@ -105,9 +107,11 @@ HAL_StatusTypeDef BMS_I2C_DirectCommandWrite(BMS_I2C_DirectCommand command, cons
   if (length < 1 || length > (BMS_I2C_BUFSIZE / 2)) return HAL_ERROR;
 
   if (bms_i2c_crc_active) {
-    //insert initial CRC data before first byte
+    //insert initial CRC data before first byte, ignore "overflow" warning due to uint32_t pointer (as that gets cast back to uint8_t anyway)
+#pragma GCC diagnostic ignored "-Wstringop-overflow="
     uint8_t initial_crc_buf[] = { BMS_I2C_ADDR, command };
     HAL_CRC_Calculate(&hcrc, (uint32_t*)initial_crc_buf, sizeof(initial_crc_buf));
+#pragma GCC diagnostic pop
 
     //handle data bytes one by one
     int i;

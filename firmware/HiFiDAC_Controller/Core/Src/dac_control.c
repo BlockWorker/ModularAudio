@@ -10,12 +10,16 @@
 #include "i2c.h"
 
 
+#undef DAC_DEBUG_PRINT_REGISTERS
+//#define DAC_DEBUG_PRINT_REGISTERS
+
+
 static uint16_t _dac_interrupts_triggered = 0;
 
 DAC_Status dac_status;
 
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(DAC_DEBUG_PRINT_REGISTERS)
 static void PrintReg8(DAC_SPI_Register reg) {
   uint8_t i8 = 0;
   HAL_StatusTypeDef res = DAC_SPI_Read8(reg, &i8);
@@ -506,8 +510,8 @@ HAL_StatusTypeDef DAC_Init() {
 
   _dac_interrupts_triggered = 0;
 
-#ifdef DEBUG
-  //PrintAllRegisters();
+#if defined(DEBUG) && defined(DAC_DEBUG_PRINT_REGISTERS)
+  PrintAllRegisters();
 #endif
 
   return HAL_OK;
