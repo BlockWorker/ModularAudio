@@ -32,7 +32,7 @@ static const q31_t __ITCM_DATA _sp_loudness_coeffs[5 * SP_LOUDNESS_BIQUAD_STAGES
 
 
 //whether the signal processor is enabled (ready to provide output data)
-bool sp_enabled = false;
+        bool sp_enabled = false;
 
 //mixer gain matrix - rows = output channels (for further processing), columns = input/SRC channels, effective gains are matrix values * 2 (to allow for bigger range)
         q31_t                   __DTCM_BSS  sp_mixer_gains          [SP_MAX_CHANNELS][SRC_MAX_CHANNELS];
@@ -49,7 +49,9 @@ static  q31_t                 __DTCM_BSS  _sp_fir_states    [SP_MAX_CHANNELS][SP
 static  arm_fir_instance_q31  __DTCM_BSS  _sp_fir_instances [SP_MAX_CHANNELS];
 
 //volume gains in dB - range between `SP_MIN_VOL_GAIN` and `SP_MAX_VOL_GAIN`
-        float __DTCM_BSS sp_volume_gains_dB[SP_MAX_CHANNELS];
+        float __DTCM_BSS  sp_volume_gains_dB[SP_MAX_CHANNELS];
+//whether positive dB volume gains are allowed
+        bool              sp_volume_allow_positive_dB = false;
 
 //loudness compensation gains in dB - max `SP_MAX_LOUDNESS_GAIN`, less than `SP_MIN_LOUDNESS_ENABLED_GAIN` means loudness compensation is disabled
         float                         __DTCM_BSS  sp_loudness_gains_dB    [SP_MAX_CHANNELS];
@@ -86,6 +88,8 @@ HAL_StatusTypeDef SP_Init() {
 
   //disable signal processor for now
   sp_enabled = false;
+  //disallow positive volume gains by default
+  sp_volume_allow_positive_dB = false;
 
   //initialise mixer gains to keep SRC channels as they are (identity matrix, taking 2x factor into account)
   memset(sp_mixer_gains, 0, sizeof(sp_mixer_gains));
@@ -293,6 +297,8 @@ HAL_StatusTypeDef __RAM_FUNC SP_ProduceOutputBatch(q31_t** out_bufs, uint16_t ou
       *gain_p = 0.0f;
     } else if (*gain_p < SP_MIN_VOL_GAIN) {
       *gain_p = SP_MIN_VOL_GAIN;
+    } else if (*gain_p > 0.0f && !sp_volume_allow_positive_dB) {
+      *gain_p = 0.0f;
     } else if (*gain_p > SP_MAX_VOL_GAIN) {
       *gain_p = SP_MAX_VOL_GAIN;
     }
@@ -315,8 +321,8 @@ HAL_StatusTypeDef __RAM_FUNC SP_ProduceOutputBatch(q31_t** out_bufs, uint16_t ou
       }
       float loudness_gain_dB = *loudness_gain_p;
 
-      //check if we need to do loudness compensation or not
-      if (loudness_gain_dB < SP_MIN_LOUDNESS_ENABLED_GAIN) {
+      //check if we need to do loudness compensation or not (also disabled for above-unity volume gain)
+      if (vol_gain_dB > 0.0f || loudness_gain_dB < SP_MIN_LOUDNESS_ENABLED_GAIN) {
         //no loudness compensation: just apply volume gain, taking into account the SRC output shift and desired SP output shift
         _SP_ApplyGain(scratch_in[i], scratch_out[i], vol_gain_linear, SP_OUTPUT_SHIFT - SRC_OUTPUT_SHIFT);
       } else {

@@ -261,10 +261,10 @@ int main(void)
     idle_cycles = 0;*/
 
     //SRC debug printouts
-    if (loop_count % 200 == 0) {
+    /*if (loop_count % 200 == 0) {
       extern float* const src_debug_adaptive_decimation_ptr;
       DEBUG_PRINTF("Adaptive decm factor: %.4f  rate err: %.5f  buffer err: %.1f\n", *src_debug_adaptive_decimation_ptr, SRC_GetAverageRateError(), SRC_GetAverageBufferFillError());
-    }
+    }*/
 #endif
 
     INPUT_LoopUpdate();

@@ -360,8 +360,8 @@ namespace I2CMonitorApp {
             if (!i2c_connected || App.i2cd.connected == 0) return;
 
             if (!float.TryParse(volume1Box.Text, out var vol1) || !float.TryParse(volume2Box.Text, out var vol2) ||
-                vol1 < -120.0f || vol1 > 0.0f || vol2 < -120.0f || vol2 > 0.0f) {
-                MessageBox.Show("Invalid volumes - must be in range [-120, 0]");
+                vol1 < -120.0f || vol1 > 20.0f || vol2 < -120.0f || vol2 > 20.0f) {
+                MessageBox.Show("Invalid volumes - must be in range [-120, 20]");
                 return;
             }
 
@@ -446,54 +446,147 @@ namespace I2CMonitorApp {
         }
 
         private void DoBiquadLPSend(object sender, RoutedEventArgs e) {
+            if (!i2c_connected || App.i2cd.connected == 0) return;
 
+            byte addr;
+            switch ((string)((Button)sender).Tag) {
+                case "1":
+                    addr = 0x50;
+                    break;
+                case "2":
+                    addr = 0x51;
+                    break;
+                default:
+                    return;
+            }
+
+            float[] coeffs = [0.0003750695191391371f, 0.0007501390382782742f, 0.0003750695191391371f, 1.9444771540706607f, -0.9459774321472173f];
+            byte[] buf = new byte[320];
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 5; j++) {
+                    Array.Copy(BitConverter.GetBytes(FloatToQ31(coeffs[j] / 2.0f)), 0, buf, (5 * i + j) * 4, 4);
+                }
+            }
+
+            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, addr, buf)) {
+                DisconnectReset();
+                return;
+            }
         }
 
         private void DoBiquadHPSend(object sender, RoutedEventArgs e) {
+            if (!i2c_connected || App.i2cd.connected == 0) return;
 
+            byte addr;
+            switch ((string)((Button)sender).Tag) {
+                case "1":
+                    addr = 0x50;
+                    break;
+                case "2":
+                    addr = 0x51;
+                    break;
+                default:
+                    return;
+            }
+
+            float[] coeffs = [0.9726136465544695f, -1.945227293108939f, 0.9726136465544695f, 1.9444771540706607f, -0.9459774321472173f];
+            byte[] buf = new byte[320];
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 5; j++) {
+                    Array.Copy(BitConverter.GetBytes(FloatToQ31(coeffs[j] / 2.0f)), 0, buf, (5 * i + j) * 4, 4);
+                }
+            }
+
+            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, addr, buf)) {
+                DisconnectReset();
+                return;
+            }
         }
 
         private void DoFIR1Send(object sender, RoutedEventArgs e) {
+            if (!i2c_connected || App.i2cd.connected == 0) return;
 
+            byte addr;
+            switch ((string)((Button)sender).Tag) {
+                case "1":
+                    addr = 0x58;
+                    break;
+                case "2":
+                    addr = 0x59;
+                    break;
+                default:
+                    return;
+            }
+
+            byte[] buf = new byte[1200];
+            Array.Fill<byte>(buf, 0);
+            buf[0] = 1;
+            Array.Copy(BitConverter.GetBytes(int.MaxValue), 0, buf, 1196, 4);
+
+            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, addr, buf)) {
+                DisconnectReset();
+                return;
+            }
         }
 
         private void DoFIR2Send(object sender, RoutedEventArgs e) {
+            if (!i2c_connected || App.i2cd.connected == 0) return;
 
+            byte addr;
+            switch ((string)((Button)sender).Tag) {
+                case "1":
+                    addr = 0x58;
+                    break;
+                case "2":
+                    addr = 0x59;
+                    break;
+                default:
+                    return;
+            }
+
+            byte[] buf = new byte[10];
+            Array.Fill<byte>(buf, 0);
+            buf[0] = 1;
+
+            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, addr, buf)) {
+                DisconnectReset();
+                return;
+            }
         }
 
         private void DoBiquadRead(object sender, RoutedEventArgs e) {
             if (!i2c_connected || App.i2cd.connected == 0) return;
 
-            var buf = new byte[320];
+            var buf = new byte[240];
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x58, 320, ref buf)) {
-                var b00 = BitConverter.ToSingle(buf, 0);
-                var b01 = BitConverter.ToSingle(buf, 4);
-                var b02 = BitConverter.ToSingle(buf, 8);
-                var a01 = BitConverter.ToSingle(buf, 12);
-                var a02 = BitConverter.ToSingle(buf, 16);
-                var bF0 = BitConverter.ToSingle(buf, 300);
-                var bF1 = BitConverter.ToSingle(buf, 304);
-                var bF2 = BitConverter.ToSingle(buf, 308);
-                var aF1 = BitConverter.ToSingle(buf, 312);
-                var aF2 = BitConverter.ToSingle(buf, 316);
-                MessageBox.Show($"Ch1 Biquad: {b00} {b01} {b02} {a01} {a02} ... {bF0} {bF1} {bF2} {aF1} {aF2}");
+            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x50, 240, ref buf)) {
+                var b00 = Q31ToFloat(BitConverter.ToInt32(buf, 0));
+                var b01 = Q31ToFloat(BitConverter.ToInt32(buf, 4));
+                var b02 = Q31ToFloat(BitConverter.ToInt32(buf, 8));
+                var a01 = Q31ToFloat(BitConverter.ToInt32(buf, 12));
+                var a02 = Q31ToFloat(BitConverter.ToInt32(buf, 16));
+                var bB0 = Q31ToFloat(BitConverter.ToInt32(buf, 220));
+                var bB1 = Q31ToFloat(BitConverter.ToInt32(buf, 224));
+                var bB2 = Q31ToFloat(BitConverter.ToInt32(buf, 228));
+                var aB1 = Q31ToFloat(BitConverter.ToInt32(buf, 232));
+                var aB2 = Q31ToFloat(BitConverter.ToInt32(buf, 236));
+                MessageBox.Show($"Ch1 Biquad: {b00} {b01} {b02} {a01} {a02} ... {bB0} {bB1} {bB2} {aB1} {aB2}");
             } else {
                 MessageBox.Show("Ch1 Biquad read failed!");
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x59, 320, ref buf)) {
-                var b00 = BitConverter.ToSingle(buf, 0);
-                var b01 = BitConverter.ToSingle(buf, 4);
-                var b02 = BitConverter.ToSingle(buf, 8);
-                var a01 = BitConverter.ToSingle(buf, 12);
-                var a02 = BitConverter.ToSingle(buf, 16);
-                var bF0 = BitConverter.ToSingle(buf, 300);
-                var bF1 = BitConverter.ToSingle(buf, 304);
-                var bF2 = BitConverter.ToSingle(buf, 308);
-                var aF1 = BitConverter.ToSingle(buf, 312);
-                var aF2 = BitConverter.ToSingle(buf, 316);
-                MessageBox.Show($"Ch2 Biquad: {b00} {b01} {b02} {a01} {a02} ... {bF0} {bF1} {bF2} {aF1} {aF2}");
+            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x51, 240, ref buf)) {
+                var b00 = Q31ToFloat(BitConverter.ToInt32(buf, 0));
+                var b01 = Q31ToFloat(BitConverter.ToInt32(buf, 4));
+                var b02 = Q31ToFloat(BitConverter.ToInt32(buf, 8));
+                var a01 = Q31ToFloat(BitConverter.ToInt32(buf, 12));
+                var a02 = Q31ToFloat(BitConverter.ToInt32(buf, 16));
+                var bB0 = Q31ToFloat(BitConverter.ToInt32(buf, 220));
+                var bB1 = Q31ToFloat(BitConverter.ToInt32(buf, 224));
+                var bB2 = Q31ToFloat(BitConverter.ToInt32(buf, 228));
+                var aB1 = Q31ToFloat(BitConverter.ToInt32(buf, 232));
+                var aB2 = Q31ToFloat(BitConverter.ToInt32(buf, 236));
+                MessageBox.Show($"Ch2 Biquad: {b00} {b01} {b02} {a01} {a02} ... {bB0} {bB1} {bB2} {aB1} {aB2}");
             } else {
                 MessageBox.Show("Ch2 Biquad read failed!");
             }
@@ -502,24 +595,24 @@ namespace I2CMonitorApp {
         private void DoFIRRead(object sender, RoutedEventArgs e) {
             if (!i2c_connected || App.i2cd.connected == 0) return;
 
-            var buf = new byte[1200];
+            var buf = new byte[252];
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x50, 1200, ref buf)) {
-                var c299 = BitConverter.ToSingle(buf, 0);
-                var c298 = BitConverter.ToSingle(buf, 4);
-                var c1 = BitConverter.ToSingle(buf, 1192);
-                var c0 = BitConverter.ToSingle(buf, 1196);
-                MessageBox.Show($"Ch1 FIR: {c0} {c1} ... {c298} {c299}");
+            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x58, 252, ref buf)) {
+                var c299 = Q31ToFloat(BitConverter.ToInt32(buf, 0));
+                var c298 = Q31ToFloat(BitConverter.ToInt32(buf, 4));
+                var c238 = Q31ToFloat(BitConverter.ToInt32(buf, 244));
+                var c237 = Q31ToFloat(BitConverter.ToInt32(buf, 248));
+                MessageBox.Show($"Ch1 FIR: ... {c237} {c238} ... {c298} {c299}");
             } else {
                 MessageBox.Show("Ch1 FIR read failed!");
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x51, 1200, ref buf)) {
-                var c299 = BitConverter.ToSingle(buf, 0);
-                var c298 = BitConverter.ToSingle(buf, 4);
-                var c1 = BitConverter.ToSingle(buf, 1192);
-                var c0 = BitConverter.ToSingle(buf, 1196);
-                MessageBox.Show($"Ch2 FIR: {c0} {c1} ... {c298} {c299}");
+            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x59, 252, ref buf)) {
+                var c299 = Q31ToFloat(BitConverter.ToInt32(buf, 0));
+                var c298 = Q31ToFloat(BitConverter.ToInt32(buf, 4));
+                var c238 = Q31ToFloat(BitConverter.ToInt32(buf, 244));
+                var c237 = Q31ToFloat(BitConverter.ToInt32(buf, 248));
+                MessageBox.Show($"Ch2 FIR: ... {c237} {c238} ... {c298} {c299}");
             } else {
                 MessageBox.Show("Ch2 FIR read failed!");
             }

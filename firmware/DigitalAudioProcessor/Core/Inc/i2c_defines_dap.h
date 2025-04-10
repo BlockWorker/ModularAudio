@@ -25,7 +25,7 @@
  *    - 0x32: SRC_BUFFER_ERROR: Average buffer fill level error in samples (4B, float, r)
  *  * Signal processor registers - filter setups and coefficients are only writable when signal processor is disabled
  *    - 0x40: MIXER_GAINS: Mixer gain matrix: out1in1, out1in2, out2in1, out2in2, each half of true gain (16B, 4 * 4B fixed point Q31, rw)
- *    - 0x41: VOLUME_GAINS: Volume gains per output channel in dB, in range [-120, 0] (8B, 2 * 4B float, rw)
+ *    - 0x41: VOLUME_GAINS: Volume gains per output channel in dB, in range [-120, 20] if positive gains are allowed, otherwise [-120, 0] (8B, 2 * 4B float, rw)
  *    - 0x42: LOUDNESS_GAINS: Loudness compensation gain per output channel in dB - active in range [-30, 0], lower to disable (8B, 2 * 4B float, rw)
  *    - 0x43: BIQUAD_SETUP: Number of active biquad filters per channel and their post-shift values (4B, 2 * 1B unsigned count + 2 * 1B unsigned shift, rw)
  *    - 0x44: FIR_SETUP: Active length of FIR filter per channel (4B, 2 * 2B unsigned length, rw)
@@ -41,6 +41,7 @@
  *    - 0: STREAMING: Audio data is being streamed to the output
  *  * CONTROL (0x08, bit field, 1B):
  *    - 4-7: RESET: controller reset (write 0xA to trigger software reset)
+ *    - 2: ALLOW_POS_GAIN: Allow positive dB volume gains (above-unity gain, may cause clipping)
  *    - 1: SP_EN: Enable signal processor
  *    - 0: INT_EN: Enable I2C interrupts
  *  * INT_MASK (0x10, bit field, 1B):
@@ -110,6 +111,8 @@
 #define I2CDEF_DAP_CONTROL_INT_EN_Msk (0x1 << I2CDEF_DAP_CONTROL_INT_EN_Pos)
 #define I2CDEF_DAP_CONTROL_SP_EN_Pos 1
 #define I2CDEF_DAP_CONTROL_SP_EN_Msk (0x1 << I2CDEF_DAP_CONTROL_SP_EN_Pos)
+#define I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Pos 2
+#define I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Msk (0x1 << I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Pos)
 #define I2CDEF_DAP_CONTROL_RESET_Pos 4
 #define I2CDEF_DAP_CONTROL_RESET_Msk (0xF << I2CDEF_DAP_CONTROL_RESET_Pos)
 #define I2CDEF_DAP_CONTROL_RESET_VALUE 0xA

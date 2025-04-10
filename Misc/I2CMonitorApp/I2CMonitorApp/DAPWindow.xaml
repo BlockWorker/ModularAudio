@@ -52,7 +52,7 @@
             <Label Content="I2S2 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="13"/>
             <Label Content="I2S3 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14"/>
             <local:BitField x:Name="statusField" LabelFontSize="12" Labels="STR&#xA;SCR&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;I2E" Grid.Column="1"/>
-            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="ITE&#xA;SPE&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
+            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="ITE&#xA;SPE&#xA;APG&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
             <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
             <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
             <ComboBox x:Name="inputBox" Grid.Row="8" Grid.Column="1" VerticalContentAlignment="Center">
@@ -123,14 +123,14 @@
             <TextBox x:Name="biquadShift2Box" Text="0" Grid.Row="9" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
             <TextBox x:Name="firLength1Box" Text="0" Grid.Row="11" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
             <TextBox x:Name="firLength2Box" Text="0" Grid.Row="11" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Content="LP" Grid.Row="13" Grid.Column="1" Margin="3,3,70,3" Click="DoBiquadLPSend"/>
-            <Button Content="HP" Grid.Row="13" Grid.Column="1" Margin="70,3,3,3" Click="DoBiquadHPSend"/>
-            <Button Content="LP" Grid.Row="13" Grid.Column="2" Margin="3,3,70,3" Click="DoBiquadLPSend"/>
-            <Button Content="HP" Grid.Row="13" Grid.Column="2" Margin="70,3,3,3" Click="DoBiquadHPSend"/>
-            <Button Content="1" Grid.Row="14" Grid.Column="1" Margin="3,3,70,3" Click="DoFIR1Send"/>
-            <Button Content="2" Grid.Row="14" Grid.Column="1" Margin="70,3,3,3" Click="DoFIR2Send"/>
-            <Button Content="1" Grid.Row="14" Grid.Column="2" Margin="3,3,70,3" Click="DoFIR1Send"/>
-            <Button Content="2" Grid.Row="14" Grid.Column="2" Margin="70,3,3,3" Click="DoFIR2Send"/>
+            <Button Content="LP" Grid.Row="13" Grid.Column="1" Margin="3,3,70,3" Click="DoBiquadLPSend" Tag="1"/>
+            <Button Content="HP" Grid.Row="13" Grid.Column="1" Margin="70,3,3,3" Click="DoBiquadHPSend" Tag="1"/>
+            <Button Content="LP" Grid.Row="13" Grid.Column="2" Margin="3,3,70,3" Click="DoBiquadLPSend" Tag="2"/>
+            <Button Content="HP" Grid.Row="13" Grid.Column="2" Margin="70,3,3,3" Click="DoBiquadHPSend" Tag="2"/>
+            <Button Content="1" Grid.Row="14" Grid.Column="1" Margin="3,3,70,3" Click="DoFIR1Send" Tag="1"/>
+            <Button Content="2" Grid.Row="14" Grid.Column="1" Margin="70,3,3,3" Click="DoFIR2Send" Tag="1"/>
+            <Button Content="1" Grid.Row="14" Grid.Column="2" Margin="3,3,70,3" Click="DoFIR1Send" Tag="2"/>
+            <Button Content="2" Grid.Row="14" Grid.Column="2" Margin="70,3,3,3" Click="DoFIR2Send" Tag="2"/>
             <Button Content="Apply" Grid.Row="1" Grid.RowSpan="2" Grid.Column="3" Margin="3 20" Click="DoMixerApply"/>
             <Button Content="Apply" Grid.Row="4" Grid.Column="3" Margin="3" Click="DoVolumeApply"/>
             <Button Content="Apply" Grid.Row="6" Grid.Column="3" Margin="3" Click="DoLoudnessApply"/>

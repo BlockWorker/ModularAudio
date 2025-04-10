@@ -109,6 +109,9 @@ void _I2C_ProcessWriteData() {
       }
       sp_enabled = sp_enabled_new;
 
+      //allow/disallow positive gains
+      sp_volume_allow_positive_dB = (write_buf[0] & I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Msk) != 0;
+
       interrupts_enabled = (write_buf[0] & I2CDEF_DAP_CONTROL_INT_EN_Msk) != 0 ? 1 : 0; //interrupt state
       _I2C_UpdateInterruptPin();
       break;
@@ -152,7 +155,7 @@ void _I2C_ProcessWriteData() {
       for (i = 0; i < SP_MAX_CHANNELS; i++) {
         //get float value
         tempF = ((float*)write_buf)[i];
-        if (!isnanf(tempF) && tempF >= SP_MIN_VOL_GAIN && tempF <= SP_MAX_VOL_GAIN) {
+        if (!isnanf(tempF) && tempF >= SP_MIN_VOL_GAIN && (tempF <= 0.0f || (sp_volume_allow_positive_dB && tempF <= SP_MAX_VOL_GAIN))) {
           //valid gain: write
           sp_volume_gains_dB[i] = tempF;
         } else {
@@ -230,7 +233,8 @@ void _I2C_PrepareReadData() {
     case I2CDEF_DAP_CONTROL:
       read_buf[0] =
           (interrupts_enabled != 0 ? I2CDEF_DAP_CONTROL_INT_EN_Msk : 0) |
-          (sp_enabled ? I2CDEF_DAP_CONTROL_SP_EN_Msk : 0);
+          (sp_enabled ? I2CDEF_DAP_CONTROL_SP_EN_Msk : 0) |
+          (sp_volume_allow_positive_dB ? I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Msk : 0);
       break;
     case I2CDEF_DAP_INT_MASK:
       read_buf[0] = interrupt_mask;

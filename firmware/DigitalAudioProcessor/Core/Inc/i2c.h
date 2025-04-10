@@ -17,9 +17,9 @@
 #define I2C_VIRT_BUFFER_SIZE I2CDEF_DAP_REG_SIZE_SP_FIR
 
 //timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)
-//initial values calculated for 8 MHz I2CCLK: stretch timeout 8ms in release, 16ms in debug, low timeout 16ms in release, 64ms in debug
+//initial values calculated for 8 MHz I2CCLK: stretch timeout 8ms in release, 32ms in debug, low timeout 16ms in release, 64ms in debug
 #ifdef DEBUG
-#define I2C_SCL_STRETCH_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_STRETCH_TIMEOUT (127 << I2C_TIMEOUTR_TIMEOUTB_Pos)
 #define I2C_SCL_LOW_TIMEOUT (255 << I2C_TIMEOUTR_TIMEOUTA_Pos)
 #else
 #define I2C_SCL_STRETCH_TIMEOUT (31 << I2C_TIMEOUTR_TIMEOUTB_Pos)
@@ -28,7 +28,7 @@
 
 //timeout for non-idle state, in main loop cycles
 #ifdef DEBUG
-#define I2C_NONIDLE_TIMEOUT 20
+#define I2C_NONIDLE_TIMEOUT 40
 #else
 #define I2C_NONIDLE_TIMEOUT 20
 #endif

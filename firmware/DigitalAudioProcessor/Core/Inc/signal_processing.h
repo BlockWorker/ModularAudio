@@ -27,7 +27,7 @@
 //minimum volume gain in dB
 #define SP_MIN_VOL_GAIN -120.0f
 //maximum volume gain in dB
-#define SP_MAX_VOL_GAIN 0.0f
+#define SP_MAX_VOL_GAIN 20.0f
 //minimum loudness compensation gain in dB (anything less than this means loudness compensation is disabled)
 #define SP_MIN_LOUDNESS_ENABLED_GAIN -30.0f
 //maximum loudness compensation gain in dB
@@ -51,6 +51,8 @@ extern q31_t sp_fir_coeffs[SP_MAX_CHANNELS][SP_MAX_FIR_LENGTH];
 
 //volume gains in dB - range between `SP_MIN_VOL_GAIN` and `SP_MAX_VOL_GAIN`
 extern float sp_volume_gains_dB[SP_MAX_CHANNELS];
+//whether positive dB volume gains are allowed
+extern bool sp_volume_allow_positive_dB;
 
 //loudness compensation gains in dB - max `SP_MAX_LOUDNESS_GAIN`, less than `SP_MIN_LOUDNESS_ENABLED_GAIN` means loudness compensation is disabled
 extern float sp_loudness_gains_dB[SP_MAX_CHANNELS];
