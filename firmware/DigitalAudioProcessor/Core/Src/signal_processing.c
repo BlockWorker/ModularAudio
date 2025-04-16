@@ -11,9 +11,10 @@
 #include "sample_rate_conv.h"
 
 
-#define SP_LOUDNESS_BIQUAD_STAGES 3
+#define SP_LOUDNESS_BIQUAD_STAGES 4
 #define SP_LOUDNESS_BIQUAD_COEFF_POST_SHIFT 1
 #define SP_LOUDNESS_BIQUAD_POST_GAIN 2317.7073f
+#define SP_LOUDNESS_GAIN_OFFSET_DB 3.0f
 
 
 #if SP_MAX_CHANNELS < SRC_MAX_CHANNELS
@@ -333,8 +334,8 @@ HAL_StatusTypeDef __RAM_FUNC SP_ProduceOutputBatch(q31_t** out_bufs, uint16_t ou
         //perform biquad filtering
         arm_biquad_cascade_df1_fast_q31(_sp_loudness_instances + i, scratch_in[i], scratch_out[i], SP_BATCH_CHANNEL_SAMPLES);
 
-        //calculate true loudness compensation gain: given gain + volume gain / 2 (in dB), converted to linear
-        float loudness_gain_linear = powf(10.0f, (loudness_gain_dB + vol_gain_dB / 2.0f) / 20.0f);
+        //calculate true loudness compensation gain: given gain + gain offset + volume gain / 2 (in dB), converted to linear
+        float loudness_gain_linear = powf(10.0f, (loudness_gain_dB + SP_LOUDNESS_GAIN_OFFSET_DB + vol_gain_dB / 2.0f) / 20.0f);
         //clamp loudness compensation gain, to ensure total gain (both paths combined) is at most 1
         float max_loudness_gain_linear = 1.0f - vol_gain_linear;
         if (loudness_gain_linear > max_loudness_gain_linear) {

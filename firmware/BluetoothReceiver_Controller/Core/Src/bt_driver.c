@@ -923,14 +923,12 @@ static bool _BT_Parse_OPEN_ERROR() {
   uint8_t reason;
   int scan_res = sscanf(_parse_buffer, BT_NOTIF_OPEN_ERROR, &bt_addr, _parse_str_0, &reason);
   if (scan_res == 3) {
-    //TODO: process error with reason
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
       _BT_Command_Finish((BT_Error)(0xFFF0U | reason));
     }
     //DEBUG_PRINTF("OPEN_ERROR with reason notification parsed\n");
     return true;
   } else if (scan_res == 2) {
-    //TODO: process error without reason
     if (_current_command == CMD_OPEN || _current_command == CMD_OPEN_LONG) {
       _BT_Command_Finish(BTERR_UNKNOWN);
     }

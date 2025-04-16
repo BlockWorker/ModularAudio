@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:I2CMonitorApp"
         mc:Ignorable="d"
-        Title="DAPWindow" Height="480" Width="900">
+        Title="DAP Controls" Height="480" Width="900">
     <Grid>
         <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="400" Height="31" Margin="10,0,0,10">
             <Grid.ColumnDefinitions>

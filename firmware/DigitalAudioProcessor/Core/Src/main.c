@@ -667,7 +667,7 @@ static void MX_SPDIFRX1_Init(void)
   hspdif1.Instance = SPDIFRX;
   hspdif1.Init.InputSelection = SPDIFRX_INPUT_IN2;
   hspdif1.Init.Retries = SPDIFRX_MAXRETRIES_3;
-  hspdif1.Init.WaitForActivity = SPDIFRX_WAITFORACTIVITY_OFF;
+  hspdif1.Init.WaitForActivity = SPDIFRX_WAITFORACTIVITY_ON;
   hspdif1.Init.ChannelSelection = SPDIFRX_CHANNEL_A;
   hspdif1.Init.DataFormat = SPDIFRX_DATAFORMAT_MSB;
   hspdif1.Init.StereoMode = SPDIFRX_STEREOMODE_ENABLE;

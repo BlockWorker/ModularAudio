@@ -407,7 +407,7 @@ void HAL_SPDIFRX_MspInit(SPDIFRX_HandleTypeDef* hspdifrx)
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPDIFRX;
     PeriphClkInitStruct.PLL2.PLL2M = 4;
-    PeriphClkInitStruct.PLL2.PLL2N = 20;
+    PeriphClkInitStruct.PLL2.PLL2N = 30;
     PeriphClkInitStruct.PLL2.PLL2P = 2;
     PeriphClkInitStruct.PLL2.PLL2Q = 2;
     PeriphClkInitStruct.PLL2.PLL2R = 2;
