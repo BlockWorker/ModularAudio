@@ -300,6 +300,7 @@ NVIC.NonMaskableInt_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.OTG_HS_IRQn=true\:0\:0\:true\:false\:true\:false\:true\:true
 NVIC.PendSV_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.PriorityGroup=NVIC_PRIORITYGROUP_4
+NVIC.SPDIF_RX_IRQn=true\:5\:0\:true\:false\:true\:true\:true\:true
 NVIC.SVCall_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.SysTick_IRQn=true\:0\:0\:true\:false\:true\:false\:true\:false
 NVIC.UART4_IRQn=true\:14\:0\:true\:false\:true\:true\:true\:true

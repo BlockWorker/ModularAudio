@@ -64,6 +64,7 @@ void I2C1_EV_IRQHandler(void);
 void I2C1_ER_IRQHandler(void);
 void UART4_IRQHandler(void);
 void OTG_HS_IRQHandler(void);
+void SPDIF_RX_IRQHandler(void);
 void MDMA_IRQHandler(void);
 void BDMA_Channel0_IRQHandler(void);
 /* USER CODE BEGIN EFP */

@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "i2c.h"
+#include "spdif.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,6 +66,7 @@ extern MDMA_HandleTypeDef hmdma_mdma_channel0_sw_0;
 extern DMA_HandleTypeDef hdma_sai4_b;
 extern DMA_HandleTypeDef hdma_spdif_rx_cs;
 extern DMA_HandleTypeDef hdma_spdif_rx_dt;
+extern SPDIFRX_HandleTypeDef hspdif1;
 extern UART_HandleTypeDef huart4;
 /* USER CODE BEGIN EV */
 
@@ -335,6 +337,29 @@ void OTG_HS_IRQHandler(void)
   /* USER CODE BEGIN OTG_HS_IRQn 1 */
 
   /* USER CODE END OTG_HS_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPDIF-RX global interrupt.
+  */
+void SPDIF_RX_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPDIF_RX_IRQn 0 */
+  if (READ_BIT(hspdif1.Instance->SR, SPDIFRX_SR_SYNCD)) {
+    __HAL_SPDIFRX_CLEAR_IT(&hspdif1, SPDIFRX_SR_SYNCD);
+    SPDIF_HandleSyncDoneIRQ();
+    return;
+  }
+  if (READ_BIT(hspdif1.Instance->SR, SPDIFRX_SR_FERR) || READ_BIT(hspdif1.Instance->SR, SPDIFRX_SR_SERR) || READ_BIT(hspdif1.Instance->SR, SPDIFRX_SR_TERR)) {
+    __HAL_SPDIFRX_CLEAR_IT(&hspdif1, SPDIFRX_SR_FERR | SPDIFRX_SR_SERR | SPDIFRX_SR_TERR);
+    SPDIF_HandleInterfaceErrorIRQ();
+    return;
+  }
+  /* USER CODE END SPDIF_RX_IRQn 0 */
+  HAL_SPDIFRX_IRQHandler(&hspdif1);
+  /* USER CODE BEGIN SPDIF_RX_IRQn 1 */
+
+  /* USER CODE END SPDIF_RX_IRQn 1 */
 }
 
 /**

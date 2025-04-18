@@ -55,6 +55,9 @@ typedef enum {
   SR_96K = 96000
 } SRC_SampleRate;
 
+//macro to check for valid sample rate
+#define SRC_IsValidSampleRate(x) ((x) == SR_44K || (x) == SR_48K || (x) == SR_96K)
+
 
 //initialise the SRC's internal filter variables - only needs to be called once
 HAL_StatusTypeDef SRC_Init();

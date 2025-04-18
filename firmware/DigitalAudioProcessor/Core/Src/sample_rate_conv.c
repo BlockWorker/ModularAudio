@@ -280,7 +280,7 @@ HAL_StatusTypeDef SRC_Configure(SRC_SampleRate input_rate) {
   int i;
 
   //check for valid input rate
-  if (input_rate != SR_44K && input_rate != SR_48K && input_rate != SR_96K) {
+  if (!SRC_IsValidSampleRate(input_rate)) {
     DEBUG_PRINTF("* Attempted SRC config with invalid sample rate %lu\n", (uint32_t)input_rate);
     return HAL_ERROR;
   }

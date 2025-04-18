@@ -11,6 +11,7 @@
 #include "signal_processing.h"
 #include "usbd_audio.h"
 #include "i2c.h"
+#include "spdif.h"
 
 
 //currently active input source
@@ -175,7 +176,8 @@ HAL_StatusTypeDef INPUT_Init() {
   HAL_I2S_Receive_DMA(&hi2s2, (uint16_t*)_i2s2_rx_buffer, INPUT_I2S_RX_BUF_SAMPLES);
   HAL_I2S_Receive_DMA(&hi2s3, (uint16_t*)_i2s3_rx_buffer, INPUT_I2S_RX_BUF_SAMPLES);
 
-  return HAL_OK;
+  //initialise SPDIF
+  return SPDIF_Init();
 }
 
 //perform main loop updates
@@ -207,6 +209,11 @@ void INPUT_Stop(INPUT_Source input) {
   if (input <= INPUT_NONE || input >= _INPUT_COUNT) {
     //invalid input
     DEBUG_PRINTF("* Attempted to stop invalid input %u\n", input);
+    return;
+  }
+
+  if (!inputs_available[input] && input_active != input) {
+    //nothing to do if input is already unavailable
     return;
   }
 
@@ -293,8 +300,7 @@ HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input) {
       rate = haudio->freq;
       break;
     case INPUT_SPDIF:
-      //TODO implement
-      rate = SR_UNKNOWN;
+      rate = spdif_sample_rate_enum;
       break;
     default:
       //invalid input
@@ -302,7 +308,7 @@ HAL_StatusTypeDef INPUT_UpdateSampleRate(INPUT_Source input) {
       return HAL_ERROR;
   }
 
-  if (rate != SR_44K && rate != SR_48K && rate != SR_96K) {
+  if (!SRC_IsValidSampleRate(rate)) {
     //invalid sample rate
     DEBUG_PRINTF("* Input %u reported invalid sample rate %u\n", input, rate);
     return HAL_ERROR;

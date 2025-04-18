@@ -264,6 +264,8 @@ int main(void)
     /*if (loop_count % 200 == 0) {
       extern float* const src_debug_adaptive_decimation_ptr;
       DEBUG_PRINTF("Adaptive decm factor: %.4f  rate err: %.5f  buffer err: %.1f\n", *src_debug_adaptive_decimation_ptr, SRC_GetAverageRateError(), SRC_GetAverageBufferFillError());
+      extern float _spdif_sample_rate_approx;
+      DEBUG_PRINTF("SPDIF in rate: %.1f\n", _spdif_sample_rate_approx);
     }*/
 #endif
 

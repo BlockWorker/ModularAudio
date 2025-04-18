@@ -135,7 +135,7 @@ void _I2C_ProcessWriteData() {
     case I2CDEF_DAP_I2S3_SAMPLE_RATE:
       //get sample rate value and check for validity
       temp32 = *(uint32_t*)write_buf;
-      if (temp32 == SR_44K || temp32 == SR_48K || temp32 == SR_96K) {
+      if (SRC_IsValidSampleRate(temp32)) {
         //sample rate good: get index of I2S interface
         temp8 = reg_addr - I2CDEF_DAP_I2S1_SAMPLE_RATE;
         //store sample rate and update it

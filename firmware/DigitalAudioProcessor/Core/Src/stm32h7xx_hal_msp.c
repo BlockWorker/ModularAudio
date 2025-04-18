@@ -471,6 +471,9 @@ void HAL_SPDIFRX_MspInit(SPDIFRX_HandleTypeDef* hspdifrx)
 
     __HAL_LINKDMA(hspdifrx,hdmaDrRx,hdma_spdif_rx_dt);
 
+    /* SPDIFRX interrupt Init */
+    HAL_NVIC_SetPriority(SPDIF_RX_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(SPDIF_RX_IRQn);
   /* USER CODE BEGIN SPDIFRX_MspInit 1 */
 
   /* USER CODE END SPDIFRX_MspInit 1 */
@@ -502,6 +505,9 @@ void HAL_SPDIFRX_MspDeInit(SPDIFRX_HandleTypeDef* hspdifrx)
     /* SPDIFRX DMA DeInit */
     HAL_DMA_DeInit(hspdifrx->hdmaCsRx);
     HAL_DMA_DeInit(hspdifrx->hdmaDrRx);
+
+    /* SPDIFRX interrupt DeInit */
+    HAL_NVIC_DisableIRQ(SPDIF_RX_IRQn);
   /* USER CODE BEGIN SPDIFRX_MspDeInit 1 */
 
   /* USER CODE END SPDIFRX_MspDeInit 1 */
