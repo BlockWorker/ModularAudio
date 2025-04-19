@@ -223,12 +223,12 @@ HAL_StatusTypeDef SPDIF_Init() {
 
 //SPDIFRX sync done interrupt handler
 void SPDIF_HandleSyncDoneIRQ() {
-  DEBUG_PRINTF("SPDIF sync established\n");
+  //DEBUG_PRINTF("SPDIF sync established\n");
   _SPDIF_CompleteResetAfterSync();
 }
 
 //SPDIFRX interface error interrupt handler
 void SPDIF_HandleInterfaceErrorIRQ() {
-  DEBUG_PRINTF("SPDIF detected frame/sync error\n");
+  //DEBUG_PRINTF("SPDIF detected frame/sync error\n");
   _SPDIF_Reset();
 }
