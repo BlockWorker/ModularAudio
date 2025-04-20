@@ -1,0 +1,159 @@
+﻿<Window x:Class="I2CMonitorApp.RTCWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:I2CMonitorApp"
+        mc:Ignorable="d"
+        Title="RTC and EEPROM Controls" Height="450" Width="864">
+    <Grid>
+        <Grid HorizontalAlignment="Left" Width="400" Margin="10,0,0,10" Height="31" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="connLabel" Content="Disconnected" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <Button x:Name="connButton" Grid.Column="3" Content="Connect" Margin="5" Click="OnConnectButtonClick"/>
+            <ComboBox x:Name="connPortBox" Grid.Column="2" Margin="3"/>
+        </Grid>
+        <Grid Margin="10,10,0,0" Width="423" Height="169" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <Label Content="Ctl/Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="2"/>
+            <Label Content="Aging Offset" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="4"/>
+            <Label Content="Temp (°C)" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="6"/>
+            <local:BitField x:Name="controlField" LabelFontSize="12" Labels="A1I&#xA;A2I&#xA;ITC&#xA;RS1&#xA;RS2&#xA;CNV&#xA;BSW&#xA;#EO" AllowSwitches="True" Grid.Column="1"/>
+            <local:BitField x:Name="controlStatusField" LabelFontSize="12" Labels="A1F&#xA;A2F&#xA;BSY&#xA;32K&#xA;&#xA;&#xA;&#xA;OSF" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
+            <TextBox x:Name="agingOffsetBox" Text="0" Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="tempBox" Text="0.0" Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <Button Content="Apply" Grid.Column="2" Margin="3" Click="DoControlApply"/>
+            <Button Content="Apply" Grid.Row="2" Grid.Column="2" Margin="3" Click="DoControlStatusApply"/>
+            <Button Content="Apply" Grid.Row="4" Grid.Column="2" Margin="3" Click="DoAgingOffsetApply"/>
+        </Grid>
+        <Grid Margin="10,197,0,0" Width="423" Height="169" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Date" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="yearBox" Text="2000" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="monthBox" Text="01" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="dateBox" Text="01" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="dayBox" Grid.Column="6" VerticalContentAlignment="Center" SelectedIndex="0" IsReadOnly="True">
+                <ComboBoxItem Content="Mon"/>
+                <ComboBoxItem Content="Tue"/>
+                <ComboBoxItem Content="Wed"/>
+                <ComboBoxItem Content="Thu"/>
+                <ComboBoxItem Content="Fri"/>
+                <ComboBoxItem Content="Sat"/>
+                <ComboBoxItem Content="Sun"/>
+            </ComboBox>
+            <Button Content="Apply" Grid.Column="7" Margin="3" Click="DoDateApply"/>
+            <Label Content="Time" Grid.Row="2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="hourBox" Text="00" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="minBox" Text="00" Grid.Row="2" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="secBox" Text="00" Grid.Row="2" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="ampmBox" Grid.Row="2" Grid.Column="6" VerticalContentAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="24h"/>
+                <ComboBoxItem Content="AM"/>
+                <ComboBoxItem Content="PM"/>
+            </ComboBox>
+            <Button Content="Apply" Grid.Row="2" Grid.Column="7" Margin="3" Click="DoTimeApply"/>
+            <Label Content="Alarm 1" Grid.Row="4" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="a1DayDateBox" Text="00" Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="a1AmpmBox" Grid.Row="4" Grid.Column="2" VerticalContentAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="24h"/>
+                <ComboBoxItem Content="AM"/>
+                <ComboBoxItem Content="PM"/>
+            </ComboBox>
+            <TextBox x:Name="a1HourBox" Text="00" Grid.Row="4" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="a1MinBox" Text="00" Grid.Row="4" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="a1SecBox" Text="00" Grid.Row="4" Grid.Column="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="a1ModeBox" Grid.Row="4" Grid.Column="6" VerticalContentAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="Day"/>
+                <ComboBoxItem Content="Date"/>
+                <ComboBoxItem Content="Hour"/>
+                <ComboBoxItem Content="Min"/>
+                <ComboBoxItem Content="Sec"/>
+                <ComboBoxItem Content="EvSec"/>
+            </ComboBox>
+            <Button Content="Apply" Grid.Row="4" Grid.Column="7" Margin="3" Tag="1"  Click="DoAlarmApply"/>
+            <Label Content="Alarm 2" Grid.Row="6" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="a2DayDateBox" Text="00" Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="a2AmpmBox" Grid.Row="6" Grid.Column="2" VerticalContentAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="24h"/>
+                <ComboBoxItem Content="AM"/>
+                <ComboBoxItem Content="PM"/>
+            </ComboBox>
+            <TextBox x:Name="a2HourBox" Text="00" Grid.Row="6" Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="a2MinBox" Text="00" Grid.Row="6" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <ComboBox x:Name="a2ModeBox" Grid.Row="6" Grid.Column="6" VerticalContentAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="Day"/>
+                <ComboBoxItem Content="Date"/>
+                <ComboBoxItem Content="Hour"/>
+                <ComboBoxItem Content="Min"/>
+                <ComboBoxItem Content="EvMin"/>
+            </ComboBox>
+            <Button Content="Apply" Grid.Row="6" Grid.Column="7" Margin="3" Tag="2" Click="DoAlarmApply"/>
+        </Grid>
+        <Grid Margin="0,35,10,0" Width="350" Height="191" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="20"/>
+                <RowDefinition/>
+                <RowDefinition Height="5"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="EEPROM" Grid.ColumnSpan="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Label Content="Addr 0x" Grid.Row="1" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <Label Content="Data 0x" Grid.Row="2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <Label Content="Batch W" Grid.Row="4" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <Label Content="Batch R" Grid.Row="6" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="romAddrBox" Text="000" Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="romDataBox" Text="00" Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Label Content="Values 0-63 in addresses 0-63" Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox x:Name="romBatchRBox" Text="" Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"/>
+            <Button Content="Read" Grid.Row="1" Grid.Column="2" Margin="3" Click="DoROMRead"/>
+            <Button Content="Write" Grid.Row="2" Grid.Column="2" Margin="3" Click="DoROMWrite"/>
+            <Button Content="Write" Grid.Row="4" Grid.Column="2" Margin="3" Click="DoROMBatchWrite"/>
+            <Button Content="Read" Grid.Row="6" Grid.Column="2" Margin="3" Click="DoROMBatchRead"/>
+        </Grid>
+    </Grid>
+</Window>

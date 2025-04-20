@@ -44,5 +44,9 @@ namespace I2CMonitorApp {
         private void OpenDAPWindow(object sender, RoutedEventArgs e) {
             new DAPWindow().Show();
         }
+
+        private void OpenRTCWindow(object sender, RoutedEventArgs e) {
+            new RTCWindow().Show();
+        }
     }
 }
