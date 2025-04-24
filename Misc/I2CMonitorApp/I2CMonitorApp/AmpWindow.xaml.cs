@@ -45,7 +45,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[256];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xFF, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0xFF, 1, ref buf)) {
                 DisconnectReset();
                 return;
             }
@@ -54,32 +54,29 @@ namespace I2CMonitorApp {
                 return;
             }
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x01, 2, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x01, 2, ref buf)) {
                 DisconnectReset();
                 return;
             }
             statusLowField.Value = buf[0];
             statusHighField.Value = buf[1];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x11, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x11, 1, ref buf)) {
                 DisconnectReset();
                 return;
             }
             intFlagsField.Value = buf[0];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x21, 4, ref buf)) {
+            int[] read_reg_sizes = [4, 4];
+            if (!App.I2CCrcMultiRead(DEV_ADDR, 0x21, read_reg_sizes, ref buf)) {
                 DisconnectReset();
                 return;
             }
             pvddReqBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
+            pvddMeasBox.Text = BitConverter.ToSingle(buf, 4).ToString("F2");
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x22, 4, ref buf)) {
-                DisconnectReset();
-                return;
-            }
-            pvddMeasBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
-
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x30, 128, ref buf)) {
+            read_reg_sizes = Enumerable.Repeat(4, 32).ToArray();
+            if (!App.I2CCrcMultiRead(DEV_ADDR, 0x30, read_reg_sizes, ref buf)) {
                 DisconnectReset();
                 return;
             }
@@ -116,28 +113,19 @@ namespace I2CMonitorApp {
             paCSlowBox.Text = BitConverter.ToSingle(buf, 0x78).ToString("F3");
             paDSlowBox.Text = BitConverter.ToSingle(buf, 0x7C).ToString("F3");
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xB0, 1, ref buf)) {
+            read_reg_sizes = [1, 2, 2];
+            if (!App.I2CCrcMultiRead(DEV_ADDR, 0xB0, read_reg_sizes, ref buf)) {
                 DisconnectReset();
                 return;
             }
             safetyStatusField.Value = buf[0];
-
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xB1, 2, ref buf)) {
-                DisconnectReset();
-                return;
-            }
-            serrSourceLowField.Value = buf[0];
-            serrSourceHighField.Value = buf[1];
-
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xB2, 2, ref buf)) {
-                DisconnectReset();
-                return;
-            }
-            swarnSourceLowField.Value = buf[0];
-            swarnSourceHighField.Value = buf[1];
+            serrSourceLowField.Value = buf[1];
+            serrSourceHighField.Value = buf[2];
+            swarnSourceLowField.Value = buf[3];
+            swarnSourceHighField.Value = buf[4];
 
             if (!pvddTargetBox.IsFocused) {
-                if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x20, 4, ref buf)) {
+                if (!App.I2CCrcRead(DEV_ADDR, 0x20, 4, ref buf)) {
                     DisconnectReset();
                     return;
                 }
@@ -148,13 +136,13 @@ namespace I2CMonitorApp {
 
             readAllCycles = 0;
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x08, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x08, 1, ref buf)) {
                 DisconnectReset();
                 return;
             }
             controlField.Value = buf[0];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x10, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x10, 1, ref buf)) {
                 DisconnectReset();
                 return;
             }
@@ -197,7 +185,7 @@ namespace I2CMonitorApp {
                 connButton.Content = "Disconnect";
 
                 byte[] id = [0];
-                if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xFF, 1, ref id)) {
+                if (App.I2CCrcRead(DEV_ADDR, 0xFF, 1, ref id)) {
                     idLabel.Content = $"0x{id[0]:X2}";
 
                     if (id[0] == DEVICE_ID_CORRECT) {
@@ -221,14 +209,14 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { controlField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x08, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x08, buf)) {
                 DisconnectReset();
                 return;
             }
 
             controlField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x08, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x08, 1, ref buf)) {
                 controlField.Value = buf[0];
             }
         }
@@ -238,14 +226,14 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { intMaskField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x10, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x10, buf)) {
                 DisconnectReset();
                 return;
             }
 
             intMaskField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x10, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x10, 1, ref buf)) {
                 intMaskField.Value = buf[0];
             }
         }
@@ -255,12 +243,12 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { 0 };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x11, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x11, buf)) {
                 DisconnectReset();
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x11, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x11, 1, ref buf)) {
                 intFlagsField.Value = buf[0];
             }
         }
@@ -275,12 +263,12 @@ namespace I2CMonitorApp {
 
             var buf = BitConverter.GetBytes(value);
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x20, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x20, buf)) {
                 DisconnectReset();
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x20, 4, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x20, 4, ref buf)) {
                 pvddTargetBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
             }
         }

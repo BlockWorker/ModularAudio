@@ -578,9 +578,9 @@ void I2C_TriggerInterrupt(uint8_t interrupt_bit) {
 }
 
 void I2C_LoopUpdate() {
-  if (state == I2C_IDLE && __HAL_I2C_GET_FLAG(&I2C_INSTANCE, I2C_FLAG_BUSY) == SET) { //driver idle but peripheral busy: should be impossible
-    if (++idle_busy_count > 1) { //second sighting in a row or more, reset
-      DEBUG_PRINTF("I2C Error: Peripheral busy in idle state\n");
+  if (state == I2C_IDLE && __HAL_I2C_GET_FLAG(&I2C_INSTANCE, I2C_FLAG_BUSY) == SET) { //driver idle but peripheral busy: check timeout
+    if (++idle_busy_count > I2C_PERIPHERAL_BUSY_TIMEOUT) { //peripheral busy for too long, reset
+      DEBUG_PRINTF("I2C Error: Peripheral busy in idle state timeout\n");
       _I2C_HardwareReset();
       _I2C_ErrorReset();
     }

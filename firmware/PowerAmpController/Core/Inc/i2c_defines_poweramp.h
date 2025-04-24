@@ -8,7 +8,7 @@
  *
  *  Register map:
  *  * General registers
- *    - 0x01: STATUS: General status (1B, bit field, r)
+ *    - 0x01: STATUS: General status (2B, bit field, r)
  *    - 0x08: CONTROL: General control (1B, bit field, rw)
  *  * Interrupt registers
  *    - 0x10: INT_MASK: Interrupt mask (1B, bit field, rw, high = interrupt enable)

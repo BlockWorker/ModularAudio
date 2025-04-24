@@ -33,6 +33,13 @@
 #define I2C_NONIDLE_TIMEOUT 20
 #endif
 
+//timeout for busy peripheral despite idle driver, in main loop cycles
+#ifdef DEBUG
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 20
+#else
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 10
+#endif
+
 //I2C instance to use
 #define I2C_INSTANCE hi2c1
 #define I2C_INT_PORT I2C_INT_N_GPIO_Port
