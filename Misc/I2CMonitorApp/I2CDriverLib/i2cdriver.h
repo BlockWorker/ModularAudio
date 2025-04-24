@@ -49,6 +49,8 @@ I2CDRVLIB_API void i2c_regrd(I2CDriver* sd, uint8_t dev, uint8_t reg, uint8_t by
 I2CDRVLIB_API void i2c_monitor(I2CDriver* sd, int enable);
 I2CDRVLIB_API void i2c_capture(I2CDriver* sd);
 
+I2CDRVLIB_API void i2c_pullups(I2CDriver* sd, uint8_t pullups);
+
 I2CDRVLIB_API int i2c_commands(I2CDriver* sd, int argc, char* argv[]);
 
 #ifdef __cplusplus

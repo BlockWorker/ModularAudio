@@ -64,6 +64,9 @@ namespace I2CMonitorApp {
         internal static extern void i2c_capture(ref I2CDriver sd);
 
         [DllImport("I2CDriverLib.dll")]
+        internal static extern void i2c_pullups(ref I2CDriver sd, byte pullups);
+
+        [DllImport("I2CDriverLib.dll")]
         internal static extern int i2c_commands(ref I2CDriver sd, int argc, string[] argv);
 
 

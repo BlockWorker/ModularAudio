@@ -389,6 +389,13 @@ void i2c_regrd(I2CDriver* sd, uint8_t dev, uint8_t reg, uint8_t bytes[], uint8_t
     crc_update(sd, bytes, nn);
 }
 
+void i2c_pullups(I2CDriver* sd, uint8_t pullups)
+{
+    uint8_t cmd[4] = { 'u', pullups };
+    writeToSerialPort(sd->port, cmd, 2);
+    i2c_getstatus(sd);
+}
+
 void i2c_monitor(I2CDriver* sd, int enable)
 {
     charCommand(sd, enable ? 'm' : '@');

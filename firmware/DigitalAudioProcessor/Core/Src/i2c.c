@@ -21,6 +21,9 @@
 #error "Mismatch between signal processor coefficient lengths and corresponding I2C register sizes"
 #endif
 
+#define I2C_OWN_ADDRESS_WRITE ((uint8_t)I2C_GET_OWN_ADDRESS1(&I2C_INSTANCE))
+#define I2C_OWN_ADDRESS_READ (I2C_OWN_ADDRESS_WRITE | 0x01)
+
 
 typedef enum {
   I2C_UNINIT,
@@ -39,8 +42,8 @@ static uint8_t reg_addr = 0;
 //size of selected virtual register (for reads/writes)
 static uint16_t reg_size = 0;
 //virtual data buffers (read and write)
-static uint8_t __attribute__((aligned(4))) read_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
-static uint8_t __attribute__((aligned(4))) write_buf[I2C_VIRT_BUFFER_SIZE] = { 0 };
+static uint8_t __attribute__((aligned(4))) read_buf[I2C_VIRT_BUFFER_SIZE + 1] = { 0 };
+static uint8_t __attribute__((aligned(4))) write_buf[I2C_VIRT_BUFFER_SIZE + 1] = { 0 };
 
 //whether a comm error has been detected since the last status read
 static uint8_t i2c_err_detected = 0;
@@ -60,6 +63,27 @@ static const uint16_t reg_size_map[] = I2CDEF_DAP_REG_SIZES;
 static uint8_t interrupts_enabled = 0;
 static uint8_t interrupt_mask = 0;
 static uint8_t interrupt_flags = 0;
+
+//I2C CRC data
+static const uint8_t _i2c_crc_table[256] = {
+  0x00, 0x7F, 0xFE, 0x81, 0x83, 0xFC, 0x7D, 0x02, 0x79, 0x06, 0x87, 0xF8, 0xFA, 0x85, 0x04, 0x7B,
+  0xF2, 0x8D, 0x0C, 0x73, 0x71, 0x0E, 0x8F, 0xF0, 0x8B, 0xF4, 0x75, 0x0A, 0x08, 0x77, 0xF6, 0x89,
+  0x9B, 0xE4, 0x65, 0x1A, 0x18, 0x67, 0xE6, 0x99, 0xE2, 0x9D, 0x1C, 0x63, 0x61, 0x1E, 0x9F, 0xE0,
+  0x69, 0x16, 0x97, 0xE8, 0xEA, 0x95, 0x14, 0x6B, 0x10, 0x6F, 0xEE, 0x91, 0x93, 0xEC, 0x6D, 0x12,
+  0x49, 0x36, 0xB7, 0xC8, 0xCA, 0xB5, 0x34, 0x4B, 0x30, 0x4F, 0xCE, 0xB1, 0xB3, 0xCC, 0x4D, 0x32,
+  0xBB, 0xC4, 0x45, 0x3A, 0x38, 0x47, 0xC6, 0xB9, 0xC2, 0xBD, 0x3C, 0x43, 0x41, 0x3E, 0xBF, 0xC0,
+  0xD2, 0xAD, 0x2C, 0x53, 0x51, 0x2E, 0xAF, 0xD0, 0xAB, 0xD4, 0x55, 0x2A, 0x28, 0x57, 0xD6, 0xA9,
+  0x20, 0x5F, 0xDE, 0xA1, 0xA3, 0xDC, 0x5D, 0x22, 0x59, 0x26, 0xA7, 0xD8, 0xDA, 0xA5, 0x24, 0x5B,
+  0x92, 0xED, 0x6C, 0x13, 0x11, 0x6E, 0xEF, 0x90, 0xEB, 0x94, 0x15, 0x6A, 0x68, 0x17, 0x96, 0xE9,
+  0x60, 0x1F, 0x9E, 0xE1, 0xE3, 0x9C, 0x1D, 0x62, 0x19, 0x66, 0xE7, 0x98, 0x9A, 0xE5, 0x64, 0x1B,
+  0x09, 0x76, 0xF7, 0x88, 0x8A, 0xF5, 0x74, 0x0B, 0x70, 0x0F, 0x8E, 0xF1, 0xF3, 0x8C, 0x0D, 0x72,
+  0xFB, 0x84, 0x05, 0x7A, 0x78, 0x07, 0x86, 0xF9, 0x82, 0xFD, 0x7C, 0x03, 0x01, 0x7E, 0xFF, 0x80,
+  0xDB, 0xA4, 0x25, 0x5A, 0x58, 0x27, 0xA6, 0xD9, 0xA2, 0xDD, 0x5C, 0x23, 0x21, 0x5E, 0xDF, 0xA0,
+  0x29, 0x56, 0xD7, 0xA8, 0xAA, 0xD5, 0x54, 0x2B, 0x50, 0x2F, 0xAE, 0xD1, 0xD3, 0xAC, 0x2D, 0x52,
+  0x40, 0x3F, 0xBE, 0xC1, 0xC3, 0xBC, 0x3D, 0x42, 0x39, 0x46, 0xC7, 0xB8, 0xBA, 0xC5, 0x44, 0x3B,
+  0xB2, 0xCD, 0x4C, 0x33, 0x31, 0x4E, 0xCF, 0xB0, 0xCB, 0xB4, 0x35, 0x4A, 0x48, 0x37, 0xB6, 0xC9
+};
+static uint8_t _i2c_crc_state = 0;
 
 
 void _I2C_UpdateInterruptPin() {
@@ -317,6 +341,20 @@ void _I2C_PrepareReadData() {
   }
 }
 
+//calculate CRC, starting with existing _i2c_crc_state
+static uint8_t _I2C_CRC_Accumulate(uint8_t* buf, uint16_t length) {
+  int i;
+  for (i = 0; i < length; i++) {
+    _i2c_crc_state = _i2c_crc_table[buf[i] ^ _i2c_crc_state];
+  }
+  return _i2c_crc_state;
+}
+
+//calculates the CRC for the current read buffer and writes it to the end of the buffer
+static inline void _I2C_CalculateReadCRC() {
+  read_buf[reg_size] = _I2C_CRC_Accumulate(read_buf, reg_size);
+}
+
 static __always_inline void _I2C_ErrorReset() {
   i2c_err_detected = 1;
   state = I2C_IDLE;
@@ -351,31 +389,22 @@ void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode) {
   if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
-    if (state == I2C_IDLE) { //idle transmission: register address
+    if (state != I2C_UNINIT) { //write transmission: start with register address, with potential write data afterwards
       state = I2C_WAITING_ADDR;
       non_idle_timeout = I2C_NONIDLE_TIMEOUT;
 
       HAL_I2C_Slave_Seq_Receive_IT(hi2c, &reg_addr, 1, I2C_FIRST_FRAME);
-    } else if (state == I2C_ADDR_RECEIVED) { //write transmission
-      state = I2C_WRITE;
-      non_idle_timeout = I2C_NONIDLE_TIMEOUT;
-
-      if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
-        DEBUG_PRINTF("I2C Error: Write start fail, address 0x%02X\n", reg_addr);
-        _I2C_HardwareReset();
-        _I2C_ErrorReset();
-      }
     } else {
       DEBUG_PRINTF("I2C Error: Transmit request in invalid state %u\n", state);
       _I2C_HardwareReset();
       _I2C_ErrorReset();
     }
   } else {
-    if (state == I2C_ADDR_RECEIVED) { //read transmission
+    if (state == I2C_ADDR_RECEIVED) { //read transmission: only supported after address write
       state = I2C_READ;
       non_idle_timeout = I2C_NONIDLE_TIMEOUT;
 
-      if (HAL_I2C_Slave_Seq_Transmit_IT(hi2c, read_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
+      if (HAL_I2C_Slave_Seq_Transmit_IT(hi2c, read_buf, reg_size + 1, I2C_NEXT_FRAME) != HAL_OK) {
         DEBUG_PRINTF("I2C Error: Read start fail, address 0x%02X\n", reg_addr);
         _I2C_HardwareReset();
         _I2C_ErrorReset();
@@ -405,12 +434,16 @@ void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {
     reg_size = new_size;
     _I2C_PrepareReadData();
   } else { //register invalid: send dummy data
-    memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE);
+    memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE + 1);
     reg_size = 1;
     reg_addr = 0;
   }
 
-  if (HAL_I2C_Slave_Seq_Transmit_IT(hi2c, read_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
+  //subsequent chained register read: only include data itself in CRC
+  _i2c_crc_state = 0;
+  _I2C_CalculateReadCRC();
+
+  if (HAL_I2C_Slave_Seq_Transmit_IT(hi2c, read_buf, reg_size + 1, I2C_NEXT_FRAME) != HAL_OK) {
     DEBUG_PRINTF("I2C Error: Sequential read start fail, address 0x%02X\n", reg_addr);
     _I2C_HardwareReset();
     _I2C_ErrorReset();
@@ -425,7 +458,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
     uint16_t size = reg_size_map[reg_addr];
     if (size == 0) { //invalid register address: accept/send dummy bytes
       DEBUG_PRINTF("I2C Error: Attempted access of invalid address 0x%02X\n", reg_addr);
-      memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE);
+      memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE + 1);
       reg_size = 1;
       reg_addr = 0;
       i2c_err_detected = 1;
@@ -434,7 +467,13 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
       _I2C_PrepareReadData();
     }
 
-    if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) { //prepare to receive write data immediately
+    //first register read after address: include I2C address and register address bytes in CRC
+    uint8_t read_crc_buf[3] = { I2C_OWN_ADDRESS_WRITE, reg_addr, I2C_OWN_ADDRESS_READ };
+    _i2c_crc_state = 0;
+    _I2C_CRC_Accumulate(read_crc_buf, 3);
+    _I2C_CalculateReadCRC();
+
+    if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size + 1, I2C_NEXT_FRAME) != HAL_OK) { //prepare to receive write data immediately
       DEBUG_PRINTF("I2C Error: Write start fail, address 0x%02X\n", reg_addr);
       _I2C_HardwareReset();
       _I2C_ErrorReset();
@@ -442,13 +481,31 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
   } else if (state == I2C_ADDR_RECEIVED || state == I2C_WRITE) { //received data is the data to be written: process it and prepare to accept more data (always to prevent freeze)
     uint16_t new_size;
 
+    _I2C_State prev_state = state;
     state = I2C_WRITE;
     non_idle_timeout = I2C_NONIDLE_TIMEOUT;
 
     if (reg_addr == 0) { //register invalid - continue as invalid
       new_size = 0;
-    } else { //register valid - process data, check if next is valid
-      _I2C_ProcessWriteData();
+    } else { //register valid: calculate and check CRC before processing
+      _i2c_crc_state = 0;
+      if (prev_state == I2C_ADDR_RECEIVED) {
+        //first register after address: include I2C address and register address in CRC
+        uint8_t write_crc_init_buf[2] = { I2C_OWN_ADDRESS_WRITE, reg_addr };
+        _I2C_CRC_Accumulate(write_crc_init_buf, 2);
+      }
+
+      uint8_t crc_check = _I2C_CRC_Accumulate(write_buf, reg_size + 1);
+      if (crc_check == 0) {
+        //good CRC: process data
+        _I2C_ProcessWriteData();
+      } else {
+        //wrong CRC: report error and ignore data
+        DEBUG_PRINTF("I2C CRC mismatch on write of register 0x%02X\n", reg_addr);
+        i2c_err_detected = 1;
+      }
+
+      //get next register size (if valid)
       new_size = reg_size_map[++reg_addr];
     }
 
@@ -459,7 +516,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
       reg_addr = 0;
     }
 
-    if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size, I2C_NEXT_FRAME) != HAL_OK) {
+    if (HAL_I2C_Slave_Seq_Receive_IT(hi2c, write_buf, reg_size + 1, I2C_NEXT_FRAME) != HAL_OK) {
       DEBUG_PRINTF("I2C Error: Sequential write start fail, address 0x%02X\n", reg_addr);
       _I2C_HardwareReset();
       _I2C_ErrorReset();
