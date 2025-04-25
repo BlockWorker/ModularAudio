@@ -55,7 +55,7 @@ namespace I2CMonitorApp {
 
             byte[] buf = new byte[256];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xFF, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0xFF, 1, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -65,14 +65,14 @@ namespace I2CMonitorApp {
                 return;
             }
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x01, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x01, 1, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
             statusField.Value = buf[0];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x11, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x11, 1, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -87,21 +87,22 @@ namespace I2CMonitorApp {
 
             readAllCycles = 0;
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x08, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x08, 1, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
             controlField.Value = buf[0];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x10, 1, ref buf)) {
+            if (!App.I2CCrcRead(DEV_ADDR, 0x10, 1, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
             intMaskField.Value = buf[0];
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x20, 9, ref buf)) {
+            int[] read_reg_sizes = [2, 1, 1, 1, 1, 1, 2];
+            if (!App.I2CCrcMultiRead(DEV_ADDR, 0x20, read_reg_sizes, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -124,7 +125,8 @@ namespace I2CMonitorApp {
                 tdmSlotCh2Box.Text = (buf[8] + 1).ToString();
             }
 
-            if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x30, 9, ref buf)) {
+            read_reg_sizes = [1, 4, 4];
+            if (!App.I2CCrcMultiRead(DEV_ADDR, 0x30, read_reg_sizes, ref buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -185,7 +187,7 @@ namespace I2CMonitorApp {
                 connButton.Content = "Disconnect";
 
                 byte[] id = [0];
-                if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0xFF, 1, ref id)) {
+                if (App.I2CCrcRead(DEV_ADDR, 0xFF, 1, ref id)) {
                     idLabel.Content = $"0x{id[0]:X2}";
 
                     if (id[0] == DEVICE_ID_CORRECT) {
@@ -209,7 +211,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { controlField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x08, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x08, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -217,7 +219,7 @@ namespace I2CMonitorApp {
 
             controlField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x08, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x08, 1, ref buf)) {
                 controlField.Value = buf[0];
             }
         }
@@ -227,7 +229,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { intMaskField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x10, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x10, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -235,7 +237,7 @@ namespace I2CMonitorApp {
 
             intMaskField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x10, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x10, 1, ref buf)) {
                 intMaskField.Value = buf[0];
             }
         }
@@ -245,13 +247,13 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { 0 };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x11, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x11, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x11, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x11, 1, ref buf)) {
                 intFlagsField.Value = buf[0];
             }
         }
@@ -266,13 +268,13 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { (byte)filterBox.SelectedIndex };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x30, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x30, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x30, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x30, 1, ref buf)) {
                 if (buf[0] <= 7) {
                     filterBox.SelectedIndex = buf[0];
                 } else {
@@ -291,13 +293,13 @@ namespace I2CMonitorApp {
 
             byte[] buf = [.. BitConverter.GetBytes(c2ch1), .. BitConverter.GetBytes(c2ch2)];
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x31, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x31, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x31, 4, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x31, 4, ref buf)) {
                 thdC2Ch1Box.Text = BitConverter.ToInt16(buf, 0).ToString();
                 thdC2Ch2Box.Text = BitConverter.ToInt16(buf, 2).ToString();
             }
@@ -313,13 +315,13 @@ namespace I2CMonitorApp {
 
             byte[] buf = [.. BitConverter.GetBytes(c3ch1), .. BitConverter.GetBytes(c3ch2)];
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x32, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x32, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x32, 4, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x32, 4, ref buf)) {
                 thdC3Ch1Box.Text = BitConverter.ToInt16(buf, 0).ToString();
                 thdC3Ch2Box.Text = BitConverter.ToInt16(buf, 2).ToString();
             }
@@ -343,13 +345,13 @@ namespace I2CMonitorApp {
 
             byte[] buf = [(byte)vol1Int, (byte)vol2Int];
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x20, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x20, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x20, 2, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x20, 2, ref buf)) {
                 volCh1Box.Text = (buf[0] * -.5f).ToString("F1");
                 volCh2Box.Text = (buf[1] * -.5f).ToString("F1");
             }
@@ -360,7 +362,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { muteField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x21, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x21, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -368,7 +370,7 @@ namespace I2CMonitorApp {
 
             muteField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x21, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x21, 1, ref buf)) {
                 muteField.Value = buf[0];
             }
         }
@@ -378,7 +380,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { pathField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x22, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x22, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -386,7 +388,7 @@ namespace I2CMonitorApp {
 
             pathField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x22, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x22, 1, ref buf)) {
                 pathField.Value = buf[0];
             }
         }
@@ -396,7 +398,7 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { clockCfgField.SwitchedValue };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x23, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x23, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
@@ -404,7 +406,7 @@ namespace I2CMonitorApp {
 
             clockCfgField.ResetSwitches();
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x23, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x23, 1, ref buf)) {
                 clockCfgField.Value = buf[0];
             }
         }
@@ -419,13 +421,13 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { (byte)(mdiv16 - 1) };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x24, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x24, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x24, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x24, 1, ref buf)) {
                 masterDivBox.Text = (buf[0] + 1).ToString();
             }
         }
@@ -440,13 +442,13 @@ namespace I2CMonitorApp {
 
             var buf = new byte[1] { (byte)(slots - 1) };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x25, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x25, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x25, 1, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x25, 1, ref buf)) {
                 tdmSlotsBox.Text = (buf[0] + 1).ToString();
             }
         }
@@ -461,13 +463,13 @@ namespace I2CMonitorApp {
 
             var buf = new byte[2] { (byte)(slot1 - 1), (byte)(slot2 - 1) };
 
-            if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, DEV_ADDR, 0x26, buf)) {
+            if (!App.I2CCrcWrite(DEV_ADDR, 0x26, buf)) {
                 connLabel.Background = Brushes.Yellow;
                 errorCount++;
                 return;
             }
 
-            if (I2CDriverLib.I2C_ReadReg(ref App.i2cd, DEV_ADDR, 0x26, 2, ref buf)) {
+            if (App.I2CCrcRead(DEV_ADDR, 0x26, 2, ref buf)) {
                 tdmSlotCh1Box.Text = (buf[0] + 1).ToString();
                 tdmSlotCh2Box.Text = (buf[1] + 1).ToString();
             }
