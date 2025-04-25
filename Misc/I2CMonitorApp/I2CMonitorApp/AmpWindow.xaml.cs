@@ -24,6 +24,7 @@ namespace I2CMonitorApp {
         private bool i2c_connected = false;
         private readonly Timer timer;
         private int readAllCycles;
+        private int errorCount;
 
         public AmpWindow() {
             InitializeComponent();
@@ -31,6 +32,8 @@ namespace I2CMonitorApp {
             readAllCycles = READ_ALL_PERIOD;
             connPortBox.ItemsSource = SerialPort.GetPortNames();
             connPortBox.Text = App.i2c_portname;
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         void OnTimerExpired(object? state) {
@@ -43,10 +46,16 @@ namespace I2CMonitorApp {
                 return;
             }
 
+            if (errorCount > 10) {
+                DisconnectReset();
+                return;
+            }
+
             var buf = new byte[256];
 
             if (!App.I2CCrcRead(DEV_ADDR, 0xFF, 1, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             if (buf[0] != DEVICE_ID_CORRECT) {
@@ -55,21 +64,24 @@ namespace I2CMonitorApp {
             }
 
             if (!App.I2CCrcRead(DEV_ADDR, 0x01, 2, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             statusLowField.Value = buf[0];
             statusHighField.Value = buf[1];
 
             if (!App.I2CCrcRead(DEV_ADDR, 0x11, 1, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             intFlagsField.Value = buf[0];
 
             int[] read_reg_sizes = [4, 4];
             if (!App.I2CCrcMultiRead(DEV_ADDR, 0x21, read_reg_sizes, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             pvddReqBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
@@ -77,7 +89,8 @@ namespace I2CMonitorApp {
 
             read_reg_sizes = Enumerable.Repeat(4, 32).ToArray();
             if (!App.I2CCrcMultiRead(DEV_ADDR, 0x30, read_reg_sizes, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             vAFastBox.Text = BitConverter.ToSingle(buf, 0x00).ToString("F3");
@@ -115,7 +128,8 @@ namespace I2CMonitorApp {
 
             read_reg_sizes = [1, 2, 2];
             if (!App.I2CCrcMultiRead(DEV_ADDR, 0xB0, read_reg_sizes, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             safetyStatusField.Value = buf[0];
@@ -126,27 +140,37 @@ namespace I2CMonitorApp {
 
             if (!pvddTargetBox.IsFocused) {
                 if (!App.I2CCrcRead(DEV_ADDR, 0x20, 4, ref buf)) {
-                    DisconnectReset();
+                    connLabel.Background = Brushes.Yellow;
+                    errorCount++;
                     return;
                 }
                 pvddTargetBox.Text = BitConverter.ToSingle(buf, 0).ToString("F2");
             }
 
-            if (readAllCycles++ < READ_ALL_PERIOD) return;
+            if (readAllCycles++ < READ_ALL_PERIOD) {
+                connLabel.Background = Brushes.Transparent;
+                errorCount = 0;
+                return;
+            }
 
             readAllCycles = 0;
 
             if (!App.I2CCrcRead(DEV_ADDR, 0x08, 1, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             controlField.Value = buf[0];
 
             if (!App.I2CCrcRead(DEV_ADDR, 0x10, 1, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
             intMaskField.Value = buf[0];
+
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         private void DisconnectReset() {
@@ -160,6 +184,8 @@ namespace I2CMonitorApp {
             idLabel.Content = "0x00";
             connPortBox.IsEnabled = true;
             connButton.Content = "Connect";
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         private void OnConnectButtonClick(object sender, RoutedEventArgs e) {
@@ -210,7 +236,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { controlField.SwitchedValue };
 
             if (!App.I2CCrcWrite(DEV_ADDR, 0x08, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -227,7 +254,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { intMaskField.SwitchedValue };
 
             if (!App.I2CCrcWrite(DEV_ADDR, 0x10, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -244,7 +272,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { 0 };
 
             if (!App.I2CCrcWrite(DEV_ADDR, 0x11, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -264,7 +293,8 @@ namespace I2CMonitorApp {
             var buf = BitConverter.GetBytes(value);
 
             if (!App.I2CCrcWrite(DEV_ADDR, 0x20, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 

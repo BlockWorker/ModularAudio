@@ -24,12 +24,15 @@ namespace I2CMonitorApp {
 
         private bool i2c_connected = false;
         private readonly Timer timer;
+        private int errorCount;
 
         public RTCWindow() {
             InitializeComponent();
             timer = new(OnTimerExpired);
             connPortBox.ItemsSource = SerialPort.GetPortNames();
             connPortBox.Text = App.i2c_portname;
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         void OnTimerExpired(object? state) {
@@ -51,10 +54,16 @@ namespace I2CMonitorApp {
                 return;
             }
 
+            if (errorCount > 10) {
+                DisconnectReset();
+                return;
+            }
+
             byte[] buf = new byte[0x13];
 
             if (!I2CDriverLib.I2C_ReadReg(ref App.i2cd, RTC_ADDR, 0x00, 0x13, ref buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -160,6 +169,9 @@ namespace I2CMonitorApp {
                     a2ModeBox.SelectedIndex = 4;
                 }
             }
+
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         private void DisconnectReset() {
@@ -171,6 +183,8 @@ namespace I2CMonitorApp {
             connLabel.Content = "Disconnected";
             connPortBox.IsEnabled = true;
             connButton.Content = "Connect";
+            connLabel.Background = Brushes.Transparent;
+            errorCount = 0;
         }
 
         private void OnConnectButtonClick(object sender, RoutedEventArgs e) {
@@ -211,7 +225,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { controlField.SwitchedValue };
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, 0x0E, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -226,7 +241,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { controlStatusField.SwitchedValue };
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, 0x0F, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -246,7 +262,8 @@ namespace I2CMonitorApp {
             var buf = new byte[1] { (byte)offset };
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, 0x10, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -284,7 +301,8 @@ namespace I2CMonitorApp {
             };
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, 0x03, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -319,7 +337,8 @@ namespace I2CMonitorApp {
             };
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, 0x00, buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
@@ -387,7 +406,8 @@ namespace I2CMonitorApp {
             }
 
             if (!I2CDriverLib.I2C_WriteReg(ref App.i2cd, RTC_ADDR, (byte)((index == 1) ? 0x07 : 0x0B), buf)) {
-                DisconnectReset();
+                connLabel.Background = Brushes.Yellow;
+                errorCount++;
                 return;
             }
 
