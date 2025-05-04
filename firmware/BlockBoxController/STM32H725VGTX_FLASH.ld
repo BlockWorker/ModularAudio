@@ -34,11 +34,14 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-/* Highest address of the user mode stack */
-_estack = ORIGIN(RAM_D1) + LENGTH(RAM_D1);    /* end of RAM */
+/* Highest address of the user mode heap and stack */
+_eheap = ORIGIN(RAM_D1) + LENGTH(RAM_D1);       /* end of RAM_D1 */
+_estack = ORIGIN(DTCMRAM) + LENGTH(DTCMRAM);    /* end of DTCMRAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x8000;      /* required amount of heap  */
-_Min_Stack_Size = 0x400; /* required amount of stack */
+_Min_Stack_Size = 0x1000; /* required amount of stack */
+/* Reserve space at start of memory space, to avoid overwriting ITCMRAM code in case of a null-pointer error */
+_Null_Pointer_Buffer_Size = 0x1000;
 
 /* Specify the memory areas */
 MEMORY
@@ -61,6 +64,29 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+  
+  /* Safety buffer at start of ITCMRAM so that any potential null pointer errors don't overwrite RAM code */
+  ._itcm_null_pointer_buffer (NOLOAD) :
+  {
+    . = ALIGN(4);
+    . = . + _Null_Pointer_Buffer_Size;
+    . = ALIGN(4);
+  } > ITCMRAM
+  
+  /* ITCMRAM section for RAM code (text) */
+  ._itcm_ram_text :
+  {
+    . = ALIGN(4);
+    _BeginITCMText = .;
+    *(.RamFunc)                     /* .RamFunc sections */
+    *(.RamFunc*)                    /* .RamFunc* sections */
+    *libCMSIS-DSP*:*(.text .text*)  /* CMSIS DSP library (for performance) */
+    /**(.text.memcpy)                 /* Standard C memcpy function */
+    /**(.text.memset)                 /* Standard C memset function */
+    . = ALIGN(4);
+    _EndITCMText = .;
+  } > ITCMRAM AT> FLASH
+  _InitITCMText = LOADADDR (._itcm_ram_text);
 
   /* The program code and other data goes into FLASH */
   .text :
@@ -128,8 +154,6 @@ SECTIONS
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
-    *(.RamFunc)        /* .RamFunc sections */
-    *(.RamFunc*)       /* .RamFunc* sections */
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
@@ -151,16 +175,93 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM_D1
 
-  /* User_heap_stack section, used to check that there is enough RAM left */
-  ._user_heap_stack :
+  /* User_heap section, used to check that there is enough RAM_D1 left */
+  ._user_heap (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = . + _Min_Heap_Size;
+    . = ALIGN(8);
+  } > RAM_D1
+  
+  /* Extra blocks for D2, D3, and DTCM RAM availability */
+  ._d2_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginD2Bss = .;
+    KEEP(*(.d2_bss))
+    . = ALIGN(4);
+    _EndD2Bss = .;
+  } > RAM_D2
+  
+  ._d2_data_block :
+  {
+    . = ALIGN(4);
+    _BeginD2Data = .;
+    KEEP(*(.d2_data))
+    . = ALIGN(4);
+    _EndD2Data = .;
+  } > RAM_D2 AT> FLASH
+  _InitD2Data = LOADADDR (._d2_data_block);
+  
+  ._d3_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginD3Bss = .;
+    KEEP(*(.d3_bss))
+    . = ALIGN(4);
+    _EndD3Bss = .;
+  } > RAM_D3
+  
+  ._d3_data_block :
+  {
+    . = ALIGN(4);
+    _BeginD3Data = .;
+    KEEP(*(.d3_data))
+    . = ALIGN(4);
+    _EndD3Data = .;
+  } > RAM_D3 AT> FLASH
+  _InitD3Data = LOADADDR (._d3_data_block);
+  
+  ._dtcm_bss_block (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _BeginDTCMBss = .;
+    KEEP(*(.dtcm_bss))
+    . = ALIGN(4);
+    _EndDTCMBss = .;
+  } > DTCMRAM
+  
+  ._dtcm_data_block :
+  {
+    . = ALIGN(4);
+    _BeginDTCMData = .;
+    KEEP(*(.dtcm_data))
+    . = ALIGN(4);
+    _EndDTCMData = .;
+  } > DTCMRAM AT> FLASH
+  _InitDTCMData = LOADADDR (._dtcm_data_block);
+  
+  /* User_stack section, used to check that there is enough DTCMRAM left */
+  ._user_stack (NOLOAD) :
+  {
+    . = ALIGN(8);
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
-  } >RAM_D1
+  } > DTCMRAM
+  
+  /* ITCM data block; intended for read-only data (but could theoretically house read-write data too) */
+  ._itcm_data_block :
+  {
+    . = ALIGN(4);
+    _BeginITCMData = .;
+    KEEP(*(.itcm_data))
+    . = ALIGN(4);
+    _EndITCMData = .;
+  } > ITCMRAM AT> FLASH
+  _InitITCMData = LOADADDR (._itcm_data_block);
+  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

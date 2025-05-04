@@ -43,9 +43,7 @@ extern "C" {
 /* USER CODE BEGIN EC */
 extern ADC_HandleTypeDef hadc1;
 
-extern I2C_HandleTypeDef hi2c1;
 extern SMBUS_HandleTypeDef hsmbus3;
-extern I2C_HandleTypeDef hi2c4;
 extern I2C_HandleTypeDef hi2c5;
 
 extern I2S_HandleTypeDef hi2s6;
@@ -57,6 +55,8 @@ extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim4;
 
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE END EC */
 
@@ -79,6 +79,15 @@ extern UART_HandleTypeDef huart2;
 #ifndef MAX
   #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
+
+//memory allocation macros
+#define __D2_BSS __attribute__((section(".d2_bss")))
+#define __D2_DATA __attribute__((section(".d2_data")))
+#define __D3_BSS __attribute__((section(".d3_bss")))
+#define __D3_DATA __attribute__((section(".d3_data")))
+#define __DTCM_BSS __attribute__((section(".dtcm_bss")))
+#define __DTCM_DATA __attribute__((section(".dtcm_data")))
+#define __ITCM_DATA __attribute__((section(".itcm_data")))
 /* USER CODE END EM */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);

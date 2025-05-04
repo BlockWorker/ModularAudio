@@ -42,20 +42,29 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-I2C_HandleTypeDef hi2c1;
 SMBUS_HandleTypeDef hsmbus3;
-I2C_HandleTypeDef hi2c4;
 I2C_HandleTypeDef hi2c5;
 
 I2S_HandleTypeDef hi2s6;
 
 OSPI_HandleTypeDef hospi1;
 
+RAMECC_HandleTypeDef hramecc1_m1;
+RAMECC_HandleTypeDef hramecc1_m2;
+RAMECC_HandleTypeDef hramecc1_m3;
+RAMECC_HandleTypeDef hramecc1_m4;
+RAMECC_HandleTypeDef hramecc1_m6;
+RAMECC_HandleTypeDef hramecc2_m1;
+RAMECC_HandleTypeDef hramecc2_m2;
+RAMECC_HandleTypeDef hramecc3_m1;
+
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -66,9 +75,7 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_I2C3_SMBUS_Init(void);
-static void MX_I2C4_Init(void);
 static void MX_I2C5_Init(void);
 static void MX_OCTOSPI1_Init(void);
 static void MX_SPI2_Init(void);
@@ -77,6 +84,9 @@ static void MX_I2S6_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_UART4_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_RAMECC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,6 +109,9 @@ int main(void)
   /* MPU Configuration--------------------------------------------------------*/
   MPU_Config();
 
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -117,9 +130,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_I2C3_SMBUS_Init();
-  MX_I2C4_Init();
   MX_I2C5_Init();
   MX_OCTOSPI1_Init();
   MX_SPI2_Init();
@@ -128,6 +139,9 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_UART4_Init();
+  MX_USART1_UART_Init();
+  MX_RAMECC_Init();
   /* USER CODE BEGIN 2 */
 
   cpp_main();
@@ -273,54 +287,6 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x20A0ACFE;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
-}
-
-/**
   * @brief I2C3 Initialization Function
   * @param None
   * @retval None
@@ -362,54 +328,6 @@ static void MX_I2C3_SMBUS_Init(void)
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
-
-}
-
-/**
-  * @brief I2C4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C4_Init(void)
-{
-
-  /* USER CODE BEGIN I2C4_Init 0 */
-
-  /* USER CODE END I2C4_Init 0 */
-
-  /* USER CODE BEGIN I2C4_Init 1 */
-
-  /* USER CODE END I2C4_Init 1 */
-  hi2c4.Instance = I2C4;
-  hi2c4.Init.Timing = 0x20A0ACFE;
-  hi2c4.Init.OwnAddress1 = 0;
-  hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c4.Init.OwnAddress2 = 0;
-  hi2c4.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c4.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c4.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c4, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C4_Init 2 */
-
-  /* USER CODE END I2C4_Init 2 */
 
 }
 
@@ -545,6 +463,91 @@ static void MX_OCTOSPI1_Init(void)
   /* USER CODE BEGIN OCTOSPI1_Init 2 */
 
   /* USER CODE END OCTOSPI1_Init 2 */
+
+}
+
+/**
+  * @brief RAMECC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RAMECC_Init(void)
+{
+
+  /* USER CODE BEGIN RAMECC_Init 0 */
+
+  /* USER CODE END RAMECC_Init 0 */
+
+  /* USER CODE BEGIN RAMECC_Init 1 */
+
+  /* USER CODE END RAMECC_Init 1 */
+
+  /** Initialize RAMECC1 M1 : AXI SRAM
+  */
+  hramecc1_m1.Instance = RAMECC1_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc1_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M2 : ITCM-RAM
+  */
+  hramecc1_m2.Instance = RAMECC1_Monitor2;
+  if (HAL_RAMECC_Init(&hramecc1_m2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M3 : D0TCM-RAM
+  */
+  hramecc1_m3.Instance = RAMECC1_Monitor3;
+  if (HAL_RAMECC_Init(&hramecc1_m3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M4 : D1TCM-RAM
+  */
+  hramecc1_m4.Instance = RAMECC1_Monitor4;
+  if (HAL_RAMECC_Init(&hramecc1_m4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC1 M6 : SRAM
+  */
+  hramecc1_m6.Instance = RAMECC1_Monitor6;
+  if (HAL_RAMECC_Init(&hramecc1_m6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC2 M1 : SRAM1_0
+  */
+  hramecc2_m1.Instance = RAMECC2_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc2_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC2 M2 : SRAM2_0
+  */
+  hramecc2_m2.Instance = RAMECC2_Monitor2;
+  if (HAL_RAMECC_Init(&hramecc2_m2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMECC3 M1 : SRAM4
+  */
+  hramecc3_m1.Instance = RAMECC3_Monitor1;
+  if (HAL_RAMECC_Init(&hramecc3_m1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RAMECC_Init 2 */
+
+  /* USER CODE END RAMECC_Init 2 */
 
 }
 
@@ -703,6 +706,102 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 2 */
   HAL_TIM_MspPostInit(&htim4);
+
+}
+
+/**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 57600;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart4, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart4, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -876,7 +975,7 @@ void MPU_Config(void)
   MPU_InitStruct.BaseAddress = 0x0;
   MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
   MPU_InitStruct.SubRegionDisable = 0x0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
   MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
@@ -892,6 +991,45 @@ void MPU_Config(void)
   MPU_InitStruct.Size = MPU_REGION_SIZE_256MB;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL2;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER2;
+  MPU_InitStruct.BaseAddress = 0x0;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512MB;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER3;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_64KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO_URO;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER4;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER5;
+  MPU_InitStruct.BaseAddress = 0x40000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512MB;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL2;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
