@@ -142,46 +142,46 @@ public:
     helper functions
 ##################################################################### */
 
-  HAL_StatusTypeDef IsBusy(uint8_t* p_result);
-  HAL_StatusTypeDef WaitUntilNotBusy(uint32_t timeout);
-  uint8_t GetAndResetFaultState();
+  uint8_t IsBusy();
+  void WaitUntilNotBusy(uint32_t timeout);
+  uint8_t GetAndResetFaultState() noexcept;
 
-  void ClearDLCmdBuffer();
-  HAL_StatusTypeDef SendBufferedDLCmds(uint32_t timeout);
+  void ClearDLCmdBuffer() noexcept;
+  void SendBufferedDLCmds(uint32_t timeout);
 
   void SaveBufferedDLCmds(std::vector<uint32_t>& target);
-  HAL_StatusTypeDef SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout);
-  uint32_t GetDLBufferSize();
+  void SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout);
+  uint32_t GetDLBufferSize() noexcept;
 
 /* ##################################################################
     commands and functions to be used outside of display-lists
 ##################################################################### */
 
-  HAL_StatusTypeDef CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height);
-  HAL_StatusTypeDef CmdGetPtr(uint32_t* p_pointer);
-  HAL_StatusTypeDef CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len);
-  HAL_StatusTypeDef CmdInterrupt(uint32_t msec);
-  HAL_StatusTypeDef CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len);
-  HAL_StatusTypeDef CmdMediaFifo(uint32_t ptr, uint32_t size);
-  HAL_StatusTypeDef CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num);
-  HAL_StatusTypeDef CmdMemcrc(uint32_t ptr, uint32_t num, uint32_t* p_crc);
-  HAL_StatusTypeDef CmdMemset(uint32_t ptr, uint8_t value, uint32_t num);
-  HAL_StatusTypeDef CmdMemzero(uint32_t ptr, uint32_t num);
-  HAL_StatusTypeDef CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len);
-  HAL_StatusTypeDef CmdSetRotate(uint32_t rotation);
-  HAL_StatusTypeDef CmdSnapshot(uint32_t ptr);
-  HAL_StatusTypeDef CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt);
-  //HAL_StatusTypeDef CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
-  HAL_StatusTypeDef CmdVideoFrame(uint32_t dest, uint32_t result_ptr);
+  void CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height);
+  uint32_t CmdGetPtr();
+  void CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len);
+  void CmdInterrupt(uint32_t msec);
+  void CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len);
+  void CmdMediaFifo(uint32_t ptr, uint32_t size);
+  void CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num);
+  uint32_t CmdMemcrc(uint32_t ptr, uint32_t num);
+  void CmdMemset(uint32_t ptr, uint8_t value, uint32_t num);
+  void CmdMemzero(uint32_t ptr, uint32_t num);
+  void CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len);
+  void CmdSetRotate(uint32_t rotation);
+  void CmdSnapshot(uint32_t ptr);
+  void CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt);
+  //void CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
+  void CmdVideoFrame(uint32_t dest, uint32_t result_ptr);
 
 /* ##################################################################
     patching and initialization
 ##################################################################### */
 
-  HAL_StatusTypeDef WriteDisplayParameters();
-  HAL_StatusTypeDef Init(uint8_t* p_result);
-  HAL_StatusTypeDef SetTransferMode(EVE_TransferMode mode);
-  EVE_TransferMode GetTransferMode();
+  void WriteDisplayParameters();
+  uint8_t Init();
+  void SetTransferMode(EVE_TransferMode mode);
+  EVE_TransferMode GetTransferMode() noexcept;
 
 /* ##################################################################
     functions for display lists
@@ -233,8 +233,8 @@ public:
     meta-commands (commonly used sequences of display-list entries)
 ##################################################################### */
 
-  HAL_StatusTypeDef CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color);
-  HAL_StatusTypeDef CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+  void CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color);
+  void CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
   void CmdPoint(int16_t x0, int16_t y0, uint16_t size);
   void CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width);
   void CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner);
@@ -247,10 +247,10 @@ private:
   uint8_t fault_recovered;
   std::vector<uint32_t> dl_cmd_buffer;
 
-  HAL_StatusTypeDef CoprocessorFaultRecover();
-  HAL_StatusTypeDef SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout);
-  HAL_StatusTypeDef WaitRegID(uint8_t* p_result);
-  HAL_StatusTypeDef WaitReset(uint8_t* p_result);
+  void CoprocessorFaultRecover();
+  void SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout);
+  uint8_t WaitRegID();
+  uint8_t WaitReset();
   void WriteString(const char *p_text);
 
 };

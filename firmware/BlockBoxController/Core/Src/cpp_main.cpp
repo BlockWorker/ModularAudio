@@ -16,24 +16,55 @@ static GUI_Screen_Test test_screen;
 static GUI_Manager gui_mgr(test_screen);
 
 
+static inline void _RefreshWatchdogs() {
+
+}
+
+
 int cpp_main() {
-  RetargetInit(&huart2);
+  //init block - on exception, fail to error handler
+  try {
+    RetargetInit(&huart2);
 
-  HAL_Delay(1000);
+    HAL_Delay(1000);
 
-  DEBUG_PRINTF("Controller started\n");
+    DEBUG_PRINTF("Controller started\n");
 
-  HAL_Delay(100);
+    HAL_Delay(100);
 
-  if (gui_mgr.Init() == HAL_OK) {
+    gui_mgr.Init();
     DEBUG_PRINTF("GUI Init complete\n");
-  } else {
-    DEBUG_PRINTF("*** GUI Init failed!\n");
+
+  } catch (const std::exception& err) {
+    DEBUG_PRINTF("*** Init failed with exception: %s\n", err.what());
+    HAL_Delay(100);
+    Error_Handler();
+  } catch (...) {
+    DEBUG_PRINTF("*** Unknown exception on init!\n");
+    HAL_Delay(100);
+    Error_Handler();
   }
 
+  //infinite loop
+  //iteration counter; may overflow eventually but shouldn't be a problem
+  uint32_t loop_count = 0;
   while (1) {
-    HAL_Delay(50);
-    gui_mgr.Update();
+    uint32_t iteration_start_tick = HAL_GetTick();
+
+    //main loop block - on exception, continue to next cycle
+    try {
+      if (loop_count % 5 == 0) {
+        gui_mgr.Update();
+      }
+    } catch (const std::exception& err) {
+      DEBUG_PRINTF("* Exception in main loop: %s\n", err.what());
+    } catch (...) {
+      DEBUG_PRINTF("* Unknown exception in main loop\n");
+    }
+
+    loop_count++;
+    _RefreshWatchdogs();
+    while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
 }
 

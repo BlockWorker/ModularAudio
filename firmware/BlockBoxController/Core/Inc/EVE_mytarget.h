@@ -160,36 +160,36 @@ class EVE_TargetPHY {
   friend EVE_Driver;
 public:
   //send a host command to to the display; ends any ongoing memory mapping
-  HAL_StatusTypeDef SendHostCommand(uint8_t command, uint8_t param);
+  void SendHostCommand(uint8_t command, uint8_t param);
 
   //directly read from the display; ends any ongoing memory mapping
-  HAL_StatusTypeDef DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout);
-  HAL_StatusTypeDef DirectRead8(uint32_t address, uint8_t* value_ptr);
-  HAL_StatusTypeDef DirectRead16(uint32_t address, uint16_t* value_ptr);
-  HAL_StatusTypeDef DirectRead32(uint32_t address, uint32_t* value_ptr);
+  void DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout);
+  void DirectRead8(uint32_t address, uint8_t* value_ptr);
+  void DirectRead16(uint32_t address, uint16_t* value_ptr);
+  void DirectRead32(uint32_t address, uint32_t* value_ptr);
 
   //directly write to the display; ends any ongoing memory mapping
-  HAL_StatusTypeDef DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout);
-  HAL_StatusTypeDef DirectWrite8(uint32_t address, uint8_t value);
-  HAL_StatusTypeDef DirectWrite16(uint32_t address, uint16_t value);
-  HAL_StatusTypeDef DirectWrite32(uint32_t address, uint32_t value);
+  void DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout);
+  void DirectWrite8(uint32_t address, uint8_t value);
+  void DirectWrite16(uint32_t address, uint16_t value);
+  void DirectWrite32(uint32_t address, uint32_t value);
 
-  HAL_StatusTypeDef EnsureMMapMode(EVE_MMapMode mode);
-  HAL_StatusTypeDef EndMMap();
+  void EnsureMMapMode(EVE_MMapMode mode);
+  void EndMMap();
 
-  EVE_MMapMode GetMMapMode();
-  EVE_TransferMode GetTransferMode() const;
+  EVE_MMapMode GetMMapMode() noexcept;
+  EVE_TransferMode GetTransferMode() const noexcept;
 
-  EVE_TargetPHY() : mmap_mode(MMAP_UNKNOWN), transfer_mode(TRANSFERMODE_SINGLE) {}
+  EVE_TargetPHY() noexcept : mmap_mode(MMAP_UNKNOWN), transfer_mode(TRANSFERMODE_SINGLE) {}
 
 private:
   EVE_MMapMode mmap_mode;
   EVE_TransferMode transfer_mode;
 
-  HAL_StatusTypeDef SetTransferMode(EVE_TransferMode mode);
+  void SetTransferMode(EVE_TransferMode mode);
 
-  HAL_StatusTypeDef configure_main_mmap();
-  HAL_StatusTypeDef configure_func_mmap();
+  void configure_main_mmap();
+  void configure_func_mmap();
 };
 
 //extern EVE_TargetPHY eve_phy;

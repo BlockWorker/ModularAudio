@@ -12,10 +12,10 @@
 /**
  * @brief Write this screen to the display (updated to the latest data).
  */
-HAL_StatusTypeDef GUI_Screen::DisplayScreen() {
+void GUI_Screen::DisplayScreen() {
   this->UpdateDisplayList();
 
-  return eve_drv.SendSavedDLCmds(this->saved_dl_commands, this->display_timeout);
+  eve_drv.SendSavedDLCmds(this->saved_dl_commands, this->display_timeout);
 }
 
 
@@ -59,7 +59,7 @@ uint32_t GUI_Screen::SaveNextCommandOffset() {
 /**
  * @brief Modify a 32-bit word in the display list, relative to a saved command offset (at given `cmd_offset_index`), offset by `word_offset` 32-bit words.
  */
-void GUI_Screen::ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) {
+void GUI_Screen::ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) noexcept {
   int32_t total_word_offset = (int32_t)this->dl_command_offsets[cmd_offset_index] + word_offset;
   this->saved_dl_commands[total_word_offset] = value;
 }
@@ -67,7 +67,7 @@ void GUI_Screen::ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offse
 /**
  * @brief Modify a 16-bit half word in the display list, relative to a saved command offset (at given `cmd_offset_index`), offset by `word_offset` 32-bit words and `half_word_offset` 16-bit half words.
  */
-void GUI_Screen::ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) {
+void GUI_Screen::ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) noexcept {
   int32_t total_word_offset = (int32_t)this->dl_command_offsets[cmd_offset_index] + word_offset;
   ((uint16_t*)(this->saved_dl_commands.data() + total_word_offset))[half_word_offset] = value;
 }

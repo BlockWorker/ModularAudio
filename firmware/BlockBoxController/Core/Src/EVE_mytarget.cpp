@@ -210,14 +210,14 @@ static const OSPI_MemoryMappedTypeDef MMAP_CFG = {
 //EVE_TargetPHY eve_phy;
 
 
-HAL_StatusTypeDef EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param) {
+void EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param) {
   //host commands are only supported in single-spi mode
   if (this->transfer_mode != TRANSFERMODE_SINGLE) {
-    return HAL_ERROR;
+    throw std::logic_error("EVE SendHostCommand only supported in single-spi mode");
   }
 
   //end any current mmap due to different command config
-  ReturnOnError(this->EndMMap());
+  this->EndMMap();
 
   //configure command
   OSPI_RegularCmdTypeDef hcmd = { 0 };
@@ -237,18 +237,18 @@ HAL_StatusTypeDef EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param)
   hcmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;
 
   //send command
-  return HAL_OSPI_Command(&hospi1, &hcmd, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, &hcmd, EVE_PHY_SMALL_TRANSFER_TIMEOUT), "EVE SendHostCommand");
 }
 
 
 //directly read from the display; ends any ongoing memory mapping
-HAL_StatusTypeDef EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout) {
+void EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout) {
   if (buf == NULL) {
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE DirectReadBuffer buf pointer must not be null");
   }
 
   //end any current mmap due to different command config
-  ReturnOnError(this->EndMMap());
+  this->EndMMap();
 
   //configure read
   OSPI_RegularCmdTypeDef dcmd = { 0 };
@@ -267,33 +267,33 @@ HAL_StatusTypeDef EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf
   dcmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;
 
   //apply read config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, &dcmd, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, &dcmd, 2), "EVE DirectReadBuffer setup");
 
   //perform actual read
-  return HAL_OSPI_Receive(&hospi1, buf, timeout);
+  ThrowOnHALErrorMsg(HAL_OSPI_Receive(&hospi1, buf, timeout), "EVE DirectReadBuffer read");
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectRead8(uint32_t address, uint8_t* value_ptr) {
-  return this->DirectReadBuffer(address, value_ptr, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectRead8(uint32_t address, uint8_t* value_ptr) {
+  this->DirectReadBuffer(address, value_ptr, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectRead16(uint32_t address, uint16_t* value_ptr) {
-  return this->DirectReadBuffer(address, (uint8_t*)value_ptr, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectRead16(uint32_t address, uint16_t* value_ptr) {
+  this->DirectReadBuffer(address, (uint8_t*)value_ptr, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectRead32(uint32_t address, uint32_t* value_ptr) {
-  return this->DirectReadBuffer(address, (uint8_t*)value_ptr, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectRead32(uint32_t address, uint32_t* value_ptr) {
+  this->DirectReadBuffer(address, (uint8_t*)value_ptr, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
 
 //directly write to the display; ends any ongoing memory mapping
-HAL_StatusTypeDef EVE_TargetPHY::DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout) {
+void EVE_TargetPHY::DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout) {
   if (buf == NULL) {
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE DirectWriteBuffer buf pointer must not be null");
   }
 
   //end any current mmap due to different command config
-  ReturnOnError(this->EndMMap());
+  this->EndMMap();
 
   //configure write
   OSPI_RegularCmdTypeDef dcmd = { 0 };
@@ -312,27 +312,27 @@ HAL_StatusTypeDef EVE_TargetPHY::DirectWriteBuffer(uint32_t address, const uint8
   dcmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;
 
   //apply write config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, &dcmd, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, &dcmd, 2), "EVE DirectWriteBuffer setup");
 
   //perform actual write
-  return HAL_OSPI_Transmit(&hospi1, (uint8_t*)buf, timeout);
+  ThrowOnHALErrorMsg(HAL_OSPI_Transmit(&hospi1, (uint8_t*)buf, timeout), "EVE DirectWriteBuffer write");
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectWrite8(uint32_t address, uint8_t value) {
-  return this->DirectWriteBuffer(address, &value, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectWrite8(uint32_t address, uint8_t value) {
+  this->DirectWriteBuffer(address, &value, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectWrite16(uint32_t address, uint16_t value) {
-  return this->DirectWriteBuffer(address, (uint8_t*)&value, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectWrite16(uint32_t address, uint16_t value) {
+   this->DirectWriteBuffer(address, (uint8_t*)&value, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::DirectWrite32(uint32_t address, uint32_t value) {
-  return this->DirectWriteBuffer(address, (uint8_t*)&value, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+void EVE_TargetPHY::DirectWrite32(uint32_t address, uint32_t value) {
+   this->DirectWriteBuffer(address, (uint8_t*)&value, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
 
 
-HAL_StatusTypeDef EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
+void EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
   //reset current state to unknown if OSPI peripheral is not in mmapped state anymore
   if (HAL_OSPI_GetState(&hospi1) != HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     this->mmap_mode = MMAP_UNKNOWN;
@@ -343,26 +343,28 @@ HAL_StatusTypeDef EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
       switch (this->mmap_mode) {
         case MMAP_MAIN_RAM:
           //main mmap already active
-          return HAL_OK;
+          return;
         case MMAP_FUNC_RAM:
           //mmap active, but wrong kind (func) - deactivate that mmap first, then fall through to default case
-          ReturnOnError(this->EndMMap());
+          this->EndMMap();
         default:
           //mmap not active - activate main mmap
-          return this->configure_main_mmap();
+          this->configure_main_mmap();
+          return;
       }
 
     case MMAP_FUNC_RAM:
       switch (this->mmap_mode) {
         case MMAP_FUNC_RAM:
           //func mmap already active
-          return HAL_OK;
+          return;
         case MMAP_MAIN_RAM:
           //mmap active, but wrong kind (main) - deactivate that mmap first, then fall through to default case
-          ReturnOnError(this->EndMMap());
+          this->EndMMap();
         default:
           //mmap not active - activate func mmap
-          return this->configure_func_mmap();
+          this->configure_func_mmap();
+          return;
       }
 
     default:
@@ -371,50 +373,46 @@ HAL_StatusTypeDef EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
         case MMAP_FUNC_RAM:
         case MMAP_MAIN_RAM:
           //any mmap active - deactivate that mmap
-          return this->EndMMap();
+          this->EndMMap();
         default:
           //mmap already inactive
-          return HAL_OK;
+          return;
       }
   }
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::EndMMap() {
+void EVE_TargetPHY::EndMMap() {
   if (HAL_OSPI_GetState(&hospi1) == HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     //peripheral busy: abort current mmap
-    ReturnOnError(HAL_OSPI_Abort(&hospi1));
+    ThrowOnHALErrorMsg(HAL_OSPI_Abort(&hospi1), "EVE EndMMap abort");
   }
   this->mmap_mode = MMAP_UNKNOWN;
-  return HAL_OK;
 }
 
-HAL_StatusTypeDef EVE_TargetPHY::SetTransferMode(EVE_TransferMode mode) {
+void EVE_TargetPHY::SetTransferMode(EVE_TransferMode mode) {
   if (this->transfer_mode == mode) {
     //already in desired mode
-    return HAL_OK;
+    return;
   }
 
   if (mode != TRANSFERMODE_SINGLE && mode != TRANSFERMODE_QUAD) {
     //invalid transfer mode requested
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE SetTransferMode only supports single and quad modes");
   }
 
   //save currently active mmap mode, stop active mmap if there is one
   EVE_MMapMode active_mmap_mode = this->GetMMapMode();
-  ReturnOnError(this->EndMMap());
+  this->EndMMap();
 
   this->transfer_mode = mode;
 
   if (active_mmap_mode == MMAP_MAIN_RAM || active_mmap_mode == MMAP_FUNC_RAM) {
     //mmap was active: restart mmap with new mode
-    return this->EnsureMMapMode(active_mmap_mode);
-  } else {
-    //no active mmap: done
-    return HAL_OK;
+    this->EnsureMMapMode(active_mmap_mode);
   }
 }
 
-EVE_MMapMode EVE_TargetPHY::GetMMapMode() {
+EVE_MMapMode EVE_TargetPHY::GetMMapMode() noexcept {
   //reset current state to unknown if OSPI peripheral is not in mmapped state anymore
   if (HAL_OSPI_GetState(&hospi1) != HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     this->mmap_mode = MMAP_UNKNOWN;
@@ -422,44 +420,42 @@ EVE_MMapMode EVE_TargetPHY::GetMMapMode() {
   return this->mmap_mode;
 }
 
-EVE_TransferMode EVE_TargetPHY::GetTransferMode() const {
+EVE_TransferMode EVE_TargetPHY::GetTransferMode() const noexcept {
   return this->transfer_mode;
 }
 
 //configure OSPI for main ram mmap mode (direct addressing, needs software-side handling of "read" addresses vs. "write" addresses)
-HAL_StatusTypeDef EVE_TargetPHY::configure_main_mmap() {
+void EVE_TargetPHY::configure_main_mmap() {
   const OSPI_RegularCmdTypeDef* read_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_MAIN_QUAD_READ : &CMD_MAIN_SINGLE_READ;
   const OSPI_RegularCmdTypeDef* write_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_MAIN_QUAD_WRITE : &CMD_MAIN_SINGLE_WRITE;
 
   //apply read config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)read_cfg, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)read_cfg, 2), "EVE configure_main_mmap setup");
 
   //apply write config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)write_cfg, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)write_cfg, 2), "EVE configure_main_mmap setup");
 
   //enable mmap mode
-  ReturnOnError(HAL_OSPI_MemoryMapped(&hospi1, (OSPI_MemoryMappedTypeDef*)&MMAP_CFG));
+  ThrowOnHALErrorMsg(HAL_OSPI_MemoryMapped(&hospi1, (OSPI_MemoryMappedTypeDef*)&MMAP_CFG), "EVE configure_main_mmap mmap");
 
   this->mmap_mode = MMAP_MAIN_RAM;
-  return HAL_OK;
 }
 
 //configure OSPI for func ram mmap mode (addressing with upper 6 bits fixed to 0x30, automatically handles read/write bit setting)
-HAL_StatusTypeDef EVE_TargetPHY::configure_func_mmap() {
+void EVE_TargetPHY::configure_func_mmap() {
   const OSPI_RegularCmdTypeDef* read_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_FUNC_QUAD_READ : &CMD_FUNC_SINGLE_READ;
   const OSPI_RegularCmdTypeDef* write_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_FUNC_QUAD_WRITE : &CMD_FUNC_SINGLE_WRITE;
 
   //apply read config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)read_cfg, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)read_cfg, 2), "EVE configure_func_mmap setup");
 
   //apply write config
-  ReturnOnError(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)write_cfg, 2));
+  ThrowOnHALErrorMsg(HAL_OSPI_Command(&hospi1, (OSPI_RegularCmdTypeDef*)write_cfg, 2), "EVE configure_func_mmap setup");
 
   //enable mmap mode
-  ReturnOnError(HAL_OSPI_MemoryMapped(&hospi1, (OSPI_MemoryMappedTypeDef*)&MMAP_CFG));
+  ThrowOnHALErrorMsg(HAL_OSPI_MemoryMapped(&hospi1, (OSPI_MemoryMappedTypeDef*)&MMAP_CFG), "EVE configure_func_mmap mmap");
 
   this->mmap_mode = MMAP_FUNC_RAM;
-  return HAL_OK;
 }
 
 

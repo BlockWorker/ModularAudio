@@ -141,4 +141,10 @@ int _kill(int pid, int sig)
   return -1;
 }
 
+int _getentropy(void* buffer, size_t length)
+{
+  buffer = buffer; length = length;
+  return -ENOSYS;
+}
+
 #endif //#if !defined(OS_USE_SEMIHOSTING)

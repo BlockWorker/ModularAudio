@@ -53,54 +53,48 @@ EVE_Driver::EVE_Driver() : fault_recovered(E_OK) {
  * @return - E_NOT_OK - if there was a coprocessor fault and the recovery sequence was executed
  * @note - if there is a coprocessor fault the external flash is not reinitialized by EVE_busy()
  */
-HAL_StatusTypeDef EVE_Driver::IsBusy(uint8_t* p_result) {
-  if (p_result == NULL) {
-    return HAL_ERROR;
-  }
-
+uint8_t EVE_Driver::IsBusy() {
   uint16_t space;
-  *p_result = EVE_IS_BUSY;
+  uint8_t result = EVE_IS_BUSY;
 
-  ReturnOnError(phy.DirectRead16(REG_CMDB_SPACE, &space));
+  phy.DirectRead16(REG_CMDB_SPACE, &space);
 
   // (REG_CMDB_SPACE & 0x03) != 0 -> we have a coprocessor fault
   if ((space & 3) != 0) {
     //we have a coprocessor fault, make EVE play with us again
-    *p_result = EVE_FAULT_RECOVERED;
+    result = EVE_FAULT_RECOVERED;
     this->fault_recovered = EVE_FAULT_RECOVERED; /* save fault recovery state */
-    return this->CoprocessorFaultRecover();
+    this->CoprocessorFaultRecover();
   } else {
     if (space == 0xFFC) {
-      *p_result = E_OK;
+      result = E_OK;
     } else if (space > 0x800) {
-      *p_result = EVE_FIFO_HALF_EMPTY;
+      result = EVE_FIFO_HALF_EMPTY;
     } else {
-      *p_result = EVE_IS_BUSY;
+      result = EVE_IS_BUSY;
     }
   }
 
-  return HAL_OK;
+  return result;
 }
 
 /**
  * @brief Helper function, wait for the coprocessor to complete the FIFO queue.
  */
-HAL_StatusTypeDef EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
+void EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
   uint8_t busy;
 
   uint32_t start_tick = HAL_GetTick();
 
   do {
-    ReturnOnError(this->IsBusy(&busy));
+    busy = this->IsBusy();
 
     if (timeout != HAL_MAX_DELAY) {
       if ((HAL_GetTick() - start_tick) > timeout) {
-        return HAL_TIMEOUT;
+        throw DriverError(DRV_TIMEOUT, "EVE WaitUntilNotBusy timed out");
       }
     }
   } while (busy != E_OK);
-
-  return HAL_OK;
 }
 
 /**
@@ -109,7 +103,7 @@ HAL_StatusTypeDef EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
  * @return - EVE_FAULT_RECOVERED - if EVE_busy() detected a coprocessor fault
  * @return - E_OK - if EVE_busy() did not detect a coprocessor fault
  */
-uint8_t EVE_Driver::GetAndResetFaultState() {
+uint8_t EVE_Driver::GetAndResetFaultState() noexcept {
   uint8_t ret = E_OK;
 
   if (fault_recovered == EVE_FAULT_RECOVERED) {
@@ -123,18 +117,16 @@ uint8_t EVE_Driver::GetAndResetFaultState() {
 /**
  * @brief Clears the display-list command buffer, exiting display-list mode.
  */
-void EVE_Driver::ClearDLCmdBuffer() {
+void EVE_Driver::ClearDLCmdBuffer() noexcept {
   this->dl_cmd_buffer.clear();
 }
 
 /**
  * @brief Sends the buffered display-list commands to the display, then clears the buffer.
  */
-HAL_StatusTypeDef EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
-  ReturnOnError(this->SendSavedDLCmds(this->dl_cmd_buffer, timeout));
+void EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
+  this->SendSavedDLCmds(this->dl_cmd_buffer, timeout);
   this->ClearDLCmdBuffer();
-
-  return HAL_OK;
 }
 
 /**
@@ -148,25 +140,25 @@ void EVE_Driver::SaveBufferedDLCmds(std::vector<uint32_t>& target) {
 /**
  * @brief Sends the display-list commands from an external vector to the display.
  */
-HAL_StatusTypeDef EVE_Driver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout) {
+void EVE_Driver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout) {
   if (source.empty()) {
-    return HAL_OK;
+    return;
   }
 
-  return this->SendCmdBlockTransfer((const uint8_t*)source.data(), source.size() * sizeof(uint32_t), timeout);
+  this->SendCmdBlockTransfer((const uint8_t*)source.data(), source.size() * sizeof(uint32_t), timeout);
 }
 
 /**
  * @brief Returns the current size of the display-list buffer, in 32-bit words. Useful for remembering positions of variable parameters in a saved list.
  */
-uint32_t EVE_Driver::GetDLBufferSize() {
+uint32_t EVE_Driver::GetDLBufferSize() noexcept {
   return this->dl_cmd_buffer.size();
 }
 
 
-HAL_StatusTypeDef EVE_Driver::CoprocessorFaultRecover() {
+void EVE_Driver::CoprocessorFaultRecover() {
   //use mmap mode for the recovery
-  ReturnOnError(this->phy.EnsureMMapMode(MMAP_FUNC_RAM));
+  this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
   MMAP_REG_CPURESET = 1U; //hold coprocessor engine in the reset condition
   MMAP_REG_CMD_READ = 0U; //reset command FIFO positions
@@ -177,18 +169,17 @@ HAL_StatusTypeDef EVE_Driver::CoprocessorFaultRecover() {
 
   MMAP_REG_CPURESET = 0U; //set REG_CPURESET to 0 to restart the coprocessor engine
 
-  ReturnOnError(this->phy.EndMMap());
+  this->phy.EndMMap();
 
   HAL_Delay(10); //just to be safe
-  return HAL_OK;
 }
 
-HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout) {
+void EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout) {
   if (p_data == NULL || length % 4 != 0) {
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE SendCmdBlockTransfer data must not be null and length must be a multiple of 4");
   }
   if (length == 0) {
-    return HAL_OK;
+    return;
   }
 
   uint32_t bytes_left = length;
@@ -197,13 +188,11 @@ HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32
   while (bytes_left > 0) {
     uint32_t block_len = MIN(bytes_left, 3840);
 
-    ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, p_data + offset, block_len, 10));
+    this->phy.DirectWriteBuffer(REG_CMDB_WRITE, p_data + offset, block_len, 10);
     offset += block_len;
     bytes_left -= block_len;
-    ReturnOnError(this->WaitUntilNotBusy(timeout));
+    this->WaitUntilNotBusy(timeout);
   }
-
-  return HAL_OK;
 }
 
 
@@ -216,15 +205,15 @@ HAL_StatusTypeDef EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height) {
+void EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height) {
   const uint32_t cmd[4] = { CMD_GETPROPS, 0, 0, 0 };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  ReturnOnError(this->WaitUntilNotBusy(10));
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 
   //get results using mmap mode
-  ReturnOnError(this->phy.EnsureMMapMode(MMAP_FUNC_RAM));
+  this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
   uint16_t cmdoffset = MMAP_REG_CMD_WRITE;
 
@@ -238,7 +227,7 @@ HAL_StatusTypeDef EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width
     *p_height = *(EVE_MMAP_RAM_CMD_PTR + ((cmdoffset - 4U) & 0xfffU));
   }
 
-  return this->phy.EndMMap();
+  this->phy.EndMMap();
 }
 
 /**
@@ -246,21 +235,20 @@ HAL_StatusTypeDef EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdGetPtr(uint32_t* p_pointer) {
-  if (p_pointer == NULL) {
-    return HAL_ERROR;
-  }
-
+uint32_t EVE_Driver::CmdGetPtr() {
   const uint32_t cmd[2] = { CMD_GETPTR, 0 };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  ReturnOnError(this->WaitUntilNotBusy(10));
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 
   //get result
   uint16_t cmdoffset;
-  ReturnOnError(this->phy.DirectRead16(REG_CMD_WRITE, &cmdoffset));
-  return this->phy.DirectRead32(EVE_RAM_CMD + ((cmdoffset - 4U) & 0xfffU), p_pointer);
+  this->phy.DirectRead16(REG_CMD_WRITE, &cmdoffset);
+  uint32_t pointer;
+  this->phy.DirectRead32(EVE_RAM_CMD + ((cmdoffset - 4U) & 0xfffU), &pointer);
+
+  return pointer;
 }
 
 /**
@@ -269,16 +257,16 @@ HAL_StatusTypeDef EVE_Driver::CmdGetPtr(uint32_t* p_pointer) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
+void EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
   if (p_data == NULL || len % 4 != 0) {
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE CmdInflate data must not be null and length must be a multiple of 4");
   }
 
   uint32_t cmd[2] = { CMD_INFLATE, ptr };
 
   //write command and data as block transfer
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->SendCmdBlockTransfer(p_data, len, 30);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->SendCmdBlockTransfer(p_data, len, 30);
 }
 
 /**
@@ -286,12 +274,12 @@ HAL_StatusTypeDef EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, ui
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdInterrupt(uint32_t msec) {
+void EVE_Driver::CmdInterrupt(uint32_t msec) {
   uint32_t cmd[2] = { CMD_INTERRUPT, msec };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10); //TODO: do we need to wait at least `msec`? probably not?
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10); //TODO: do we need to wait at least `msec`? probably not?
 }
 
 /**
@@ -303,22 +291,16 @@ HAL_StatusTypeDef EVE_Driver::CmdInterrupt(uint32_t msec) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len) {
-  if (p_data == NULL || len % 4 != 0) {
-    return HAL_ERROR;
-  }
-
+void EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len) {
   uint32_t cmd[3] = { CMD_LOADIMAGE, ptr, options };
 
   //write command and data as block transfer (unless mediafifo is used)
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
   if ((options & EVE_OPT_MEDIAFIFO) == 0) {
-    if (p_data == NULL) {
-      return HAL_ERROR;
+    if (p_data == NULL || len % 4 != 0) {
+      throw std::invalid_argument("EVE CmdLoadImage data must not be null and length must be a multiple of 4");
     }
-    return this->SendCmdBlockTransfer(p_data, len, 30);
-  } else {
-    return HAL_OK;
+    this->SendCmdBlockTransfer(p_data, len, 30);
   }
 }
 
@@ -327,12 +309,12 @@ HAL_StatusTypeDef EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
+void EVE_Driver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
   uint32_t cmd[3] = { CMD_MEDIAFIFO, ptr, size };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -340,12 +322,12 @@ HAL_StatusTypeDef EVE_Driver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num) {
+void EVE_Driver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num) {
   uint32_t cmd[4] = { CMD_MEMCPY, dest, src, num };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -353,21 +335,20 @@ HAL_StatusTypeDef EVE_Driver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t nu
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdMemcrc(uint32_t ptr, uint32_t num, uint32_t* p_crc) {
-  if (p_crc == NULL) {
-    return HAL_ERROR;
-  }
-
+uint32_t EVE_Driver::CmdMemcrc(uint32_t ptr, uint32_t num) {
   const uint32_t cmd[4] = { CMD_MEMCRC, ptr, num, 0 };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  ReturnOnError(this->WaitUntilNotBusy(10));
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 
   //get result
   uint16_t cmdoffset;
-  ReturnOnError(this->phy.DirectRead16(REG_CMD_WRITE, &cmdoffset));
-  return this->phy.DirectRead32(EVE_RAM_CMD + ((cmdoffset - 4U) & 0xfffU), p_crc);
+  this->phy.DirectRead16(REG_CMD_WRITE, &cmdoffset);
+  uint32_t crc;
+  this->phy.DirectRead32(EVE_RAM_CMD + ((cmdoffset - 4U) & 0xfffU), &crc);
+
+  return crc;
 }
 
 /**
@@ -375,12 +356,12 @@ HAL_StatusTypeDef EVE_Driver::CmdMemcrc(uint32_t ptr, uint32_t num, uint32_t* p_
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t num) {
+void EVE_Driver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t num) {
   uint32_t cmd[4] = { CMD_MEMSET, ptr, (uint32_t)value, num };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -388,12 +369,12 @@ HAL_StatusTypeDef EVE_Driver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t nu
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
+void EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
   uint32_t cmd[3] = { CMD_MEMZERO, ptr, num };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -403,22 +384,16 @@ HAL_StatusTypeDef EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
  * @note - Includes executing the command.
  * @note - Does not wait for completion in order to allow the video to be paused or terminated by REG_PLAY_CONTROL
  */
-HAL_StatusTypeDef EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len) {
-  if (p_data == NULL || len % 4 != 0) {
-    return HAL_ERROR;
-  }
-
+void EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len) {
   uint32_t cmd[2] = { CMD_PLAYVIDEO, options };
 
   //write command and data as block transfer (unless mediafifo is used)
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
   if ((options & EVE_OPT_MEDIAFIFO) == 0) {
-    if (p_data == NULL) {
-      return HAL_ERROR;
+    if (p_data == NULL || len % 4 != 0) {
+      throw std::invalid_argument("EVE CmdPlayVideo data must not be null and length must be a multiple of 4");
     }
-    return this->SendCmdBlockTransfer(p_data, len, 30);
-  } else {
-    return HAL_OK;
+    this->SendCmdBlockTransfer(p_data, len, 30);
   }
 }
 
@@ -427,12 +402,12 @@ HAL_StatusTypeDef EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_da
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdSetRotate(uint32_t rotation) {
+void EVE_Driver::CmdSetRotate(uint32_t rotation) {
   uint32_t cmd[2] = { CMD_SETROTATE, rotation };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -440,12 +415,12 @@ HAL_StatusTypeDef EVE_Driver::CmdSetRotate(uint32_t rotation) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdSnapshot(uint32_t ptr) {
+void EVE_Driver::CmdSnapshot(uint32_t ptr) {
   uint32_t cmd[2] = { CMD_SNAPSHOT, ptr };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 8, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -453,7 +428,7 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot(uint32_t ptr) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt) {
+void EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt) {
   uint32_t cmd[5] = {
       CMD_SNAPSHOT2, fmt, ptr,
       ((uint32_t)xc0) | (((uint32_t)yc0) << 16U),
@@ -461,8 +436,8 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t x
   };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 20, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 20, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 /**
@@ -470,7 +445,7 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t x
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-/*HAL_StatusTypeDef EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
+/*void EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
   uint32_t cmd[4] = {
       CMD_TRACK,
       ((uint32_t)xc0) | (((uint32_t)yc0) << 16U),
@@ -479,8 +454,8 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t x
   };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 16, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }*/
 
 /**
@@ -488,12 +463,12 @@ HAL_StatusTypeDef EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t x
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-HAL_StatusTypeDef EVE_Driver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) {
+void EVE_Driver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) {
   uint32_t cmd[3] = { CMD_VIDEOFRAME, dest, result_ptr };
 
   //write command and wait for completion
-  ReturnOnError(this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT));
-  return this->WaitUntilNotBusy(10);
+  this->phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmd, 12, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
+  this->WaitUntilNotBusy(10);
 }
 
 
@@ -506,9 +481,9 @@ HAL_StatusTypeDef EVE_Driver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) 
  * to the corresponding registers.
  * It is used by Init() and can be used to refresh the register values if needed.
  */
-HAL_StatusTypeDef EVE_Driver::WriteDisplayParameters() {
+void EVE_Driver::WriteDisplayParameters() {
   //perform writes in mmap mode
-  ReturnOnError(this->phy.EnsureMMapMode(MMAP_FUNC_RAM));
+  this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
   //Initialize Display
   MMAP_REG_HSIZE = EVE_HSIZE;      //active display width
@@ -542,7 +517,7 @@ HAL_StatusTypeDef EVE_Driver::WriteDisplayParameters() {
   //reset default value is 0x0 - not inverted, landscape, not mirrored
 #endif
 
-  return this->phy.EndMMap();
+  this->phy.EndMMap();
 }
 
 /**
@@ -556,12 +531,8 @@ HAL_StatusTypeDef EVE_Driver::WriteDisplayParameters() {
  * @note - EVE_BACKLIGHT_FREQ - configure the backlight frequency, default is not writing it which results in 250Hz.
  * @note - EVE_BACKLIGHT_PWM - configure the backlight pwm, defaults to 0x20 / 25%.
  */
-HAL_StatusTypeDef EVE_Driver::Init(uint8_t* p_result) {
-  if (p_result == NULL) {
-    return HAL_ERROR;
-  }
-
-  *p_result = E_NOT_OK;
+uint8_t EVE_Driver::Init() {
+  uint8_t result = E_NOT_OK;
 
   //power cycle
   HAL_GPIO_WritePin(LCD_PD_N_GPIO_Port, LCD_PD_N_Pin, GPIO_PIN_RESET);
@@ -570,26 +541,26 @@ HAL_StatusTypeDef EVE_Driver::Init(uint8_t* p_result) {
   HAL_Delay(21); //minimum time to allow from rising PD_N to first access is 20ms
 
 #if defined (EVE_HAS_CRYSTAL)
-  ReturnOnError(this->phy.SendHostCommand(EVE_CLKEXT, 0U)); //setup EVE for external clock
+  this->phy.SendHostCommand(EVE_CLKEXT, 0U); //setup EVE for external clock
 #else
-  ReturnOnError(this->phy.SendHostCommand(EVE_CLKINT, 0U)); //setup EVE for internal clock
+  this->phy.SendHostCommand(EVE_CLKINT, 0U); //setup EVE for internal clock
 #endif
 
-  ReturnOnError(this->phy.SendHostCommand(EVE_ACTIVE, 0U)); //start EVE
+  this->phy.SendHostCommand(EVE_ACTIVE, 0U); //start EVE
   HAL_Delay(40); //give EVE a moment of silence to power up
 
-  ReturnOnError(this->WaitRegID(p_result));
-  if (*p_result == E_OK) {
-    ReturnOnError(this->WaitReset(p_result));
-    if (*p_result == E_OK) {
+  result = this->WaitRegID();
+  if (result == E_OK) {
+    result = this->WaitReset();
+    if (result == E_OK) {
       //use mmap mode for writing
-      ReturnOnError(this->phy.EnsureMMapMode(MMAP_FUNC_RAM));
+      this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
       MMAP_REG_PWM_DUTY = 0U; //turn off backlight
 
-      ReturnOnError(this->WriteDisplayParameters());
+      this->WriteDisplayParameters();
 
-      ReturnOnError(this->phy.EnsureMMapMode(MMAP_FUNC_RAM)); //make sure we still have mmap enabled
+      this->phy.EnsureMMapMode(MMAP_FUNC_RAM); //make sure we still have mmap enabled
 
       //disable Audio for now
       MMAP_REG_VOL_PB = 0U;      //turn recorded audio volume down, reset-default is 0xff
@@ -616,36 +587,36 @@ HAL_StatusTypeDef EVE_Driver::Init(uint8_t* p_result) {
       MMAP_REG_PWM_DUTY = 0x20U; //turn on backlight pwm to 25%
 #endif
 
-      ReturnOnError(this->phy.EndMMap());
+      this->phy.EndMMap();
 
       HAL_Delay(1);
-      return this->WaitUntilNotBusy(20); //just to be safe, wait for EVE to not be busy
+      this->WaitUntilNotBusy(20); //just to be safe, wait for EVE to not be busy
     }
   }
 
-  return HAL_OK;
+  return result;
 }
 
-HAL_StatusTypeDef EVE_Driver::SetTransferMode(EVE_TransferMode mode) {
+void EVE_Driver::SetTransferMode(EVE_TransferMode mode) {
   if (this->GetTransferMode() == mode) {
     //already in desired mode
-    return HAL_OK;
+    return;
   }
 
   if (mode != TRANSFERMODE_SINGLE && mode != TRANSFERMODE_QUAD) {
     //invalid transfer mode requested
-    return HAL_ERROR;
+    throw std::invalid_argument("EVE SetTransferMode only supports single and quad modes");
   }
 
   //write to spi config register
   uint8_t spi_config = (mode == TRANSFERMODE_QUAD) ? 0x02 : 0x00;
-  ReturnOnError(this->phy.DirectWrite8(REG_SPI_WIDTH, spi_config));
+  this->phy.DirectWrite8(REG_SPI_WIDTH, spi_config);
 
   //configure interface to new width
-  return this->phy.SetTransferMode(mode);
+  this->phy.SetTransferMode(mode);
 }
 
-EVE_TransferMode EVE_Driver::GetTransferMode() {
+EVE_TransferMode EVE_Driver::GetTransferMode() noexcept {
   return this->phy.GetTransferMode();
 }
 
@@ -656,22 +627,22 @@ EVE_TransferMode EVE_Driver::GetTransferMode() {
  * @return Returns E_OK in case of success, EVE_FAIL_REGID_TIMEOUT if the
  * value of 0x7c could not be read.
  */
-HAL_StatusTypeDef EVE_Driver::WaitRegID(uint8_t* p_result) {
-  *p_result = EVE_FAIL_REGID_TIMEOUT;
+uint8_t EVE_Driver::WaitRegID() {
+  uint8_t result = EVE_FAIL_REGID_TIMEOUT;
   uint8_t regid = 0U;
 
   for (uint16_t timeout = 0U; timeout < 400U; timeout++) {
     HAL_Delay(1);
 
-    ReturnOnError(this->phy.DirectRead8(REG_ID, &regid));
+    this->phy.DirectRead8(REG_ID, &regid);
     if (regid == 0x7CU) {
       //EVE is up and running
-      *p_result = E_OK;
+      result = E_OK;
       break;
     }
   }
 
-  return HAL_OK;
+  return result;
 }
 
 /**
@@ -681,22 +652,22 @@ HAL_StatusTypeDef EVE_Driver::WaitRegID(uint8_t* p_result) {
  * @return Returns E_OK in case of success, EVE_FAIL_RESET_TIMEOUT if either the
  * audio, touch or coprocessor unit indicate a fault by not returning from reset.
  */
-HAL_StatusTypeDef EVE_Driver::WaitReset(uint8_t* p_result) {
-  *p_result = EVE_FAIL_RESET_TIMEOUT;
+uint8_t EVE_Driver::WaitReset() {
+  uint8_t result = EVE_FAIL_RESET_TIMEOUT;
   uint8_t reset = 0U;
 
   for (uint16_t timeout = 0U; timeout < 50U; timeout++) {
     HAL_Delay(1);
 
-    ReturnOnError(this->phy.DirectRead8(REG_CPURESET, &reset));
+    this->phy.DirectRead8(REG_CPURESET, &reset);
     if ((reset & 0x7U) == 0U) {
       //EVE reports all units running
-      *p_result = E_OK;
+      result = E_OK;
       break;
     }
   }
 
-  return HAL_OK;
+  return result;
 }
 
 
@@ -1085,7 +1056,7 @@ void EVE_Driver::WriteString(const char *p_text) {
         return;
       }
 
-      calc += ((uint32_t)data) << (index * 8U);
+      calc |= ((uint32_t)data) << (index * 8U);
     }
 
     this->dl_cmd_buffer.push_back(calc);
@@ -1108,22 +1079,20 @@ void EVE_Driver::WriteString(const char *p_text) {
     meta-commands (commonly used sequences of display-list entries)
 ##################################################################### */
 
-HAL_StatusTypeDef EVE_Driver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color) {
-  ReturnOnError(this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE));
+void EVE_Driver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color) {
+  this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
   this->CmdDL(CLEAR(color, stencil, tag));
-  return HAL_OK;
 }
 
-HAL_StatusTypeDef EVE_Driver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-  ReturnOnError(this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE));
+void EVE_Driver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+  this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(SCISSOR_XY(x, y));
   this->CmdDL(SCISSOR_SIZE(w, h));
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
   this->CmdDL(CLEAR(color, stencil, tag));
-  return HAL_OK;
 }
 
 void EVE_Driver::CmdPoint(int16_t x0, int16_t y0, uint16_t size) {

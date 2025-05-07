@@ -23,10 +23,10 @@
 
 class GUI_Manager {
 public:
-  GUI_Manager(GUI_Screen& init_screen) : current_screen(init_screen) {}
+  GUI_Manager(GUI_Screen& init_screen) noexcept : current_screen(init_screen) {}
 
-  HAL_StatusTypeDef Init();
-  void Update();
+  void Init();
+  void Update() noexcept;
 
   void SetScreen(GUI_Screen& screen);
 

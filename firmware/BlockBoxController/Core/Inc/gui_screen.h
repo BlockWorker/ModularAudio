@@ -8,6 +8,7 @@
 #ifndef INC_GUI_SCREEN_H_
 #define INC_GUI_SCREEN_H_
 
+#include "cpp_main.h"
 #include "EVE.h"
 
 
@@ -37,11 +38,11 @@ typedef struct {
 
 class GUI_Screen {
 public:
-  virtual HAL_StatusTypeDef DisplayScreen();
+  virtual void DisplayScreen();
 
-  virtual void HandleTouch(const GUI_TouchState& state) = 0;
+  virtual void HandleTouch(const GUI_TouchState& state) noexcept = 0;
 
-  GUI_Screen(uint32_t display_timeout) : display_timeout(display_timeout) {}
+  GUI_Screen(uint32_t display_timeout) noexcept : display_timeout(display_timeout) {}
 
 protected:
   std::vector<uint32_t> saved_dl_commands;
@@ -53,8 +54,8 @@ protected:
   virtual void UpdateDisplayList();
 
   uint32_t SaveNextCommandOffset();
-  void ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value);
-  void ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value);
+  void ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) noexcept;
+  void ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) noexcept;
 
 private:
   void BuildCommonContent();

@@ -8,16 +8,15 @@
 #include "gui_manager.h"
 
 
-HAL_StatusTypeDef GUI_Manager::Init() {
+void GUI_Manager::Init() {
   //start by initialising the display
-  uint8_t init_result;
-  ReturnOnError(eve_drv.Init(&init_result));
+  uint8_t init_result = eve_drv.Init();
   if (init_result != E_OK) {
-    return HAL_ERROR;
+    InlineFormat(throw DriverError(DRV_FAILED, __msg), "EVE driver init failed with result %d", init_result);
   }
 
   //set up quad transfer mode - TODO: enable when logic analyser debug not required anymore
-  //ReturnOnError(eve_drv.SetTransferMode(TRANSFERMODE_QUAD));
+  //eve_drv.SetTransferMode(TRANSFERMODE_QUAD);
 
   //TODO: increase SPI speed above 11MHz here if desired
 
@@ -39,35 +38,34 @@ HAL_StatusTypeDef GUI_Manager::Init() {
   this->touch_state.tracker_value = 0;
 
   //display initial screen
-  return this->current_screen.DisplayScreen();
+  this->current_screen.DisplayScreen();
 }
 
-void GUI_Manager::Update() {
+void GUI_Manager::Update() noexcept {
   uint32_t tick = HAL_GetTick();
 
   //read touch info
   uint8_t tag_read_buf;
   uint32_t touch_read_buf;
-  if (eve_drv.phy.DirectRead32(REG_TOUCH_DIRECT_XY, &touch_read_buf) == HAL_OK) {
+  try {
+    eve_drv.phy.DirectRead32(REG_TOUCH_DIRECT_XY, &touch_read_buf);
     bool new_touched = (touch_read_buf & 0x80000000U) == 0;
 
     //read tag and tracker info if we have a touch
     if (new_touched) {
-      if (eve_drv.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf) == HAL_OK) {
-        //store tag in touch state
-        this->touch_state.tag = tag_read_buf;
+      //get tag and store in touch state
+      eve_drv.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
+      this->touch_state.tag = tag_read_buf;
 
-        if (eve_drv.phy.DirectRead32(REG_TRACKER, &touch_read_buf) == HAL_OK) {
-          //get tracker tag and compare it against directly reported tag
-          uint16_t tracker_tag = (uint16_t)touch_read_buf;
-          if (tracker_tag == this->touch_state.tag) {
-            //tag matches: store tracker value
-            this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16);
-          } else {
-            //tag doesn't match: discard tracker value
-            this->touch_state.tracker_value = 0;
-          }
-        }
+      //get tracker tag and compare it against directly reported tag
+      eve_drv.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
+      uint16_t tracker_tag = (uint16_t)touch_read_buf;
+      if (tracker_tag == this->touch_state.tag) {
+        //tag matches: store tracker value
+        this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16);
+      } else {
+        //tag doesn't match: discard tracker value
+        this->touch_state.tracker_value = 0;
       }
     }
 
@@ -103,10 +101,20 @@ void GUI_Manager::Update() {
     if (this->touch_state.touched || this->touch_state.released) {
       this->current_screen.HandleTouch(touch_state);
     }
+  } catch (const std::exception& exc) {
+    DEBUG_PRINTF("* GUI manager touch update failed: %s\n", exc.what());
+  } catch (...) {
+    DEBUG_PRINTF("* GUI manager touch update failed with unknown exception\n");
   }
 
   //perform screen update and redraw
-  this->current_screen.DisplayScreen();
+  try {
+    this->current_screen.DisplayScreen();
+  } catch (const std::exception& exc) {
+    DEBUG_PRINTF("* GUI manager screen update failed: %s\n", exc.what());
+  } catch (...) {
+    DEBUG_PRINTF("* GUI manager screen update failed with unknown exception\n");
+  }
 }
 
 

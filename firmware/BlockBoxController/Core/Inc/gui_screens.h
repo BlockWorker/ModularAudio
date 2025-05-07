@@ -16,7 +16,7 @@ class GUI_Screen_Test : public GUI_Screen {
 public:
   GUI_Screen_Test() : GUI_Screen(30), slider_pos(0) {}
 
-  virtual void HandleTouch(const GUI_TouchState& state) override {
+  virtual void HandleTouch(const GUI_TouchState& state) noexcept override {
     if (state.touched && state.tag == 1) {
       this->slider_pos = state.tracker_value;
     }
