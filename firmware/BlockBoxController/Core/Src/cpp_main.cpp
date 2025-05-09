@@ -7,9 +7,9 @@
 
 #include "cpp_main.h"
 #include "retarget.h"
-#include <string.h>
 #include "EVE.h"
 #include "gui_manager.h"
+#include "module_interface.h"
 
 
 static GUI_Screen_Test test_screen;
@@ -29,6 +29,30 @@ int cpp_main() {
     HAL_Delay(1000);
 
     DEBUG_PRINTF("Controller started\n");
+
+    HAL_Delay(100);
+
+    I2CHardwareInterface i2c5_if(&hi2c5);
+    I2CModuleInterface dap_if(i2c5_if, I2C5_INT3_N_GPIO_Port, I2C5_INT3_N_Pin, 0x4A, true);
+    DEBUG_PRINTF("DAP module ID: 0x%02X\n", dap_if.ReadRegister8(0xFF));
+    DEBUG_PRINTF("DAP I2S1 sample rate: %lu\n", dap_if.ReadRegister32(0x28));
+    DEBUG_PRINTF("DAP initial control: 0x%02X\n", dap_if.ReadRegister8(0x08));
+    dap_if.WriteRegister8(0x08, 0x07);
+    DEBUG_PRINTF("DAP new control: 0x%02X\n", dap_if.ReadRegister8(0x08));
+    uint32_t mixerAndVols[6];
+    uint16_t regSizes[2] = { 16, 8 };
+    dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+    DEBUG_PRINTF("DAP initial mixer: 0x%08lX 0x%08lX 0x%08lX 0x%08lX; vols: %.1f %.1f\n", mixerAndVols[0], mixerAndVols[1], mixerAndVols[2], mixerAndVols[3], ((float*)mixerAndVols)[4], ((float*)mixerAndVols)[5]);
+    mixerAndVols[0] = 0x41234567;
+    mixerAndVols[1] = 0x00000008;
+    mixerAndVols[2] = 0x00000009;
+    mixerAndVols[3] = 0x4123456A;
+    ((float*)mixerAndVols)[4] = -3.5f;
+    ((float*)mixerAndVols)[5] = -5.5f;
+    dap_if.WriteMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+    memset(mixerAndVols, 0, sizeof(mixerAndVols));
+    dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+    DEBUG_PRINTF("DAP new mixer: 0x%08lX 0x%08lX 0x%08lX 0x%08lX; vols: %.1f %.1f\n", mixerAndVols[0], mixerAndVols[1], mixerAndVols[2], mixerAndVols[3], ((float*)mixerAndVols)[4], ((float*)mixerAndVols)[5]);
 
     HAL_Delay(100);
 

@@ -38,7 +38,7 @@ ENTRY(Reset_Handler)
 _eheap = ORIGIN(RAM_D1) + LENGTH(RAM_D1);       /* end of RAM_D1 */
 _estack = ORIGIN(DTCMRAM) + LENGTH(DTCMRAM);    /* end of DTCMRAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x8000;      /* required amount of heap  */
+_Min_Heap_Size = 0x10000;      /* required amount of heap  */
 _Min_Stack_Size = 0x1000; /* required amount of stack */
 /* Reserve space at start of memory space, to avoid overwriting ITCMRAM code in case of a null-pointer error */
 _Null_Pointer_Buffer_Size = 0x1000;
