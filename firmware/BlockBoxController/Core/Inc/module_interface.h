@@ -51,7 +51,8 @@ typedef enum {
 //callback type for module register transfers - arguments: success, context, value where applicable
 typedef void (*ModuleTransferCallback)(bool, uintptr_t, uint32_t);
 
-typedef struct {
+class ModuleTransferQueueItem {
+public:
   ModuleTransferType type;
 
   uint8_t reg_addr;
@@ -63,7 +64,9 @@ typedef struct {
 
   ModuleTransferCallback callback;
   uintptr_t context;
-} ModuleTransferQueueItem;
+
+  virtual ~ModuleTransferQueueItem() = default;
+};
 
 
 //abstract interface for interacting with other system modules
@@ -104,8 +107,8 @@ protected:
   std::vector<ModuleTransferQueueItem*> completed_transfers;
   bool async_transfer_active = false;
 
-  virtual void StartQueuedAsyncTransfer() = 0;
-  void CompleteActiveAsyncTransfer(bool success);
+  virtual ModuleTransferQueueItem* CreateTransferQueueItem();
+  virtual void StartQueuedAsyncTransfer() noexcept = 0;
 
   void ExecuteCallbacks(uint32_t event) noexcept;
 };
@@ -122,21 +125,32 @@ public:
   bool IsBusy() noexcept;
 
   void Read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf, uint16_t length);
-  void ReadAsync(I2CModuleInterface* interface, uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf, uint16_t length);
+  void ReadAsync(I2CModuleInterface* interface, uint8_t reg_addr, uint8_t* buf, uint16_t length);
 
   void Write(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length);
-  void WriteAsync(I2CModuleInterface* interface, uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length);
+  void WriteAsync(I2CModuleInterface* interface, uint8_t reg_addr, const uint8_t* buf, uint16_t length);
 
   void HandleInterrupt(ModuleInterfaceInterruptType type) noexcept;
 
-  I2CHardwareInterface(I2C_HandleTypeDef* i2c_handle);
+  void Init();
+  void LoopTasks();
+
+  I2CHardwareInterface(I2C_HandleTypeDef* i2c_handle, void (*hardware_reset_func)());
 
 private:
+  void (*const hardware_reset_func)();
+
   std::vector<I2CModuleInterface*> registered_interfaces;
   I2CModuleInterface* active_async_interface = NULL;
 
+  uint32_t idle_busy_count;
+  uint32_t non_idle_timeout;
+
   void RegisterInterface(I2CModuleInterface* interface);
   void UnregisterInterface(I2CModuleInterface* interface);
+
+  void StartNextTransfer() noexcept;
+  void Reset() noexcept;
 };
 
 
@@ -150,8 +164,8 @@ public:
   const uint8_t i2c_address;
   const bool uses_crc;
 
-  virtual void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
-  virtual void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
+  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
 
   //read `count` consecutive registers with the given sizes
   void ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count);
@@ -161,13 +175,17 @@ public:
   void WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count);
   void WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context);
 
-  virtual void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
+  void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
 
   I2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, bool use_crc = true);
-  virtual ~I2CModuleInterface() override;
+  ~I2CModuleInterface() override;
 
 protected:
-  virtual void StartQueuedAsyncTransfer() override;
+  ModuleTransferQueueItem* CreateTransferQueueItem() override;
+  void StartQueuedAsyncTransfer() noexcept override;
+
+private:
+  void HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept;
 };
 
 
@@ -177,15 +195,15 @@ public:
   UART_HandleTypeDef* const uart_handle;
   const bool uses_crc;
 
-  virtual void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
-  virtual void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
+  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
 
-  virtual void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
+  void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
 
   UARTModuleInterface(UART_HandleTypeDef* uart_handle, bool use_crc = true);
 
 protected:
-  virtual void StartQueuedAsyncTransfer() override;
+  void StartQueuedAsyncTransfer() noexcept override;
 };
 
 #endif

@@ -27,7 +27,7 @@ UARTModuleInterface::UARTModuleInterface(UART_HandleTypeDef* uart_handle, bool u
   }
 }
 
-void UARTModuleInterface::StartQueuedAsyncTransfer() {
+void UARTModuleInterface::StartQueuedAsyncTransfer() noexcept {
 
 }
 

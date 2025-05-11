@@ -9,6 +9,57 @@
 #include "module_interface.h"
 
 
+//timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)
+//initial values calculated for 8 MHz I2CCLK: stretch timeout 8ms in release, 32ms in debug, low timeout 16ms in release, 64ms in debug
+#ifdef DEBUG
+#define I2C_SCL_STRETCH_TIMEOUT (127 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (255 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#else
+#define I2C_SCL_STRETCH_TIMEOUT (31 << I2C_TIMEOUTR_TIMEOUTB_Pos)
+#define I2C_SCL_LOW_TIMEOUT (63 << I2C_TIMEOUTR_TIMEOUTA_Pos)
+#endif
+
+//timeout for non-idle state, in main loop cycles
+#ifdef DEBUG
+#define I2C_NONIDLE_TIMEOUT 40
+#else
+#define I2C_NONIDLE_TIMEOUT 20
+#endif
+
+//timeout for busy I2C peripheral despite idle driver, in main loop cycles
+#ifdef DEBUG
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 20
+#else
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 10
+#endif
+
+//number of internal retries for failed I2C transfers
+#define I2C_INTERNAL_RETRIES 3
+
+//TODO: potential transfer-specific timeout as well?
+
+
+//async transfer queue item, extended for I2C-specific information
+class I2CModuleTransferQueueItem : public ModuleTransferQueueItem {
+public:
+  uint8_t* add_buffer;
+
+  uint16_t* reg_sizes;
+  uint8_t reg_count;
+
+  uint8_t retry_count;
+
+  ~I2CModuleTransferQueueItem() override {
+    if (this->add_buffer != NULL) {
+      delete[] this->add_buffer;
+    }
+    if (this->reg_sizes != NULL) {
+      delete[] this->reg_sizes;
+    }
+  }
+};
+
+
 //I2C CRC data
 static const uint8_t _i2c_crc_table[256] = {
   0x00, 0x7F, 0xFE, 0x81, 0x83, 0xFC, 0x7D, 0x02, 0x79, 0x06, 0x87, 0xF8, 0xFA, 0x85, 0x04, 0x7B,
@@ -30,16 +81,6 @@ static const uint8_t _i2c_crc_table[256] = {
 };
 
 
-//calculate CRC, starting with existing CRC state (initial state at the start of a calculation should be 0)
-static uint8_t _I2C_CRC_Accumulate(uint8_t* buf, uint16_t length, uint8_t state) {
-  int i;
-  for (i = 0; i < length; i++) {
-    state = _i2c_crc_table[buf[i] ^ state];
-  }
-  return state;
-}
-
-
 /*********************************************************/
 /*                I2C Hardware Interface                 */
 /*********************************************************/
@@ -57,7 +98,7 @@ void I2CHardwareInterface::Read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf
   ThrowOnHALErrorMsg(HAL_I2C_Mem_Read(this->i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C read");
 }
 
-void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t reg_addr, uint8_t* buf, uint16_t length) {
   if (interface == NULL || buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface async transfers require non-null interface and buffer and non-zero length");
   }
@@ -72,12 +113,14 @@ void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t i2c_
     throw DriverError(DRV_BUSY, "I2CHardwareInterface is already busy");
   }
 
+  //start non-idle timeout
+  this->non_idle_timeout = I2C_NONIDLE_TIMEOUT;
   //remember given interface as active
   this->active_async_interface = interface;
 
   //start transfer
   try {
-    ThrowOnHALErrorMsg(HAL_I2C_Mem_Read_IT(this->i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, buf, length), "I2C async read");
+    ThrowOnHALErrorMsg(HAL_I2C_Mem_Read_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, buf, length), "I2C async read");
   } catch (...) {
     //on error: clear active interface, re-enable interrupts, then rethrow
     this->active_async_interface = NULL;
@@ -97,7 +140,7 @@ void I2CHardwareInterface::Write(uint8_t i2c_addr, uint8_t reg_addr, const uint8
   ThrowOnHALErrorMsg(HAL_I2C_Mem_Write(i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C write");
 }
 
-void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
   if (interface == NULL || buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface async transfers require non-null interface and buffer and non-zero length");
   }
@@ -112,12 +155,14 @@ void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint8_t i2c
     throw DriverError(DRV_BUSY, "I2CHardwareInterface is already busy");
   }
 
+  //start non-idle timeout
+  this->non_idle_timeout = I2C_NONIDLE_TIMEOUT;
   //remember given interface as active
   this->active_async_interface = interface;
 
   //start transfer
   try {
-    ThrowOnHALErrorMsg(HAL_I2C_Mem_Write_IT(this->i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)buf, length), "I2C async write");
+    ThrowOnHALErrorMsg(HAL_I2C_Mem_Write_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)buf, length), "I2C async write");
   } catch (...) {
     //on error: clear active interface, re-enable interrupts, then rethrow
     this->active_async_interface = NULL;
@@ -136,9 +181,18 @@ void I2CHardwareInterface::HandleInterrupt(ModuleInterfaceInterruptType type) no
 
   switch (type) {
     case IF_ERROR:
-      //reset I2C driver before continuing with end-of-transfer handling
-      HAL_I2C_DeInit(this->i2c_handle);
-      HAL_I2C_Init(this->i2c_handle);
+      DEBUG_PRINTF("* I2C error interrupt, code %lu\n", HAL_I2C_GetError(this->i2c_handle));
+
+      if (this->active_async_interface != NULL) {
+        //we have an active async transfer: pass interrupt to target interface
+        this->active_async_interface->HandleInterrupt(type, 0);
+        //clear active interface
+        this->active_async_interface = NULL;
+      }
+
+      //reset hardware
+      this->Reset();
+      break;
     case IF_RX_COMPLETE:
     case IF_TX_COMPLETE:
       if (this->active_async_interface != NULL) {
@@ -149,22 +203,7 @@ void I2CHardwareInterface::HandleInterrupt(ModuleInterfaceInterruptType type) no
       }
 
       //find and start next queued transfer
-      for (auto i = this->registered_interfaces.begin(); i < this->registered_interfaces.end(); i++) {
-        try {
-          (*i)->StartQueuedAsyncTransfer();
-        } catch (const std::exception& err) {
-          DEBUG_PRINTF("* Exception on I2C async transfer start: %s\n", err.what());
-          continue;
-        } catch (...) {
-          DEBUG_PRINTF("* Unknown exception on I2C async transfer start\n");
-          continue;
-        }
-
-        if (this->active_async_interface != NULL) {
-          //transfer has been started: break out of loop
-          break;
-        }
-      }
+      this->StartNextTransfer();
       break;
     default:
       break;
@@ -174,9 +213,48 @@ void I2CHardwareInterface::HandleInterrupt(ModuleInterfaceInterruptType type) no
 }
 
 
-I2CHardwareInterface::I2CHardwareInterface(I2C_HandleTypeDef* i2c_handle) : i2c_handle(i2c_handle) {
-  if (i2c_handle == NULL) {
-    throw std::invalid_argument("I2CHardwareInterface I2C handle cannot be null");
+void I2CHardwareInterface::Init() {
+  this->registered_interfaces.clear();
+  this->active_async_interface = NULL;
+  this->Reset();
+}
+
+void I2CHardwareInterface::LoopTasks() {
+  //perform timeout checks under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  if (!this->IsBusy() && __HAL_I2C_GET_FLAG(this->i2c_handle, I2C_FLAG_BUSY) == SET) { //driver idle but peripheral busy: check timeout
+    if (++this->idle_busy_count > I2C_PERIPHERAL_BUSY_TIMEOUT) { //peripheral busy for too long, reset
+      DEBUG_PRINTF("* I2C Error: Peripheral busy in idle state timeout\n");
+      this->Reset();
+      __set_PRIMASK(primask);
+      return;
+    }
+  } else {
+    this->idle_busy_count = 0;
+  }
+
+  if (this->non_idle_timeout > 0) { //handle non-idle state timeouts
+    if (!this->IsBusy()) { //reset timeout if idle
+      this->non_idle_timeout = 0;
+    } else {
+      if (--this->non_idle_timeout == 0) { //timed out: error
+        DEBUG_PRINTF("* I2C Error: Non-idle state timed out\n");
+        this->Reset();
+        __set_PRIMASK(primask);
+        return;
+      }
+    }
+  }
+
+  __set_PRIMASK(primask);
+}
+
+
+I2CHardwareInterface::I2CHardwareInterface(I2C_HandleTypeDef* i2c_handle, void (*hardware_reset_func)()) : i2c_handle(i2c_handle), hardware_reset_func(hardware_reset_func) {
+  if (i2c_handle == NULL || hardware_reset_func == NULL) {
+    throw std::invalid_argument("I2CHardwareInterface I2C handle and hardware reset func cannot be null");
   }
 }
 
@@ -192,6 +270,140 @@ void I2CHardwareInterface::UnregisterInterface(I2CModuleInterface* interface) {
       return;
     }
   }
+}
+
+
+void I2CHardwareInterface::StartNextTransfer() noexcept {
+  for (auto i = this->registered_interfaces.begin(); i < this->registered_interfaces.end(); i++) {
+    (*i)->StartQueuedAsyncTransfer();
+
+    if (this->active_async_interface != NULL) {
+      //transfer has been started: break out of loop
+      break;
+    }
+  }
+}
+
+void I2CHardwareInterface::Reset() noexcept {
+  //perform reset handling under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  HAL_I2C_DeInit(this->i2c_handle);
+  this->hardware_reset_func();
+  HAL_I2C_Init(this->i2c_handle);
+
+  //enable I2C timeouts
+  WRITE_REG(this->i2c_handle->Instance->TIMEOUTR, (I2C_SCL_STRETCH_TIMEOUT | I2C_SCL_LOW_TIMEOUT));
+  SET_BIT(this->i2c_handle->Instance->TIMEOUTR, (I2C_TIMEOUTR_TEXTEN | I2C_TIMEOUTR_TIMOUTEN));
+
+  //reset internal state and timeout counters
+  this->active_async_interface = NULL;
+  this->idle_busy_count = 0;
+  this->non_idle_timeout = 0;
+
+  //reset interfaces (i.e. inform them that no async transfer is ongoing)
+  for (auto i = this->registered_interfaces.begin(); i < this->registered_interfaces.end(); i++) {
+    (*i)->async_transfer_active = false;
+  }
+
+  //find and start next queued transfer
+  this->StartNextTransfer();
+
+  __set_PRIMASK(primask);
+}
+
+
+/*********************************************************/
+/*       I2C Module Interface - CRC calculations         */
+/*********************************************************/
+
+//calculate CRC, starting with existing CRC state (initial state at the start of a calculation should be 0)
+static uint8_t _I2C_CRC_Accumulate(const uint8_t* buf, uint16_t length, uint8_t state) noexcept {
+  int i;
+  for (i = 0; i < length; i++) {
+    state = _i2c_crc_table[buf[i] ^ state];
+  }
+  return state;
+}
+
+//check CRC on received data for a single-register read
+static bool _I2C_CRC_SingleReadCheck(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* rx_buf, uint16_t length) noexcept {
+  //calculate CRC checksum (taking into account I2C and register address bytes too)
+  uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), reg_addr, (uint8_t)((i2c_addr << 1) | 1) };
+  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  crc = _I2C_CRC_Accumulate(rx_buf, length + 1, crc);
+  return crc == 0;
+}
+
+//check CRCs on received data for a multi-register read
+static bool _I2C_CRC_MultiReadCheck(uint8_t i2c_addr, uint8_t reg_addr_first, const uint8_t* rx_buf, const uint16_t* reg_sizes, uint8_t count) noexcept {
+  //calculate first CRC checksum (taking into account I2C and register address bytes too)
+  uint16_t reg_size = reg_sizes[0];
+  uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), reg_addr_first, (uint8_t)((i2c_addr << 1) | 1) };
+  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  crc = _I2C_CRC_Accumulate(rx_buf, reg_size + 1, crc);
+  if (crc != 0) {
+    return false;
+  }
+
+  //calculate consecutive CRC checksums (without I2C and register address bytes)
+  uint16_t rx_buf_offset = reg_size + 1;
+  for (int i = 1; i < count; i++) {
+    reg_size = reg_sizes[i];
+    crc = _I2C_CRC_Accumulate(rx_buf + rx_buf_offset, reg_size + 1, 0);
+    if (crc != 0) {
+      return false;
+    }
+    rx_buf_offset += reg_size + 1;
+  }
+
+  return true;
+}
+
+//prepare a newly allocated transmit buffer with the correct CRC for a single-register write
+static uint8_t* _I2C_CRC_PrepareSingleWrite(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+  //allocate new transmit buffer with one extra byte for CRC, and copy data into it
+  uint8_t* tx_buf = new uint8_t[length + 1];
+  memcpy(tx_buf, buf, length);
+
+  //calculate CRC checksum (taking into account I2C and register address bytes too)
+  uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), reg_addr };
+  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  crc = _I2C_CRC_Accumulate(tx_buf, length, crc);
+  //insert CRC sum at end of transmit buffer
+  tx_buf[length] = crc;
+
+  return tx_buf;
+}
+
+//prepare a newly allocated transmit buffer with the correct CRCs for a multi-register write
+static uint8_t* _I2C_CRC_PrepareMultiWrite(uint8_t i2c_addr, uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, uint16_t total_length) {
+  //allocate new transmit buffer with `count` extra bytes for CRCs
+  uint8_t* tx_buf = new uint8_t[total_length + count];
+
+  //copy first register and calculate first CRC checksum (taking into account I2C and register address bytes too)
+  uint16_t reg_size = reg_sizes[0];
+  memcpy(tx_buf, buf, reg_size);
+  uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), reg_addr_first };
+  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  crc = _I2C_CRC_Accumulate(tx_buf, reg_size, crc);
+  //insert CRC sum after the data
+  tx_buf[reg_size] = crc;
+
+  //copy consecutive registers and calculate their CRC checksums (without I2C and register address bytes)
+  uint16_t tx_buf_offset = reg_size + 1;
+  uint16_t in_buf_offset = reg_size;
+  for (int i = 1; i < count; i++) {
+    reg_size = reg_sizes[i];
+    memcpy(tx_buf + tx_buf_offset, buf + in_buf_offset, reg_size);
+    crc = _I2C_CRC_Accumulate(tx_buf + tx_buf_offset, reg_size, 0);
+    tx_buf[tx_buf_offset + reg_size] = crc;
+    tx_buf_offset += reg_size + 1;
+    in_buf_offset += reg_size;
+  }
+
+  return tx_buf;
 }
 
 
@@ -215,12 +427,7 @@ void I2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t l
       throw;
     }
 
-    //calculate CRC checksum (taking into account I2C and register address bytes too)
-    uint8_t crc_prefix[3] = { (uint8_t)(this->i2c_address << 1), reg_addr, (uint8_t)((this->i2c_address << 1) | 1) };
-    uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
-    crc = _I2C_CRC_Accumulate(rx_buf, length + 1, crc);
-
-    if (crc == 0) {
+    if (_I2C_CRC_SingleReadCheck(this->i2c_address, reg_addr, rx_buf, length)) {
       //CRC check is good: copy data to output buffer and free receive buffer
       memcpy(buf, rx_buf, length);
       delete[] rx_buf;
@@ -241,16 +448,8 @@ void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uin
   }
 
   if (this->uses_crc) {
-    //CRC mode: allocate new transmit buffer with one extra byte for CRC, and copy data into it
-    uint8_t* tx_buf = new uint8_t[length + 1];
-    memcpy(tx_buf, buf, length);
-
-    //calculate CRC checksum (taking into account I2C and register address bytes too)
-    uint8_t crc_prefix[2] = { (uint8_t)(this->i2c_address << 1), reg_addr };
-    uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
-    crc = _I2C_CRC_Accumulate(tx_buf, length, crc);
-    //insert CRC sum at end of transmit buffer
-    tx_buf[length] = crc;
+    //CRC mode: prepare transmit buffer with CRC
+    uint8_t* tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, reg_addr, buf, length);
 
     //write transmit buffer and free it afterwards
     try {
@@ -274,7 +473,6 @@ I2CModuleInterface::I2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_
 }
 
 I2CModuleInterface::~I2CModuleInterface() {
-  this->ModuleInterface::~ModuleInterface();
   this->hw_interface.UnregisterInterface(this);
 }
 
@@ -308,33 +506,16 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
       throw;
     }
 
-    //calculate first CRC checksum (taking into account I2C and register address bytes too)
-    uint16_t reg_size = reg_sizes[0];
-    uint8_t crc_prefix[3] = { (uint8_t)(this->i2c_address << 1), reg_addr_first, (uint8_t)((this->i2c_address << 1) | 1) };
-    uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
-    crc = _I2C_CRC_Accumulate(rx_buf, reg_size + 1, crc);
-    if (crc != 0) {
+    if (!_I2C_CRC_MultiReadCheck(this->i2c_address, reg_addr_first, rx_buf, reg_sizes, count)) {
       //CRC check failed: free receive buffer (without copying) and throw exception
       delete[] rx_buf;
       throw DriverError(DRV_FAILED, "I2CModuleInterface CRC check failed on read");
     }
 
-    //calculate consecutive CRC checksums (without I2C and register address bytes)
-    uint16_t rx_buf_offset = reg_size + 1;
-    for (int i = 1; i < count; i++) {
-      reg_size = reg_sizes[i];
-      crc = _I2C_CRC_Accumulate(rx_buf + rx_buf_offset, reg_size + 1, 0);
-      if (crc != 0) {
-        //CRC check failed: free receive buffer (without copying) and throw exception
-        delete[] rx_buf;
-        throw DriverError(DRV_FAILED, "I2CModuleInterface CRC check failed on read");
-      }
-      rx_buf_offset += reg_size + 1;
-    }
-
     //all CRC checks passed: copy actual register data to output, then free receive buffer
-    rx_buf_offset = 0;
+    uint16_t rx_buf_offset = 0;
     uint16_t out_buf_offset = 0;
+    uint16_t reg_size;
     for (int i = 0; i < count; i++) {
       reg_size = reg_sizes[i];
       memcpy(buf + out_buf_offset, rx_buf + rx_buf_offset, reg_size);
@@ -347,11 +528,6 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
     this->hw_interface.Read(this->i2c_address, reg_addr_first, buf, total_length);
   }
 }
-
-void I2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
-
-}
-
 
 void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
   if (buf == NULL || reg_sizes == NULL || count == 0) {
@@ -368,29 +544,8 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
   }
 
   if (this->uses_crc) {
-    //CRC mode: allocate new transmit buffer with `count` extra bytes for CRCs
-    uint8_t* tx_buf = new uint8_t[total_length + count];
-
-    //copy first register and calculate first CRC checksum (taking into account I2C and register address bytes too)
-    uint16_t reg_size = reg_sizes[0];
-    memcpy(tx_buf, buf, reg_size);
-    uint8_t crc_prefix[2] = { (uint8_t)(this->i2c_address << 1), reg_addr_first };
-    uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
-    crc = _I2C_CRC_Accumulate(tx_buf, reg_size, crc);
-    //insert CRC sum after the data
-    tx_buf[reg_size] = crc;
-
-    //copy consecutive registers and calculate their CRC checksums (without I2C and register address bytes)
-    uint16_t tx_buf_offset = reg_size + 1;
-    uint16_t in_buf_offset = reg_size;
-    for (int i = 1; i < count; i++) {
-      reg_size = reg_sizes[i];
-      memcpy(tx_buf + tx_buf_offset, buf + in_buf_offset, reg_size);
-      crc = _I2C_CRC_Accumulate(tx_buf + tx_buf_offset, reg_size, 0);
-      tx_buf[tx_buf_offset + reg_size] = crc;
-      tx_buf_offset += reg_size + 1;
-      in_buf_offset += reg_size;
-    }
+    //CRC mode: prepare new transmit buffer with CRCs
+    uint8_t* tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, reg_addr_first, buf, reg_sizes, count, total_length);
 
     //write transmit buffer and free it afterwards
     try {
@@ -407,8 +562,65 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
   }
 }
 
-void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
 
+static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr_first, uint8_t* buf,
+                                                          const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
+  if (buf == NULL || reg_sizes == NULL || count == 0) {
+    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes and nonzero count");
+  }
+
+  //calculate total data length in bytes
+  uint16_t total_length = 0;
+  for (int i = 0; i < count; i++) {
+    if (reg_sizes[i] == 0) {
+      throw std::invalid_argument("I2CModuleInterface multi-transfers require nonzero register sizes");
+    }
+    total_length += reg_sizes[i];
+  }
+
+  //initialise new transfer for the read operation
+  auto new_transfer = new I2CModuleTransferQueueItem;
+  new_transfer->type = type;
+  new_transfer->reg_addr = reg_addr_first;
+  new_transfer->data_ptr = buf;
+  new_transfer->length = total_length;
+  new_transfer->value_buffer = 0;
+  new_transfer->success = false;
+  new_transfer->callback = cb;
+  new_transfer->context = context;
+  new_transfer->add_buffer = NULL;
+  new_transfer->reg_count = count;
+  new_transfer->retry_count = 0;
+
+  //copy register sizes to dynamically allocated buffer (so that given argument buffer doesn't need to remain valid)
+  try {
+    auto reg_sizes_copy = new uint16_t[count];
+    memcpy(reg_sizes_copy, reg_sizes, count * sizeof(uint16_t));
+    new_transfer->reg_sizes = reg_sizes_copy;
+  } catch (...) {
+    //on error: free transfer item before rethrowing
+    delete new_transfer;
+    throw;
+  }
+
+  //add transfer to queue
+  try {
+    queue.push_back(new_transfer);
+  } catch (...) {
+    //on error: free transfer item before rethrowing
+    delete new_transfer;
+    throw;
+  }
+}
+
+void I2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_READ, reg_addr_first, buf, reg_sizes, count, cb, context);
+  this->StartQueuedAsyncTransfer();
+}
+
+void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_WRITE, reg_addr_first, (uint8_t*)buf, reg_sizes, count, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 
@@ -416,11 +628,231 @@ void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const u
 /*             I2C Module Interface - Async              */
 /*********************************************************/
 
-void I2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept {
 
+ModuleTransferQueueItem* I2CModuleInterface::CreateTransferQueueItem() {
+  //initialise to empty defaults
+  auto item = new I2CModuleTransferQueueItem;
+  item->add_buffer = NULL;
+  item->reg_sizes = NULL;
+  item->reg_count = 1;
+  item->retry_count = 0;
+  return item;
 }
 
-void I2CModuleInterface::StartQueuedAsyncTransfer() {
 
+void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept {
+  if (!this->async_transfer_active || this->queued_transfers.empty()) {
+    //no active transfer or empty queue: nothing to do
+    this->async_transfer_active = false;
+    return;
+  }
+
+  //whether the transfer should be retried if it failed
+  bool retry = true;
+
+  auto transfer = (I2CModuleTransferQueueItem*)this->queued_transfers.front();
+
+  if (itype == IF_RX_COMPLETE && transfer->type == TF_READ) {
+    //successful read: handle CRC if necessary
+    if (this->uses_crc) {
+      //CRC mode: derive success from CRC check and copy data
+      if (transfer->data_ptr == NULL || transfer->add_buffer == NULL) {
+        //no target or receive buffer: should never be possible!
+        DEBUG_PRINTF("* I2C async receive completed, but data_ptr and/or add_buffer is null!\n");
+        transfer->success = false;
+        retry = false;
+      } else if (transfer->reg_sizes == NULL) {
+        //single read
+        transfer->success = _I2C_CRC_SingleReadCheck(this->i2c_address, transfer->reg_addr, transfer->add_buffer, transfer->length);
+        if (transfer->success) {
+          //copy data if CRC matches
+          memcpy(transfer->data_ptr, transfer->add_buffer, transfer->length);
+        }
+      } else {
+        //multi-read
+        transfer->success = _I2C_CRC_MultiReadCheck(this->i2c_address, transfer->reg_addr, transfer->add_buffer, transfer->reg_sizes, transfer->reg_count);
+        if (transfer->success) {
+          //copy data for each register if CRCs match
+          uint16_t rx_buf_offset = 0;
+          uint16_t out_buf_offset = 0;
+          uint16_t reg_size;
+          for (int i = 0; i < transfer->reg_count; i++) {
+            reg_size = transfer->reg_sizes[i];
+            memcpy(transfer->data_ptr + out_buf_offset, transfer->add_buffer + rx_buf_offset, reg_size);
+            rx_buf_offset += reg_size + 1;
+            out_buf_offset += reg_size;
+          }
+        }
+      }
+    } else {
+      //no CRC: assume success
+      transfer->success = true;
+    }
+  } else if (itype == IF_TX_COMPLETE && transfer->type == TF_WRITE) {
+    //successful write
+    transfer->success = true;
+  } else {
+    //anything else: report failure
+    transfer->success = false;
+  }
+
+  if (!transfer->success && retry) {
+    //failed with possibility of retry: increment retry counter, check if we're out of retries
+    if (transfer->retry_count++ >= I2C_INTERNAL_RETRIES) {
+      //out of retries: don't retry again
+      retry = false;
+      DEBUG_PRINTF("* I2CModuleInterface async transfer failed to complete too many times to retry!\n");
+    } else {
+      DEBUG_PRINTF("I2CModuleInterface async transfer retrying on completion\n");
+    }
+  }
+
+  if (transfer->success || !retry) {
+    //successful, or failed without retry: put transfer into the completed list and remove it from the queue
+    this->completed_transfers.push_back(transfer);
+    this->queued_transfers.pop_front();
+  }
+
+  //async transfer is no longer active, ready for the next (or retry of current one)
+  this->async_transfer_active = false;
+}
+
+
+void I2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept {
+  UNUSED(extra);
+
+  //perform interrupt handling under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  switch (type) {
+    case IF_ERROR:
+    case IF_RX_COMPLETE:
+    case IF_TX_COMPLETE:
+      this->HandleAsyncTransferDone(type);
+      break;
+    case IF_EXTI:
+      //TODO: interrupt pin handling
+      break;
+    default:
+      break;
+  }
+
+  __set_PRIMASK(primask);
+}
+
+void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
+  //perform start checks and handling under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  if (this->async_transfer_active || this->hw_interface.IsBusy() || this->queued_transfers.empty()) {
+    //busy or nothing queued: don't do anything
+    __set_PRIMASK(primask);
+    return;
+  }
+
+  //whether the transfer should be retried if it failed
+  bool retry = true;
+  //whether a transfer failure should reset the I2C hardware
+  bool reset_on_fail = false;
+
+  auto transfer = (I2CModuleTransferQueueItem*)this->queued_transfers.front();
+
+  try {
+    try {
+      switch (transfer->type) {
+        case TF_READ:
+          if (this->uses_crc) {
+            //CRC mode: allocate new receive buffer with `reg_count` extra bytes for CRCs
+            uint8_t* rx_buf = new uint8_t[transfer->length + transfer->reg_count];
+            //start the async read
+            try {
+              //reset if we encounter a hardware exception
+              reset_on_fail = true;
+              this->hw_interface.ReadAsync(this, transfer->reg_addr, rx_buf, transfer->length + transfer->reg_count);
+              transfer->add_buffer = rx_buf;
+            } catch (...) {
+              //on error: free receive buffer before rethrowing to avoid memory leak
+              delete[] rx_buf;
+              throw;
+            }
+          } else {
+            //no CRC: just start a basic async mem read
+            //reset if we encounter a hardware exception
+            reset_on_fail = true;
+            this->hw_interface.ReadAsync(this, transfer->reg_addr, transfer->data_ptr, transfer->length);
+          }
+          break;
+        case TF_WRITE:
+          if (this->uses_crc) {
+            //CRC mode: prepare new transmit buffer with CRCs
+            uint8_t* tx_buf;
+            if (transfer->reg_sizes == NULL) {
+              //single write
+              tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, transfer->reg_addr, transfer->data_ptr, transfer->length);
+            } else {
+              //multi-write
+              tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, transfer->reg_addr, transfer->data_ptr, transfer->reg_sizes, transfer->reg_count, transfer->length);
+            }
+            //start the async write
+            try {
+              //reset if we encounter a hardware exception
+              reset_on_fail = true;
+              this->hw_interface.WriteAsync(this, transfer->reg_addr, tx_buf, transfer->length + transfer->reg_count);
+              transfer->add_buffer = tx_buf;
+            } catch (...) {
+              //on error: free transmit buffer before rethrowing to avoid memory leak
+              delete[] tx_buf;
+              throw;
+            }
+          } else {
+            //no CRC: just start a basic async mem transfer
+            //reset if we encounter a hardware exception
+            reset_on_fail = true;
+            this->hw_interface.WriteAsync(this, transfer->reg_addr, transfer->data_ptr, transfer->length);
+          }
+          break;
+        default:
+          retry = false;
+          InlineFormat(throw std::runtime_error(__msg), "I2CModuleInterface async transfer with invalid type %u", transfer->type);
+      }
+
+      this->async_transfer_active = true;
+    } catch (const std::exception& exc) {
+      //encountered "readable" exception: just print the message and rethrow for the outer handler
+      DEBUG_PRINTF("* I2CModuleInterface async transfer start exception: %s\n", exc.what());
+      throw;
+    }
+  } catch (...) {
+    if (retry) {
+      //failed with possibility of retry: increment retry counter, check if we're out of retries
+      if (transfer->retry_count++ >= I2C_INTERNAL_RETRIES) {
+        //out of retries: don't retry again
+        retry = false;
+      }
+    }
+
+    if (!retry) {
+      //failed without retry: put transfer into the completed list and remove it from the queue
+      DEBUG_PRINTF("* I2CModuleInterface async transfer failed to start too many times to retry!\n");
+      transfer->success = false;
+      try {
+        this->completed_transfers.push_back(transfer);
+        this->queued_transfers.pop_front();
+      } catch (...) {
+        //list operation failed: force another retry (should be a very unlikely case)
+        DEBUG_PRINTF("*** Retry forced due to exception when trying to mark the failed transfer as done!\n");
+      }
+    } else {
+      DEBUG_PRINTF("I2CModuleInterface async transfer retrying on start\n");
+    }
+
+    if (reset_on_fail) {
+      this->hw_interface.Reset();
+    }
+  }
+
+  __set_PRIMASK(primask);
 }
 

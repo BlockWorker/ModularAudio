@@ -34,15 +34,14 @@ uint32_t ModuleInterface::ReadRegister32(uint16_t reg_addr) {
 
 
 //helper function for queueing variable length reads or writes
-static inline void _ModuleInterface_QueueVarTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr,
-                                                     uint8_t* buf, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
+static inline void _ModuleInterface_QueueVarTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferQueueItem* new_transfer, ModuleTransferType type,
+                                                     uint8_t reg_addr, uint8_t* buf, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
   if (buf == NULL || length == 0) {
+    delete new_transfer;
     throw std::invalid_argument("ModuleInterface transfers require non-null buffer and nonzero length");
   }
 
-  //create new transfer
-  auto new_transfer = new ModuleTransferQueueItem;
-  //configure it for the read operation
+  //configure transfer for the read operation
   new_transfer->type = type;
   new_transfer->reg_addr = reg_addr;
   new_transfer->data_ptr = buf;
@@ -61,11 +60,9 @@ static inline void _ModuleInterface_QueueVarTransfer(std::deque<ModuleTransferQu
 }
 
 //helper function for queueing 8/16/32-bit reads or writes
-static inline void _ModuleInterface_QueueShortTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr,
-                                                       uint32_t value, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
-  //create new transfer
-  auto new_transfer = new ModuleTransferQueueItem;
-  //configure it for the short read (reading into the internal value buffer) or write (copy value into the internal value buffer, write from there)
+static inline void _ModuleInterface_QueueShortTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferQueueItem* new_transfer, ModuleTransferType type,
+                                                       uint8_t reg_addr, uint32_t value, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
+  //configure transfer for the short read (reading into the internal value buffer) or write (copy value into the internal value buffer, write from there)
   new_transfer->type = type;
   new_transfer->reg_addr = reg_addr;
   new_transfer->data_ptr = (uint8_t*)&new_transfer->value_buffer;
@@ -84,19 +81,23 @@ static inline void _ModuleInterface_QueueShortTransfer(std::deque<ModuleTransfer
 }
 
 void ModuleInterface::ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueVarTransfer(this->queued_transfers, TF_READ, reg_addr, buf, length, cb, context);
+  _ModuleInterface_QueueVarTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_READ, reg_addr, buf, length, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_READ, reg_addr, 0, 1, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_READ, reg_addr, 0, 1, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::ReadRegister16Async(uint8_t reg_addr, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_READ, reg_addr, 0, 2, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_READ, reg_addr, 0, 2, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::ReadRegister32Async(uint8_t reg_addr, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_READ, reg_addr, 0, 4, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_READ, reg_addr, 0, 4, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 
@@ -114,19 +115,23 @@ void ModuleInterface::WriteRegister32(uint16_t reg_addr, uint32_t value) {
 
 
 void ModuleInterface::WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, uint16_t length, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueVarTransfer(this->queued_transfers, TF_WRITE, reg_addr, (uint8_t*)buf, length, cb, context);
+  _ModuleInterface_QueueVarTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, (uint8_t*)buf, length, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_WRITE, reg_addr, (uint32_t)value, 1, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, (uint32_t)value, 1, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::WriteRegister16Async(uint16_t reg_addr, uint16_t value, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_WRITE, reg_addr, (uint32_t)value, 2, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, (uint32_t)value, 2, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 void ModuleInterface::WriteRegister32Async(uint16_t reg_addr, uint32_t value, ModuleTransferCallback cb, uintptr_t context) {
-  _ModuleInterface_QueueShortTransfer(this->queued_transfers, TF_WRITE, reg_addr, value, 4, cb, context);
+  _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, value, 4, cb, context);
+  this->StartQueuedAsyncTransfer();
 }
 
 
@@ -169,17 +174,22 @@ void ModuleInterface::LoopTasks() {
   for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {
     auto transfer = *i;
 
-    try {
-      transfer->callback(transfer->success, transfer->context, transfer->value_buffer);
-    } catch (...) {
-      //on error: erase successfully executed callbacks from completed list (all before current one), then rethrow
-      this->completed_transfers.erase(this->completed_transfers.begin(), i);
-      throw;
+    if (transfer->callback != NULL) {
+      try {
+        transfer->callback(transfer->success, transfer->context, transfer->value_buffer);
+      } catch (...) {
+        //on error: erase successfully executed callbacks from completed list (all before current one), then rethrow
+        this->completed_transfers.erase(this->completed_transfers.begin(), i);
+        throw;
+      }
     }
 
     delete transfer;
   }
   this->completed_transfers.clear();
+
+  //try to start the next async transfer if possible
+  this->StartQueuedAsyncTransfer();
 }
 
 
@@ -194,24 +204,8 @@ ModuleInterface::~ModuleInterface() {
 }
 
 
-void ModuleInterface::CompleteActiveAsyncTransfer(bool success) {
-  if (this->queued_transfers.empty()) {
-    //empty queue: shouldn't happen, but handle just in case - just reset async transfer to inactive
-    this->async_transfer_active = false;
-    return;
-  }
-
-  if (this->async_transfer_active) {
-    //have an active transfer: update success, add it to the completed queue, and remove it from the pending queue
-    auto transfer = this->queued_transfers.front();
-    transfer->success &= success;
-    this->completed_transfers.push_back(transfer);
-    this->queued_transfers.pop_front();
-  }
-
-  this->async_transfer_active = false;
-
-  //don't start next queued transfer automatically - should be done manually
+ModuleTransferQueueItem* ModuleInterface::CreateTransferQueueItem() {
+  return new ModuleTransferQueueItem;
 }
 
 

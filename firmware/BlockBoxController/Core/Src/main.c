@@ -73,6 +73,7 @@ UART_HandleTypeDef huart2;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C3_SMBUS_Init(void);
@@ -123,6 +124,9 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+
+/* Configure the peripherals common clocks */
+  PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -219,6 +223,34 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief Peripherals Common Clock Configuration
+  * @retval None
+  */
+void PeriphCommonClock_Config(void)
+{
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  /** Initializes the peripherals clock
+  */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_I2C3
+                              |RCC_PERIPHCLK_I2C5;
+  PeriphClkInitStruct.PLL3.PLL3M = 32;
+  PeriphClkInitStruct.PLL3.PLL3N = 128;
+  PeriphClkInitStruct.PLL3.PLL3P = 2;
+  PeriphClkInitStruct.PLL3.PLL3Q = 2;
+  PeriphClkInitStruct.PLL3.PLL3R = 32;
+  PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
+  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+  PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C1235CLKSOURCE_PLL3;
+  PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
   * @brief ADC1 Initialization Function
   * @param None
   * @retval None
@@ -302,7 +334,7 @@ static void MX_I2C3_SMBUS_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hsmbus3.Instance = I2C3;
-  hsmbus3.Init.Timing = 0x20A0ACFE;
+  hsmbus3.Init.Timing = 0x2000090E;
   hsmbus3.Init.AnalogFilter = SMBUS_ANALOGFILTER_ENABLE;
   hsmbus3.Init.OwnAddress1 = 2;
   hsmbus3.Init.AddressingMode = SMBUS_ADDRESSINGMODE_7BIT;
@@ -313,7 +345,7 @@ static void MX_I2C3_SMBUS_Init(void)
   hsmbus3.Init.NoStretchMode = SMBUS_NOSTRETCH_DISABLE;
   hsmbus3.Init.PacketErrorCheckMode = SMBUS_PEC_DISABLE;
   hsmbus3.Init.PeripheralMode = SMBUS_PERIPHERAL_MODE_SMBUS_SLAVE;
-  hsmbus3.Init.SMBusTimeout = 0x00008632;
+  hsmbus3.Init.SMBusTimeout = 0x00008061;
   if (HAL_SMBUS_Init(&hsmbus3) != HAL_OK)
   {
     Error_Handler();
@@ -347,7 +379,7 @@ static void MX_I2C5_Init(void)
 
   /* USER CODE END I2C5_Init 1 */
   hi2c5.Instance = I2C5;
-  hi2c5.Init.Timing = 0x20A0ACFE;
+  hi2c5.Init.Timing = 0x2000090E;
   hi2c5.Init.OwnAddress1 = 0;
   hi2c5.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c5.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -950,6 +982,22 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(I2C1_INT0_N_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 6, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 7, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 8, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 9, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 10, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

@@ -9,6 +9,9 @@
 #define INC_CPP_MAIN_H_
 
 
+#include "main.h"
+
+
 #define MAIN_LOOP_PERIOD_MS 10
 
 
@@ -34,9 +37,6 @@
 extern "C"
 {
 #endif
-
-
-#include "main.h"
 
 
 int cpp_main();
