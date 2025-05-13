@@ -44,6 +44,7 @@
  *    - 0x8001: UART_FORMAT_ERROR: Received UART command is malformed
  *    - 0x8002: INTERNAL_UART_ERROR: Internal UART communication error
  *    - 0x8003: UART_COMMAND_NOT_ALLOWED: Given UART command is not allowed in the current state
+ *    - 0x8004: UART_CRC_ERROR: Received UART command has failed the CRC integrity check
  *
  *
  *  Register map:
@@ -148,6 +149,7 @@
 #define UARTDEF_BTRX_ERROR_UART_FORMAT_ERROR          0x8001
 #define UARTDEF_BTRX_ERROR_INTERNAL_UART_ERROR        0x8002
 #define UARTDEF_BTRX_ERROR_UART_COMMAND_NOT_ALLOWED   0x8003
+#define UARTDEF_BTRX_ERROR_UART_CRC_ERROR             0x8004
 
 
 //Status registers

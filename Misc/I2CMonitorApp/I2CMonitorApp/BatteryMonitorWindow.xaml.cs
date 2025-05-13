@@ -31,6 +31,8 @@ namespace I2CMonitorApp {
 
         private readonly Timer timer;
 
+        private static readonly UARTCrc16 crc = new();
+
         public BatteryMonitorWindow() {
             InitializeComponent();
 
@@ -67,15 +69,26 @@ namespace I2CMonitorApp {
                 return;
             }
 
+            crc.Reset();
+            var crcValue = crc.ComputeHash(data);
+
             List<byte> buf = [];
-            buf.Add(0xF1);
-            foreach(var b in data) {
+            buf.Add(0xF1); //add start byte
+            //add data
+            foreach (var b in data) {
                 if (b == 0xF1 || b == 0xFA || b == 0xFF) {
                     buf.Add(0xFF); //escape
                 }
                 buf.Add(b);
             }
-            buf.Add(0xFA);
+            //add CRC, in big endian order so that CRC(data..crc) = 0
+            foreach (var b in crcValue.Reverse()) {
+                if (b == 0xF1 || b == 0xFA || b == 0xFF) {
+                    buf.Add(0xFF);
+                }
+                buf.Add(b);
+            }
+            buf.Add(0xFA); //add end byte
 
             port.SendMessage(buf.ToArray());
         }
@@ -219,7 +232,15 @@ namespace I2CMonitorApp {
         }
 
         private void HandleReceivedNotification(byte[] data) {
-            if (data.Length < 2) return;
+            if (data.Length < 4) return;
+
+            crc.Reset();
+            var crcValue = crc.ComputeHash(data);
+            if (crcValue[0] != 0 || crcValue[1] != 0) {
+                eventBox.Items.Add("CRC mismatch on received notification");
+                return;
+            }
+
             switch (data[0]) {
                 case 0x00:
                     //event
@@ -229,11 +250,11 @@ namespace I2CMonitorApp {
                             ReadAndInitRegisters();
                             break;
                         case 0x01:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             eventBox.Items.Add($"Write ACK 0x{data[2]:X2}");
                             break;
                         case 0x02:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             eventBox.Items.Add($"Error 0x{data[3]:X2}{data[2]:X2}");
                             break;
                         default:
@@ -246,7 +267,7 @@ namespace I2CMonitorApp {
                     //data
                     switch (data[1]) {
                         case 0x00:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             if (data[0] == 0x01) {
                                 statusField.Value = (byte)((statusField.Value & 0xE0) | data[2]);
                             } else {
@@ -254,22 +275,22 @@ namespace I2CMonitorApp {
                             }
                             break;
                         case 0x01:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             stackBox.Text = BitConverter.ToUInt16(data, 2).ToString();
                             break;
                         case 0x02:
-                            if (data.Length < 10) return;
+                            if (data.Length < 12) return;
                             cell1Box.Text = BitConverter.ToInt16(data, 2).ToString();
                             cell2Box.Text = BitConverter.ToInt16(data, 4).ToString();
                             cell3Box.Text = BitConverter.ToInt16(data, 6).ToString();
                             cell4Box.Text = BitConverter.ToInt16(data, 8).ToString();
                             break;
                         case 0x03:
-                            if (data.Length < 6) return;
+                            if (data.Length < 8) return;
                             currentBox.Text = BitConverter.ToInt32(data, 2).ToString();
                             break;
                         case 0x04:
-                            if (data.Length < 7) return;
+                            if (data.Length < 9) return;
                             socPercentBox.Text = (BitConverter.ToSingle(data, 2) * 100.0f).ToString("F2");
                             switch (data[6]) {
                                 case 0x01:
@@ -290,7 +311,7 @@ namespace I2CMonitorApp {
                             }
                             break;
                         case 0x05:
-                            if (data.Length < 7) return;
+                            if (data.Length < 9) return;
                             socEnergyBox.Text = BitConverter.ToSingle(data, 2).ToString("F2");
                             switch (data[6]) {
                                 case 0x01:
@@ -311,31 +332,31 @@ namespace I2CMonitorApp {
                             }
                             break;
                         case 0x06:
-                            if (data.Length < 6) return;
+                            if (data.Length < 8) return;
                             if (!healthPercentBox.IsFocused) {
                                 healthPercentBox.Text = (BitConverter.ToSingle(data, 2) * 100.0f).ToString("F2");
                             }
                             break;
                         case 0x07:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             batTempBox.Text = BitConverter.ToInt16(data, 2).ToString();
                             break;
                         case 0x08:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             intTempBox.Text = BitConverter.ToInt16(data, 2).ToString();
                             break;
                         case 0x09:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             alertsLowField.Value = data[2];
                             alertsHighField.Value = data[3];
                             break;
                         case 0x0A:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             faultsLowField.Value = data[2];
                             faultsHighField.Value = data[3];
                             break;
                         case 0x0B:
-                            if (data.Length < 5) return;
+                            if (data.Length < 7) return;
                             switch(data[2]) {
                                 case 0x00:
                                     shutdownTypeBox.Text = "None";
@@ -357,16 +378,16 @@ namespace I2CMonitorApp {
                             shutdownTimeBox.Text = BitConverter.ToUInt16(data, 3).ToString();
                             break;
                         case 0x20:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             notifMaskLowField.Value = data[2];
                             notifMaskHighField.Value = data[3];
                             break;
                         case 0x30:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             controlField.Value = data[2];
                             break;
                         case 0xFE:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             idLabel.Content = $"0x{data[2]:X2}";
                             break;
                         default:

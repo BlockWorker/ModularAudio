@@ -78,6 +78,40 @@ bool uarth_ignore_one_hardware_error = false;
 
 
 /******************************************************************************************
+ * CRC CALCULATIONS
+ ******************************************************************************************/
+
+static const uint16_t _uart_crc_table[256] = {
+  0x0000, 0x1FB7, 0x3F6E, 0x20D9, 0x7EDC, 0x616B, 0x41B2, 0x5E05, 0xFDB8, 0xE20F, 0xC2D6, 0xDD61, 0x8364, 0x9CD3, 0xBC0A, 0xA3BD,
+  0xE4C7, 0xFB70, 0xDBA9, 0xC41E, 0x9A1B, 0x85AC, 0xA575, 0xBAC2, 0x197F, 0x06C8, 0x2611, 0x39A6, 0x67A3, 0x7814, 0x58CD, 0x477A,
+  0xD639, 0xC98E, 0xE957, 0xF6E0, 0xA8E5, 0xB752, 0x978B, 0x883C, 0x2B81, 0x3436, 0x14EF, 0x0B58, 0x555D, 0x4AEA, 0x6A33, 0x7584,
+  0x32FE, 0x2D49, 0x0D90, 0x1227, 0x4C22, 0x5395, 0x734C, 0x6CFB, 0xCF46, 0xD0F1, 0xF028, 0xEF9F, 0xB19A, 0xAE2D, 0x8EF4, 0x9143,
+  0xB3C5, 0xAC72, 0x8CAB, 0x931C, 0xCD19, 0xD2AE, 0xF277, 0xEDC0, 0x4E7D, 0x51CA, 0x7113, 0x6EA4, 0x30A1, 0x2F16, 0x0FCF, 0x1078,
+  0x5702, 0x48B5, 0x686C, 0x77DB, 0x29DE, 0x3669, 0x16B0, 0x0907, 0xAABA, 0xB50D, 0x95D4, 0x8A63, 0xD466, 0xCBD1, 0xEB08, 0xF4BF,
+  0x65FC, 0x7A4B, 0x5A92, 0x4525, 0x1B20, 0x0497, 0x244E, 0x3BF9, 0x9844, 0x87F3, 0xA72A, 0xB89D, 0xE698, 0xF92F, 0xD9F6, 0xC641,
+  0x813B, 0x9E8C, 0xBE55, 0xA1E2, 0xFFE7, 0xE050, 0xC089, 0xDF3E, 0x7C83, 0x6334, 0x43ED, 0x5C5A, 0x025F, 0x1DE8, 0x3D31, 0x2286,
+  0x783D, 0x678A, 0x4753, 0x58E4, 0x06E1, 0x1956, 0x398F, 0x2638, 0x8585, 0x9A32, 0xBAEB, 0xA55C, 0xFB59, 0xE4EE, 0xC437, 0xDB80,
+  0x9CFA, 0x834D, 0xA394, 0xBC23, 0xE226, 0xFD91, 0xDD48, 0xC2FF, 0x6142, 0x7EF5, 0x5E2C, 0x419B, 0x1F9E, 0x0029, 0x20F0, 0x3F47,
+  0xAE04, 0xB1B3, 0x916A, 0x8EDD, 0xD0D8, 0xCF6F, 0xEFB6, 0xF001, 0x53BC, 0x4C0B, 0x6CD2, 0x7365, 0x2D60, 0x32D7, 0x120E, 0x0DB9,
+  0x4AC3, 0x5574, 0x75AD, 0x6A1A, 0x341F, 0x2BA8, 0x0B71, 0x14C6, 0xB77B, 0xA8CC, 0x8815, 0x97A2, 0xC9A7, 0xD610, 0xF6C9, 0xE97E,
+  0xCBF8, 0xD44F, 0xF496, 0xEB21, 0xB524, 0xAA93, 0x8A4A, 0x95FD, 0x3640, 0x29F7, 0x092E, 0x1699, 0x489C, 0x572B, 0x77F2, 0x6845,
+  0x2F3F, 0x3088, 0x1051, 0x0FE6, 0x51E3, 0x4E54, 0x6E8D, 0x713A, 0xD287, 0xCD30, 0xEDE9, 0xF25E, 0xAC5B, 0xB3EC, 0x9335, 0x8C82,
+  0x1DC1, 0x0276, 0x22AF, 0x3D18, 0x631D, 0x7CAA, 0x5C73, 0x43C4, 0xE079, 0xFFCE, 0xDF17, 0xC0A0, 0x9EA5, 0x8112, 0xA1CB, 0xBE7C,
+  0xF906, 0xE6B1, 0xC668, 0xD9DF, 0x87DA, 0x986D, 0xB8B4, 0xA703, 0x04BE, 0x1B09, 0x3BD0, 0x2467, 0x7A62, 0x65D5, 0x450C, 0x5ABB
+};
+
+
+//calculate CRC, starting with given crc state
+static uint16_t _UART_CRC_Accumulate(uint8_t* buf, uint32_t length, uint16_t crc) {
+  int i;
+  for (i = 0; i < length; i++) {
+    crc = ((crc << 8) ^ _uart_crc_table[buf[i] ^ (uint8_t)(crc >> 8)]);
+  }
+  return crc;
+}
+
+
+/******************************************************************************************
  * RESPONSE FUNCTIONS
  ******************************************************************************************/
 
@@ -87,11 +121,24 @@ static UARTH_NotificationQueueItem* _UARTH_CreateNotification(int32_t length) {
     return NULL;
   }
 
-  //check if the notification fits in the buffer
-  uint32_t true_length = length + 2;
+  //calculate notification CRC
+  uint16_t crc = _UART_CRC_Accumulate(_notif_prep_buffer, length, 0);
+  //pointer for bytewise CRC access
+  uint8_t* crc_ptr = (uint8_t*)&crc;
+
+  //check if the notification fits in the buffer, starting with length + start and end bytes + 2 crc bytes
+  uint32_t true_length = length + 4;
   int i;
+  //count the number of data bytes that need escaping
   for (i = 0; i < length; i++) {
     uint8_t val = _notif_prep_buffer[i];
+    if (val == UARTDEF_BMS_START_BYTE || val == UARTDEF_BMS_END_BYTE || val == UARTDEF_BMS_ESCAPE_BYTE) {
+      true_length++;
+    }
+  }
+  //count the number of CRC bytes that need escaping
+  for (i = 0; i < 2; i++) {
+    uint8_t val = crc_ptr[i];
     if (val == UARTDEF_BMS_START_BYTE || val == UARTDEF_BMS_END_BYTE || val == UARTDEF_BMS_ESCAPE_BYTE) {
       true_length++;
     }
@@ -118,6 +165,14 @@ static UARTH_NotificationQueueItem* _UARTH_CreateNotification(int32_t length) {
       new_item->data[j++] = UARTDEF_BMS_ESCAPE_BYTE;
     }
     //add data byte itself
+    new_item->data[j++] = val;
+  }
+  //add CRC value, also escaped if necessary, in big endian order so that CRC(data..crc) = 0
+  for (i = 1; i >= 0; i--) {
+    uint8_t val = crc_ptr[i];
+    if (val == UARTDEF_BMS_START_BYTE || val == UARTDEF_BMS_END_BYTE || val == UARTDEF_BMS_ESCAPE_BYTE) {
+      new_item->data[j++] = UARTDEF_BMS_ESCAPE_BYTE;
+    }
     new_item->data[j++] = val;
   }
   new_item->data[j] = UARTDEF_BMS_END_BYTE;
@@ -243,6 +298,7 @@ HAL_StatusTypeDef UARTH_Notification_Event_Error(uint16_t error_code, bool high_
     case UARTDEF_BMS_ERROR_UART_FORMAT_ERROR:
     case UARTDEF_BMS_ERROR_INTERNAL_UART_ERROR:
     case UARTDEF_BMS_ERROR_UART_COMMAND_NOT_ALLOWED:
+    case UARTDEF_BMS_ERROR_UART_CRC_ERROR:
       _uart_error_since_last_status = true;
       break;
   }
@@ -507,24 +563,31 @@ static void _UARTH_ParseCommand() {
   _parse_failure_error_code = UARTDEF_BMS_ERROR_UART_FORMAT_ERROR;
 
   HAL_StatusTypeDef result;
-  switch (_parse_buffer[0]) {
-    case UARTDEF_BMS_TYPE_READ:
-      if (length == 2) {
-        result = _UARTH_ParseRead(_parse_buffer[1]);
-      } else {
+  if (_UART_CRC_Accumulate(_parse_buffer, length, 0) == 0) {
+    //CRC check passed: continue parsing
+    switch (_parse_buffer[0]) {
+      case UARTDEF_BMS_TYPE_READ:
+        if (length == 4) {
+          result = _UARTH_ParseRead(_parse_buffer[1]);
+        } else {
+          result = HAL_ERROR;
+        }
+        break;
+      case UARTDEF_BMS_TYPE_WRITE:
+        if (length > 4) {
+          result = _UARTH_ParseWrite(_parse_buffer[1], length - 4);
+        } else {
+          result = HAL_ERROR;
+        }
+        break;
+      default:
         result = HAL_ERROR;
-      }
-      break;
-    case UARTDEF_BMS_TYPE_WRITE:
-      if (length > 2) {
-        result = _UARTH_ParseWrite(_parse_buffer[1], length - 2);
-      } else {
-        result = HAL_ERROR;
-      }
-      break;
-    default:
-      result = HAL_ERROR;
-      break;
+        break;
+    }
+  } else {
+    //CRC check failed
+    _parse_failure_error_code = UARTDEF_BMS_ERROR_UART_CRC_ERROR;
+    result = HAL_ERROR;
   }
 
   if (result != HAL_OK) {
@@ -620,12 +683,12 @@ static void _UARTH_ProcessReceivedData() {
           UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_UART_FORMAT_ERROR, false);
         } else if (rx_byte == UARTDEF_BMS_END_BYTE) {
           //end byte found: parse buffer is done
-          if (_parse_buffer_write_offset == 0) {
-            //error: empty parse buffer: skip to next start
+          if (_parse_buffer_write_offset < 3) {
+            //error: parse buffer empty or too short (must have 1B type + 2B crc at least): skip to next start
             _rx_skip_to_start = true;
             UARTH_Notification_Event_Error(UARTDEF_BMS_ERROR_UART_FORMAT_ERROR, false);
           } else {
-            //non-empty parse buffer: parse command, then reset parse buffer and skip to next start
+            //parse buffer has data: parse command, then reset parse buffer and skip to next start
             _UARTH_ParseCommand();
             _parse_buffer_write_offset = 0;
             _rx_skip_to_start = true;

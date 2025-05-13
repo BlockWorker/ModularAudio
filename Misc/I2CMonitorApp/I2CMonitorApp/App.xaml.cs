@@ -9,6 +9,10 @@ namespace I2CMonitorApp {
         internal I2CCrc8() : base(0x7f, 0x00, 0x00, false, false, 0x1f) { }
     }
 
+    internal class UARTCrc16 : Crc16Base {
+        internal UARTCrc16() : base(0x1fb7, 0x0000, 0x0000, false, false, 0x200f) { }
+    }
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>

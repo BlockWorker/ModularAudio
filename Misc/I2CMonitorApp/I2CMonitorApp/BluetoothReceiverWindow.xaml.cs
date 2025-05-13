@@ -31,6 +31,8 @@ namespace I2CMonitorApp {
 
         private readonly Timer timer;
 
+        private static readonly UARTCrc16 crc = new();
+
         public BluetoothReceiverWindow() {
             InitializeComponent();
 
@@ -66,15 +68,26 @@ namespace I2CMonitorApp {
                 return;
             }
 
+            crc.Reset();
+            var crcValue = crc.ComputeHash(data);
+
             List<byte> buf = [];
-            buf.Add(0xF1);
+            buf.Add(0xF1); //add start byte
+            //add data
             foreach (var b in data) {
                 if (b == 0xF1 || b == 0xFA || b == 0xFF) {
                     buf.Add(0xFF); //escape
                 }
                 buf.Add(b);
             }
-            buf.Add(0xFA);
+            //add CRC, in big endian order so that CRC(data..crc) = 0
+            foreach (var b in crcValue.Reverse()) {
+                if (b == 0xF1 || b == 0xFA || b == 0xFF) {
+                    buf.Add(0xFF);
+                }
+                buf.Add(b);
+            }
+            buf.Add(0xFA); //add end byte
 
             port.SendMessage(buf.ToArray());
         }
@@ -214,7 +227,15 @@ namespace I2CMonitorApp {
         }
 
         private void HandleReceivedNotification(byte[] data) {
-            if (data.Length < 2) return;
+            if (data.Length < 4) return;
+
+            crc.Reset();
+            var crcValue = crc.ComputeHash(data);
+            if (crcValue[0] != 0 || crcValue[1] != 0) {
+                eventBox.Items.Add("CRC mismatch on received notification");
+                return;
+            }
+
             switch (data[0]) {
                 case 0x00:
                     //event
@@ -224,11 +245,11 @@ namespace I2CMonitorApp {
                             //ReadAndInitRegisters();
                             break;
                         case 0x01:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             eventBox.Items.Add($"Write ACK 0x{data[2]:X2}");
                             break;
                         case 0x02:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             eventBox.Items.Add($"Error 0x{data[3]:X2}{data[2]:X2}");
                             break;
                         case 0x03:
@@ -245,7 +266,7 @@ namespace I2CMonitorApp {
                     //data
                     switch (data[1]) {
                         case 0x00:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             statusLowField.Value = data[2];
                             if (data[0] == 0x01) {
                                 statusHighField.Value = (byte)((statusHighField.Value & 0x80) | data[3]);
@@ -254,47 +275,47 @@ namespace I2CMonitorApp {
                             }
                             break;
                         case 0x01:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             if (!volumeBox.IsFocused) {
                                 volumeBox.Text = data[2].ToString();
                             }
                             break;
                         case 0x02:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             titleBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x03:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             artistBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x04:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             albumBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x05:
-                            if (data.Length < 8) return;
-                            devAddrBox.Text = BitConverter.ToUInt64([.. data, 0, 0], 2).ToString("X12");
+                            if (data.Length < 10) return;
+                            devAddrBox.Text = BitConverter.ToUInt64([.. data.Take(8), 0, 0], 2).ToString("X12");
                             break;
                         case 0x06:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             devNameBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x07:
-                            if (data.Length < 6) return;
+                            if (data.Length < 8) return;
                             rssiBox.Text = BitConverter.ToInt16(data, 2).ToString();
                             qualityBox.Text = BitConverter.ToUInt16(data, 4).ToString();
                             break;
                         case 0x08:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             codecBox.Text = Encoding.UTF8.GetString(data.Skip(2).TakeWhile(b => b != 0).ToArray());
                             break;
                         case 0x20:
-                            if (data.Length < 4) return;
+                            if (data.Length < 6) return;
                             notifMaskLowField.Value = data[2];
                             notifMaskHighField.Value = data[3];
                             break;
                         case 0xFE:
-                            if (data.Length < 3) return;
+                            if (data.Length < 5) return;
                             idLabel.Content = $"0x{data[2]:X2}";
                             break;
                         default:
