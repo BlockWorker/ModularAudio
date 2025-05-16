@@ -169,6 +169,23 @@ void ModuleInterface::UnregisterCallback(ModuleEventCallback cb) {
 }
 
 
+void ModuleInterface::Init() {
+  //reset state
+  this->registered_callbacks.clear();
+
+  for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
+    delete *i;
+  }
+  this->queued_transfers.clear();
+
+  for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {
+    delete *i;
+  }
+  this->completed_transfers.clear();
+
+  this->async_transfer_active = false;
+}
+
 void ModuleInterface::LoopTasks() {
   //iterate through completed async transfers, executing their callbacks
   for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {

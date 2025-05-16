@@ -709,8 +709,13 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
 
   if (transfer->success || !retry) {
     //successful, or failed without retry: put transfer into the completed list and remove it from the queue
-    this->completed_transfers.push_back(transfer);
-    this->queued_transfers.pop_front();
+    try {
+      this->completed_transfers.push_back(transfer);
+      this->queued_transfers.pop_front();
+    } catch (...) {
+      //list operation failed: force a retry (should be a very unlikely case)
+      DEBUG_PRINTF("*** I2CModuleInterface retry forced due to exception when trying to finish a transfer!\n");
+    }
   }
 
   //async transfer is no longer active, ready for the next (or retry of current one)
@@ -727,12 +732,14 @@ void I2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint
 
   switch (type) {
     case IF_ERROR:
+      this->ExecuteCallbacks(MODIF_EVENT_ERROR);
     case IF_RX_COMPLETE:
     case IF_TX_COMPLETE:
       this->HandleAsyncTransferDone(type);
       break;
     case IF_EXTI:
       //TODO: interrupt pin handling
+      this->ExecuteCallbacks(MODIF_EVENT_INTERRUPT);
       break;
     default:
       break;
