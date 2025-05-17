@@ -37,6 +37,8 @@ public:
 
   I2CModuleInterface dap_if;
 
+  UARTModuleInterface btrx_if;
+
   void Init() override;
   void LoopTasks() override;
 

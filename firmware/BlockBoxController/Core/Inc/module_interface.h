@@ -87,8 +87,8 @@ typedef enum {
   TF_WRITE = 0x2
 } ModuleTransferType;
 
-//callback type for module register transfers - arguments: success, context, value where applicable
-typedef void (*ModuleTransferCallback)(bool, uintptr_t, uint32_t);
+//callback type for module register transfers - arguments: success, context, value where applicable, length in bytes
+typedef void (*ModuleTransferCallback)(bool, uintptr_t, uint32_t, uint16_t);
 
 class ModuleTransferQueueItem {
 public:
@@ -225,6 +225,8 @@ protected:
   void StartQueuedAsyncTransfer() noexcept override;
 
   void HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept;
+
+  virtual void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept;
 };
 
 

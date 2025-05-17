@@ -863,3 +863,11 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
   __set_PRIMASK(primask);
 }
 
+
+void I2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
+  //nothing to do in base class implementation
+  UNUSED(reg_addr);
+  UNUSED(buf);
+  UNUSED(length);
+}
+

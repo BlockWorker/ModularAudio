@@ -193,7 +193,7 @@ void ModuleInterface::LoopTasks() {
 
     if (transfer->callback != NULL) {
       try {
-        transfer->callback(transfer->success, transfer->context, transfer->value_buffer);
+        transfer->callback(transfer->success, transfer->context, transfer->value_buffer, transfer->length);
       } catch (...) {
         //on error: erase successfully executed callbacks from completed list (all before current one), then rethrow
         this->completed_transfers.erase(this->completed_transfers.begin(), i);

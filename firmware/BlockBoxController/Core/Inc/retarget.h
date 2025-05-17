@@ -15,6 +15,8 @@ extern "C" {
 #include "stm32h7xx_hal.h"
 #include <sys/stat.h>
 
+void Retarget_UART_TxCpltCallback(UART_HandleTypeDef *huart);
+
 void RetargetInit(UART_HandleTypeDef *huart);
 int _isatty(int fd);
 int _write(int fd, char* ptr, int len);

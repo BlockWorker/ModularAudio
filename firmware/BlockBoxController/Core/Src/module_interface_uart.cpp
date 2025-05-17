@@ -113,7 +113,7 @@ void UARTModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uin
       this->ExecuteCallbacks(MODIF_EVENT_ERROR);
       return;
     case IF_TX_COMPLETE:
-      this->async_transfer_active = false;
+      //this->async_transfer_active = false;
       break;
     default:
       break;
@@ -130,7 +130,15 @@ void UARTModuleInterface::Init() {
 }
 
 void UARTModuleInterface::LoopTasks() {
+  if (this->interrupt_error) {
+    this->Reset();
+  }
+
   this->ProcessRawReceivedData();
+
+  //transfer timeout handling: to be done under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
 
   //decrement transfer timeout counters
   for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
@@ -149,6 +157,10 @@ void UARTModuleInterface::LoopTasks() {
         //timed out: unsuccessful completion of transfer
         transfer->success = false;
         this->completed_transfers.push_back(transfer);
+        //if we're at the front of the queue: async transfer no longer active (cancelled)
+        if (i == this->queued_transfers.begin()) {
+          this->async_transfer_active = false;
+        }
         this->queued_transfers.erase(i);
         //erase invalidates iterators, so break out of inner loop and do another pass to check for more timeouts
         any_timed_out = true;
@@ -156,6 +168,8 @@ void UARTModuleInterface::LoopTasks() {
       }
     }
   } while (any_timed_out);
+
+  __set_PRIMASK(primask);
 
   this->ModuleInterface::LoopTasks();
 }
@@ -507,12 +521,17 @@ void UARTModuleInterface::ParseRawNotification() {
           retry_on_fail = true;
           break;
         }
-        if (transfer->type == TF_READ && transfer->reg_addr == this->parse_buffer[1] && (uint32_t)transfer->length <= length - crc_length - 2) {
-          //we have a read transfer, and its register address and length match the data: do a sanity check that we have a non-null destination buffer
+        if (transfer->type == TF_READ && transfer->reg_addr == this->parse_buffer[1]) {
+          //we have a read transfer, and its register address matches the data: do a sanity check that we have a non-null destination buffer
           if (transfer->data_ptr != NULL) {
             //transfer successful, copy data to the destination buffer
             transfer->success = true;
             error = false;
+            //if we received fewer bytes than requested, update that information in the transfer object
+            if (length - crc_length - 2 < transfer->length) {
+              transfer->length = length - crc_length - 2;
+            }
+            //copy whatever data we have, up to the requested number of bytes
             memcpy(transfer->data_ptr, this->parse_buffer.data() + 2, transfer->length);
           } else {
             //we somehow have a null destination pointer: transfer failed, do not retry (corrupted transfer object)
@@ -566,6 +585,11 @@ void UARTModuleInterface::ParseRawNotification() {
         //TODO: log event or something
       }
     }
+
+    //async transfer is no longer active, ready for the next (or retry of current one)
+    this->async_transfer_active = false;
+    //start next transfer
+    this->StartQueuedAsyncTransfer();
   }
 
   __set_PRIMASK(primask);
@@ -580,6 +604,8 @@ void UARTModuleInterface::ParseRawNotification() {
 void UARTModuleInterface::HandleNotificationData(bool unsolicited) {
   //nothing to do in base class implementation
   UNUSED(unsolicited);
+  //testing printout for debug - TODO: remove later
+  DEBUG_PRINTF("UART notif: unsolicited %u, type %u, sub %u, length %u\n", unsolicited, this->parse_buffer[0], this->parse_buffer[1], this->parse_buffer.size());
 }
 
 //return value: whether the current error is attributable to a command
