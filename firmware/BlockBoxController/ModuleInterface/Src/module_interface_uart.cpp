@@ -5,7 +5,7 @@
  *      Author: Alex
  */
 
-#include "module_interface.h"
+#include "module_interface_uart.h"
 
 
 //timeout for async UART commands, in main loop cycles
@@ -605,7 +605,7 @@ void UARTModuleInterface::HandleNotificationData(bool unsolicited) {
   //nothing to do in base class implementation
   UNUSED(unsolicited);
   //testing printout for debug - TODO: remove later
-  DEBUG_PRINTF("UART notif: unsolicited %u, type %u, sub %u, length %u\n", unsolicited, this->parse_buffer[0], this->parse_buffer[1], this->parse_buffer.size());
+  //DEBUG_PRINTF("UART notif: unsolicited %u, type %u, sub %u, length %u\n", unsolicited, this->parse_buffer[0], this->parse_buffer[1], this->parse_buffer.size());
 }
 
 //return value: whether the current error is attributable to a command

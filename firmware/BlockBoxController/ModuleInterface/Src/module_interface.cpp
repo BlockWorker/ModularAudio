@@ -242,4 +242,3 @@ void ModuleInterface::ExecuteCallbacks(uint32_t event) noexcept {
     }
   }
 }
-

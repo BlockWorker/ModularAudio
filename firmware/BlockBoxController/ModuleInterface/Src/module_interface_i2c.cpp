@@ -6,7 +6,7 @@
  */
 
 
-#include "module_interface.h"
+#include "module_interface_i2c.h"
 
 
 //timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)

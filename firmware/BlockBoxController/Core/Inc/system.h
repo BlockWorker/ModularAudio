@@ -14,7 +14,8 @@
 
 #ifdef __cplusplus
 
-#include "module_interface.h"
+#include "module_interface_i2c.h"
+#include "module_interface_uart.h"
 
 extern "C" {
 #endif
