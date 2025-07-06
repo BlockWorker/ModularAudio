@@ -11,6 +11,7 @@
 
 #include "cpp_main.h"
 #include "module_interface.h"
+#include "register_set.h"
 
 
 #ifdef __cplusplus
@@ -95,6 +96,22 @@ protected:
   void HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept;
 
   virtual void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept;
+};
+
+
+//register-enabled I2C module interface
+class RegI2CModuleInterface : public I2CModuleInterface {
+public:
+  const RegisterSet& registers;
+
+  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc = true);
+  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
+
+protected:
+  RegisterSet _registers;
+
+  void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept override;
+  virtual void OnRegisterUpdate(uint8_t address);
 };
 
 #endif

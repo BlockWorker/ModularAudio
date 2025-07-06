@@ -440,6 +440,9 @@ void I2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t l
     //no CRC: just do a basic mem read
     this->hw_interface.Read(this->i2c_address, reg_addr, buf, length);
   }
+
+  //handle data update
+  this->HandleDataUpdate(reg_addr, buf, length);
 }
 
 void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
@@ -464,6 +467,9 @@ void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uin
     //no CRC: just do a basic mem write
     this->hw_interface.Write(this->i2c_address, reg_addr, buf, length);
   }
+
+  //handle data update
+  this->HandleDataUpdate(reg_addr, buf, length);
 }
 
 
@@ -527,6 +533,15 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
     //no CRC: just do a basic mem read for all registers
     this->hw_interface.Read(this->i2c_address, reg_addr_first, buf, total_length);
   }
+
+  //handle data updates
+  uint16_t reg_offset = 0;
+  uint16_t reg_size;
+  for (int i = 0; i < count; i++) {
+    reg_size = reg_sizes[i];
+    this->HandleDataUpdate(reg_addr_first + i, buf + reg_offset, reg_size);
+    reg_offset += reg_size;
+  }
 }
 
 void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
@@ -559,6 +574,15 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
   } else {
     //no CRC: just do a basic mem write for all registers
     this->hw_interface.Write(this->i2c_address, reg_addr_first, buf, total_length);
+  }
+
+  //handle data updates
+  uint16_t reg_offset = 0;
+  uint16_t reg_size;
+  for (int i = 0; i < count; i++) {
+    reg_size = reg_sizes[i];
+    this->HandleDataUpdate(reg_addr_first + i, buf + reg_offset, reg_size);
+    reg_offset += reg_size;
   }
 }
 
@@ -694,6 +718,23 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
   } else {
     //anything else: report failure
     transfer->success = false;
+  }
+
+  //in case of successful transfer, handle data update(s)
+  if (transfer->success) {
+    if (transfer->reg_count < 2 || transfer->reg_sizes == NULL) {
+      //single transfer
+      this->HandleDataUpdate(transfer->reg_addr, transfer->data_ptr, transfer->length);
+    } else {
+      //multi-transfer
+      uint16_t reg_offset = 0;
+      uint16_t reg_size;
+      for (int i = 0; i < transfer->reg_count; i++) {
+        reg_size = transfer->reg_sizes[i];
+        this->HandleDataUpdate(transfer->reg_addr + i, transfer->data_ptr + reg_offset, reg_size);
+        reg_offset += reg_size;
+      }
+    }
   }
 
   if (!transfer->success && retry) {
@@ -869,5 +910,38 @@ void I2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, 
   UNUSED(reg_addr);
   UNUSED(buf);
   UNUSED(length);
+}
+
+
+
+RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc) :
+    I2CModuleInterface(hw_interface, int_port, int_pin, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+
+RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc) :
+    I2CModuleInterface(hw_interface, int_port, int_pin, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+
+
+void RegI2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
+  //allow base handling
+  this->I2CModuleInterface::HandleDataUpdate(reg_addr, buf, length);
+
+  //ensure that the register is valid and the length matches
+  if (this->_registers.reg_sizes[reg_addr] > 0 && length == this->_registers.reg_sizes[reg_addr]) {
+    //copy notification data to the corresponding register
+    memcpy(this->_registers[reg_addr], buf, length);
+    this->OnRegisterUpdate(reg_addr);
+  } else {
+    //invalid register or length mismatch
+    DEBUG_PRINTF("* I2C register notification for address 0x%02X length %u, expected %u\n", reg_addr, length, this->_registers.reg_sizes[reg_addr]);
+  }
+}
+
+void RegI2CModuleInterface::OnRegisterUpdate(uint8_t address) {
+  //address in base implementation
+  UNUSED(address);
+  //execute callbacks
+  this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
+  //TODO temporary debug printout
+  DEBUG_PRINTF("I2C register 0x%02X updated\n", address);
 }
 
