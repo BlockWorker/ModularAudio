@@ -661,3 +661,63 @@ void UARTModuleInterface::Reset() {
   ThrowOnHALErrorMsg(res, "UART receive start");
 }
 
+
+
+RegUARTModuleInterface::RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, const uint16_t* reg_sizes, bool use_crc) :
+    UARTModuleInterface(uart_handle, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+
+RegUARTModuleInterface::RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, std::initializer_list<uint16_t> reg_sizes, bool use_crc) :
+    UARTModuleInterface(uart_handle, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+
+
+void RegUARTModuleInterface::HandleNotificationData(bool unsolicited) {
+  //allow base handling
+  this->UARTModuleInterface::HandleNotificationData(unsolicited);
+
+  uint8_t address;
+  uint16_t length;
+  const uint8_t* data;
+
+  //how many length bytes to subtract for CRC
+  uint16_t crc_length = (this->uses_crc ? 2 : 0);
+
+  //check notification type
+  //we explicitly *do not* handle write acknowledgement events, since the written data is not necessarily equal to the resulting register state
+  switch ((ModuleInterfaceUARTNotificationType)this->parse_buffer[0]) {
+    case IF_UART_TYPE_CHANGE_NOTIFICATION:
+    case IF_UART_TYPE_READ_DATA:
+      //reads or async change notifications
+      address = this->parse_buffer[1];
+      length = this->parse_buffer.size() - 2 - crc_length; //calculate data-only length
+      data = this->parse_buffer.data() + 2;
+      break;
+    default:
+      //other types don't impact register contents, or need module-specific handling logic (example: reset events)
+      return;
+  }
+
+  //ensure that the register is valid
+  if (this->_registers.reg_sizes[address] > 0) {
+    //limit the length to the register size
+    if (length > this->_registers.reg_sizes[address]) {
+      length = this->_registers.reg_sizes[address];
+    }
+    //copy notification data to the corresponding register
+    memcpy(this->_registers[address], data, length);
+    this->OnRegisterUpdate(address);
+  } else {
+    //invalid register
+    DEBUG_PRINTF("* UART register notification for invalid address 0x%02X\n", address);
+  }
+}
+
+void RegUARTModuleInterface::OnRegisterUpdate(uint8_t address) {
+  //address in base implementation
+  UNUSED(address);
+  //execute callbacks
+  this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
+  //TODO temporary debug printout
+  DEBUG_PRINTF("UART register 0x%02X updated\n", address);
+}
+
+

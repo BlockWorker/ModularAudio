@@ -7,6 +7,7 @@
 
 #include "system.h"
 #include "retarget.h"
+#include "../../../BluetoothReceiver_Controller/Core/Inc/uart_defines_btrx.h"
 
 
 /***************************************************/
@@ -105,7 +106,7 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       break;
     case 1:
       if (length == 2) {
-        DEBUG_PRINTF("BTRX initial notif mask: 0x%04X\n", (uint16_t)value);
+        DEBUG_PRINTF("BTRX initial notif mask: 0x%04X reg 0x%04X\n", (uint16_t)value, bbv2_system.btrx_if.registers.Reg16(0x20));
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
@@ -114,7 +115,7 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       break;
     case 2:
       if (length == 2) {
-        DEBUG_PRINTF("BTRX new notif mask: 0x%04X\n", (uint16_t)value);
+        DEBUG_PRINTF("BTRX new notif mask: 0x%04X reg 0x%04X\n", (uint16_t)value, bbv2_system.btrx_if.registers.Reg16(0x20));
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
@@ -122,16 +123,22 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       break;
     case 3:
       if (length == 2) {
-        DEBUG_PRINTF("BTRX initial status: 0x%04X\n", (uint16_t)value);
+        DEBUG_PRINTF("BTRX initial status: 0x%04X reg 0x%04X\n", (uint16_t)value, bbv2_system.btrx_if.registers.Reg16(0x00));
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
-      bbv2_system.btrx_if.WriteRegister8Async(0x31, 0x04, NULL, 0);
-      bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 4);
+      if ((value & UARTDEF_BTRX_STATUS_INIT_DONE_Msk) != 0) {
+        //init done - proceed
+        bbv2_system.btrx_if.WriteRegister8Async(0x31, 0x04, NULL, 0);
+        bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 4);
+      } else {
+        //init not done yet - stay in this stage
+        bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 3);
+      }
       break;
     case 4:
       if (length == 2) {
-        DEBUG_PRINTF("BTRX new status: 0x%04X\n", (uint16_t)value);
+        DEBUG_PRINTF("BTRX new status: 0x%04X reg 0x%04X\n", (uint16_t)value, bbv2_system.btrx_if.registers.Reg16(0x00));
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
@@ -183,7 +190,7 @@ void BlockBoxV2System::LoopTasks() {
 BlockBoxV2System::BlockBoxV2System() :
     main_i2c_hw(&BBV2_I2C_MAIN_HANDLE, _BlockBoxV2_I2C_Main_HardwareReset),
     dap_if(this->main_i2c_hw, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN, BBV2_DAP_I2C_ADDR, true),
-    btrx_if(&BBV2_BTRX_UART_HANDLE, true) {
+    btrx_if(&BBV2_BTRX_UART_HANDLE, UARTDEF_BTRX_REG_SIZES, true) {
 
 }
 

@@ -152,6 +152,27 @@
 #define UARTDEF_BTRX_ERROR_UART_CRC_ERROR             0x8004
 
 
+//Register sizes in bytes - 0 means register is invalid
+#define UARTDEF_BTRX_STRINGREG_SIZE 256
+#define UARTDEF_BTRX_REG_SIZES {\
+  2, 1, UARTDEF_BTRX_STRINGREG_SIZE, UARTDEF_BTRX_STRINGREG_SIZE, UARTDEF_BTRX_STRINGREG_SIZE, 6, UARTDEF_BTRX_STRINGREG_SIZE, 4, UARTDEF_BTRX_STRINGREG_SIZE, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  1, 1, 1, UARTDEF_BTRX_STRINGREG_SIZE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,\
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 }
+
+
 //Status registers
 #define UARTDEF_BTRX_STATUS 0x00
 

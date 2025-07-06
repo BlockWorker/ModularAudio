@@ -11,6 +11,7 @@
 
 #include "cpp_main.h"
 #include "module_interface.h"
+#include "register_set.h"
 
 
 //UART-specific constants
@@ -100,6 +101,22 @@ protected:
   virtual bool IsCommandError(bool* should_retry) noexcept;
 
   void Reset();
+};
+
+
+//register-enabled UART module interface
+class RegUARTModuleInterface : public UARTModuleInterface {
+public:
+  const RegisterSet& registers;
+
+  RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, const uint16_t* reg_sizes, bool use_crc = true);
+  RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
+
+protected:
+  RegisterSet _registers;
+
+  void HandleNotificationData(bool unsolicited) override;
+  virtual void OnRegisterUpdate(uint8_t address);
 };
 
 

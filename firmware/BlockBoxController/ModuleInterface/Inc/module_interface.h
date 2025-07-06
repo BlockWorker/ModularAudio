@@ -14,8 +14,9 @@
 //blocking operation timeout
 #define MODIF_BLOCKING_TIMEOUT_MS 20
 //common interface events
-#define MODIF_EVENT_INTERRUPT 0
-#define MODIF_EVENT_ERROR 1
+#define MODIF_EVENT_INTERRUPT (1u << 0)
+#define MODIF_EVENT_ERROR (1u << 1)
+#define MODIF_EVENT_REGISTER_UPDATE (1u << 8)
 
 
 #ifdef __cplusplus
