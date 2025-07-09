@@ -588,7 +588,7 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
 
 
 static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr_first, uint8_t* buf,
-                                                          const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
+                                                          const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
   if (buf == NULL || reg_sizes == NULL || count == 0) {
     throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes and nonzero count");
   }
@@ -610,8 +610,7 @@ static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTrans
   new_transfer->length = total_length;
   new_transfer->value_buffer = 0;
   new_transfer->success = false;
-  new_transfer->callback = cb;
-  new_transfer->context = context;
+  new_transfer->callback = callback;
   new_transfer->add_buffer = NULL;
   new_transfer->reg_count = count;
   new_transfer->retry_count = 0;
@@ -637,13 +636,13 @@ static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTrans
   }
 }
 
-void I2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
-  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_READ, reg_addr_first, buf, reg_sizes, count, cb, context);
+void I2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_READ, reg_addr_first, buf, reg_sizes, count, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }
 
-void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback cb, uintptr_t context) {
-  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_WRITE, reg_addr_first, (uint8_t*)buf, reg_sizes, count, cb, context);
+void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_WRITE, reg_addr_first, (uint8_t*)buf, reg_sizes, count, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }
 

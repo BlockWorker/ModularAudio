@@ -53,39 +53,39 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
   switch (context) {
     case 0:
       DEBUG_PRINTF("DAP async status: 0x%02X reg 0x%02X\n", (uint8_t)value, bbv2_system.dap_if.registers.Reg8(0x01));
-      bbv2_system.dap_if.WriteRegister32Async(0x28, 44100, /*NULL, 0 */ _AsyncI2CTest, 1);
+      bbv2_system.dap_if.WriteRegister32Async(0x28, 44100, std::bind(_AsyncI2CTest, std::placeholders::_1, 1, std::placeholders::_2, std::placeholders::_3));
       break;
     case 1:
       DEBUG_PRINTF("DAP async write I2S1 SR done, reg %lu\n", bbv2_system.dap_if.registers.Reg32(0x28));
-      bbv2_system.dap_if.ReadRegister32Async(0x28, _AsyncI2CTest, 2);
+      bbv2_system.dap_if.ReadRegister32Async(0x28, std::bind(_AsyncI2CTest, std::placeholders::_1, 2, std::placeholders::_2, std::placeholders::_3));
       break;
     case 2:
       DEBUG_PRINTF("DAP async new I2S1 SR: %lu reg %lu\n", value, bbv2_system.dap_if.registers.Reg32(0x28));
-      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, _AsyncI2CTest, 3);
+      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 3, std::placeholders::_2, std::placeholders::_3));
       break;
     case 3:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x42);
       DEBUG_PRINTF("DAP async initial loudness: %.1f %.1f; reg1 %.1f\n", loudness_gains[0], loudness_gains[1], *(float*)&reg_tmp);
       loudness_gains[0] = -10.0f;
       loudness_gains[1] = 0.0f;
-      bbv2_system.dap_if.WriteRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, _AsyncI2CTest, 4);
+      bbv2_system.dap_if.WriteRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 4, std::placeholders::_2, std::placeholders::_3));
       break;
     case 4:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x42);
       DEBUG_PRINTF("DAP async write loudness done, reg1 %.1f\n", *(float*)&reg_tmp);
       memset(loudness_gains, 0, sizeof(loudness_gains));
-      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, _AsyncI2CTest, 5);
+      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 5, std::placeholders::_2, std::placeholders::_3));
       break;
     case 5:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
       DEBUG_PRINTF("DAP async new loudness: %.1f %.1f; reg1 %.1f\n", loudness_gains[0], loudness_gains[1], *(float*)&reg_tmp);
-      bbv2_system.dap_if.WriteMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, _AsyncI2CTest, 6);
+      bbv2_system.dap_if.WriteMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 6, std::placeholders::_2, std::placeholders::_3));
       break;
     case 6:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
       DEBUG_PRINTF("DAP async write mixer+vols done, reg1 0x%08lX %.1f\n", bbv2_system.dap_if.registers.Reg32(0x40), *(float*)&reg_tmp);
       memset(mixerAndVols, 0, sizeof(mixerAndVols));
-      bbv2_system.dap_if.ReadMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, _AsyncI2CTest, 7);
+      bbv2_system.dap_if.ReadMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 7, std::placeholders::_2, std::placeholders::_3));
       break;
     case 7:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
@@ -109,7 +109,7 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
-      bbv2_system.btrx_if.ReadRegister16Async(0x20, _AsyncUARTTest, 1);
+      bbv2_system.btrx_if.ReadRegister16Async(0x20, std::bind(_AsyncUARTTest, std::placeholders::_1, 1, std::placeholders::_2, std::placeholders::_3));
       break;
     case 1:
       if (length == 2) {
@@ -117,8 +117,8 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
-      bbv2_system.btrx_if.WriteRegister16Async(0x20, 0x1F, NULL, 0);
-      bbv2_system.btrx_if.ReadRegister16Async(0x20, _AsyncUARTTest, 2);
+      bbv2_system.btrx_if.WriteRegister16Async(0x20, 0x1F, ModuleTransferCallback());
+      bbv2_system.btrx_if.ReadRegister16Async(0x20, std::bind(_AsyncUARTTest, std::placeholders::_1, 2, std::placeholders::_2, std::placeholders::_3));
       break;
     case 2:
       if (length == 2) {
@@ -126,7 +126,7 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       } else {
         DEBUG_PRINTF("BTRX wrong length %u at context %u\n", length, context);
       }
-      bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 3);
+      bbv2_system.btrx_if.ReadRegister16Async(0x00, std::bind(_AsyncUARTTest, std::placeholders::_1, 3, std::placeholders::_2, std::placeholders::_3));
       break;
     case 3:
       if (length == 2) {
@@ -136,11 +136,11 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
       }
       if ((value & UARTDEF_BTRX_STATUS_INIT_DONE_Msk) != 0) {
         //init done - proceed
-        bbv2_system.btrx_if.WriteRegister8Async(0x31, 0x04, NULL, 0);
-        bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 4);
+        bbv2_system.btrx_if.WriteRegister8Async(0x31, 0x04, ModuleTransferCallback());
+        bbv2_system.btrx_if.ReadRegister16Async(0x00, std::bind(_AsyncUARTTest, std::placeholders::_1, 4, std::placeholders::_2, std::placeholders::_3));
       } else {
         //init not done yet - stay in this stage
-        bbv2_system.btrx_if.ReadRegister16Async(0x00, _AsyncUARTTest, 3);
+        bbv2_system.btrx_if.ReadRegister16Async(0x00, std::bind(_AsyncUARTTest, std::placeholders::_1, 3, std::placeholders::_2, std::placeholders::_3));
       }
       break;
     case 4:
@@ -187,8 +187,8 @@ void BlockBoxV2System::Init() {
 
   HAL_Delay(100);
 
-  this->dap_if.ReadRegister8Async(0x01, _AsyncI2CTest, 0);
-  //this->btrx_if.ReadRegister8Async(0xFE, _AsyncUARTTest, 0);
+  //this->dap_if.ReadRegister8Async(0x01, std::bind(_AsyncI2CTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
+  this->btrx_if.ReadRegister8Async(0xFE, std::bind(_AsyncUARTTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
 }
 
 

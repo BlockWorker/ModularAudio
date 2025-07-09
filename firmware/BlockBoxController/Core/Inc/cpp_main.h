@@ -20,6 +20,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <functional>
 #include <stdio.h>
 
 //inline string formatting macro, limited to 256 characters: "action" is performed with the format result in "__msg"
