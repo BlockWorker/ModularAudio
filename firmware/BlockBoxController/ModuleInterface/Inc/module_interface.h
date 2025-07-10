@@ -79,8 +79,8 @@ class ModuleInterface {
 public:
   virtual void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) = 0;
   uint8_t ReadRegister8(uint8_t reg_addr);
-  uint16_t ReadRegister16(uint16_t reg_addr);
-  uint32_t ReadRegister32(uint16_t reg_addr);
+  uint16_t ReadRegister16(uint8_t reg_addr);
+  uint32_t ReadRegister32(uint8_t reg_addr);
 
   void ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, uint16_t length, ModuleTransferCallback&& callback);
   void ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
@@ -89,13 +89,13 @@ public:
 
   virtual void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) = 0;
   void WriteRegister8(uint8_t reg_addr, uint8_t value);
-  void WriteRegister16(uint16_t reg_addr, uint16_t value);
-  void WriteRegister32(uint16_t reg_addr, uint32_t value);
+  void WriteRegister16(uint8_t reg_addr, uint16_t value);
+  void WriteRegister32(uint8_t reg_addr, uint32_t value);
 
   void WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, uint16_t length, ModuleTransferCallback&& callback);
   void WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback&& callback);
-  void WriteRegister16Async(uint16_t reg_addr, uint16_t value, ModuleTransferCallback&& callback);
-  void WriteRegister32Async(uint16_t reg_addr, uint32_t value, ModuleTransferCallback&& callback);
+  void WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback);
+  void WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback);
 
   virtual void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept = 0;
 

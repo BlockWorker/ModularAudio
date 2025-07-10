@@ -488,8 +488,8 @@ I2CModuleInterface::~I2CModuleInterface() {
 /*********************************************************/
 
 void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
-  if (buf == NULL || reg_sizes == NULL || count == 0) {
-    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes and nonzero count");
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
   //calculate total data length in bytes
@@ -545,8 +545,8 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
 }
 
 void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
-  if (buf == NULL || reg_sizes == NULL || count == 0) {
-    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes and nonzero count");
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
   //calculate total data length in bytes
@@ -589,8 +589,8 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
 
 static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr_first, uint8_t* buf,
                                                           const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
-  if (buf == NULL || reg_sizes == NULL || count == 0) {
-    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes and nonzero count");
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+    throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
   //calculate total data length in bytes
@@ -650,7 +650,6 @@ void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const u
 /*********************************************************/
 /*             I2C Module Interface - Async              */
 /*********************************************************/
-
 
 ModuleTransferQueueItem* I2CModuleInterface::CreateTransferQueueItem() {
   //initialise to empty defaults
@@ -913,6 +912,226 @@ void I2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, 
 
 
 
+/*********************************************************/
+/*          Reg I2C Module Interface - Helpers           */
+/*********************************************************/
+
+uint16_t RegI2CModuleInterface::GetRegisterSize(uint8_t reg_addr) {
+  uint16_t size = this->registers.reg_sizes[reg_addr];
+
+  if (size == 0) {
+    //invalid register
+    throw std::invalid_argument("RegI2CModuleInterface transfers require all involved registers to be valid");
+  }
+
+  return size;
+}
+
+const uint16_t* RegI2CModuleInterface::GetMultiRegisterSizes(uint8_t reg_addr_first, uint8_t count) {
+  //check for at least 1 register and potential overrun
+  if (count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+    throw std::invalid_argument("RegI2CModuleInterface multi-transfers require nonzero count and cannot go above register 255");
+  }
+
+  //check validity of involved registers
+  for (uint8_t i = 0; i < count; i++) {
+    if (this->registers.reg_sizes[reg_addr_first + i] == 0) {
+      //range includes invalid register
+      throw std::invalid_argument("RegI2CModuleInterface transfers require all involved registers to be valid");
+    }
+  }
+
+  //return direct pointer to register sizes
+  return this->registers.reg_sizes + reg_addr_first;
+}
+
+
+/*********************************************************/
+/*       Reg I2C Module Interface - Basics Shadows       */
+/*********************************************************/
+
+void RegI2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->I2CModuleInterface::ReadRegister(reg_addr, buf, length);
+}
+
+uint8_t RegI2CModuleInterface::ReadRegister8(uint8_t reg_addr) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    return this->I2CModuleInterface::ReadRegister8(reg_addr);
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 8-bit)");
+  }
+}
+
+uint16_t RegI2CModuleInterface::ReadRegister16(uint8_t reg_addr) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    return this->I2CModuleInterface::ReadRegister16(reg_addr);
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 16-bit)");
+  }
+}
+
+uint32_t RegI2CModuleInterface::ReadRegister32(uint8_t reg_addr) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 4) {
+    return this->I2CModuleInterface::ReadRegister32(reg_addr);
+  } else if (length == 3) {
+    //support 24-bit registers in this call too
+    return this->I2CModuleInterface::ReadRegister32(reg_addr) & 0xFFFFFF;
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 24-bit or 32-bit)");
+  }
+}
+
+
+void RegI2CModuleInterface::ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->I2CModuleInterface::ReadRegisterAsync(reg_addr, buf, length, std::move(callback));
+}
+
+void RegI2CModuleInterface::ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    this->I2CModuleInterface::ReadRegister8Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 8-bit)");
+  }
+}
+
+void RegI2CModuleInterface::ReadRegister16Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    return this->I2CModuleInterface::ReadRegister16Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 16-bit)");
+  }
+}
+
+void RegI2CModuleInterface::ReadRegister32Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  //TODO no support for 24-bit registers in async (not easily doable with provided base functions) - implement later if required
+  if (length == 4) {
+    return this->I2CModuleInterface::ReadRegister32Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to read register of wrong size (function expects 32-bit)");
+  }
+}
+
+
+void RegI2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->I2CModuleInterface::WriteRegister(reg_addr, buf, length);
+}
+
+void RegI2CModuleInterface::WriteRegister8(uint8_t reg_addr, uint8_t value) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    this->I2CModuleInterface::WriteRegister8(reg_addr, value);
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 8-bit)");
+  }
+}
+
+void RegI2CModuleInterface::WriteRegister16(uint8_t reg_addr, uint16_t value) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    this->I2CModuleInterface::WriteRegister16(reg_addr, value);
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 16-bit)");
+  }
+}
+
+void RegI2CModuleInterface::WriteRegister32(uint8_t reg_addr, uint32_t value) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 4) {
+    this->I2CModuleInterface::WriteRegister32(reg_addr, value);
+  } else if (length == 3) {
+    //support 24-bit registers in this call too
+    this->I2CModuleInterface::WriteRegister32(reg_addr, value & 0xFFFFFF);
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 24-bit or 32-bit)");
+  }
+}
+
+
+void RegI2CModuleInterface::WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->I2CModuleInterface::WriteRegisterAsync(reg_addr, buf, length, std::move(callback));
+}
+
+void RegI2CModuleInterface::WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    this->I2CModuleInterface::WriteRegister8Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 8-bit)");
+  }
+}
+
+void RegI2CModuleInterface::WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    this->I2CModuleInterface::WriteRegister16Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 16-bit)");
+  }
+}
+
+void RegI2CModuleInterface::WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  //TODO no support for 24-bit registers in async (not easily doable with provided base functions) - implement later if required
+  if (length == 4) {
+    this->I2CModuleInterface::WriteRegister32Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegI2CModuleInterface attempted to write register of wrong size (function expects 32-bit)");
+  }
+}
+
+
+/*********************************************************/
+/*   Reg I2C Module Interface - Multi-Register Shadows   */
+/*********************************************************/
+
+void RegI2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, uint8_t count) {
+  const uint16_t* reg_sizes = this->GetMultiRegisterSizes(reg_addr_first, count);
+  this->I2CModuleInterface::ReadMultiRegister(reg_addr_first, buf, reg_sizes, count);
+}
+
+void RegI2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, uint8_t count, ModuleTransferCallback&& callback) {
+  const uint16_t* reg_sizes = this->GetMultiRegisterSizes(reg_addr_first, count);
+  this->I2CModuleInterface::ReadMultiRegisterAsync(reg_addr_first, buf, reg_sizes, count, std::move(callback));
+}
+
+
+void RegI2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count) {
+  const uint16_t* reg_sizes = this->GetMultiRegisterSizes(reg_addr_first, count);
+  this->I2CModuleInterface::WriteMultiRegister(reg_addr_first, buf, reg_sizes, count);
+}
+
+void RegI2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count, ModuleTransferCallback&& callback) {
+  const uint16_t* reg_sizes = this->GetMultiRegisterSizes(reg_addr_first, count);
+  this->I2CModuleInterface::WriteMultiRegisterAsync(reg_addr_first, buf, reg_sizes, count, std::move(callback));
+}
+
+
+/*********************************************************/
+/*     Reg I2C Module Interface - Register Handling      */
+/*********************************************************/
+
 RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc) :
     I2CModuleInterface(hw_interface, int_port, int_pin, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
@@ -941,6 +1160,6 @@ void RegI2CModuleInterface::OnRegisterUpdate(uint8_t address) {
   //execute callbacks
   this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
   //TODO temporary debug printout
-  DEBUG_PRINTF("I2C register 0x%02X updated\n", address);
+  //DEBUG_PRINTF("I2C register 0x%02X updated\n", address);
 }
 

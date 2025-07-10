@@ -104,11 +104,44 @@ class RegI2CModuleInterface : public I2CModuleInterface {
 public:
   const RegisterSet& registers;
 
+  //register read/write functions with automatic length inference based on the register set
+  void ReadRegister(uint8_t reg_addr, uint8_t* buf);
+  uint8_t ReadRegister8(uint8_t reg_addr);
+  uint16_t ReadRegister16(uint8_t reg_addr);
+  uint32_t ReadRegister32(uint8_t reg_addr);
+
+  void ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, ModuleTransferCallback&& callback);
+  void ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+  void ReadRegister16Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+  void ReadRegister32Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+
+  void WriteRegister(uint8_t reg_addr, const uint8_t* buf);
+  void WriteRegister8(uint8_t reg_addr, uint8_t value);
+  void WriteRegister16(uint8_t reg_addr, uint16_t value);
+  void WriteRegister32(uint8_t reg_addr, uint32_t value);
+
+  void WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, ModuleTransferCallback&& callback);
+  void WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback&& callback);
+  void WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback);
+  void WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback);
+
+  //read `count` consecutive registers with the given sizes - infers the register sizes automatically from the register set
+  void ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, uint8_t count);
+  void ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, uint8_t count, ModuleTransferCallback&& callback);
+
+  //write `count` consecutive registers with the given sizes - infers the register sizes automatically from the register set
+  void WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count);
+  void WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count, ModuleTransferCallback&& callback);
+
   RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc = true);
   RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
 
 protected:
   RegisterSet _registers;
+
+  //register size retrieval functions with validity checking
+  uint16_t GetRegisterSize(uint8_t reg_addr);
+  const uint16_t* GetMultiRegisterSizes(uint8_t reg_addr_first, uint8_t count);
 
   void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept override;
   virtual void OnRegisterUpdate(uint8_t address);

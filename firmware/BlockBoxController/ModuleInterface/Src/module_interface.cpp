@@ -16,7 +16,7 @@ uint8_t ModuleInterface::ReadRegister8(uint8_t reg_addr) {
   return value;
 }
 
-uint16_t ModuleInterface::ReadRegister16(uint16_t reg_addr) {
+uint16_t ModuleInterface::ReadRegister16(uint8_t reg_addr) {
   uint16_t value;
 
   this->ReadRegister(reg_addr, (uint8_t*)&value, 2);
@@ -24,7 +24,7 @@ uint16_t ModuleInterface::ReadRegister16(uint16_t reg_addr) {
   return value;
 }
 
-uint32_t ModuleInterface::ReadRegister32(uint16_t reg_addr) {
+uint32_t ModuleInterface::ReadRegister32(uint8_t reg_addr) {
   uint32_t value;
 
   this->ReadRegister(reg_addr, (uint8_t*)&value, 4);
@@ -103,11 +103,11 @@ void ModuleInterface::WriteRegister8(uint8_t reg_addr, uint8_t value) {
   this->WriteRegister(reg_addr, &value, 1);
 }
 
-void ModuleInterface::WriteRegister16(uint16_t reg_addr, uint16_t value) {
+void ModuleInterface::WriteRegister16(uint8_t reg_addr, uint16_t value) {
   this->WriteRegister(reg_addr, (uint8_t*)&value, 2);
 }
 
-void ModuleInterface::WriteRegister32(uint16_t reg_addr, uint32_t value) {
+void ModuleInterface::WriteRegister32(uint8_t reg_addr, uint32_t value) {
   this->WriteRegister(reg_addr, (uint8_t*)&value, 4);
 }
 
@@ -122,12 +122,12 @@ void ModuleInterface::WriteRegister8Async(uint8_t reg_addr, uint8_t value, Modul
   this->StartQueuedAsyncTransfer();
 }
 
-void ModuleInterface::WriteRegister16Async(uint16_t reg_addr, uint16_t value, ModuleTransferCallback&& callback) {
+void ModuleInterface::WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback) {
   _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, (uint32_t)value, 2, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }
 
-void ModuleInterface::WriteRegister32Async(uint16_t reg_addr, uint32_t value, ModuleTransferCallback&& callback) {
+void ModuleInterface::WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback) {
   _ModuleInterface_QueueShortTransfer(this->queued_transfers, this->CreateTransferQueueItem(), TF_WRITE, reg_addr, value, 4, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }

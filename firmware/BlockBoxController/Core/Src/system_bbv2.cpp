@@ -42,7 +42,7 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
   static float loudness_gains[2];
 
   static uint32_t mixerAndVols[6] = { 0x40000001, 0, 0, 0x40000002, 0, 0x80000000 };
-  uint16_t regSizes[2] = { 16, 8 };
+  //uint16_t regSizes[2] = { 16, 8 };
   uint32_t reg_tmp;
 
   if (!success) {
@@ -61,31 +61,31 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
       break;
     case 2:
       DEBUG_PRINTF("DAP async new I2S1 SR: %lu reg %lu\n", value, bbv2_system.dap_if.registers.Reg32(0x28));
-      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 3, std::placeholders::_2, std::placeholders::_3));
+      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, std::bind(_AsyncI2CTest, std::placeholders::_1, 3, std::placeholders::_2, std::placeholders::_3));
       break;
     case 3:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x42);
       DEBUG_PRINTF("DAP async initial loudness: %.1f %.1f; reg1 %.1f\n", loudness_gains[0], loudness_gains[1], *(float*)&reg_tmp);
       loudness_gains[0] = -10.0f;
       loudness_gains[1] = 0.0f;
-      bbv2_system.dap_if.WriteRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 4, std::placeholders::_2, std::placeholders::_3));
+      bbv2_system.dap_if.WriteRegisterAsync(0x42, (uint8_t*)loudness_gains, std::bind(_AsyncI2CTest, std::placeholders::_1, 4, std::placeholders::_2, std::placeholders::_3));
       break;
     case 4:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x42);
       DEBUG_PRINTF("DAP async write loudness done, reg1 %.1f\n", *(float*)&reg_tmp);
       memset(loudness_gains, 0, sizeof(loudness_gains));
-      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, 8, std::bind(_AsyncI2CTest, std::placeholders::_1, 5, std::placeholders::_2, std::placeholders::_3));
+      bbv2_system.dap_if.ReadRegisterAsync(0x42, (uint8_t*)loudness_gains, std::bind(_AsyncI2CTest, std::placeholders::_1, 5, std::placeholders::_2, std::placeholders::_3));
       break;
     case 5:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
       DEBUG_PRINTF("DAP async new loudness: %.1f %.1f; reg1 %.1f\n", loudness_gains[0], loudness_gains[1], *(float*)&reg_tmp);
-      bbv2_system.dap_if.WriteMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 6, std::placeholders::_2, std::placeholders::_3));
+      bbv2_system.dap_if.WriteMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 6, std::placeholders::_2, std::placeholders::_3));
       break;
     case 6:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
       DEBUG_PRINTF("DAP async write mixer+vols done, reg1 0x%08lX %.1f\n", bbv2_system.dap_if.registers.Reg32(0x40), *(float*)&reg_tmp);
       memset(mixerAndVols, 0, sizeof(mixerAndVols));
-      bbv2_system.dap_if.ReadMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, regSizes, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 7, std::placeholders::_2, std::placeholders::_3));
+      bbv2_system.dap_if.ReadMultiRegisterAsync(0x40, (uint8_t*)mixerAndVols, 2, std::bind(_AsyncI2CTest, std::placeholders::_1, 7, std::placeholders::_2, std::placeholders::_3));
       break;
     case 7:
       reg_tmp = bbv2_system.dap_if.registers.Reg32(0x41);
@@ -167,8 +167,8 @@ void BlockBoxV2System::Init() {
   uint8_t reg_val = this->dap_if.registers.Reg8(0x08);
   DEBUG_PRINTF("DAP new control: 0x%02X reg 0x%02X/0x%02X\n", this->dap_if.ReadRegister8(0x08), reg_val, this->dap_if.registers.Reg8(0x08));
   uint32_t mixerAndVols[6];
-  uint16_t regSizes[2] = { 16, 8 };
-  this->dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+  //uint16_t regSizes[2] = { 16, 8 };
+  this->dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, 2);
   uint32_t reg_tmp = this->dap_if.registers.Reg32(0x41);
   DEBUG_PRINTF("DAP initial mixer: 0x%08lX 0x%08lX 0x%08lX 0x%08lX; vols: %.1f %.1f; reg1 0x%08lX %.1f\n", mixerAndVols[0], mixerAndVols[1], mixerAndVols[2], mixerAndVols[3], ((float*)mixerAndVols)[4], ((float*)mixerAndVols)[5], this->dap_if.registers.Reg32(0x40), *(float*)&reg_tmp);
   mixerAndVols[0] = 0x41234567;
@@ -177,11 +177,11 @@ void BlockBoxV2System::Init() {
   mixerAndVols[3] = 0x4123456A;
   ((float*)mixerAndVols)[4] = -3.5f;
   ((float*)mixerAndVols)[5] = -5.5f;
-  this->dap_if.WriteMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+  this->dap_if.WriteMultiRegister(0x40, (uint8_t*)mixerAndVols, 2);
   reg_tmp = this->dap_if.registers.Reg32(0x41);
   DEBUG_PRINTF("DAP mixer/vol regs after write: 0x%08lX %.1f\n", this->dap_if.registers.Reg32(0x40), *(float*)&reg_tmp);
   memset(mixerAndVols, 0, sizeof(mixerAndVols));
-  this->dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, regSizes, 2);
+  this->dap_if.ReadMultiRegister(0x40, (uint8_t*)mixerAndVols, 2);
   reg_tmp = this->dap_if.registers.Reg32(0x41);
   DEBUG_PRINTF("DAP new mixer: 0x%08lX 0x%08lX 0x%08lX 0x%08lX; vols: %.1f %.1f; reg1 0x%08lX %.1f\n", mixerAndVols[0], mixerAndVols[1], mixerAndVols[2], mixerAndVols[3], ((float*)mixerAndVols)[4], ((float*)mixerAndVols)[5], this->dap_if.registers.Reg32(0x40), *(float*)&reg_tmp);
 

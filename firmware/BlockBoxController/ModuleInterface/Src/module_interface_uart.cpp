@@ -64,6 +64,10 @@ static uint16_t _UART_CRC_Accumulate(uint8_t* buf, uint32_t length, uint16_t crc
 }
 
 
+/*********************************************************/
+/*            UART Module Interface - Basics             */
+/*********************************************************/
+
 void UARTModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) {
   UNUSED(reg_addr);
   UNUSED(buf);
@@ -186,6 +190,42 @@ UARTModuleInterface::UARTModuleInterface(UART_HandleTypeDef* uart_handle, bool u
   }
 }
 
+
+void UARTModuleInterface::Reset() {
+  //perform reset under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  //restore UART peripheral to idle/ready
+  HAL_UART_Abort(this->uart_handle);
+
+  //reset all driver state
+  this->rx_buffer_write_offset = 0;
+  this->rx_buffer_read_offset = 0;
+  this->rx_escape_active = false;
+  this->rx_skip_to_start = true;
+  this->async_transfer_active = false;
+  this->current_error = IF_UART_ERROR_UNKNOWN;
+
+  this->parse_buffer.clear();
+  this->parse_buffer.shrink_to_fit();
+
+  //start reception of notifications
+  HAL_StatusTypeDef res = HAL_UARTEx_ReceiveToIdle_IT(this->uart_handle, this->rx_buffer + this->rx_buffer_write_offset, MODIF_UART_RXBUF_SIZE - this->rx_buffer_write_offset);
+
+  if (res == HAL_OK) {
+    this->interrupt_error = false;
+  }
+
+  __set_PRIMASK(primask);
+
+  ThrowOnHALErrorMsg(res, "UART receive start");
+}
+
+
+/*********************************************************/
+/*          UART Module Interface - Transfers            */
+/*********************************************************/
 
 ModuleTransferQueueItem* UARTModuleInterface::CreateTransferQueueItem() {
   //initialise to empty defaults
@@ -326,6 +366,10 @@ void UARTModuleInterface::StartQueuedAsyncTransfer() noexcept {
   __set_PRIMASK(primask);
 }
 
+
+/*********************************************************/
+/*           UART Module Interface - Parsing             */
+/*********************************************************/
 
 void UARTModuleInterface::ProcessRawReceivedData() noexcept {
   //process one byte at a time, until we reach the write pointer
@@ -598,11 +642,12 @@ void UARTModuleInterface::ParseRawNotification() {
     this->ExecuteCallbacks(MODIF_EVENT_ERROR);
   }
 
-  this->HandleNotificationData(!transfer_related);
+  this->HandleNotificationData(error, !transfer_related);
 }
 
-void UARTModuleInterface::HandleNotificationData(bool unsolicited) {
+void UARTModuleInterface::HandleNotificationData(bool error, bool unsolicited) {
   //nothing to do in base class implementation
+  UNUSED(error);
   UNUSED(unsolicited);
   //testing printout for debug - TODO: remove later
   //DEBUG_PRINTF("UART notif: unsolicited %u, type %u, sub %u, length %u\n", unsolicited, this->parse_buffer[0], this->parse_buffer[1], this->parse_buffer.size());
@@ -630,38 +675,104 @@ bool UARTModuleInterface::IsCommandError(bool* should_retry) noexcept {
 }
 
 
-void UARTModuleInterface::Reset() {
-  //perform reset under disabled interrupts
-  uint32_t primask = __get_PRIMASK();
-  __disable_irq();
 
-  //restore UART peripheral to idle/ready
-  HAL_UART_Abort(this->uart_handle);
+/*********************************************************/
+/*         Reg UART Module Interface - Helpers           */
+/*********************************************************/
 
-  //reset all driver state
-  this->rx_buffer_write_offset = 0;
-  this->rx_buffer_read_offset = 0;
-  this->rx_escape_active = false;
-  this->rx_skip_to_start = true;
-  this->async_transfer_active = false;
-  this->current_error = IF_UART_ERROR_UNKNOWN;
+uint16_t RegUARTModuleInterface::GetRegisterSize(uint8_t reg_addr) {
+  uint16_t size = this->registers.reg_sizes[reg_addr];
 
-  this->parse_buffer.clear();
-  this->parse_buffer.shrink_to_fit();
-
-  //start reception of notifications
-  HAL_StatusTypeDef res = HAL_UARTEx_ReceiveToIdle_IT(this->uart_handle, this->rx_buffer + this->rx_buffer_write_offset, MODIF_UART_RXBUF_SIZE - this->rx_buffer_write_offset);
-
-  if (res == HAL_OK) {
-    this->interrupt_error = false;
+  if (size == 0) {
+    //invalid register
+    throw std::invalid_argument("RegUARTModuleInterface transfers require all involved registers to be valid");
   }
 
-  __set_PRIMASK(primask);
-
-  ThrowOnHALErrorMsg(res, "UART receive start");
+  return size;
 }
 
 
+/*********************************************************/
+/*      Reg UART Module Interface - Basics Shadows       */
+/*********************************************************/
+
+void RegUARTModuleInterface::ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->UARTModuleInterface::ReadRegisterAsync(reg_addr, buf, length, std::move(callback));
+}
+
+void RegUARTModuleInterface::ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    this->UARTModuleInterface::ReadRegister8Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to read register of wrong size (function expects 8-bit)");
+  }
+}
+
+void RegUARTModuleInterface::ReadRegister16Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    return this->UARTModuleInterface::ReadRegister16Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to read register of wrong size (function expects 16-bit)");
+  }
+}
+
+void RegUARTModuleInterface::ReadRegister32Async(uint8_t reg_addr, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  //TODO no support for 24-bit registers in async (not easily doable with provided base functions) - implement later if required
+  if (length == 4) {
+    return this->UARTModuleInterface::ReadRegister32Async(reg_addr, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to read register of wrong size (function expects 32-bit)");
+  }
+}
+
+
+void RegUARTModuleInterface::WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+  this->UARTModuleInterface::WriteRegisterAsync(reg_addr, buf, length, std::move(callback));
+}
+
+void RegUARTModuleInterface::WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 1) {
+    this->UARTModuleInterface::WriteRegister8Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to write register of wrong size (function expects 8-bit)");
+  }
+}
+
+void RegUARTModuleInterface::WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  if (length == 2) {
+    this->UARTModuleInterface::WriteRegister16Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to write register of wrong size (function expects 16-bit)");
+  }
+}
+
+void RegUARTModuleInterface::WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback) {
+  uint16_t length = this->GetRegisterSize(reg_addr);
+
+  //TODO no support for 24-bit registers in async (not easily doable with provided base functions) - implement later if required
+  if (length == 4) {
+    this->UARTModuleInterface::WriteRegister32Async(reg_addr, value, std::move(callback));
+  } else {
+    throw std::invalid_argument("RegUARTModuleInterface attempted to write register of wrong size (function expects 32-bit)");
+  }
+}
+
+
+/*********************************************************/
+/*     Reg UART Module Interface - Register Handling     */
+/*********************************************************/
 
 RegUARTModuleInterface::RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, const uint16_t* reg_sizes, bool use_crc) :
     UARTModuleInterface(uart_handle, use_crc), registers(this->_registers), _registers(reg_sizes) {}
@@ -670,9 +781,14 @@ RegUARTModuleInterface::RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, 
     UARTModuleInterface(uart_handle, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
 
-void RegUARTModuleInterface::HandleNotificationData(bool unsolicited) {
+void RegUARTModuleInterface::HandleNotificationData(bool error, bool unsolicited) {
   //allow base handling
-  this->UARTModuleInterface::HandleNotificationData(unsolicited);
+  this->UARTModuleInterface::HandleNotificationData(error, unsolicited);
+
+  if (error) {
+    //notifications with errors should never affect registers
+    return;
+  }
 
   uint8_t address;
   uint16_t length;

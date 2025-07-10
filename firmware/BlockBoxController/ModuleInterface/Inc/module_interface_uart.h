@@ -65,9 +65,6 @@ public:
   UART_HandleTypeDef* const uart_handle;
   const bool uses_crc;
 
-  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
-  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
-
   void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
 
   void Init() override;
@@ -90,13 +87,23 @@ protected:
   bool interrupt_error = false;
   ModuleInterfaceUARTErrorType current_error;
 
+  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
+  using ModuleInterface::ReadRegister8;
+  using ModuleInterface::ReadRegister16;
+  using ModuleInterface::ReadRegister32;
+
+  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+  using ModuleInterface::WriteRegister8;
+  using ModuleInterface::WriteRegister16;
+  using ModuleInterface::WriteRegister32;
+
   ModuleTransferQueueItem* CreateTransferQueueItem() override;
   void StartQueuedAsyncTransfer() noexcept override;
 
   void ProcessRawReceivedData() noexcept;
   void ParseRawNotification();
 
-  virtual void HandleNotificationData(bool unsolicited);
+  virtual void HandleNotificationData(bool error, bool unsolicited);
 
   virtual bool IsCommandError(bool* should_retry) noexcept;
 
@@ -109,13 +116,27 @@ class RegUARTModuleInterface : public UARTModuleInterface {
 public:
   const RegisterSet& registers;
 
+  //register read/write functions with automatic length inference based on the register set
+  void ReadRegisterAsync(uint8_t reg_addr, uint8_t* buf, ModuleTransferCallback&& callback);
+  void ReadRegister8Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+  void ReadRegister16Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+  void ReadRegister32Async(uint8_t reg_addr, ModuleTransferCallback&& callback);
+
+  void WriteRegisterAsync(uint8_t reg_addr, const uint8_t* buf, ModuleTransferCallback&& callback);
+  void WriteRegister8Async(uint8_t reg_addr, uint8_t value, ModuleTransferCallback&& callback);
+  void WriteRegister16Async(uint8_t reg_addr, uint16_t value, ModuleTransferCallback&& callback);
+  void WriteRegister32Async(uint8_t reg_addr, uint32_t value, ModuleTransferCallback&& callback);
+
   RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, const uint16_t* reg_sizes, bool use_crc = true);
   RegUARTModuleInterface(UART_HandleTypeDef* uart_handle, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
 
 protected:
   RegisterSet _registers;
 
-  void HandleNotificationData(bool unsolicited) override;
+  //register size retrieval function with validity checking
+  uint16_t GetRegisterSize(uint8_t reg_addr);
+
+  void HandleNotificationData(bool error, bool unsolicited) override;
   virtual void OnRegisterUpdate(uint8_t address);
 };
 
