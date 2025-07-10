@@ -37,10 +37,12 @@ typedef enum {
 #ifdef __cplusplus
 }
 
+
 class ModuleInterface;
 
 //callback type for module events - arguments: reference to module interface, event type
 typedef std::function<void(ModuleInterface&, uint32_t)> ModuleEventCallback;
+
 
 typedef struct {
   ModuleEventCallback func;
@@ -54,8 +56,13 @@ typedef enum {
   TF_WRITE = 0x2
 } ModuleTransferType;
 
+
 //callback type for module register transfers - arguments: success, value where applicable, length in bytes
 typedef std::function<void(bool, uint32_t, uint16_t)> ModuleTransferCallback;
+
+//macro for converting a success-or-fail callback reference to a transfer callback (which discards everything except for the success bool)
+#define SuccessToTransferCallback(cb) ((cb) ? [cb](bool success, uint32_t, uint16_t) { cb(success); } : ModuleTransferCallback())
+
 
 class ModuleTransferQueueItem {
 public:

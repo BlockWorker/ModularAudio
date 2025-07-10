@@ -46,6 +46,9 @@ int cpp_main();
 #ifdef __cplusplus
 }
 
+//simple success-or-failure callback
+typedef std::function<void(bool)> SuccessCallback;
+
 typedef enum {
   DRV_FAILED = HAL_ERROR,
   DRV_BUSY = HAL_BUSY,
