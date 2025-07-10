@@ -610,7 +610,7 @@ static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTrans
   new_transfer->length = total_length;
   new_transfer->value_buffer = 0;
   new_transfer->success = false;
-  new_transfer->callback = callback;
+  new_transfer->callback = std::move(callback);
   new_transfer->add_buffer = NULL;
   new_transfer->reg_count = count;
   new_transfer->retry_count = 0;

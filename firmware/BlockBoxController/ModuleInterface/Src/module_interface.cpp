@@ -48,7 +48,7 @@ static inline void _ModuleInterface_QueueVarTransfer(std::deque<ModuleTransferQu
   new_transfer->length = length;
   new_transfer->value_buffer = 0;
   new_transfer->success = false;
-  new_transfer->callback = callback;
+  new_transfer->callback = std::move(callback);
   //add transfer to queue
   try {
     queue.push_back(new_transfer);
@@ -68,7 +68,7 @@ static inline void _ModuleInterface_QueueShortTransfer(std::deque<ModuleTransfer
   new_transfer->length = length;
   new_transfer->value_buffer = value;
   new_transfer->success = false;
-  new_transfer->callback = callback;
+  new_transfer->callback = std::move(callback);
   //add transfer to queue
   try {
     queue.push_back(new_transfer);
@@ -144,7 +144,7 @@ void ModuleInterface::RegisterCallback(ModuleEventCallback&& cb, uint32_t event_
     for (auto& reg : this->registered_callbacks) {
       if (reg.identifier == identifier) {
         //function already registered: replace old callback and event mask with new ones
-        reg.func = cb;
+        reg.func = std::move(cb);
         reg.event_mask = event_mask;
         return;
       }
@@ -153,7 +153,7 @@ void ModuleInterface::RegisterCallback(ModuleEventCallback&& cb, uint32_t event_
 
   //new function: add registration for it
   auto& new_reg = this->registered_callbacks.emplace_back();
-  new_reg.func = cb;
+  new_reg.func = std::move(cb);
   new_reg.event_mask = event_mask;
   new_reg.identifier = identifier;
 }
