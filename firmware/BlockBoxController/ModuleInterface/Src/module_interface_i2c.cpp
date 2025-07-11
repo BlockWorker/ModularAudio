@@ -473,8 +473,7 @@ void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uin
 }
 
 
-I2CModuleInterface::I2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, bool use_crc)
-                                      : hw_interface(hw_interface), int_port(int_port), int_pin(int_pin), i2c_address(i2c_address), uses_crc(use_crc) {
+I2CModuleInterface::I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, bool use_crc) : hw_interface(hw_interface), i2c_address(i2c_address), uses_crc(use_crc) {
   this->hw_interface.RegisterInterface(this);
 }
 
@@ -777,7 +776,7 @@ void I2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint
       this->HandleAsyncTransferDone(type);
       break;
     case IF_EXTI:
-      //TODO: interrupt pin handling
+      //just run callbacks here - basic interface isn't inherently interrupt-enabled
       this->ExecuteCallbacks(MODIF_EVENT_INTERRUPT);
       break;
     default:
@@ -1132,11 +1131,11 @@ void RegI2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, cons
 /*     Reg I2C Module Interface - Register Handling      */
 /*********************************************************/
 
-RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc) :
-    I2CModuleInterface(hw_interface, int_port, int_pin, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc) :
+    I2CModuleInterface(hw_interface, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
-RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc) :
-    I2CModuleInterface(hw_interface, int_port, int_pin, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc) :
+    I2CModuleInterface(hw_interface, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
 
 void RegI2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
@@ -1161,5 +1160,182 @@ void RegI2CModuleInterface::OnRegisterUpdate(uint8_t address) {
   this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
   //TODO temporary debug printout
   //DEBUG_PRINTF("I2C register 0x%02X updated\n", address);
+}
+
+
+
+/*********************************************************/
+/*   IntReg I2C Module Interface - Interrupt Handling    */
+/*********************************************************/
+
+uint16_t IntRegI2CModuleInterface::GetInterruptMask() {
+  switch (this->int_reg_size) {
+    case 1:
+      return (uint16_t)this->registers.Reg8(MODIF_I2C_INT_MASK_REG);
+    case 2:
+      return this->registers.Reg16(MODIF_I2C_INT_MASK_REG);
+    default:
+      //should never happen
+      throw std::logic_error("IntRegI2CModuleInterface invalid state: Bad int_reg_size");
+  }
+}
+
+void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&& callback) {
+  switch (this->int_reg_size) {
+    case 1:
+      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback](bool success, uint32_t, uint16_t) {
+        if (success) {
+          //update actual register
+          this->_registers.Reg8(MODIF_I2C_INT_MASK_REG) = (uint8_t)mask;
+          this->OnRegisterUpdate(MODIF_I2C_INT_MASK_REG);
+        }
+
+        if (callback) {
+          //propagate to external callback
+          callback(success);
+        }
+      });
+      break;
+    case 2:
+      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback](bool success, uint32_t, uint16_t) {
+        if (success) {
+          //update actual register
+          this->_registers.Reg16(MODIF_I2C_INT_MASK_REG) = mask;
+          this->OnRegisterUpdate(MODIF_I2C_INT_MASK_REG);
+        }
+
+        if (callback) {
+          //propagate to external callback
+          callback(success);
+        }
+      });
+      break;
+    default:
+      //should never happen
+      throw std::logic_error("IntRegI2CModuleInterface invalid state: Bad int_reg_size");
+  }
+}
+
+
+void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept {
+  //allow base handling
+  this->RegI2CModuleInterface::HandleInterrupt(type, extra);
+
+
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  //process external interrupt
+  if (type == IF_EXTI && extra == this->int_pin && this->current_interrupt_timer == 0) {
+    this->current_interrupt_timer = MODIF_I2C_INT_HANDLING_TIMEOUT;
+
+    try {
+      //read interrupt flags register with corresponding size
+      switch (this->int_reg_size) {
+        case 1:
+          this->ReadRegister8Async(MODIF_I2C_INT_FLAGS_REG, [&](bool success, uint32_t value, uint16_t) {
+            if (!success) {
+              //handle read failure
+              DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
+              this->current_interrupt_timer = 0;
+              return;
+            }
+
+            //clear given flags in register
+            uint8_t flags = (uint8_t)value;
+            this->WriteRegister8Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [&](bool, uint32_t, uint16_t) {
+              //after clear, interrupt handling will be complete
+              this->current_interrupt_timer = 0;
+            });
+
+            //propagate to further interrupt handling
+            this->OnI2CInterrupt(flags);
+          });
+          break;
+        case 2:
+          this->ReadRegister16Async(MODIF_I2C_INT_FLAGS_REG, [&](bool success, uint32_t value, uint16_t) {
+            if (!success) {
+              //handle read failure
+              DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
+              this->current_interrupt_timer = 0;
+              return;
+            }
+
+            //clear given flags in register
+            uint16_t flags = (uint16_t)value;
+            this->WriteRegister16Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [&](bool, uint32_t, uint16_t) {
+              //after clear, interrupt handling will be complete
+              this->current_interrupt_timer = 0;
+            });
+
+            //propagate to further interrupt handling
+            this->OnI2CInterrupt(flags);
+          });
+          break;
+        default:
+          //should never happen
+          throw std::logic_error("IntRegI2CModuleInterface invalid state: Bad int_reg_size");
+      }
+    } catch (std::exception& exc) {
+      DEBUG_PRINTF("* IntRegI2CModuleInterface exception when handling interrupt: %s\n", exc.what());
+    } catch (...) {
+      DEBUG_PRINTF("* IntRegI2CModuleInterface unknown exception when handling interrupt\n");
+    }
+  }
+
+  __set_PRIMASK(primask);
+}
+
+
+void IntRegI2CModuleInterface::LoopTasks() {
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  //check for interrupt or interrupt timeout
+  if (this->current_interrupt_timer > 0) {
+    //currently handling interrupt: decrement timer - TODO check if we need any additional logic/logging on interrupt handling timeout
+    this->current_interrupt_timer--;
+  } else {
+    //currently not handling any interrupt: check for undetected interrupt condition (pin)
+    if (HAL_GPIO_ReadPin(this->int_port, this->int_pin) == GPIO_PIN_RESET) {
+      this->HandleInterrupt(IF_EXTI, this->int_pin);
+    }
+  }
+
+  __set_PRIMASK(primask);
+
+  //allow base handling
+  this->RegI2CModuleInterface::LoopTasks();
+}
+
+
+void IntRegI2CModuleInterface::CheckInterruptRegisterDefinitions() {
+  //check that both interrupt registers are either 1 or 2 bytes long (and equal)
+  if (this->_registers.reg_sizes[MODIF_I2C_INT_MASK_REG] == 1 && this->_registers.reg_sizes[MODIF_I2C_INT_FLAGS_REG] == 1) {
+    this->int_reg_size = 1;
+  } else if (this->_registers.reg_sizes[MODIF_I2C_INT_MASK_REG] == 2 && this->_registers.reg_sizes[MODIF_I2C_INT_FLAGS_REG] == 2) {
+    this->int_reg_size = 2;
+  } else {
+    //interrupt registers invalid, bad size, or unequal: doesn't fit the standard interrupt register model
+    throw std::invalid_argument("IntRegI2CModuleInterface requires standard INT_MASK and INT_FLAGS registers to be valid, of equal size, and either 1 or 2 bytes long");
+  }
+}
+
+IntRegI2CModuleInterface::IntRegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, const uint16_t* reg_sizes, GPIO_TypeDef* int_port, uint16_t int_pin, bool use_crc) :
+    RegI2CModuleInterface(hw_interface, i2c_address, reg_sizes, use_crc), int_port(int_port), int_pin(int_pin), current_interrupt_timer(0) {
+  this->CheckInterruptRegisterDefinitions();
+}
+
+IntRegI2CModuleInterface::IntRegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, GPIO_TypeDef* int_port, uint16_t int_pin, bool use_crc) :
+    RegI2CModuleInterface(hw_interface, i2c_address, reg_sizes, use_crc), int_port(int_port), int_pin(int_pin), current_interrupt_timer(0) {
+  this->CheckInterruptRegisterDefinitions();
+}
+
+
+void IntRegI2CModuleInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
+  //nothing to do in base implementation
+  UNUSED(interrupt_flags);
+  //TODO temporary debug printout
+  DEBUG_PRINTF("I2C interrupt 0x%04X\n", interrupt_flags);
 }
 

@@ -140,9 +140,11 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
   //perform UART init
   this->Init();
 
+  this->init_wait_timer = 0;
+
   //clear status (in particular, init-done bit)
   this->_registers.Reg16(UARTDEF_BTRX_STATUS) = 0;
-  this->ExecuteCallbacks(MODIF_BTRX_EVENT_STATUS_UPDATE);
+  this->OnRegisterUpdate(UARTDEF_BTRX_STATUS);
 
   //write notification mask (enable all notifications), followed by further initialisation steps in callback
   this->WriteRegister16Async(UARTDEF_BTRX_NOTIF_MASK, 0x1FF, [&, callback](bool success, uint32_t, uint16_t) {
@@ -183,15 +185,15 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
 
 
 void BluetoothReceiverInterface::LoopTasks() {
-  //allow base handling
-  this->RegUARTModuleInterface::LoopTasks();
-
   static uint32_t loop_count = 0;
 
   if (loop_count++ % 50 == 0) {
     //every 50 cycles (500ms), read status - no callback needed, we're only reading to update the register
     this->ReadRegister16Async(UARTDEF_BTRX_STATUS, ModuleTransferCallback());
   }
+
+  //allow base handling
+  this->RegUARTModuleInterface::LoopTasks();
 
   uint32_t primask = __get_PRIMASK();
   __disable_irq();

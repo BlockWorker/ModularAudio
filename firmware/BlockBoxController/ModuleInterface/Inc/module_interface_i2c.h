@@ -14,6 +14,16 @@
 #include "register_set.h"
 
 
+//register addresses for standardised interrupt handling (IntRegI2CModuleInterface)
+#define MODIF_I2C_INT_MASK_REG 0x10
+#define MODIF_I2C_INT_FLAGS_REG 0x11
+//interrupt flag for universal "reset" interrupt - all other values reflect the respective INT_FLAGS register exactly
+#define MODIF_I2C_INT_RESET_FLAG 0
+
+//timeout for interrupt handling, in main loop cycles
+#define MODIF_I2C_INT_HANDLING_TIMEOUT (500 / MAIN_LOOP_PERIOD_MS)
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -68,8 +78,6 @@ class I2CModuleInterface : public ModuleInterface {
   friend I2CHardwareInterface;
 public:
   I2CHardwareInterface& hw_interface;
-  GPIO_TypeDef* const int_port;
-  const uint16_t int_pin;
   const uint8_t i2c_address;
   const bool uses_crc;
 
@@ -86,7 +94,7 @@ public:
 
   void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
 
-  I2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, bool use_crc = true);
+  I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, bool use_crc = true);
   ~I2CModuleInterface() override;
 
 protected:
@@ -133,8 +141,8 @@ public:
   void WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count);
   void WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, uint8_t count, ModuleTransferCallback&& callback);
 
-  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc = true);
-  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, GPIO_TypeDef* int_port, uint16_t int_pin, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
+  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc = true);
+  RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc = true);
 
 protected:
   RegisterSet _registers;
@@ -146,6 +154,33 @@ protected:
   void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept override;
   virtual void OnRegisterUpdate(uint8_t address);
 };
+
+
+//register- and interrupt-enabled I2C module interface (using standardised interrupt control registers)
+class IntRegI2CModuleInterface : public RegI2CModuleInterface {
+public:
+  GPIO_TypeDef* const int_port;
+  const uint16_t int_pin;
+
+  uint16_t GetInterruptMask();
+  void SetInterruptMask(uint16_t mask, SuccessCallback&& callback);
+
+  void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
+
+  void LoopTasks() override;
+
+  IntRegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, const uint16_t* reg_sizes, GPIO_TypeDef* int_port, uint16_t int_pin, bool use_crc = true);
+  IntRegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, GPIO_TypeDef* int_port, uint16_t int_pin, bool use_crc = true);
+
+protected:
+  uint8_t int_reg_size; //size of interrupt mask/flags registers: 1 = one byte, 2 = two bytes
+  uint32_t current_interrupt_timer;
+
+  void CheckInterruptRegisterDefinitions();
+
+  virtual void OnI2CInterrupt(uint16_t interrupt_flags);
+};
+
 
 #endif
 

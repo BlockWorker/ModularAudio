@@ -36,7 +36,7 @@ class BlockBoxV2System : public System {
 public:
   I2CHardwareInterface main_i2c_hw;
 
-  RegI2CModuleInterface dap_if;
+  IntRegI2CModuleInterface dap_if;
 
   BluetoothReceiverInterface btrx_if;
 
