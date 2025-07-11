@@ -96,7 +96,7 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
   }
 }
 
-static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint16_t length) {
+/*static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint16_t length) {
   if (!success) {
     DEBUG_PRINTF("* BTRX fail at context %u\n", context);
     return;
@@ -153,12 +153,12 @@ static void _AsyncUARTTest(bool success, uintptr_t context, uint32_t value, uint
     default:
       break;
   }
-}
+}*/
 
 void BlockBoxV2System::Init() {
   this->main_i2c_hw.Init();
   this->dap_if.Init();
-  this->btrx_if.Init();
+  //this->btrx_if.Init();
 
   DEBUG_PRINTF("DAP module ID: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0xFF), this->dap_if.registers.Reg8(0xFF));
   DEBUG_PRINTF("DAP I2S1 sample rate: %lu reg %lu\n", this->dap_if.ReadRegister32(0x28), this->dap_if.registers.Reg32(0x28));
@@ -188,7 +188,39 @@ void BlockBoxV2System::Init() {
   HAL_Delay(100);
 
   //this->dap_if.ReadRegister8Async(0x01, std::bind(_AsyncI2CTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
-  this->btrx_if.ReadRegister8Async(0xFE, std::bind(_AsyncUARTTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
+  //this->btrx_if.ReadRegister8Async(0xFE, std::bind(_AsyncUARTTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
+
+  this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+    switch (event) {
+      case MODIF_BTRX_EVENT_STATUS_UPDATE:
+        DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
+        break;
+      case MODIF_BTRX_EVENT_VOLUME_UPDATE:
+        DEBUG_PRINTF("BTRX volume update: %u\n", this->btrx_if.GetAbsoluteVolume());
+        break;
+      case MODIF_BTRX_EVENT_MEDIA_META_UPDATE:
+        DEBUG_PRINTF("BTRX media meta update: %s - %s (%s)\n", this->btrx_if.GetMediaArtist(), this->btrx_if.GetMediaTitle(), this->btrx_if.GetMediaAlbum());
+        break;
+      case MODIF_BTRX_EVENT_DEVICE_UPDATE:
+        DEBUG_PRINTF("BTRX device update: %s (0x%012llX)\n", this->btrx_if.GetDeviceName(), this->btrx_if.GetDeviceAddress());
+        break;
+      case MODIF_BTRX_EVENT_CONN_STATS_UPDATE:
+        DEBUG_PRINTF("BTRX conn stats update: RSSI %d, quality %u\n", this->btrx_if.GetConnectionRSSI(), this->btrx_if.GetConnectionQuality());
+        break;
+      case MODIF_BTRX_EVENT_CODEC_UPDATE:
+        DEBUG_PRINTF("BTRX codec update: %s\n", this->btrx_if.GetActiveCodec());
+        break;
+      default:
+        break;
+    }
+  }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
+
+  this->btrx_if.InitModule([&](bool success) {
+    DEBUG_PRINTF("BTRX init complete, success %u\n", success);
+    this->btrx_if.SetDiscoverable(true, [&](bool success) {
+      DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
+    });
+  });
 }
 
 
@@ -202,7 +234,7 @@ void BlockBoxV2System::LoopTasks() {
 BlockBoxV2System::BlockBoxV2System() :
     main_i2c_hw(&BBV2_I2C_MAIN_HANDLE, _BlockBoxV2_I2C_Main_HardwareReset),
     dap_if(this->main_i2c_hw, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN, BBV2_DAP_I2C_ADDR, I2CDEF_DAP_REG_SIZES, true),
-    btrx_if(&BBV2_BTRX_UART_HANDLE, UARTDEF_BTRX_REG_SIZES, true) {
+    btrx_if(&BBV2_BTRX_UART_HANDLE) {
 
 }
 

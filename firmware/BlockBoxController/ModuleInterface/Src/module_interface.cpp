@@ -174,10 +174,16 @@ void ModuleInterface::UnregisterCallback(uint64_t identifier) {
   }
 }
 
+void ModuleInterface::ClearCallbacks() noexcept {
+  this->registered_callbacks.clear();
+}
+
 
 void ModuleInterface::Init() {
   //reset state
-  this->registered_callbacks.clear();
+
+  //callback clearing disabled - I think we want them to stick around, to allow re-init without losing callbacks, as well as callback registration before init
+  //this->registered_callbacks.clear();
 
   for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
     delete *i;

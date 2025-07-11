@@ -15,7 +15,7 @@
 #ifdef __cplusplus
 
 #include "module_interface_i2c.h"
-#include "module_interface_uart.h"
+#include "bluetooth_receiver_interface.h"
 
 extern "C" {
 #endif
@@ -38,7 +38,7 @@ public:
 
   RegI2CModuleInterface dap_if;
 
-  RegUARTModuleInterface btrx_if;
+  BluetoothReceiverInterface btrx_if;
 
   void Init() override;
   void LoopTasks() override;

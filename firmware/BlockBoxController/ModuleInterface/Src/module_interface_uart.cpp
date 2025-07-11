@@ -833,7 +833,7 @@ void RegUARTModuleInterface::OnRegisterUpdate(uint8_t address) {
   //execute callbacks
   this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
   //TODO temporary debug printout
-  DEBUG_PRINTF("UART register 0x%02X updated\n", address);
+  //DEBUG_PRINTF("UART register 0x%02X updated\n", address);
 }
 
 

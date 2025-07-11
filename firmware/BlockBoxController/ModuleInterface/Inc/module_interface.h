@@ -108,6 +108,7 @@ public:
 
   void RegisterCallback(ModuleEventCallback&& cb, uint32_t event_mask, uint64_t identifier = 0);
   void UnregisterCallback(uint64_t identifier);
+  void ClearCallbacks() noexcept;
 
   virtual void Init();
   virtual void LoopTasks();

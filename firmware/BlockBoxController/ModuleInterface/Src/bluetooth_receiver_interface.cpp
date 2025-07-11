@@ -15,6 +15,10 @@ typedef struct {
 } _IF_BTRX_SuccessCallbackItem;
 
 
+//scratch space for register discard-reads
+static uint8_t btrx_scratch[256];
+
+
 BluetoothReceiverStatus BluetoothReceiverInterface::GetStatus() const {
   BluetoothReceiverStatus status;
   status.value = this->registers.Reg16(UARTDEF_BTRX_STATUS);
@@ -141,7 +145,7 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
   this->ExecuteCallbacks(MODIF_BTRX_EVENT_STATUS_UPDATE);
 
   //write notification mask (enable all notifications), followed by further initialisation steps in callback
-  this->WriteRegister32Async(UARTDEF_BTRX_NOTIF_MASK, 0x1FF, [&, callback](bool success, uint32_t, uint16_t) {
+  this->WriteRegister16Async(UARTDEF_BTRX_NOTIF_MASK, 0x1FF, [&, callback](bool success, uint32_t, uint16_t) {
     if (!success) {
       //report failure to external callback
       callback(false);
@@ -157,14 +161,14 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
       }
 
       //read all registers once to update registers to their initial values
-      this->ReadRegister16Async(UARTDEF_BTRX_VOLUME, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_TITLE, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_ARTIST, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_ALBUM, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_DEVICE_ADDR, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_DEVICE_NAME, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_CONN_STATS, ModuleTransferCallback());
-      this->ReadRegister16Async(UARTDEF_BTRX_CODEC, [callback](bool, uint32_t, uint16_t) {
+      this->ReadRegister8Async(UARTDEF_BTRX_VOLUME, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_TITLE, btrx_scratch, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_ARTIST, btrx_scratch, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_ALBUM, btrx_scratch, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_ADDR, btrx_scratch, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_NAME, btrx_scratch, ModuleTransferCallback());
+      this->ReadRegister32Async(UARTDEF_BTRX_CONN_STATS, ModuleTransferCallback());
+      this->ReadRegisterAsync(UARTDEF_BTRX_CODEC, btrx_scratch, [callback](bool, uint32_t, uint16_t) {
         //after last read is done: init completed successfully (even if read failed - that's non-critical)
         callback(true);
       });
