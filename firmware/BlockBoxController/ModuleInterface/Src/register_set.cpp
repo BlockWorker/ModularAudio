@@ -11,7 +11,7 @@
 
 uint8_t* RegisterSet::operator[](uint8_t reg_addr) {
   if (this->reg_sizes[reg_addr] == 0) {
-    throw std::logic_error("RegisterSet attempted access to invalid register");
+    throw std::invalid_argument("RegisterSet attempted access to invalid register");
   }
 
   return this->data.data() + this->data_offsets[reg_addr];
@@ -19,33 +19,57 @@ uint8_t* RegisterSet::operator[](uint8_t reg_addr) {
 
 const uint8_t* RegisterSet::operator[](uint8_t reg_addr) const {
   if (this->reg_sizes[reg_addr] == 0) {
-    throw std::logic_error("RegisterSet attempted access to invalid register");
+    throw std::invalid_argument("RegisterSet attempted access to invalid register");
   }
 
   return this->data.data() + this->data_offsets[reg_addr];
 }
 
 uint8_t& RegisterSet::Reg8(uint8_t reg_addr) {
+  if (this->reg_sizes[reg_addr] != 1) {
+    throw std::invalid_argument("RegisterSet attempted 8-bit access to invalid or differently-sized register");
+  }
+
   return *this->operator [](reg_addr);
 }
 
 uint8_t RegisterSet::Reg8(uint8_t reg_addr) const {
+  if (this->reg_sizes[reg_addr] != 1) {
+    throw std::invalid_argument("RegisterSet attempted 8-bit access to invalid or differently-sized register");
+  }
+
   return *this->operator [](reg_addr);
 }
 
 uint16_t& RegisterSet::Reg16(uint8_t reg_addr) {
+  if (this->reg_sizes[reg_addr] != 2) {
+    throw std::invalid_argument("RegisterSet attempted 16-bit access to invalid or differently-sized register");
+  }
+
   return *(uint16_t*)(this->operator [](reg_addr));
 }
 
 uint16_t RegisterSet::Reg16(uint8_t reg_addr) const {
+  if (this->reg_sizes[reg_addr] != 2) {
+    throw std::invalid_argument("RegisterSet attempted 16-bit access to invalid or differently-sized register");
+  }
+
   return *(uint16_t*)(this->operator [](reg_addr));
 }
 
 uint32_t& RegisterSet::Reg32(uint8_t reg_addr) {
+  if (this->reg_sizes[reg_addr] != 4) {
+    throw std::invalid_argument("RegisterSet attempted 32-bit access to invalid or differently-sized register");
+  }
+
   return *(uint32_t*)(this->operator [](reg_addr));
 }
 
 uint32_t RegisterSet::Reg32(uint8_t reg_addr) const {
+  if (this->reg_sizes[reg_addr] != 4) {
+    throw std::invalid_argument("RegisterSet attempted 32-bit access to invalid or differently-sized register");
+  }
+
   return *(uint32_t*)(this->operator [](reg_addr));
 }
 
