@@ -158,7 +158,7 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
 void BlockBoxV2System::Init() {
   this->main_i2c_hw.Init();
   this->dap_if.Init();
-  //this->btrx_if.Init();
+  this->btrx_if.Init();
 
   DEBUG_PRINTF("DAP module ID: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0xFF), this->dap_if.registers.Reg8(0xFF));
   DEBUG_PRINTF("DAP I2S1 sample rate: %lu reg %lu\n", this->dap_if.ReadRegister32(0x28), this->dap_if.registers.Reg32(0x28));
@@ -219,11 +219,14 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
 */
-  this->btrx_if.InitModule([&](bool success) {
-    DEBUG_PRINTF("BTRX init complete, success %u\n", success);
-    this->btrx_if.SetDiscoverable(true, [&](bool success) {
-      DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
-    });
+
+  this->btrx_if.ResetModule([&](bool success) {
+    DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
+    if (success) {
+      this->btrx_if.SetDiscoverable(true, [&](bool success) {
+        DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
+      });
+    }
   });
 }
 

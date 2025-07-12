@@ -9,12 +9,6 @@
 #include "bluetooth_receiver_interface.h"
 
 
-typedef struct {
-  SuccessCallback cb;
-  uintptr_t context;
-} _IF_BTRX_SuccessCallbackItem;
-
-
 //scratch space for register discard-reads
 static uint8_t btrx_scratch[256];
 
@@ -79,8 +73,9 @@ void BluetoothReceiverInterface::SetAbsoluteVolume(uint8_t volume, SuccessCallba
 
 
 void BluetoothReceiverInterface::ResetModule(SuccessCallback&& callback) {
-  //store reset callback
+  //store reset callback and start timer
   this->reset_callback = std::move(callback);
+  this->reset_wait_timer = IF_BTRX_RESET_TIMEOUT;
 
   //write reset without callback, since we're not getting an acknowledgement for this write
   this->WriteRegister8Async(UARTDEF_BTRX_CONTROL, UARTDEF_BTRX_CONTROL_RESET_VALUE << UARTDEF_BTRX_CONTROL_RESET_Pos, ModuleTransferCallback());
@@ -137,49 +132,77 @@ void BluetoothReceiverInterface::SendTone(std::string& tone, SuccessCallback&& c
 
 
 void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
-  //perform UART init
-  this->Init();
+  this->initialised = false;
 
   this->init_wait_timer = 0;
+  this->reset_wait_timer = 0;
 
   //clear status (in particular, init-done bit)
   this->_registers.Reg16(UARTDEF_BTRX_STATUS) = 0;
   this->OnRegisterUpdate(UARTDEF_BTRX_STATUS);
 
-  //write notification mask (enable all notifications), followed by further initialisation steps in callback
-  this->WriteRegister16Async(UARTDEF_BTRX_NOTIF_MASK, 0x1FF, [&, callback](bool success, uint32_t, uint16_t) {
+  //read module ID to check communication
+  this->ReadRegister8Async(UARTDEF_BTRX_MODULE_ID, [&, callback](bool success, uint32_t value, uint16_t) {
     if (!success) {
       //report failure to external callback
-      callback(false);
+      if (callback) {
+        callback(false);
+      }
       return;
     }
 
-    //create init callback (contains further initialisation steps)
-    this->init_callback = [&, callback](bool success) {
+    //check correctness of module ID
+    if ((uint8_t)value != UARTDEF_BTRX_MODULE_ID_VALUE) {
+      DEBUG_PRINTF("* BluetoothReceiver module ID incorrect: 0x%02X instead of 0x%02X\n", (uint8_t)value, UARTDEF_BTRX_MODULE_ID_VALUE);
+      //report failure to external callback
+      if (callback) {
+        callback(false);
+      }
+      return;
+    }
+
+    //write notification mask (enable all notifications)
+    this->WriteRegister16Async(UARTDEF_BTRX_NOTIF_MASK, 0x1FF, [&, callback](bool success, uint32_t, uint16_t) {
       if (!success) {
         //report failure to external callback
-        callback(false);
+        if (callback) {
+          callback(false);
+        }
         return;
       }
 
-      //read all registers once to update registers to their initial values
-      this->ReadRegister8Async(UARTDEF_BTRX_VOLUME, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_TITLE, btrx_scratch, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_ARTIST, btrx_scratch, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_ALBUM, btrx_scratch, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_ADDR, btrx_scratch, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_NAME, btrx_scratch, ModuleTransferCallback());
-      this->ReadRegister32Async(UARTDEF_BTRX_CONN_STATS, ModuleTransferCallback());
-      this->ReadRegisterAsync(UARTDEF_BTRX_CODEC, btrx_scratch, [callback](bool, uint32_t, uint16_t) {
-        //after last read is done: init completed successfully (even if read failed - that's non-critical)
-        callback(true);
-      });
-    };
+      //create init callback (contains further initialisation steps)
+      this->init_callback = [&, callback](bool success) {
+        if (!success) {
+          //report failure to external callback
+          if (callback) {
+            callback(false);
+          }
+          return;
+        }
 
-    //start init wait
-    this->init_wait_timer = IF_BTRX_INIT_TIMEOUT;
-    //read status register immediately (in case init is already done) - no callback needed, we're only reading to update the register
-    this->ReadRegister16Async(UARTDEF_BTRX_STATUS, ModuleTransferCallback());
+        //read all registers once to update registers to their initial values
+        this->ReadRegister8Async(UARTDEF_BTRX_VOLUME, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_TITLE, btrx_scratch, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_ARTIST, btrx_scratch, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_ALBUM, btrx_scratch, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_ADDR, btrx_scratch, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_DEVICE_NAME, btrx_scratch, ModuleTransferCallback());
+        this->ReadRegister32Async(UARTDEF_BTRX_CONN_STATS, ModuleTransferCallback());
+        this->ReadRegisterAsync(UARTDEF_BTRX_CODEC, btrx_scratch, [&, callback](bool, uint32_t, uint16_t) {
+          //after last read is done: init completed successfully (even if read failed - that's non-critical)
+          this->initialised = true;
+          if (callback) {
+            callback(true);
+          }
+        });
+      };
+
+      //start init wait
+      this->init_wait_timer = IF_BTRX_INIT_TIMEOUT;
+      //read status register immediately (in case init is already done) - no callback needed, we're only reading to update the register
+      this->ReadRegister16Async(UARTDEF_BTRX_STATUS, ModuleTransferCallback());
+    });
   });
 }
 
@@ -197,13 +220,27 @@ void BluetoothReceiverInterface::LoopTasks() {
 
   uint32_t primask = __get_PRIMASK();
   __disable_irq();
-  if (init_wait_timer > 0) {
+  if (this->init_wait_timer > 0) {
     //check for init timeout
-    if (--init_wait_timer == 0) {
+    if (--this->init_wait_timer == 0) {
       //timed out: report to callback
       __set_PRIMASK(primask);
       if (this->init_callback) {
         this->init_callback(false);
+      }
+    }
+  }
+  __set_PRIMASK(primask);
+
+  primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->reset_wait_timer > 0) {
+    //check for reset timeout
+    if (--this->reset_wait_timer == 0) {
+      //timed out: report to callback
+      __set_PRIMASK(primask);
+      if (this->reset_callback) {
+        this->reset_callback(false);
       }
     }
   }
@@ -213,7 +250,7 @@ void BluetoothReceiverInterface::LoopTasks() {
 
 
 BluetoothReceiverInterface::BluetoothReceiverInterface(UART_HandleTypeDef* uart_handle) :
-    RegUARTModuleInterface(uart_handle, UARTDEF_BTRX_REG_SIZES, IF_BTRX_USE_CRC), init_wait_timer(0) {}
+    RegUARTModuleInterface(uart_handle, UARTDEF_BTRX_REG_SIZES, IF_BTRX_USE_CRC), initialised(false), init_wait_timer(0), reset_wait_timer(0) {}
 
 
 
@@ -231,10 +268,19 @@ void BluetoothReceiverInterface::HandleNotificationData(bool error, bool unsolic
     case IF_UART_TYPE_EVENT:
       switch ((BluetoothReceiverInterfaceEventNotifType)this->parse_buffer[1]) {
         case IF_BTRX_EVENT_BT_RESET:
-          //perform module re-init
-          this->InitModule(std::move(this->reset_callback));
-          //clear reset callback
-          this->reset_callback = SuccessCallback();
+          //only re-initialise if already initialised, or reset is pending
+          if (this->initialised || this->reset_wait_timer > 0) {
+            //perform module re-init
+            this->InitModule([&](bool success) {
+              //notify system of reset, then call reset callback
+              this->ExecuteCallbacks(MODIF_EVENT_MODULE_RESET);
+              if (this->reset_callback) {
+                this->reset_callback(success);
+                //clear reset callback
+                this->reset_callback = SuccessCallback();
+              }
+            });
+          }
           break;
         default:
           break;

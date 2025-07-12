@@ -17,6 +17,7 @@
 #define MODIF_EVENT_INTERRUPT (1u << 0)
 #define MODIF_EVENT_ERROR (1u << 1)
 #define MODIF_EVENT_REGISTER_UPDATE (1u << 2)
+#define MODIF_EVENT_MODULE_RESET (1u << 3)
 
 
 #ifdef __cplusplus

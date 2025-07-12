@@ -26,7 +26,9 @@
 #define MODIF_BTRX_EVENT_CODEC_UPDATE (1u << 13)
 
 //init timeout, in main loop cycles
-#define IF_BTRX_INIT_TIMEOUT (2000 / MAIN_LOOP_PERIOD_MS)
+#define IF_BTRX_INIT_TIMEOUT (4000 / MAIN_LOOP_PERIOD_MS)
+//reset timeout, in main loop cycles
+#define IF_BTRX_RESET_TIMEOUT (500 / MAIN_LOOP_PERIOD_MS)
 
 
 //BTRX specific event notification types
@@ -146,11 +148,12 @@ public:
   BluetoothReceiverInterface(UART_HandleTypeDef* uart_handle);
 
 protected:
+  bool initialised;
   uint32_t init_wait_timer;
   SuccessCallback init_callback;
-  SuccessCallback reset_callback;
 
-  using RegUARTModuleInterface::Init;
+  uint32_t reset_wait_timer;
+  SuccessCallback reset_callback;
 
   void HandleNotificationData(bool error, bool unsolicited) override;
   bool IsCommandError(bool* should_retry) noexcept override;
