@@ -1183,31 +1183,23 @@ uint16_t IntRegI2CModuleInterface::GetInterruptMask() {
 void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&& callback) {
   switch (this->int_reg_size) {
     case 1:
-      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback](bool success, uint32_t, uint16_t) {
-        if (success) {
-          //update actual register
-          this->_registers.Reg8(MODIF_I2C_INT_MASK_REG) = (uint8_t)mask;
-          this->OnRegisterUpdate(MODIF_I2C_INT_MASK_REG);
-        }
-
-        if (callback) {
-          //propagate to external callback
-          callback(success);
-        }
+      //write mask
+      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback](bool, uint32_t, uint16_t) {
+        //read back mask to ensure correctness
+        this->ReadRegister8Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback](bool success, uint32_t value, uint16_t) {
+          //propagate success and correctness to external callback
+          callback(success && (uint8_t)value == (uint8_t)mask);
+        } : ModuleTransferCallback());
       });
       break;
     case 2:
-      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback](bool success, uint32_t, uint16_t) {
-        if (success) {
-          //update actual register
-          this->_registers.Reg16(MODIF_I2C_INT_MASK_REG) = mask;
-          this->OnRegisterUpdate(MODIF_I2C_INT_MASK_REG);
-        }
-
-        if (callback) {
-          //propagate to external callback
-          callback(success);
-        }
+      //write mask
+      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback](bool, uint32_t, uint16_t) {
+        //read back mask to ensure correctness
+        this->ReadRegister16Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback](bool success, uint32_t value, uint16_t) {
+          //propagate success and correctness to external callback
+          callback(success && (uint16_t)value == mask);
+        } : ModuleTransferCallback());
       });
       break;
     default:
@@ -1336,6 +1328,6 @@ void IntRegI2CModuleInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   //nothing to do in base implementation
   UNUSED(interrupt_flags);
   //TODO temporary debug printout
-  DEBUG_PRINTF("I2C interrupt 0x%04X\n", interrupt_flags);
+  //DEBUG_PRINTF("I2C interrupt 0x%04X\n", interrupt_flags);
 }
 

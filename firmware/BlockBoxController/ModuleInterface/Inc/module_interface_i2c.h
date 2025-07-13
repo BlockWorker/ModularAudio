@@ -21,7 +21,7 @@
 #define MODIF_I2C_INT_RESET_FLAG 0
 
 //timeout for interrupt handling, in main loop cycles
-#define MODIF_I2C_INT_HANDLING_TIMEOUT (500 / MAIN_LOOP_PERIOD_MS)
+#define MODIF_I2C_INT_HANDLING_TIMEOUT (200 / MAIN_LOOP_PERIOD_MS)
 
 
 #ifdef __cplusplus
@@ -81,8 +81,10 @@ public:
   const uint8_t i2c_address;
   const bool uses_crc;
 
+#pragma GCC diagnostic ignored "-Woverloaded-virtual="
   void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
   void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+#pragma GCC diagnostic pop
 
   //read `count` consecutive registers with the given sizes
   void ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count);

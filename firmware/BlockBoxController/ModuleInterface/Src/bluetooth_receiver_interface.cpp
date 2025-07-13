@@ -210,7 +210,7 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
 void BluetoothReceiverInterface::LoopTasks() {
   static uint32_t loop_count = 0;
 
-  if (loop_count++ % 50 == 0) {
+  if (this->initialised && loop_count++ % 50 == 0) {
     //every 50 cycles (500ms), read status - no callback needed, we're only reading to update the register
     this->ReadRegister16Async(UARTDEF_BTRX_STATUS, ModuleTransferCallback());
   }

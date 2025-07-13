@@ -14,7 +14,7 @@
 
 #ifdef __cplusplus
 
-#include "module_interface_i2c.h"
+#include "dap_interface.h"
 #include "bluetooth_receiver_interface.h"
 
 extern "C" {
@@ -36,7 +36,7 @@ class BlockBoxV2System : public System {
 public:
   I2CHardwareInterface main_i2c_hw;
 
-  IntRegI2CModuleInterface dap_if;
+  DAPInterface dap_if;
 
   BluetoothReceiverInterface btrx_if;
 

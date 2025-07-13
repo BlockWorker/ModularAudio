@@ -160,7 +160,7 @@ void BlockBoxV2System::Init() {
   this->dap_if.Init();
   this->btrx_if.Init();
 
-  DEBUG_PRINTF("DAP module ID: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0xFF), this->dap_if.registers.Reg8(0xFF));
+  /*DEBUG_PRINTF("DAP module ID: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0xFF), this->dap_if.registers.Reg8(0xFF));
   DEBUG_PRINTF("DAP I2S1 sample rate: %lu reg %lu\n", this->dap_if.ReadRegister32(0x28), this->dap_if.registers.Reg32(0x28));
   DEBUG_PRINTF("DAP initial control: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0x08), this->dap_if.registers.Reg8(0x08));
   this->dap_if.WriteRegister8(0x08, 0x07);
@@ -189,10 +189,30 @@ void BlockBoxV2System::Init() {
 
   this->dap_if.SetInterruptMask(0xF, [&](bool success) {
     DEBUG_PRINTF("DAP interrupt mask set: 0x%02X\n", this->dap_if.GetInterruptMask());
-  });
+  });*/
 
   //this->dap_if.ReadRegister8Async(0x01, std::bind(_AsyncI2CTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
   //this->btrx_if.ReadRegister8Async(0xFE, std::bind(_AsyncUARTTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
+
+  this->dap_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+    switch (event) {
+      case MODIF_DAP_EVENT_STATUS_UPDATE:
+        DEBUG_PRINTF("DAP status update: 0x%02X\n", this->dap_if.GetStatus().value);
+        break;
+      case MODIF_DAP_EVENT_INPUTS_UPDATE:
+        DEBUG_PRINTF("DAP inputs update: active 0x%02X, available 0x%02X\n", this->dap_if.GetActiveInput(), this->dap_if.GetAvailableInputs().value);
+        break;
+      case MODIF_DAP_EVENT_INPUT_RATE_UPDATE:
+        DEBUG_PRINTF("DAP input rate update: %u\n", this->dap_if.GetSRCInputSampleRate());
+        break;
+      case MODIF_DAP_EVENT_SRC_STATS_UPDATE:
+        DEBUG_PRINTF("DAP SRC stats update: rate error %.4f, fill error %.1f\n", this->dap_if.GetSRCInputRateErrorRelative(), this->dap_if.GetSRCBufferFillErrorSamples());
+        break;
+      default:
+        break;
+    }
+  }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
+
 
   /*this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
     switch (event) {
@@ -220,14 +240,35 @@ void BlockBoxV2System::Init() {
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
 */
 
-  this->btrx_if.ResetModule([&](bool success) {
+  this->dap_if.ResetModule([&](bool success) {
+    DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
+    if (success) {
+      this->dap_if.monitor_src_stats = true;
+      this->dap_if.SetConfig(false, false, [&](bool success) {
+        DEBUG_PRINTF("DAP SP disabled, success %u\n", success);
+        if (success) {
+          this->dap_if.SetBiquadSetup(0, 0, 2, 3, [&](bool success) {
+            DEBUG_PRINTF("DAP biquad setup done, success %u\n", success);
+          });
+          this->dap_if.SetConfig(true, false, [&](bool success) {
+            DEBUG_PRINTF("DAP SP re-enabled, success %u\n", success);
+          });
+          this->dap_if.SetVolumeGains({ -6.0f, -3.0f }, [&](bool success) {
+            DEBUG_PRINTF("DAP vol gains set, success %u\n", success);
+          });
+        }
+      });
+    }
+  });
+
+  /*this->btrx_if.ResetModule([&](bool success) {
     DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
     if (success) {
       this->btrx_if.SetDiscoverable(true, [&](bool success) {
         DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       });
     }
-  });
+  });*/
 }
 
 
@@ -240,7 +281,7 @@ void BlockBoxV2System::LoopTasks() {
 
 BlockBoxV2System::BlockBoxV2System() :
     main_i2c_hw(&BBV2_I2C_MAIN_HANDLE, _BlockBoxV2_I2C_Main_HardwareReset),
-    dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, I2CDEF_DAP_REG_SIZES, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN, true),
+    dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN),
     btrx_if(&BBV2_BTRX_UART_HANDLE) {
 
 }
