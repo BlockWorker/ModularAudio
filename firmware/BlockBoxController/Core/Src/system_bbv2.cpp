@@ -214,7 +214,7 @@ void BlockBoxV2System::Init() {
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
 
-  /*this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
     switch (event) {
       case MODIF_BTRX_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
@@ -238,12 +238,15 @@ void BlockBoxV2System::Init() {
         break;
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
-*/
+
 
   this->dap_if.ResetModule([&](bool success) {
     DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
     if (success) {
       this->dap_if.monitor_src_stats = true;
+      this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&](bool success) {
+        DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
+      });
       this->dap_if.SetConfig(false, false, [&](bool success) {
         DEBUG_PRINTF("DAP SP disabled, success %u\n", success);
         if (success) {
@@ -261,14 +264,14 @@ void BlockBoxV2System::Init() {
     }
   });
 
-  /*this->btrx_if.ResetModule([&](bool success) {
+  this->btrx_if.ResetModule([&](bool success) {
     DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
     if (success) {
       this->btrx_if.SetDiscoverable(true, [&](bool success) {
         DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       });
     }
-  });*/
+  });
 }
 
 

@@ -49,7 +49,7 @@ const char* BluetoothReceiverInterface::GetDeviceName() const {
 
 
 int16_t BluetoothReceiverInterface::GetConnectionRSSI() const {
-  return (int16_t)this->registers.Reg16(UARTDEF_BTRX_CONN_STATS);
+  return (int16_t)this->registers.Reg32(UARTDEF_BTRX_CONN_STATS);
 }
 
 uint16_t BluetoothReceiverInterface::GetConnectionQuality() const {
