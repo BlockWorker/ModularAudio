@@ -68,14 +68,14 @@ static uint16_t _UART_CRC_Accumulate(uint8_t* buf, uint32_t length, uint16_t crc
 /*            UART Module Interface - Basics             */
 /*********************************************************/
 
-void UARTModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) {
+void UARTModuleInterface::ReadRegister(uint16_t reg_addr, uint8_t* buf, uint16_t length) {
   UNUSED(reg_addr);
   UNUSED(buf);
   UNUSED(length);
   throw std::logic_error("UARTModuleInterface does not support blocking transfers");
 }
 
-void UARTModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+void UARTModuleInterface::WriteRegister(uint16_t reg_addr, const uint8_t* buf, uint16_t length) {
   UNUSED(reg_addr);
   UNUSED(buf);
   UNUSED(length);
@@ -266,12 +266,12 @@ void UARTModuleInterface::StartQueuedAsyncTransfer() noexcept {
         case TF_READ:
           //read transfer: just consists of type and address
           cmd_buf.push_back(IF_UART_TYPE_READ);
-          cmd_buf.push_back(transfer->reg_addr);
+          cmd_buf.push_back((uint8_t)transfer->reg_addr);
           break;
         case TF_WRITE:
           //write transfer: consists of type, address, and data
           cmd_buf.push_back(IF_UART_TYPE_WRITE);
-          cmd_buf.push_back(transfer->reg_addr);
+          cmd_buf.push_back((uint8_t)transfer->reg_addr);
           cmd_buf.insert(cmd_buf.end(), transfer->data_ptr, transfer->data_ptr + transfer->length);
           break;
         default:
@@ -520,7 +520,7 @@ void UARTModuleInterface::ParseRawNotification() {
               break;
             }
             //if we have a write transfer, and its register address matches the acknowledgment, consider it successful
-            transfer->success = (transfer->type == TF_WRITE && transfer->reg_addr == this->parse_buffer[2]);
+            transfer->success = (transfer->type == TF_WRITE && (uint8_t)transfer->reg_addr == this->parse_buffer[2]);
             this->current_error = IF_UART_ERROR_UART_FORMAT_ERROR_LOCAL;
             //if unsuccessful, report an error, but retry
             error = !transfer->success;
@@ -565,7 +565,7 @@ void UARTModuleInterface::ParseRawNotification() {
           retry_on_fail = true;
           break;
         }
-        if (transfer->type == TF_READ && transfer->reg_addr == this->parse_buffer[1]) {
+        if (transfer->type == TF_READ && (uint8_t)transfer->reg_addr == this->parse_buffer[1]) {
           //we have a read transfer, and its register address matches the data: do a sanity check that we have a non-null destination buffer
           if (transfer->data_ptr != NULL) {
             //transfer successful, copy data to the destination buffer

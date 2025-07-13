@@ -59,7 +59,7 @@ extern "C" {
 }
 
 
-//interface for interacting with other system modules through a UART bus
+//interface for interacting with other system modules through a UART bus - currently restricted to 8-bit register addresses
 class UARTModuleInterface : public ModuleInterface {
 public:
   UART_HandleTypeDef* const uart_handle;
@@ -87,12 +87,12 @@ protected:
   bool interrupt_error = false;
   ModuleInterfaceUARTErrorType current_error;
 
-  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
+  void ReadRegister(uint16_t reg_addr, uint8_t* buf, uint16_t length) override;
   using ModuleInterface::ReadRegister8;
   using ModuleInterface::ReadRegister16;
   using ModuleInterface::ReadRegister32;
 
-  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+  void WriteRegister(uint16_t reg_addr, const uint8_t* buf, uint16_t length) override;
   using ModuleInterface::WriteRegister8;
   using ModuleInterface::WriteRegister16;
   using ModuleInterface::WriteRegister32;

@@ -43,11 +43,11 @@ public:
 
   bool IsBusy() noexcept;
 
-  void Read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf, uint16_t length);
-  void ReadAsync(I2CModuleInterface* interface, uint8_t reg_addr, uint8_t* buf, uint16_t length);
+  void Read(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, uint8_t* buf, uint16_t length);
+  void ReadAsync(I2CModuleInterface* interface, uint16_t reg_addr, uint8_t* buf, uint16_t length);
 
-  void Write(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length);
-  void WriteAsync(I2CModuleInterface* interface, uint8_t reg_addr, const uint8_t* buf, uint16_t length);
+  void Write(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, const uint8_t* buf, uint16_t length);
+  void WriteAsync(I2CModuleInterface* interface, uint16_t reg_addr, const uint8_t* buf, uint16_t length);
 
   void HandleInterrupt(ModuleInterfaceInterruptType type) noexcept;
 
@@ -79,24 +79,25 @@ class I2CModuleInterface : public ModuleInterface {
 public:
   I2CHardwareInterface& hw_interface;
   const uint8_t i2c_address;
+  const uint16_t reg_addr_size;
   const bool uses_crc;
 
 #pragma GCC diagnostic ignored "-Woverloaded-virtual="
-  void ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) override;
-  void WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) override;
+  void ReadRegister(uint16_t reg_addr, uint8_t* buf, uint16_t length) override;
+  void WriteRegister(uint16_t reg_addr, const uint8_t* buf, uint16_t length) override;
 #pragma GCC diagnostic pop
 
   //read `count` consecutive registers with the given sizes
-  void ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count);
-  void ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback);
+  void ReadMultiRegister(uint16_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint16_t count);
+  void ReadMultiRegisterAsync(uint16_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint16_t count, ModuleTransferCallback&& callback);
 
   //write `count` consecutive registers with the given sizes
-  void WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count);
-  void WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback);
+  void WriteMultiRegister(uint16_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint16_t count);
+  void WriteMultiRegisterAsync(uint16_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint16_t count, ModuleTransferCallback&& callback);
 
   void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept override;
 
-  I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, bool use_crc = true);
+  I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, uint16_t reg_addr_size, bool use_crc = true);
   ~I2CModuleInterface() override;
 
 protected:
@@ -105,11 +106,11 @@ protected:
 
   void HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept;
 
-  virtual void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept;
+  virtual void HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf, uint16_t length) noexcept;
 };
 
 
-//register-enabled I2C module interface
+//register-enabled I2C module interface - currently restricted to 8-bit register addresses
 class RegI2CModuleInterface : public I2CModuleInterface {
 public:
   const RegisterSet& registers;
@@ -153,7 +154,7 @@ protected:
   uint16_t GetRegisterSize(uint8_t reg_addr);
   const uint16_t* GetMultiRegisterSizes(uint8_t reg_addr_first, uint8_t count);
 
-  void HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept override;
+  void HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf, uint16_t length) noexcept override;
   virtual void OnRegisterUpdate(uint8_t address);
 };
 

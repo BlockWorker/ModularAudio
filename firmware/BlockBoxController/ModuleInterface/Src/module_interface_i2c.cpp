@@ -90,15 +90,15 @@ bool I2CHardwareInterface::IsBusy() noexcept {
 }
 
 
-void I2CHardwareInterface::Read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::Read(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, uint8_t* buf, uint16_t length) {
   if (buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface transfers require non-null buffer and non-zero length");
   }
 
-  ThrowOnHALErrorMsg(HAL_I2C_Mem_Read(this->i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C read");
+  ThrowOnHALErrorMsg(HAL_I2C_Mem_Read(this->i2c_handle, (uint16_t)i2c_addr << 1, reg_addr, reg_addr_size, buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C read");
 }
 
-void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t reg_addr, uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint16_t reg_addr, uint8_t* buf, uint16_t length) {
   if (interface == NULL || buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface async transfers require non-null interface and buffer and non-zero length");
   }
@@ -120,7 +120,7 @@ void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t reg_
 
   //start transfer
   try {
-    ThrowOnHALErrorMsg(HAL_I2C_Mem_Read_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, buf, length), "I2C async read");
+    ThrowOnHALErrorMsg(HAL_I2C_Mem_Read_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, reg_addr, interface->reg_addr_size, buf, length), "I2C async read");
   } catch (...) {
     //on error: clear active interface, re-enable interrupts, then rethrow
     this->active_async_interface = NULL;
@@ -132,15 +132,15 @@ void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint8_t reg_
 }
 
 
-void I2CHardwareInterface::Write(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::Write(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, const uint8_t* buf, uint16_t length) {
   if (buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface transfers require non-null buffer and non-zero length");
   }
 
-  ThrowOnHALErrorMsg(HAL_I2C_Mem_Write(i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C write");
+  ThrowOnHALErrorMsg(HAL_I2C_Mem_Write(i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, reg_addr_size, (uint8_t*)buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C write");
 }
 
-void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint16_t reg_addr, const uint8_t* buf, uint16_t length) {
   if (interface == NULL || buf == NULL || length == 0) {
     throw std::invalid_argument("I2CHardwareInterface async transfers require non-null interface and buffer and non-zero length");
   }
@@ -162,7 +162,7 @@ void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint8_t reg
 
   //start transfer
   try {
-    ThrowOnHALErrorMsg(HAL_I2C_Mem_Write_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t*)buf, length), "I2C async write");
+    ThrowOnHALErrorMsg(HAL_I2C_Mem_Write_IT(this->i2c_handle, (uint16_t)interface->i2c_address << 1, reg_addr, interface->reg_addr_size, (uint8_t*)buf, length), "I2C async write");
   } catch (...) {
     //on error: clear active interface, re-enable interrupts, then rethrow
     this->active_async_interface = NULL;
@@ -328,20 +328,32 @@ static uint8_t _I2C_CRC_Accumulate(const uint8_t* buf, uint16_t length, uint8_t 
 }
 
 //check CRC on received data for a single-register read
-static bool _I2C_CRC_SingleReadCheck(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* rx_buf, uint16_t length) noexcept {
+static bool _I2C_CRC_SingleReadCheck(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, const uint8_t* rx_buf, uint16_t length) noexcept {
   //calculate CRC checksum (taking into account I2C and register address bytes too)
-  uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), reg_addr, (uint8_t)((i2c_addr << 1) | 1) };
-  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  uint8_t crc;
+  if (reg_addr_size == I2C_MEMADD_SIZE_8BIT) {
+    uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), (uint8_t)reg_addr, (uint8_t)((i2c_addr << 1) | 1) };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  } else {
+    uint8_t crc_prefix[4] = { (uint8_t)(i2c_addr << 1), (uint8_t)(reg_addr >> 8), (uint8_t)reg_addr, (uint8_t)((i2c_addr << 1) | 1) };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 4, 0);
+  }
   crc = _I2C_CRC_Accumulate(rx_buf, length + 1, crc);
   return crc == 0;
 }
 
 //check CRCs on received data for a multi-register read
-static bool _I2C_CRC_MultiReadCheck(uint8_t i2c_addr, uint8_t reg_addr_first, const uint8_t* rx_buf, const uint16_t* reg_sizes, uint8_t count) noexcept {
+static bool _I2C_CRC_MultiReadCheck(uint8_t i2c_addr, uint16_t reg_addr_first, uint16_t reg_addr_size, const uint8_t* rx_buf, const uint16_t* reg_sizes, uint8_t count) noexcept {
   //calculate first CRC checksum (taking into account I2C and register address bytes too)
   uint16_t reg_size = reg_sizes[0];
-  uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), reg_addr_first, (uint8_t)((i2c_addr << 1) | 1) };
-  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  uint8_t crc;
+  if (reg_addr_size == I2C_MEMADD_SIZE_8BIT) {
+    uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), (uint8_t)reg_addr_first, (uint8_t)((i2c_addr << 1) | 1) };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  } else {
+    uint8_t crc_prefix[4] = { (uint8_t)(i2c_addr << 1), (uint8_t)(reg_addr_first >> 8), (uint8_t)reg_addr_first, (uint8_t)((i2c_addr << 1) | 1) };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 4, 0);
+  }
   crc = _I2C_CRC_Accumulate(rx_buf, reg_size + 1, crc);
   if (crc != 0) {
     return false;
@@ -362,14 +374,20 @@ static bool _I2C_CRC_MultiReadCheck(uint8_t i2c_addr, uint8_t reg_addr_first, co
 }
 
 //prepare a newly allocated transmit buffer with the correct CRC for a single-register write
-static uint8_t* _I2C_CRC_PrepareSingleWrite(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+static uint8_t* _I2C_CRC_PrepareSingleWrite(uint8_t i2c_addr, uint16_t reg_addr, uint16_t reg_addr_size, const uint8_t* buf, uint16_t length) {
   //allocate new transmit buffer with one extra byte for CRC, and copy data into it
   uint8_t* tx_buf = new uint8_t[length + 1];
   memcpy(tx_buf, buf, length);
 
   //calculate CRC checksum (taking into account I2C and register address bytes too)
-  uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), reg_addr };
-  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  uint8_t crc;
+  if (reg_addr_size == I2C_MEMADD_SIZE_8BIT) {
+    uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), (uint8_t)reg_addr };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  } else {
+    uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), (uint8_t)(reg_addr >> 8), (uint8_t)reg_addr };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  }
   crc = _I2C_CRC_Accumulate(tx_buf, length, crc);
   //insert CRC sum at end of transmit buffer
   tx_buf[length] = crc;
@@ -378,15 +396,21 @@ static uint8_t* _I2C_CRC_PrepareSingleWrite(uint8_t i2c_addr, uint8_t reg_addr, 
 }
 
 //prepare a newly allocated transmit buffer with the correct CRCs for a multi-register write
-static uint8_t* _I2C_CRC_PrepareMultiWrite(uint8_t i2c_addr, uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, uint16_t total_length) {
+static uint8_t* _I2C_CRC_PrepareMultiWrite(uint8_t i2c_addr, uint16_t reg_addr_first, uint16_t reg_addr_size, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, uint16_t total_length) {
   //allocate new transmit buffer with `count` extra bytes for CRCs
   uint8_t* tx_buf = new uint8_t[total_length + count];
 
   //copy first register and calculate first CRC checksum (taking into account I2C and register address bytes too)
   uint16_t reg_size = reg_sizes[0];
   memcpy(tx_buf, buf, reg_size);
-  uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), reg_addr_first };
-  uint8_t crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  uint8_t crc;
+  if (reg_addr_size == I2C_MEMADD_SIZE_8BIT) {
+    uint8_t crc_prefix[2] = { (uint8_t)(i2c_addr << 1), (uint8_t)reg_addr_first };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 2, 0);
+  } else {
+    uint8_t crc_prefix[3] = { (uint8_t)(i2c_addr << 1), (uint8_t)(reg_addr_first >> 8), (uint8_t)reg_addr_first };
+    crc = _I2C_CRC_Accumulate(crc_prefix, 3, 0);
+  }
   crc = _I2C_CRC_Accumulate(tx_buf, reg_size, crc);
   //insert CRC sum after the data
   tx_buf[reg_size] = crc;
@@ -411,7 +435,7 @@ static uint8_t* _I2C_CRC_PrepareMultiWrite(uint8_t i2c_addr, uint8_t reg_addr_fi
 /*            I2C Module Interface - Basics              */
 /*********************************************************/
 
-void I2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t length) {
+void I2CModuleInterface::ReadRegister(uint16_t reg_addr, uint8_t* buf, uint16_t length) {
   if (buf == NULL || length == 0) {
     throw std::invalid_argument("ModuleInterface transfers require non-null buffer and nonzero length");
   }
@@ -420,14 +444,14 @@ void I2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t l
     //CRC mode: allocate new receive buffer with one extra byte for CRC, then receive data
     uint8_t* rx_buf = new uint8_t[length + 1];
     try {
-      this->hw_interface.Read(this->i2c_address, reg_addr, rx_buf, length + 1);
+      this->hw_interface.Read(this->i2c_address, reg_addr, this->reg_addr_size, rx_buf, length + 1);
     } catch (...) {
       //on error: free receive buffer before rethrowing to avoid memory leak
       delete[] rx_buf;
       throw;
     }
 
-    if (_I2C_CRC_SingleReadCheck(this->i2c_address, reg_addr, rx_buf, length)) {
+    if (_I2C_CRC_SingleReadCheck(this->i2c_address, reg_addr, this->reg_addr_size, rx_buf, length)) {
       //CRC check is good: copy data to output buffer and free receive buffer
       memcpy(buf, rx_buf, length);
       delete[] rx_buf;
@@ -438,25 +462,25 @@ void I2CModuleInterface::ReadRegister(uint8_t reg_addr, uint8_t* buf, uint16_t l
     }
   } else {
     //no CRC: just do a basic mem read
-    this->hw_interface.Read(this->i2c_address, reg_addr, buf, length);
+    this->hw_interface.Read(this->i2c_address, reg_addr, this->reg_addr_size, buf, length);
   }
 
   //handle data update
   this->HandleDataUpdate(reg_addr, buf, length);
 }
 
-void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uint16_t length) {
+void I2CModuleInterface::WriteRegister(uint16_t reg_addr, const uint8_t* buf, uint16_t length) {
   if (buf == NULL || length == 0) {
     throw std::invalid_argument("ModuleInterface transfers require non-null buffer and nonzero length");
   }
 
   if (this->uses_crc) {
     //CRC mode: prepare transmit buffer with CRC
-    uint8_t* tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, reg_addr, buf, length);
+    uint8_t* tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, reg_addr, this->reg_addr_size, buf, length);
 
     //write transmit buffer and free it afterwards
     try {
-      this->hw_interface.Write(this->i2c_address, reg_addr, tx_buf, length + 1);
+      this->hw_interface.Write(this->i2c_address, reg_addr, this->reg_addr_size, tx_buf, length + 1);
     } catch (...) {
       //on error: free transmit buffer before rethrowing to avoid memory leak
       delete[] tx_buf;
@@ -465,7 +489,7 @@ void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uin
     delete[] tx_buf;
   } else {
     //no CRC: just do a basic mem write
-    this->hw_interface.Write(this->i2c_address, reg_addr, buf, length);
+    this->hw_interface.Write(this->i2c_address, reg_addr, this->reg_addr_size, buf, length);
   }
 
   //handle data update
@@ -473,7 +497,13 @@ void I2CModuleInterface::WriteRegister(uint8_t reg_addr, const uint8_t* buf, uin
 }
 
 
-I2CModuleInterface::I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, bool use_crc) : hw_interface(hw_interface), i2c_address(i2c_address), uses_crc(use_crc) {
+I2CModuleInterface::I2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, uint16_t reg_addr_size, bool use_crc) :
+    hw_interface(hw_interface), i2c_address(i2c_address), reg_addr_size(reg_addr_size), uses_crc(use_crc) {
+  if (this->reg_addr_size != I2C_MEMADD_SIZE_8BIT && this->reg_addr_size != I2C_MEMADD_SIZE_16BIT) {
+    //invalid address size
+    throw std::invalid_argument("I2CModuleInterface register address size invalid, must be either I2C_MEMADD_SIZE_8BIT or I2C_MEMADD_SIZE_16BIT");
+  }
+
   this->hw_interface.RegisterInterface(this);
 }
 
@@ -486,8 +516,8 @@ I2CModuleInterface::~I2CModuleInterface() {
 /*         I2C Module Interface - Multi-Register         */
 /*********************************************************/
 
-void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
-  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+void I2CModuleInterface::ReadMultiRegister(uint16_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint16_t count) {
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint32_t)reg_addr_first + (uint32_t)count > (this->reg_addr_size == I2C_MEMADD_SIZE_8BIT ? UINT8_MAX : UINT16_MAX)) {
     throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
@@ -504,14 +534,14 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
     //CRC mode: allocate new receive buffer with `count` extra bytes for CRCs, then receive data
     uint8_t* rx_buf = new uint8_t[total_length + count];
     try {
-      this->hw_interface.Read(this->i2c_address, reg_addr_first, rx_buf, total_length + count);
+      this->hw_interface.Read(this->i2c_address, reg_addr_first, this->reg_addr_size, rx_buf, total_length + count);
     } catch (...) {
       //on error: free receive buffer before rethrowing to avoid memory leak
       delete[] rx_buf;
       throw;
     }
 
-    if (!_I2C_CRC_MultiReadCheck(this->i2c_address, reg_addr_first, rx_buf, reg_sizes, count)) {
+    if (!_I2C_CRC_MultiReadCheck(this->i2c_address, reg_addr_first, this->reg_addr_size, rx_buf, reg_sizes, count)) {
       //CRC check failed: free receive buffer (without copying) and throw exception
       delete[] rx_buf;
       throw DriverError(DRV_FAILED, "I2CModuleInterface CRC check failed on read");
@@ -530,7 +560,7 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
     delete[] rx_buf;
   } else {
     //no CRC: just do a basic mem read for all registers
-    this->hw_interface.Read(this->i2c_address, reg_addr_first, buf, total_length);
+    this->hw_interface.Read(this->i2c_address, reg_addr_first, this->reg_addr_size, buf, total_length);
   }
 
   //handle data updates
@@ -543,8 +573,8 @@ void I2CModuleInterface::ReadMultiRegister(uint8_t reg_addr_first, uint8_t* buf,
   }
 }
 
-void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count) {
-  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+void I2CModuleInterface::WriteMultiRegister(uint16_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint16_t count) {
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint32_t)reg_addr_first + (uint32_t)count > (this->reg_addr_size == I2C_MEMADD_SIZE_8BIT ? UINT8_MAX : UINT16_MAX)) {
     throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
@@ -559,11 +589,11 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
 
   if (this->uses_crc) {
     //CRC mode: prepare new transmit buffer with CRCs
-    uint8_t* tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, reg_addr_first, buf, reg_sizes, count, total_length);
+    uint8_t* tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, reg_addr_first, this->reg_addr_size, buf, reg_sizes, count, total_length);
 
     //write transmit buffer and free it afterwards
     try {
-      this->hw_interface.Write(this->i2c_address, reg_addr_first, tx_buf, total_length + count);
+      this->hw_interface.Write(this->i2c_address, reg_addr_first, this->reg_addr_size, tx_buf, total_length + count);
     } catch (...) {
       //on error: free transmit buffer before rethrowing to avoid memory leak
       delete[] tx_buf;
@@ -572,7 +602,7 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
     delete[] tx_buf;
   } else {
     //no CRC: just do a basic mem write for all registers
-    this->hw_interface.Write(this->i2c_address, reg_addr_first, buf, total_length);
+    this->hw_interface.Write(this->i2c_address, reg_addr_first, this->reg_addr_size, buf, total_length);
   }
 
   //handle data updates
@@ -586,9 +616,9 @@ void I2CModuleInterface::WriteMultiRegister(uint8_t reg_addr_first, const uint8_
 }
 
 
-static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint8_t reg_addr_first, uint8_t* buf,
-                                                          const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
-  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint16_t)reg_addr_first + (uint16_t)count > 255) {
+static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTransferQueueItem*>& queue, ModuleTransferType type, uint16_t reg_addr_first, uint16_t reg_addr_size, uint8_t* buf,
+                                                          const uint16_t* reg_sizes, uint16_t count, ModuleTransferCallback&& callback) {
+  if (buf == NULL || reg_sizes == NULL || count == 0 || (uint32_t)reg_addr_first + (uint32_t)count > (reg_addr_size == I2C_MEMADD_SIZE_8BIT ? UINT8_MAX : UINT16_MAX)) {
     throw std::invalid_argument("I2CModuleInterface multi-transfers require non-null buffer and register sizes, nonzero count, and cannot go above register 255");
   }
 
@@ -635,13 +665,13 @@ static inline void _I2CModuleInterface_QueueMultiTransfer(std::deque<ModuleTrans
   }
 }
 
-void I2CModuleInterface::ReadMultiRegisterAsync(uint8_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
-  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_READ, reg_addr_first, buf, reg_sizes, count, std::move(callback));
+void I2CModuleInterface::ReadMultiRegisterAsync(uint16_t reg_addr_first, uint8_t* buf, const uint16_t* reg_sizes, uint16_t count, ModuleTransferCallback&& callback) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_READ, reg_addr_first, this->reg_addr_size, buf, reg_sizes, count, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }
 
-void I2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint8_t count, ModuleTransferCallback&& callback) {
-  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_WRITE, reg_addr_first, (uint8_t*)buf, reg_sizes, count, std::move(callback));
+void I2CModuleInterface::WriteMultiRegisterAsync(uint16_t reg_addr_first, const uint8_t* buf, const uint16_t* reg_sizes, uint16_t count, ModuleTransferCallback&& callback) {
+  _I2CModuleInterface_QueueMultiTransfer(this->queued_transfers, TF_WRITE, reg_addr_first, this->reg_addr_size, (uint8_t*)buf, reg_sizes, count, std::move(callback));
   this->StartQueuedAsyncTransfer();
 }
 
@@ -684,14 +714,14 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
         retry = false;
       } else if (transfer->reg_sizes == NULL) {
         //single read
-        transfer->success = _I2C_CRC_SingleReadCheck(this->i2c_address, transfer->reg_addr, transfer->add_buffer, transfer->length);
+        transfer->success = _I2C_CRC_SingleReadCheck(this->i2c_address, transfer->reg_addr, this->reg_addr_size, transfer->add_buffer, transfer->length);
         if (transfer->success) {
           //copy data if CRC matches
           memcpy(transfer->data_ptr, transfer->add_buffer, transfer->length);
         }
       } else {
         //multi-read
-        transfer->success = _I2C_CRC_MultiReadCheck(this->i2c_address, transfer->reg_addr, transfer->add_buffer, transfer->reg_sizes, transfer->reg_count);
+        transfer->success = _I2C_CRC_MultiReadCheck(this->i2c_address, transfer->reg_addr, this->reg_addr_size, transfer->add_buffer, transfer->reg_sizes, transfer->reg_count);
         if (transfer->success) {
           //copy data for each register if CRCs match
           uint16_t rx_buf_offset = 0;
@@ -835,10 +865,10 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
             uint8_t* tx_buf;
             if (transfer->reg_sizes == NULL) {
               //single write
-              tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, transfer->reg_addr, transfer->data_ptr, transfer->length);
+              tx_buf = _I2C_CRC_PrepareSingleWrite(this->i2c_address, transfer->reg_addr, this->reg_addr_size, transfer->data_ptr, transfer->length);
             } else {
               //multi-write
-              tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, transfer->reg_addr, transfer->data_ptr, transfer->reg_sizes, transfer->reg_count, transfer->length);
+              tx_buf = _I2C_CRC_PrepareMultiWrite(this->i2c_address, transfer->reg_addr, this->reg_addr_size, transfer->data_ptr, transfer->reg_sizes, transfer->reg_count, transfer->length);
             }
             //start the async write
             try {
@@ -902,7 +932,7 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
 }
 
 
-void I2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
+void I2CModuleInterface::HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
   //nothing to do in base class implementation
   UNUSED(reg_addr);
   UNUSED(buf);
@@ -1132,24 +1162,26 @@ void RegI2CModuleInterface::WriteMultiRegisterAsync(uint8_t reg_addr_first, cons
 /*********************************************************/
 
 RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, const uint16_t* reg_sizes, bool use_crc) :
-    I2CModuleInterface(hw_interface, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+    I2CModuleInterface(hw_interface, i2c_address, I2C_MEMADD_SIZE_8BIT, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
 RegI2CModuleInterface::RegI2CModuleInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, std::initializer_list<uint16_t> reg_sizes, bool use_crc) :
-    I2CModuleInterface(hw_interface, i2c_address, use_crc), registers(this->_registers), _registers(reg_sizes) {}
+    I2CModuleInterface(hw_interface, i2c_address, I2C_MEMADD_SIZE_8BIT, use_crc), registers(this->_registers), _registers(reg_sizes) {}
 
 
-void RegI2CModuleInterface::HandleDataUpdate(uint8_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
+void RegI2CModuleInterface::HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf, uint16_t length) noexcept {
   //allow base handling
   this->I2CModuleInterface::HandleDataUpdate(reg_addr, buf, length);
 
+  uint8_t reg_addr_8 = (uint8_t)reg_addr;
+
   //ensure that the register is valid and the length matches
-  if (this->_registers.reg_sizes[reg_addr] > 0 && length == this->_registers.reg_sizes[reg_addr]) {
+  if (this->_registers.reg_sizes[reg_addr_8] > 0 && length == this->_registers.reg_sizes[reg_addr_8]) {
     //copy notification data to the corresponding register
-    memcpy(this->_registers[reg_addr], buf, length);
-    this->OnRegisterUpdate(reg_addr);
+    memcpy(this->_registers[reg_addr_8], buf, length);
+    this->OnRegisterUpdate(reg_addr_8);
   } else {
     //invalid register or length mismatch
-    DEBUG_PRINTF("* I2C register notification for address 0x%02X length %u, expected %u\n", reg_addr, length, this->_registers.reg_sizes[reg_addr]);
+    DEBUG_PRINTF("* I2C register notification for address 0x%02X length %u, expected %u\n", reg_addr_8, length, this->_registers.reg_sizes[reg_addr_8]);
   }
 }
 
