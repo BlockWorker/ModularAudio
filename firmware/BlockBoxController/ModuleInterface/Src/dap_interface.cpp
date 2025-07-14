@@ -463,6 +463,8 @@ void DAPInterface::LoopTasks() {
       __set_PRIMASK(primask);
       if (this->reset_callback) {
         this->reset_callback(false);
+        //clear reset callback
+        this->reset_callback = SuccessCallback();
       }
     }
   }

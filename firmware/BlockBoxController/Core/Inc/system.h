@@ -15,6 +15,7 @@
 #ifdef __cplusplus
 
 #include "dap_interface.h"
+#include "hifidac_interface.h"
 #include "bluetooth_receiver_interface.h"
 
 extern "C" {
@@ -37,6 +38,7 @@ public:
   I2CHardwareInterface main_i2c_hw;
 
   DAPInterface dap_if;
+  HiFiDACInterface dac_if;
 
   BluetoothReceiverInterface btrx_if;
 

@@ -7,8 +7,6 @@
 
 #include "system.h"
 #include "retarget.h"
-#include "../../../DigitalAudioProcessor/Core/Inc/i2c_defines_dap.h"
-#include "../../../BluetoothReceiver_Controller/Core/Inc/uart_defines_btrx.h"
 
 
 /***************************************************/
@@ -22,6 +20,10 @@
 #define BBV2_DAP_INT_PORT I2C5_INT3_N_GPIO_Port
 #define BBV2_DAP_INT_PIN I2C5_INT3_N_Pin
 #define BBV2_DAP_I2C_ADDR 0x4A
+
+#define BBV2_HIFIDAC_INT_PORT I2C5_INT2_N_GPIO_Port
+#define BBV2_HIFIDAC_INT_PIN I2C5_INT2_N_Pin
+#define BBV2_HIFIDAC_I2C_ADDR 0x1D
 
 #define BBV2_BTRX_UART_HANDLE huart1
 
@@ -158,6 +160,7 @@ static void _AsyncI2CTest(bool success, uintptr_t context, uint32_t value, uint1
 void BlockBoxV2System::Init() {
   this->main_i2c_hw.Init();
   this->dap_if.Init();
+  this->dac_if.Init();
   this->btrx_if.Init();
 
   /*DEBUG_PRINTF("DAP module ID: 0x%02X reg 0x%02X\n", this->dap_if.ReadRegister8(0xFF), this->dap_if.registers.Reg8(0xFF));
@@ -213,6 +216,9 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
+  this->dac_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+    DEBUG_PRINTF("HiFiDAC status update: 0x%02X\n", this->dac_if.GetStatus().value);
+  }, MODIF_HIFIDAC_EVENT_STATUS_UPDATE);
 
   this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
     switch (event) {
@@ -239,27 +245,30 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
 
+  HAL_Delay(500);
 
   this->dap_if.ResetModule([&](bool success) {
     DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
     if (success) {
-      this->dap_if.monitor_src_stats = true;
+      //this->dap_if.monitor_src_stats = true;
       this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&](bool success) {
         DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
       });
-      this->dap_if.SetConfig(false, false, [&](bool success) {
-        DEBUG_PRINTF("DAP SP disabled, success %u\n", success);
-        if (success) {
-          this->dap_if.SetBiquadSetup(0, 0, 2, 3, [&](bool success) {
-            DEBUG_PRINTF("DAP biquad setup done, success %u\n", success);
-          });
-          this->dap_if.SetConfig(true, false, [&](bool success) {
-            DEBUG_PRINTF("DAP SP re-enabled, success %u\n", success);
-          });
-          this->dap_if.SetVolumeGains({ -6.0f, -3.0f }, [&](bool success) {
-            DEBUG_PRINTF("DAP vol gains set, success %u\n", success);
-          });
-        }
+      this->dap_if.SetVolumeGains({ -6.0f, -6.0f }, [&](bool success) {
+        DEBUG_PRINTF("DAP vol gains set, success %u\n", success);
+      });
+    }
+  });
+
+  this->dac_if.ResetModule([&](bool success) {
+    DEBUG_PRINTF("HiFiDAC reset/init complete, success %u\n", success);
+    if (success) {
+      HiFiDACConfig cfg;
+      cfg.dac_enable = true;
+      cfg.sync_mode = true;
+      cfg.master_mode = false;
+      this->dac_if.SetConfig(cfg, [&](bool success) {
+        DEBUG_PRINTF("HiFiDAC config set to enabled/sync/slave, success %u\n", success);
       });
     }
   });
@@ -278,6 +287,7 @@ void BlockBoxV2System::Init() {
 void BlockBoxV2System::LoopTasks() {
   this->main_i2c_hw.LoopTasks();
   this->dap_if.LoopTasks();
+  this->dac_if.LoopTasks();
   this->btrx_if.LoopTasks();
 }
 
@@ -285,6 +295,7 @@ void BlockBoxV2System::LoopTasks() {
 BlockBoxV2System::BlockBoxV2System() :
     main_i2c_hw(&BBV2_I2C_MAIN_HANDLE, _BlockBoxV2_I2C_Main_HardwareReset),
     dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN),
+    dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     btrx_if(&BBV2_BTRX_UART_HANDLE) {
 
 }
@@ -314,8 +325,15 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
 
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == bbv2_system.dap_if.int_pin) {
-    bbv2_system.dap_if.HandleInterrupt(IF_EXTI, GPIO_Pin);
+  switch (GPIO_Pin) {
+    case BBV2_DAP_INT_PIN:
+      bbv2_system.dap_if.HandleInterrupt(IF_EXTI, GPIO_Pin);
+      break;
+    case BBV2_HIFIDAC_INT_PIN:
+      bbv2_system.dac_if.HandleInterrupt(IF_EXTI, GPIO_Pin);
+      break;
+    default:
+      break;
   }
 }
 

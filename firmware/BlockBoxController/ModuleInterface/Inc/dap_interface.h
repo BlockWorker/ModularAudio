@@ -25,7 +25,7 @@
 #define MODIF_DAP_EVENT_SRC_STATS_UPDATE (1u << 11)
 
 //reset timeout, in main loop cycles
-#define IF_DAP_RESET_TIMEOUT (500 / MAIN_LOOP_PERIOD_MS)
+#define IF_DAP_RESET_TIMEOUT (1000 / MAIN_LOOP_PERIOD_MS)
 
 
 //DAP status

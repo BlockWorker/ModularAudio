@@ -39,7 +39,7 @@
  *    - 0: LOCK: Async mode SRC is locked to the input
  *  * CONTROL (0x08, 1B):
  *    - 4-7: RESET: controller reset (write 0xA to trigger software reset)
- *    - 3: MASTER: I2C master mode (otherwise slave mode)
+ *    - 3: MASTER: I2S master mode (otherwise slave mode)
  *    - 2: SYNC: Synchronous DAC mode (otherwise asynchronous mode)
  *    - 1: DAC_EN: Enable analog DAC section
  *    - 0: INT_EN: Enable I2C interrupts
