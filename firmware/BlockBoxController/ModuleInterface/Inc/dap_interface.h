@@ -27,6 +27,11 @@
 //reset timeout, in main loop cycles
 #define IF_DAP_RESET_TIMEOUT (1000 / MAIN_LOOP_PERIOD_MS)
 
+//minimum/maximum volume and loudness gains
+#define IF_DAP_VOLUME_GAIN_MIN -120.0f
+#define IF_DAP_VOLUME_GAIN_MAX 20.0f
+#define IF_DAP_LOUDNESS_GAIN_MAX 0.0f
+
 
 //DAP status
 typedef union {

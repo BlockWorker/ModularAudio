@@ -16,6 +16,7 @@
 
 #include "dap_interface.h"
 #include "hifidac_interface.h"
+#include "power_amp_interface.h"
 #include "bluetooth_receiver_interface.h"
 
 extern "C" {
@@ -39,6 +40,7 @@ public:
 
   DAPInterface dap_if;
   HiFiDACInterface dac_if;
+  PowerAmpInterface amp_if;
 
   BluetoothReceiverInterface btrx_if;
 

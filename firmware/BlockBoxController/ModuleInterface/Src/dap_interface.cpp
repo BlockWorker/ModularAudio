@@ -7,6 +7,7 @@
 
 
 #include "dap_interface.h"
+#include <math.h>
 
 
 //write buffers for larger structures - TODO make something more flexible if overlapping writes become a problem
@@ -243,6 +244,13 @@ void DAPInterface::SetMixerConfig(DAPMixerConfig config, SuccessCallback&& callb
 }
 
 void DAPInterface::SetVolumeGains(DAPGains gains, SuccessCallback&& callback) {
+  bool sp_enabled, pos_gain_allowed;
+  this->GetConfig(sp_enabled, pos_gain_allowed);
+  if (isnanf(gains.ch1) || gains.ch1 < IF_DAP_VOLUME_GAIN_MIN || gains.ch1 > (pos_gain_allowed ? IF_DAP_VOLUME_GAIN_MAX : 0.0f) ||
+      isnanf(gains.ch2) || gains.ch2 < IF_DAP_VOLUME_GAIN_MIN || gains.ch2 > (pos_gain_allowed ? IF_DAP_VOLUME_GAIN_MAX : 0.0f)) {
+    throw std::invalid_argument("DAPInterface SetVolumeGains given invalid gains - must be in range [-120, 0] or [-120, 20] if positive gain is allowed");
+  }
+
   memcpy(&volume_write_buf, &gains, sizeof(DAPGains));
 
   //write desired config
@@ -256,6 +264,11 @@ void DAPInterface::SetVolumeGains(DAPGains gains, SuccessCallback&& callback) {
 }
 
 void DAPInterface::SetLoudnessGains(DAPGains gains, SuccessCallback&& callback) {
+  if (isnanf(gains.ch1) || gains.ch1 > IF_DAP_LOUDNESS_GAIN_MAX ||
+      isnanf(gains.ch2) || gains.ch2 > IF_DAP_LOUDNESS_GAIN_MAX) {
+    throw std::invalid_argument("DAPInterface SetLoudnessGains given invalid gains - must be 0 or less");
+  }
+
   memcpy(&loudness_write_buf, &gains, sizeof(DAPGains));
 
   //write desired config

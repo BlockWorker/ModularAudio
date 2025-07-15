@@ -325,15 +325,29 @@ void HiFiDACInterface::InitModule(SuccessCallback&& callback) {
         return;
       }
 
-      //read all registers once to update registers to their initial values
-      this->ReadRegister8Async(I2CDEF_HIFIDAC_CONTROL, ModuleTransferCallback());
-      this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_VOLUME, hifidac_scratch, 7, ModuleTransferCallback());
-      this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_FILTER_SHAPE, hifidac_scratch, 3, [&, callback](bool, uint32_t, uint16_t) {
-        //after last read is done: init completed successfully (even if read failed - that's non-critical)
-        this->initialised = true;
-        if (callback) {
-          callback(true);
+      //set basic config (async slave, dac disabled) to enable interrupts
+      HiFiDACConfig cfg;
+      cfg.dac_enable = false;
+      cfg.sync_mode = false;
+      cfg.master_mode = false;
+      this->SetConfig(cfg, [&, callback](bool success) {
+        if (!success) {
+          //report failure to external callback
+          if (callback) {
+            callback(false);
+          }
+          return;
         }
+
+        //read all registers once to update registers to their initial values
+        this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_VOLUME, hifidac_scratch, 7, ModuleTransferCallback());
+        this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_FILTER_SHAPE, hifidac_scratch, 3, [&, callback](bool, uint32_t, uint16_t) {
+          //after last read is done: init completed successfully (even if read failed - that's non-critical)
+          this->initialised = true;
+          if (callback) {
+            callback(true);
+          }
+        });
       });
     });
   });
