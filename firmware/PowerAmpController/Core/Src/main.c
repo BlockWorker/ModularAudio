@@ -146,17 +146,17 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  //below: moved DAC1 init to the very start
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_DAC1_Init();
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
   MX_ADC4_Init();
-  MX_DAC1_Init();
   MX_I2C3_Init();
   MX_USART3_UART_Init();
   MX_IWDG_Init();
@@ -640,6 +640,10 @@ static void MX_DAC1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN DAC1_Init 2 */
+
+  //pre-initialise DAC to safe output as soon as possible
+  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, PVDD_INIT_DAC_VALUE);
+  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
 
   /* USER CODE END DAC1_Init 2 */
 
