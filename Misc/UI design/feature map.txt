@@ -1,0 +1,54 @@
+Global status bar
+- battery info small
+- input info (esp. bluetooth) (details in dropdown)
+- input selection (in dropdown)
+
+Main screen
+- sys on/off
+- volume info + mute
+- volume up/down
+- light on/off
+- media controls (play/pause, forward, backward)
+- media info (title, artist, album) (maybe provision for progress/position?)
+- date+time?
+
+Volume config screen
+- volume limits (low+high)
+- volume step
+- volume sync with bluetooth yes/no
+- volume pos gain allowed yes/no (?)
+
+Sound config screen
+- sound EQ option (?)
+- sound loudness gain
+- sound bass/treble settings if want? prob not rn
+- amplifier info
+- amplifier power "limit" (adjustable warning level, tries to stay below)
+- amplifier voltage behaviour (?) (unclear about implementation details of that so far anyway)
+
+Light config screen
+- light on/off
+- light brightness
+- light mode
+
+Battery config screen
+- battery info detailed
+- battery charging on/off
+- battery current limit
+- battery charge level/voltage limit
+- battery auto-shutdown time
+- battery manual shutdown
+- battery full shutdown (with confirmation)
+
+Screen config screen
+- screen brightness
+- screen off delay
+- screen theme colour(s)
+- screen touch calibration
+
+Debug screen
+- debug events
+- debug speaker calibration mode
+- debug bluetooth OTA upgrade
+
+- time+date setup
