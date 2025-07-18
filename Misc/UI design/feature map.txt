@@ -1,7 +1,12 @@
-Global status bar
+Global status bar -- RAM_DL usage: no dropdown ~5%, with dropdown ~30%
 - battery info small
-- input info (esp. bluetooth) (details in dropdown)
+- input info (details in dropdown)
 - input selection (in dropdown)
+  - Bluetooth: Tag 251
+  - USB: Tag 253
+  - SPDIF: Tag 254
+- bluetooth pair+disconnect (in dropdown): Tag 252
+=> Open/close dropdown: Tag 250
 
 Main screen
 - sys on/off
@@ -11,6 +16,7 @@ Main screen
 - media controls (play/pause, forward, backward)
 - media info (title, artist, album) (maybe provision for progress/position?)
 - date+time?
+- bluetooth status+pair+disconnect shortcuts
 
 Volume config screen
 - volume limits (low+high)
