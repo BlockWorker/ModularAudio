@@ -24,9 +24,9 @@
   "DEEP_SLEEP", "OFF ON",\
   "GPIO_CONFIG", "OFF OFF 00",\
   "MUSIC_META_DATA", "ON",\
-  "NAME", "BlockBox v2.5",\
-  "NAME_BCAST", "BlockBoxV2.5",\
-  "NAME_SHORT", "BlockBoxV2.5",\
+  "NAME", "BlockBox v2 neo",\
+  "NAME_BCAST", "BlockBox v2n",\
+  "NAME_SHORT", "BlockBox v2n",\
   "POWERMAX", "11",\
   "PROFILES", "OFF 0 0 1 0 1 0 1",\
   "SSP_CAPS", "3 OFF",\

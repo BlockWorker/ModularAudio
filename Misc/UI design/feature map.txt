@@ -1,4 +1,4 @@
-Global status bar -- RAM_DL usage: no dropdown ~5%, with dropdown ~30%
+Global status bar -- RAM_DL usage: no dropdown ~5%, with dropdown ~20%
 - battery info small
 - input info (details in dropdown)
 - input selection (in dropdown)
