@@ -38,7 +38,8 @@ typedef union {
   struct {
     bool streaming : 1;
     bool src_ready : 1;
-    int : 5;
+    bool usb_connected : 1;
+    int : 4;
     bool i2c_error : 1;
   };
   uint8_t value;

@@ -11,6 +11,7 @@
 #include "inputs.h"
 #include "sample_rate_conv.h"
 #include "signal_processing.h"
+#include "usbd_def.h"
 
 
 #if I2C_VIRT_BUFFER_SIZE < I2CDEF_DAP_REG_SIZE_SP_FIR || I2C_VIRT_BUFFER_SIZE < I2CDEF_DAP_REG_SIZE_SP_BIQUAD
@@ -242,6 +243,7 @@ void _I2C_ProcessWriteData() {
 void _I2C_PrepareReadData() {
   bool tempB;
   uint8_t temp8;
+  extern USBD_HandleTypeDef hUsbDeviceHS;
 
   memset(read_buf, 0, I2C_VIRT_BUFFER_SIZE);
 
@@ -251,6 +253,7 @@ void _I2C_PrepareReadData() {
       read_buf[0] =
           (tempB && sp_enabled ? I2CDEF_DAP_STATUS_STREAMING_Msk : 0) |
           (tempB ? I2CDEF_DAP_STATUS_SRC_READY_Msk : 0) |
+          (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED ? I2CDEF_DAP_STATUS_USB_CONN_Msk : 0) |
           (i2c_err_detected != 0 ? I2CDEF_DAP_STATUS_I2CERR_Msk : 0);
       i2c_err_detected = 0; //reset comm error detection after read
       break;

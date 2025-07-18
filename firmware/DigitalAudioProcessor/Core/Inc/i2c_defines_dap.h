@@ -37,6 +37,7 @@
  *  Bit field and enum definitions:
  *  * STATUS (0x01, bit field, 1B):
  *    - 7: I2CERR: I2C communication error detected since last STATUS read
+ *    - 2: USB_CONN: USB connected (whether audio is being streamed or not)
  *    - 1: SRC_READY: Sample rate converter is ready to provide output audio data
  *    - 0: STREAMING: Audio data is being streamed to the output
  *  * CONTROL (0x08, bit field, 1B):
@@ -102,6 +103,8 @@
 #define I2CDEF_DAP_STATUS_STREAMING_Msk (0x1 << I2CDEF_DAP_STATUS_STREAMING_Pos)
 #define I2CDEF_DAP_STATUS_SRC_READY_Pos 1
 #define I2CDEF_DAP_STATUS_SRC_READY_Msk (0x1 << I2CDEF_DAP_STATUS_SRC_READY_Pos)
+#define I2CDEF_DAP_STATUS_USB_CONN_Pos 2
+#define I2CDEF_DAP_STATUS_USB_CONN_Msk (0x1 << I2CDEF_DAP_STATUS_USB_CONN_Pos)
 #define I2CDEF_DAP_STATUS_I2CERR_Pos 7
 #define I2CDEF_DAP_STATUS_I2CERR_Msk (0x1 << I2CDEF_DAP_STATUS_I2CERR_Pos)
 
