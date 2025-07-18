@@ -22,17 +22,17 @@
   "COD", "240404",\
   "CODEC", "ON ON ON ON ON ON ON ON ON",\
   "DEEP_SLEEP", "OFF ON",\
-  "GPIO_CONFIG", "OFF 00",\
+  "GPIO_CONFIG", "OFF OFF 00",\
   "MUSIC_META_DATA", "ON",\
-  "NAME", "Modular Audio Bluetooth",\
-  "NAME_BCAST", "ModAudioBT",\
-  "NAME_SHORT", "ModAudioBT",\
+  "NAME", "BlockBox v2.5",\
+  "NAME_BCAST", "BlockBoxV2.5",\
+  "NAME_SHORT", "BlockBoxV2.5",\
   "POWERMAX", "11",\
   "PROFILES", "OFF 0 0 1 0 1 0 1",\
-  "SSP_CAPS", "3",\
+  "SSP_CAPS", "3 OFF",\
   "UART_CONFIG", "9600 ON 0",\
   "UI_CONFIG", "OFF OFF OFF OFF %s %s 0 ON",\
-  "VOLUME_CONTROL", "ON 127 ON"\
+  "VOLUME_CONTROL", "OFF 127 ON"\
 }
 
 #define BT_CONFIG_ARRAY_ENTRIES 22
