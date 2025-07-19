@@ -9,6 +9,7 @@
 #define INC_MODULE_INTERFACE_H_
 
 #include "cpp_main.h"
+#include "event_source.h"
 
 //common constants
 //blocking operation timeout
@@ -38,18 +39,6 @@ typedef enum {
 #ifdef __cplusplus
 }
 
-
-class ModuleInterface;
-
-//callback type for module events - arguments: reference to module interface, event type
-typedef std::function<void(ModuleInterface&, uint32_t)> ModuleEventCallback;
-
-
-typedef struct {
-  ModuleEventCallback func;
-  uint32_t event_mask;
-  uint64_t identifier;
-} ModuleEventCallbackRegistration;
 
 //transfer types
 typedef enum {
@@ -83,7 +72,7 @@ public:
 
 
 //abstract interface for interacting with other system modules
-class ModuleInterface {
+class ModuleInterface : public EventSource {
 public:
   virtual void ReadRegister(uint16_t reg_addr, uint8_t* buf, uint16_t length) = 0;
   uint8_t ReadRegister8(uint16_t reg_addr);
@@ -107,25 +96,18 @@ public:
 
   virtual void HandleInterrupt(ModuleInterfaceInterruptType type, uint16_t extra) noexcept = 0;
 
-  void RegisterCallback(ModuleEventCallback&& cb, uint32_t event_mask, uint64_t identifier = 0);
-  void UnregisterCallback(uint64_t identifier);
-  void ClearCallbacks() noexcept;
-
   virtual void Init();
   virtual void LoopTasks();
 
   virtual ~ModuleInterface();
 
 protected:
-  std::vector<ModuleEventCallbackRegistration> registered_callbacks;
   std::deque<ModuleTransferQueueItem*> queued_transfers;
   std::vector<ModuleTransferQueueItem*> completed_transfers;
   bool async_transfer_active = false;
 
   virtual ModuleTransferQueueItem* CreateTransferQueueItem();
   virtual void StartQueuedAsyncTransfer() noexcept = 0;
-
-  void ExecuteCallbacks(uint32_t event) noexcept;
 };
 
 

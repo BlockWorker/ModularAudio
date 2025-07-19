@@ -133,57 +133,10 @@ void ModuleInterface::WriteRegister32Async(uint16_t reg_addr, uint32_t value, Mo
 }
 
 
-//registers the given callback with the given event mask and identifier. identifier 0 is "unidentifiable". if the given (non-zero) identifier already exists, the old callback is replaced.
-void ModuleInterface::RegisterCallback(ModuleEventCallback&& cb, uint32_t event_mask, uint64_t identifier) {
-  if (!cb || event_mask == 0) {
-    throw std::invalid_argument("ModuleInterface RegisterCallback requires a non-empty function and a non-zero event mask");
-  }
-
-  //iterate through existing registrations to see if this identifier is already registered
-  if (identifier != 0) {
-    for (auto& reg : this->registered_callbacks) {
-      if (reg.identifier == identifier) {
-        //function already registered: replace old callback and event mask with new ones
-        reg.func = std::move(cb);
-        reg.event_mask = event_mask;
-        return;
-      }
-    }
-  }
-
-  //new function: add registration for it
-  auto& new_reg = this->registered_callbacks.emplace_back();
-  new_reg.func = std::move(cb);
-  new_reg.event_mask = event_mask;
-  new_reg.identifier = identifier;
-}
-
-void ModuleInterface::UnregisterCallback(uint64_t identifier) {
-  if (identifier == 0) {
-    throw std::invalid_argument("ModuleInterface UnregisterCallback only works for nonzero identifiers");
-  }
-
-  //iterate through existing registrations to find the function with the given identifier
-  for (auto i = this->registered_callbacks.begin(); i < this->registered_callbacks.end(); i++) {
-    auto& reg = *i;
-    if (reg.identifier == identifier) {
-      //found: remove callback registration and return
-      this->registered_callbacks.erase(i);
-      return;
-    }
-  }
-}
-
-void ModuleInterface::ClearCallbacks() noexcept {
-  this->registered_callbacks.clear();
-}
-
-
 void ModuleInterface::Init() {
   //reset state
 
   //callback clearing disabled - I think we want them to stick around, to allow re-init without losing callbacks, as well as callback registration before init
-  //this->registered_callbacks.clear();
 
   for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
     delete *i;
@@ -235,22 +188,4 @@ ModuleInterface::~ModuleInterface() {
 
 ModuleTransferQueueItem* ModuleInterface::CreateTransferQueueItem() {
   return new ModuleTransferQueueItem;
-}
-
-
-void ModuleInterface::ExecuteCallbacks(uint32_t event) noexcept {
-  //iterate through callback registrations to find all that match the given event
-  for (auto i = this->registered_callbacks.begin(); i < this->registered_callbacks.end(); i++) {
-    auto& reg = *i;
-    if ((reg.event_mask & event) != 0) {
-      //event mask matches: call function (in exception-safe way)
-      try {
-        reg.func(*this, event);
-      } catch (const std::exception& err) {
-        DEBUG_PRINTF("* ModuleInterface callback exception: %s\n", err.what());
-      } catch (...) {
-        DEBUG_PRINTF("* Unknown ModuleInterface callback exception\n");
-      }
-    }
-  }
 }

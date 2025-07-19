@@ -206,7 +206,8 @@ void BlockBoxV2System::Init() {
   this->gui_mgr.SetScreen(&this->test_screen);
   this->gui_mgr.Init();
 
-  /*this->dap_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  /*
+  this->dap_if.RegisterCallback([&](EventSource&, uint32_t event) {
     switch (event) {
       case MODIF_DAP_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("DAP status update: 0x%02X\n", this->dap_if.GetStatus().value);
@@ -225,11 +226,11 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
-  this->dac_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  this->dac_if.RegisterCallback([&](EventSource&, uint32_t event) {
     DEBUG_PRINTF("HiFiDAC status update: 0x%02X\n", this->dac_if.GetStatus().value);
   }, MODIF_HIFIDAC_EVENT_STATUS_UPDATE);
 
-  this->amp_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  this->amp_if.RegisterCallback([&](EventSource&, uint32_t event) {
     switch (event) {
       case MODIF_POWERAMP_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("PowerAmp status update: 0x%04X\n", this->amp_if.GetStatus().value);
@@ -251,7 +252,7 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE | MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);
 
-  this->btrx_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  this->btrx_if.RegisterCallback([&](EventSource&, uint32_t event) {
     switch (event) {
       case MODIF_BTRX_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
@@ -327,7 +328,7 @@ void BlockBoxV2System::Init() {
         DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       });
     }
-  });*/
+  });//*/
 }
 
 
