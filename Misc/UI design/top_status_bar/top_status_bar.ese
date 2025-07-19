@@ -3,6 +3,7 @@
     ],
     "coprocessor": [
         "CLEAR(1, 1, 1)",
+        "TAG(0)",
         "SAVE_CONTEXT()",
         "BEGIN(RECTS)",
         "LINE_WIDTH(16)",

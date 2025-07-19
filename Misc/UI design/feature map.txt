@@ -9,22 +9,21 @@ Global status bar -- RAM_DL usage: no dropdown ~5%, with dropdown ~20%
 => Open/close dropdown: Tag 250
 
 Main screen
-- sys on/off
-- volume info + mute
-- volume up/down
-- light on/off
-- media controls (play/pause, forward, backward)
+- sys on/off: Tag 19
+- volume info + mute: Tag 14
+- volume up/down: - Tag 13, + Tag 15
+- light on/off: Tag 17
+- media controls (play/pause, forward, backward): Tags back 10, p/p 11, fwd 12
 - media info (title, artist, album) (maybe provision for progress/position?)
 - date+time?
-- bluetooth status+pair+disconnect shortcuts
-
-Volume config screen
-- volume limits (low+high)
-- volume step
-- volume sync with bluetooth yes/no
-- volume pos gain allowed yes/no (?)
+- bluetooth status+pair+disconnect shortcuts: Tag 16
+=> Open dropdown: Tag 250
+=> Settings: Tag 18
 
 Sound config screen
+- volume limits (low+high)
+- volume step
+- volume pos gain allowed yes/no (?)
 - sound EQ option (?)
 - sound loudness gain
 - sound bass/treble settings if want? prob not rn
