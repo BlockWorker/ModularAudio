@@ -16,16 +16,22 @@ GUIManager::GUIManager(EVEDriver& driver) noexcept :
 void GUIManager::Init() {
   this->initialised = false;
 
+  //reset SPI speed to 10MHz if not already set
+  if (this->driver.phy.GetTransferSpeed() != TRANSFERSPEED_10M) {
+    this->driver.phy.SetTransferSpeed(TRANSFERSPEED_10M);
+  }
+
   //start by initialising the display
   uint8_t init_result = this->driver.Init();
   if (init_result != E_OK) {
     InlineFormat(throw DriverError(DRV_FAILED, __msg), "EVE driver init failed with result %d", init_result);
   }
 
-  //set up quad transfer mode - TODO: enable when logic analyser debug not required anymore
-  //this->driver.SetTransferMode(TRANSFERMODE_QUAD);
+  //set up quad transfer mode
+  this->driver.SetTransferMode(TRANSFERMODE_QUAD);
 
-  //TODO: increase SPI speed above 11MHz here if desired
+  //increase SPI speed above 11MHz
+  this->driver.phy.SetTransferSpeed(TRANSFERSPEED_MAX);
 
   //calibrate touch - TODO: save to flash and restore if saved
   this->driver.ClearDLCmdBuffer();

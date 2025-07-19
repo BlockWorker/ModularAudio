@@ -150,6 +150,12 @@ typedef enum {
   TRANSFERMODE_QUAD = 1
 } EVETransferMode;
 
+typedef enum {
+  TRANSFERSPEED_1M = 256,
+  TRANSFERSPEED_10M = 26,
+  TRANSFERSPEED_MAX = 16
+} EVETransferSpeed;
+
 
 #ifdef __cplusplus
 }
@@ -177,8 +183,11 @@ public:
   void EnsureMMapMode(EVEMMapMode mode);
   void EndMMap();
 
+  void SetTransferSpeed(EVETransferSpeed speed);
+
   EVEMMapMode GetMMapMode() noexcept;
   EVETransferMode GetTransferMode() const noexcept;
+  EVETransferSpeed GetTransferSpeed() const noexcept;
 
   EVETargetPHY() noexcept : mmap_mode(MMAP_UNKNOWN), transfer_mode(TRANSFERMODE_SINGLE) {}
 

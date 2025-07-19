@@ -409,6 +409,27 @@ void EVETargetPHY::SetTransferMode(EVETransferMode mode) {
   }
 }
 
+void EVETargetPHY::SetTransferSpeed(EVETransferSpeed speed) {
+  uint32_t prescaler = (uint32_t)speed;
+  if (prescaler < TRANSFERSPEED_MAX || prescaler > 256) {
+    throw std::invalid_argument("EVE SetTransferSpeed given unsupported speed");
+  }
+
+  //save currently active mmap mode, abort any active transfer/mmap if there is one
+  EVEMMapMode active_mmap_mode = this->GetMMapMode();
+  HAL_OSPI_Abort(&hospi1);
+  this->mmap_mode = MMAP_UNKNOWN;
+
+  HAL_OSPI_DeInit(&hospi1);
+  hospi1.Init.ClockPrescaler = prescaler;
+  ThrowOnHALErrorMsg(HAL_OSPI_Init(&hospi1), "EVE SetTransferSpeed init");
+
+  if (active_mmap_mode == MMAP_MAIN_RAM || active_mmap_mode == MMAP_FUNC_RAM) {
+    //mmap was active: restart mmap with new speed
+    this->EnsureMMapMode(active_mmap_mode);
+  }
+}
+
 EVEMMapMode EVETargetPHY::GetMMapMode() noexcept {
   //reset current state to unknown if OSPI peripheral is not in mmapped state anymore
   if (HAL_OSPI_GetState(&hospi1) != HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
@@ -419,6 +440,10 @@ EVEMMapMode EVETargetPHY::GetMMapMode() noexcept {
 
 EVETransferMode EVETargetPHY::GetTransferMode() const noexcept {
   return this->transfer_mode;
+}
+
+EVETransferSpeed EVETargetPHY::GetTransferSpeed() const noexcept {
+  return (EVETransferSpeed)hospi1.Init.ClockPrescaler;
 }
 
 //configure OSPI for main ram mmap mode (direct addressing, needs software-side handling of "read" addresses vs. "write" addresses)
