@@ -6,26 +6,33 @@
  */
 
 #include "gui_manager.h"
+#include "gui_screen.h"
 
 
-void GUI_Manager::Init() {
+GUIManager::GUIManager(EVEDriver& driver) noexcept :
+    driver(driver), initialised(false), current_screen(NULL) {}
+
+
+void GUIManager::Init() {
+  this->initialised = false;
+
   //start by initialising the display
-  uint8_t init_result = eve_drv.Init();
+  uint8_t init_result = this->driver.Init();
   if (init_result != E_OK) {
     InlineFormat(throw DriverError(DRV_FAILED, __msg), "EVE driver init failed with result %d", init_result);
   }
 
   //set up quad transfer mode - TODO: enable when logic analyser debug not required anymore
-  //eve_drv.SetTransferMode(TRANSFERMODE_QUAD);
+  //this->driver.SetTransferMode(TRANSFERMODE_QUAD);
 
   //TODO: increase SPI speed above 11MHz here if desired
 
   //calibrate touch - TODO: save to flash and restore if saved
-  eve_drv.ClearDLCmdBuffer();
-  eve_drv.CmdBeginDisplay(true, true, true, 0x000000);
-  eve_drv.CmdCalibrate();
-  eve_drv.CmdEndDisplay();
-  eve_drv.SendBufferedDLCmds(HAL_MAX_DELAY); //TODO: is this wait okay in an overall system context? if yes, keep in mind for other init, if no, implement alternative approach
+  this->driver.ClearDLCmdBuffer();
+  this->driver.CmdBeginDisplay(true, true, true, 0x000000);
+  this->driver.CmdCalibrate();
+  this->driver.CmdEndDisplay();
+  this->driver.SendBufferedDLCmds(HAL_MAX_DELAY); //TODO: is this wait okay in an overall system context? if yes, keep in mind for other init, if no, implement alternative approach
 
   //reset touch state
   this->touch_state.touched = false;
@@ -34,31 +41,41 @@ void GUI_Manager::Init() {
   this->touch_state.long_press_tick = false;
   this->touch_state.released = false;
   this->touch_state._next_tick_at = HAL_MAX_DELAY;
+  this->touch_state.initial_tag = 0;
   this->touch_state.tag = 0;
   this->touch_state.tracker_value = 0;
 
-  //display initial screen
-  this->current_screen.DisplayScreen();
+  this->initialised = true;
+
+  //display initial screen, if set
+  if (this->current_screen != NULL) {
+    this->current_screen->DisplayScreen();
+  }
 }
 
-void GUI_Manager::Update() noexcept {
+void GUIManager::Update() noexcept {
+  if (!this->initialised) {
+    //uninitialised: nothing to do
+    return;
+  }
+
   uint32_t tick = HAL_GetTick();
 
   //read touch info
   uint8_t tag_read_buf;
   uint32_t touch_read_buf;
   try {
-    eve_drv.phy.DirectRead32(REG_TOUCH_DIRECT_XY, &touch_read_buf);
+    this->driver.phy.DirectRead32(REG_TOUCH_DIRECT_XY, &touch_read_buf);
     bool new_touched = (touch_read_buf & 0x80000000U) == 0;
 
     //read tag and tracker info if we have a touch
     if (new_touched) {
       //get tag and store in touch state
-      eve_drv.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
+      this->driver.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
       this->touch_state.tag = tag_read_buf;
 
       //get tracker tag and compare it against directly reported tag
-      eve_drv.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
+      this->driver.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
       uint16_t tracker_tag = (uint16_t)touch_read_buf;
       if (tracker_tag == this->touch_state.tag) {
         //tag matches: store tracker value
@@ -94,12 +111,13 @@ void GUI_Manager::Update() noexcept {
       this->touch_state.touched = true;
       this->touch_state.initial = true;
       this->touch_state.long_press = false;
+      this->touch_state.initial_tag = tag_read_buf;
       this->touch_state._next_tick_at = tick + GUI_TOUCH_LONG_DELAY; //set up delay until long press
     }
 
     //send touch update to screen if there's anything to report
-    if (this->touch_state.touched || this->touch_state.released) {
-      this->current_screen.HandleTouch(touch_state);
+    if (this->current_screen != NULL && (this->touch_state.touched || this->touch_state.released)) {
+      this->current_screen->HandleTouch(touch_state);
     }
   } catch (const std::exception& exc) {
     DEBUG_PRINTF("* GUI manager touch update failed: %s\n", exc.what());
@@ -108,16 +126,27 @@ void GUI_Manager::Update() noexcept {
   }
 
   //perform screen update and redraw
-  try {
-    this->current_screen.DisplayScreen();
-  } catch (const std::exception& exc) {
-    DEBUG_PRINTF("* GUI manager screen update failed: %s\n", exc.what());
-  } catch (...) {
-    DEBUG_PRINTF("* GUI manager screen update failed with unknown exception\n");
+  if (this->current_screen != NULL) {
+    try {
+      this->current_screen->DisplayScreen();
+    } catch (const std::exception& exc) {
+      DEBUG_PRINTF("* GUI manager screen update failed: %s\n", exc.what());
+    } catch (...) {
+      DEBUG_PRINTF("* GUI manager screen update failed with unknown exception\n");
+    }
   }
 }
 
 
-void GUI_Manager::SetScreen(GUI_Screen& screen) {
-  //TODO
+void GUIManager::SetScreen(GUIScreen* screen) {
+  if (screen == NULL) {
+    throw std::invalid_argument("GUIManager SetScreen given null pointer");
+  }
+
+  //TODO see if we need to do more?
+  this->current_screen = screen;
+
+  if (this->initialised) {
+    this->current_screen->DisplayScreen();
+  }
 }

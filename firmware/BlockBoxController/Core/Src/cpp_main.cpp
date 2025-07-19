@@ -13,10 +13,6 @@
 #include "system.h"
 
 
-static GUI_Screen_Test test_screen;
-static GUI_Manager gui_mgr(test_screen);
-
-
 BlockBoxV2System bbv2_system;
 System& main_system = bbv2_system;
 
@@ -39,11 +35,6 @@ int cpp_main() {
 
     main_system.Init();
 
-    /*HAL_Delay(100);
-
-    gui_mgr.Init();
-    DEBUG_PRINTF("GUI Init complete\n");*/
-
   } catch (const std::exception& err) {
     DEBUG_PRINTF("*** Init failed with exception: %s\n", err.what());
     HAL_Delay(100);
@@ -63,9 +54,6 @@ int cpp_main() {
     //main loop block - on exception, continue to next cycle
     try {
       main_system.LoopTasks();
-      /*if (loop_count % 5 == 0) {
-        gui_mgr.Update();
-      }*/
     } catch (const std::exception& err) {
       DEBUG_PRINTF("* Exception in main loop: %s\n", err.what());
     } catch (...) {

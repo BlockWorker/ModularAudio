@@ -32,10 +32,7 @@
 #include "EVE.h"
 
 
-EVE_Driver eve_drv;
-
-
-EVE_Driver::EVE_Driver() : fault_recovered(E_OK) {
+EVEDriver::EVEDriver() : fault_recovered(E_OK) {
   //allocate default size for display list, to avoid excessive allocations during first display list build
   this->dl_cmd_buffer.reserve(EVE_DLBUFFER_DEFAULT_SIZE);
 }
@@ -53,7 +50,7 @@ EVE_Driver::EVE_Driver() : fault_recovered(E_OK) {
  * @return - E_NOT_OK - if there was a coprocessor fault and the recovery sequence was executed
  * @note - if there is a coprocessor fault the external flash is not reinitialized by EVE_busy()
  */
-uint8_t EVE_Driver::IsBusy() {
+uint8_t EVEDriver::IsBusy() {
   uint16_t space;
   uint8_t result = EVE_IS_BUSY;
 
@@ -81,7 +78,7 @@ uint8_t EVE_Driver::IsBusy() {
 /**
  * @brief Helper function, wait for the coprocessor to complete the FIFO queue.
  */
-void EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
+void EVEDriver::WaitUntilNotBusy(uint32_t timeout) {
   uint8_t busy;
 
   uint32_t start_tick = HAL_GetTick();
@@ -103,7 +100,7 @@ void EVE_Driver::WaitUntilNotBusy(uint32_t timeout) {
  * @return - EVE_FAULT_RECOVERED - if EVE_busy() detected a coprocessor fault
  * @return - E_OK - if EVE_busy() did not detect a coprocessor fault
  */
-uint8_t EVE_Driver::GetAndResetFaultState() noexcept {
+uint8_t EVEDriver::GetAndResetFaultState() noexcept {
   uint8_t ret = E_OK;
 
   if (fault_recovered == EVE_FAULT_RECOVERED) {
@@ -117,14 +114,14 @@ uint8_t EVE_Driver::GetAndResetFaultState() noexcept {
 /**
  * @brief Clears the display-list command buffer, exiting display-list mode.
  */
-void EVE_Driver::ClearDLCmdBuffer() noexcept {
+void EVEDriver::ClearDLCmdBuffer() noexcept {
   this->dl_cmd_buffer.clear();
 }
 
 /**
  * @brief Sends the buffered display-list commands to the display, then clears the buffer.
  */
-void EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
+void EVEDriver::SendBufferedDLCmds(uint32_t timeout) {
   this->SendSavedDLCmds(this->dl_cmd_buffer, timeout);
   this->ClearDLCmdBuffer();
 }
@@ -132,7 +129,7 @@ void EVE_Driver::SendBufferedDLCmds(uint32_t timeout) {
 /**
  * @brief Saves the buffered display-list commands to an external vector, then clears the buffer.
  */
-void EVE_Driver::SaveBufferedDLCmds(std::vector<uint32_t>& target) {
+void EVEDriver::SaveBufferedDLCmds(std::vector<uint32_t>& target) {
   target = this->dl_cmd_buffer;
   this->ClearDLCmdBuffer();
 }
@@ -140,7 +137,7 @@ void EVE_Driver::SaveBufferedDLCmds(std::vector<uint32_t>& target) {
 /**
  * @brief Sends the display-list commands from an external vector to the display.
  */
-void EVE_Driver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout) {
+void EVEDriver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t timeout) {
   if (source.empty()) {
     return;
   }
@@ -151,12 +148,12 @@ void EVE_Driver::SendSavedDLCmds(const std::vector<uint32_t>& source, uint32_t t
 /**
  * @brief Returns the current size of the display-list buffer, in 32-bit words. Useful for remembering positions of variable parameters in a saved list.
  */
-uint32_t EVE_Driver::GetDLBufferSize() noexcept {
+uint32_t EVEDriver::GetDLBufferSize() noexcept {
   return this->dl_cmd_buffer.size();
 }
 
 
-void EVE_Driver::CoprocessorFaultRecover() {
+void EVEDriver::CoprocessorFaultRecover() {
   //use mmap mode for the recovery
   this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
@@ -174,7 +171,7 @@ void EVE_Driver::CoprocessorFaultRecover() {
   HAL_Delay(10); //just to be safe
 }
 
-void EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout) {
+void EVEDriver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, uint32_t timeout) {
   if (p_data == NULL || length % 4 != 0) {
     throw std::invalid_argument("EVE SendCmdBlockTransfer data must not be null and length must be a multiple of 4");
   }
@@ -205,7 +202,7 @@ void EVE_Driver::SendCmdBlockTransfer(const uint8_t* p_data, uint32_t length, ui
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height) {
+void EVEDriver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p_height) {
   const uint32_t cmd[4] = { CMD_GETPROPS, 0, 0, 0 };
 
   //write command and wait for completion
@@ -235,7 +232,7 @@ void EVE_Driver::CmdGetProps(uint32_t *p_pointer, uint32_t *p_width, uint32_t *p
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-uint32_t EVE_Driver::CmdGetPtr() {
+uint32_t EVEDriver::CmdGetPtr() {
   const uint32_t cmd[2] = { CMD_GETPTR, 0 };
 
   //write command and wait for completion
@@ -257,7 +254,7 @@ uint32_t EVE_Driver::CmdGetPtr() {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
+void EVEDriver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
   if (p_data == NULL || len % 4 != 0) {
     throw std::invalid_argument("EVE CmdInflate data must not be null and length must be a multiple of 4");
   }
@@ -274,7 +271,7 @@ void EVE_Driver::CmdInflate(uint32_t ptr, const uint8_t *p_data, uint32_t len) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdInterrupt(uint32_t msec) {
+void EVEDriver::CmdInterrupt(uint32_t msec) {
   uint32_t cmd[2] = { CMD_INTERRUPT, msec };
 
   //write command and wait for completion
@@ -291,7 +288,7 @@ void EVE_Driver::CmdInterrupt(uint32_t msec) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len) {
+void EVEDriver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_data, uint32_t len) {
   uint32_t cmd[3] = { CMD_LOADIMAGE, ptr, options };
 
   //write command and data as block transfer (unless mediafifo is used)
@@ -309,7 +306,7 @@ void EVE_Driver::CmdLoadImage(uint32_t ptr, uint32_t options, const uint8_t *p_d
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
+void EVEDriver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
   uint32_t cmd[3] = { CMD_MEDIAFIFO, ptr, size };
 
   //write command and wait for completion
@@ -322,7 +319,7 @@ void EVE_Driver::CmdMediaFifo(uint32_t ptr, uint32_t size) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num) {
+void EVEDriver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num) {
   uint32_t cmd[4] = { CMD_MEMCPY, dest, src, num };
 
   //write command and wait for completion
@@ -335,7 +332,7 @@ void EVE_Driver::CmdMemcpy(uint32_t dest, uint32_t src, uint32_t num) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-uint32_t EVE_Driver::CmdMemcrc(uint32_t ptr, uint32_t num) {
+uint32_t EVEDriver::CmdMemcrc(uint32_t ptr, uint32_t num) {
   const uint32_t cmd[4] = { CMD_MEMCRC, ptr, num, 0 };
 
   //write command and wait for completion
@@ -356,7 +353,7 @@ uint32_t EVE_Driver::CmdMemcrc(uint32_t ptr, uint32_t num) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t num) {
+void EVEDriver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t num) {
   uint32_t cmd[4] = { CMD_MEMSET, ptr, (uint32_t)value, num };
 
   //write command and wait for completion
@@ -369,7 +366,7 @@ void EVE_Driver::CmdMemset(uint32_t ptr, uint8_t value, uint32_t num) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
+void EVEDriver::CmdMemzero(uint32_t ptr, uint32_t num) {
   uint32_t cmd[3] = { CMD_MEMZERO, ptr, num };
 
   //write command and wait for completion
@@ -384,7 +381,7 @@ void EVE_Driver::CmdMemzero(uint32_t ptr, uint32_t num) {
  * @note - Includes executing the command.
  * @note - Does not wait for completion in order to allow the video to be paused or terminated by REG_PLAY_CONTROL
  */
-void EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len) {
+void EVEDriver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t len) {
   uint32_t cmd[2] = { CMD_PLAYVIDEO, options };
 
   //write command and data as block transfer (unless mediafifo is used)
@@ -402,7 +399,7 @@ void EVE_Driver::CmdPlayVideo(uint32_t options, const uint8_t *p_data, uint32_t 
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdSetRotate(uint32_t rotation) {
+void EVEDriver::CmdSetRotate(uint32_t rotation) {
   uint32_t cmd[2] = { CMD_SETROTATE, rotation };
 
   //write command and wait for completion
@@ -415,7 +412,7 @@ void EVE_Driver::CmdSetRotate(uint32_t rotation) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdSnapshot(uint32_t ptr) {
+void EVEDriver::CmdSnapshot(uint32_t ptr) {
   uint32_t cmd[2] = { CMD_SNAPSHOT, ptr };
 
   //write command and wait for completion
@@ -428,7 +425,7 @@ void EVE_Driver::CmdSnapshot(uint32_t ptr) {
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt) {
+void EVEDriver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt) {
   uint32_t cmd[5] = {
       CMD_SNAPSHOT2, fmt, ptr,
       ((uint32_t)xc0) | (((uint32_t)yc0) << 16U),
@@ -445,7 +442,7 @@ void EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t y
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-/*void EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
+/*void EVEDriver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
   uint32_t cmd[4] = {
       CMD_TRACK,
       ((uint32_t)xc0) | (((uint32_t)yc0) << 16U),
@@ -463,7 +460,7 @@ void EVE_Driver::CmdSnapshot2(uint32_t fmt, uint32_t ptr, int16_t xc0, int16_t y
  * @note - Meant to be called outside display-list building.
  * @note - Includes executing the command and waiting for completion.
  */
-void EVE_Driver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) {
+void EVEDriver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) {
   uint32_t cmd[3] = { CMD_VIDEOFRAME, dest, result_ptr };
 
   //write command and wait for completion
@@ -481,7 +478,7 @@ void EVE_Driver::CmdVideoFrame(uint32_t dest, uint32_t result_ptr) {
  * to the corresponding registers.
  * It is used by Init() and can be used to refresh the register values if needed.
  */
-void EVE_Driver::WriteDisplayParameters() {
+void EVEDriver::WriteDisplayParameters() {
   //perform writes in mmap mode
   this->phy.EnsureMMapMode(MMAP_FUNC_RAM);
 
@@ -531,7 +528,7 @@ void EVE_Driver::WriteDisplayParameters() {
  * @note - EVE_BACKLIGHT_FREQ - configure the backlight frequency, default is not writing it which results in 250Hz.
  * @note - EVE_BACKLIGHT_PWM - configure the backlight pwm, defaults to 0x20 / 25%.
  */
-uint8_t EVE_Driver::Init() {
+uint8_t EVEDriver::Init() {
   uint8_t result = E_NOT_OK;
 
   //power cycle
@@ -597,7 +594,7 @@ uint8_t EVE_Driver::Init() {
   return result;
 }
 
-void EVE_Driver::SetTransferMode(EVE_TransferMode mode) {
+void EVEDriver::SetTransferMode(EVETransferMode mode) {
   if (this->GetTransferMode() == mode) {
     //already in desired mode
     return;
@@ -616,7 +613,7 @@ void EVE_Driver::SetTransferMode(EVE_TransferMode mode) {
   this->phy.SetTransferMode(mode);
 }
 
-EVE_TransferMode EVE_Driver::GetTransferMode() noexcept {
+EVETransferMode EVEDriver::GetTransferMode() noexcept {
   return this->phy.GetTransferMode();
 }
 
@@ -627,7 +624,7 @@ EVE_TransferMode EVE_Driver::GetTransferMode() noexcept {
  * @return Returns E_OK in case of success, EVE_FAIL_REGID_TIMEOUT if the
  * value of 0x7c could not be read.
  */
-uint8_t EVE_Driver::WaitRegID() {
+uint8_t EVEDriver::WaitRegID() {
   uint8_t result = EVE_FAIL_REGID_TIMEOUT;
   uint8_t regid = 0U;
 
@@ -652,7 +649,7 @@ uint8_t EVE_Driver::WaitRegID() {
  * @return Returns E_OK in case of success, EVE_FAIL_RESET_TIMEOUT if either the
  * audio, touch or coprocessor unit indicate a fault by not returning from reset.
  */
-uint8_t EVE_Driver::WaitReset() {
+uint8_t EVEDriver::WaitReset() {
   uint8_t result = EVE_FAIL_RESET_TIMEOUT;
   uint8_t reset = 0U;
 
@@ -679,7 +676,7 @@ uint8_t EVE_Driver::WaitReset() {
  * @brief Generic function for display-list and coprocessor commands with no arguments.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdDL(uint32_t command) {
+void EVEDriver::CmdDL(uint32_t command) {
   this->dl_cmd_buffer.push_back(command);
 }
 
@@ -688,7 +685,7 @@ void EVE_Driver::CmdDL(uint32_t command) {
  * @brief Appends commands from RAM_G to the display list.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdAppend(uint32_t ptr, uint32_t num) {
+void EVEDriver::CmdAppend(uint32_t ptr, uint32_t num) {
   this->dl_cmd_buffer.push_back(CMD_APPEND);
   this->dl_cmd_buffer.push_back(ptr);
   this->dl_cmd_buffer.push_back(num);
@@ -698,7 +695,7 @@ void EVE_Driver::CmdAppend(uint32_t ptr, uint32_t num) {
  * @brief Set the background color.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdBGColor(uint32_t color) {
+void EVEDriver::CmdBGColor(uint32_t color) {
   this->dl_cmd_buffer.push_back(CMD_BGCOLOR);
   this->dl_cmd_buffer.push_back(color & 0xFFFFFFU);
 }
@@ -707,7 +704,7 @@ void EVE_Driver::CmdBGColor(uint32_t color) {
  * @brief Draw a button with a label.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdButton(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
+void EVEDriver::CmdButton(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
   if (p_text == NULL) {
     return;
   }
@@ -724,7 +721,7 @@ void EVE_Driver::CmdButton(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt,
  * @note Appends to display-list command buffer
  * @note Pauses command execution until calibration is done
  */
-void EVE_Driver::CmdCalibrate() {
+void EVEDriver::CmdCalibrate() {
   this->dl_cmd_buffer.push_back(CMD_CALIBRATE);
   this->dl_cmd_buffer.push_back(0U);
 }
@@ -733,7 +730,7 @@ void EVE_Driver::CmdCalibrate() {
  * @brief Draw an analog clock.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdClock(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t hours, uint16_t mins, uint16_t secs, uint16_t msecs) {
+void EVEDriver::CmdClock(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t hours, uint16_t mins, uint16_t secs, uint16_t msecs) {
   this->dl_cmd_buffer.push_back(CMD_CLOCK);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)rad) | (((uint32_t)options) << 16U));
@@ -745,7 +742,7 @@ void EVE_Driver::CmdClock(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t optio
  * @brief Draw a rotary dial control.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdDial(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t val) {
+void EVEDriver::CmdDial(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t val) {
   this->dl_cmd_buffer.push_back(CMD_DIAL);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)rad) | (((uint32_t)options) << 16U));
@@ -756,7 +753,7 @@ void EVE_Driver::CmdDial(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t option
  * @brief Set the foreground color.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdFGColor(uint32_t color) {
+void EVEDriver::CmdFGColor(uint32_t color) {
   this->dl_cmd_buffer.push_back(CMD_FGCOLOR);
   this->dl_cmd_buffer.push_back(color & 0xFFFFFFU);
 }
@@ -765,7 +762,7 @@ void EVE_Driver::CmdFGColor(uint32_t color) {
  * @brief Draw a gauge.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdGauge(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range) {
+void EVEDriver::CmdGauge(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range) {
   this->dl_cmd_buffer.push_back(CMD_GAUGE);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)rad) | (((uint32_t)options) << 16U));
@@ -773,7 +770,7 @@ void EVE_Driver::CmdGauge(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t optio
   this->dl_cmd_buffer.push_back(((uint32_t)val) | (((uint32_t)range) << 16U));
 }
 
-/*void EVE_Driver::CmdGetMatrix(int32_t *p_a, int32_t *p_b, int32_t *p_c, int32_t *p_d, int32_t *p_e, int32_t *p_f) {
+/*void EVEDriver::CmdGetMatrix(int32_t *p_a, int32_t *p_b, int32_t *p_c, int32_t *p_d, int32_t *p_e, int32_t *p_f) {
 
 }*/
 
@@ -781,7 +778,7 @@ void EVE_Driver::CmdGauge(int16_t xc0, int16_t yc0, uint16_t rad, uint16_t optio
  * @brief Set up the highlight color used in 3D effects for CMD_BUTTON and CMD_KEYS.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdGradColor(uint32_t color) {
+void EVEDriver::CmdGradColor(uint32_t color) {
   this->dl_cmd_buffer.push_back(CMD_GRADCOLOR);
   this->dl_cmd_buffer.push_back(color & 0xFFFFFFU);
 }
@@ -790,7 +787,7 @@ void EVE_Driver::CmdGradColor(uint32_t color) {
  * @brief Draw a smooth color gradient.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdGradient(int16_t xc0, int16_t yc0, uint32_t rgb0, int16_t xc1, int16_t yc1, uint32_t rgb1) {
+void EVEDriver::CmdGradient(int16_t xc0, int16_t yc0, uint32_t rgb0, int16_t xc1, int16_t yc1, uint32_t rgb1) {
   this->dl_cmd_buffer.push_back(CMD_GRADIENT);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(rgb0 & 0xFFFFFFU);
@@ -804,7 +801,7 @@ void EVE_Driver::CmdGradient(int16_t xc0, int16_t yc0, uint32_t rgb0, int16_t xc
  * @note - The tag value of each button is set to the ASCII value of its label.
  * @note - Does not work with UTF-8.
  */
-void EVE_Driver::CmdKeys(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
+void EVEDriver::CmdKeys(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text) {
   if (p_text == NULL) {
     return;
   }
@@ -820,7 +817,7 @@ void EVE_Driver::CmdKeys(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, u
  * @brief Draw a number.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdNumber(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, int32_t number) {
+void EVEDriver::CmdNumber(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, int32_t number) {
   this->dl_cmd_buffer.push_back(CMD_NUMBER);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)font) | (((uint32_t)options) << 16U));
@@ -831,7 +828,7 @@ void EVE_Driver::CmdNumber(int16_t xc0, int16_t yc0, uint16_t font, uint16_t opt
  * @brief Draw a progress bar.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdProgress(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t range) {
+void EVEDriver::CmdProgress(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t range) {
   this->dl_cmd_buffer.push_back(CMD_PROGRESS);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -844,7 +841,7 @@ void EVE_Driver::CmdProgress(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hg
  * @note Appends to display-list command buffer
  * @note - generates display list commands, so it needs to be put in a display list
  */
-void EVE_Driver::CmdRomFont(uint32_t font, uint32_t romslot) {
+void EVEDriver::CmdRomFont(uint32_t font, uint32_t romslot) {
   this->dl_cmd_buffer.push_back(CMD_ROMFONT);
   this->dl_cmd_buffer.push_back(font);
   this->dl_cmd_buffer.push_back(romslot);
@@ -854,7 +851,7 @@ void EVE_Driver::CmdRomFont(uint32_t font, uint32_t romslot) {
  * @brief Apply a rotation to the current matrix.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdRotate(uint32_t angle) {
+void EVEDriver::CmdRotate(uint32_t angle) {
   this->dl_cmd_buffer.push_back(CMD_ROTATE);
   this->dl_cmd_buffer.push_back(angle & 0xFFFFU);
 }
@@ -863,7 +860,7 @@ void EVE_Driver::CmdRotate(uint32_t angle) {
  * @brief Apply a scale to the current matrix.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdScale(int32_t scx, int32_t scy) {
+void EVEDriver::CmdScale(int32_t scx, int32_t scy) {
   this->dl_cmd_buffer.push_back(CMD_SCALE);
   this->dl_cmd_buffer.push_back(scx);
   this->dl_cmd_buffer.push_back(scy);
@@ -873,7 +870,7 @@ void EVE_Driver::CmdScale(int32_t scx, int32_t scy) {
  * @brief Draw a scroll bar.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdScrollBar(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t size, uint16_t range) {
+void EVEDriver::CmdScrollBar(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t size, uint16_t range) {
   this->dl_cmd_buffer.push_back(CMD_SCROLLBAR);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -885,7 +882,7 @@ void EVE_Driver::CmdScrollBar(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t h
  * @brief Set the base for number output.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSetBase(uint32_t base) {
+void EVEDriver::CmdSetBase(uint32_t base) {
   this->dl_cmd_buffer.push_back(CMD_SETBASE);
   this->dl_cmd_buffer.push_back(base);
 }
@@ -894,7 +891,7 @@ void EVE_Driver::CmdSetBase(uint32_t base) {
  * @brief Generate the corresponding display list commands for given bitmap information.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSetBitmap(uint32_t addr, uint16_t fmt, uint16_t width, uint16_t height) {
+void EVEDriver::CmdSetBitmap(uint32_t addr, uint16_t fmt, uint16_t width, uint16_t height) {
   this->dl_cmd_buffer.push_back(CMD_SETBITMAP);
   this->dl_cmd_buffer.push_back(addr);
   this->dl_cmd_buffer.push_back(((uint32_t)fmt) | (((uint32_t)width) << 16U));
@@ -906,7 +903,7 @@ void EVE_Driver::CmdSetBitmap(uint32_t addr, uint16_t fmt, uint16_t width, uint1
  * @note Appends to display-list command buffer
  * @note - does not set up the bitmap parameters of the font
  */
-void EVE_Driver::CmdSetFont(uint32_t font, uint32_t ptr) {
+void EVEDriver::CmdSetFont(uint32_t font, uint32_t ptr) {
   this->dl_cmd_buffer.push_back(CMD_SETFONT);
   this->dl_cmd_buffer.push_back(font);
   this->dl_cmd_buffer.push_back(ptr);
@@ -917,7 +914,7 @@ void EVE_Driver::CmdSetFont(uint32_t font, uint32_t ptr) {
  * @note Appends to display-list command buffer
  * @note - generates display list commands, so it needs to be put in a display list
  */
-void EVE_Driver::CmdSetFont2(uint32_t font, uint32_t ptr, uint32_t firstchar) {
+void EVEDriver::CmdSetFont2(uint32_t font, uint32_t ptr, uint32_t firstchar) {
   this->dl_cmd_buffer.push_back(CMD_SETFONT2);
   this->dl_cmd_buffer.push_back(font);
   this->dl_cmd_buffer.push_back(ptr);
@@ -928,7 +925,7 @@ void EVE_Driver::CmdSetFont2(uint32_t font, uint32_t ptr, uint32_t firstchar) {
  * @brief Set the scratch bitmap for widget use.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSetScratch(uint32_t handle) {
+void EVEDriver::CmdSetScratch(uint32_t handle) {
   this->dl_cmd_buffer.push_back(CMD_SETSCRATCH);
   this->dl_cmd_buffer.push_back(handle);
 }
@@ -937,7 +934,7 @@ void EVE_Driver::CmdSetScratch(uint32_t handle) {
  * @brief Start a continuous sketch update.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSketch(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint32_t ptr, uint16_t format) {
+void EVEDriver::CmdSketch(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint32_t ptr, uint16_t format) {
   this->dl_cmd_buffer.push_back(CMD_SKETCH);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -949,7 +946,7 @@ void EVE_Driver::CmdSketch(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt,
  * @brief Draw a slider.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSlider(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t range) {
+void EVEDriver::CmdSlider(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t options, uint16_t val, uint16_t range) {
   this->dl_cmd_buffer.push_back(CMD_SLIDER);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -961,7 +958,7 @@ void EVE_Driver::CmdSlider(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt,
  * @brief Start an animated spinner.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t scale) {
+void EVEDriver::CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t scale) {
   this->dl_cmd_buffer.push_back(CMD_SLIDER);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)style) | (((uint32_t)scale) << 16U));
@@ -971,7 +968,7 @@ void EVE_Driver::CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t s
  * @brief Draw a text string.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, const char *p_text) {
+void EVEDriver::CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t options, const char *p_text) {
   if (p_text == NULL) {
     return;
   }
@@ -986,7 +983,7 @@ void EVE_Driver::CmdText(int16_t xc0, int16_t yc0, uint16_t font, uint16_t optio
  * @brief Draw a toggle switch with labels.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font, uint16_t options, uint16_t state, const char *p_text) {
+void EVEDriver::CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font, uint16_t options, uint16_t state, const char *p_text) {
   if (p_text == NULL) {
     return;
   }
@@ -1002,7 +999,7 @@ void EVE_Driver::CmdToggle(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t font
  * @brief Set up touch tracking for a graphics object.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
+void EVEDriver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag) {
   this->dl_cmd_buffer.push_back(CMD_TRACK);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)wid) | (((uint32_t)hgt) << 16U));
@@ -1013,7 +1010,7 @@ void EVE_Driver::CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, 
  * @brief Apply a translation to the current matrix.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::CmdTranslate(int32_t tr_x, int32_t tr_y) {
+void EVEDriver::CmdTranslate(int32_t tr_x, int32_t tr_y) {
   this->dl_cmd_buffer.push_back(CMD_TRANSLATE);
   this->dl_cmd_buffer.push_back(tr_x);
   this->dl_cmd_buffer.push_back(tr_y);
@@ -1024,7 +1021,7 @@ void EVE_Driver::CmdTranslate(int32_t tr_x, int32_t tr_y) {
  * @brief Set the current color red, green and blue.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::ColorRGB(uint32_t color) {
+void EVEDriver::ColorRGB(uint32_t color) {
   this->CmdDL(DL_COLOR_RGB | (color & 0xFFFFFFU));
 }
 
@@ -1032,13 +1029,13 @@ void EVE_Driver::ColorRGB(uint32_t color) {
  * @brief Set the current color alpha.
  * @note Appends to display-list command buffer
  */
-void EVE_Driver::ColorA(uint8_t alpha) {
+void EVEDriver::ColorA(uint8_t alpha) {
   this->CmdDL(DL_COLOR_A | ((uint32_t)alpha));
 }
 
 
 //write a string to the command buffer, in context of a command
-void EVE_Driver::WriteString(const char *p_text) {
+void EVEDriver::WriteString(const char *p_text) {
   const uint8_t* p_bytes = (const uint8_t*)p_text;
 
   if (p_bytes == NULL) {
@@ -1070,7 +1067,7 @@ void EVE_Driver::WriteString(const char *p_text) {
     special purpose functions
 ##################################################################### */
 
-/*HAL_StatusTypeDef EVE_Driver::CalibrateManual(uint16_t width, uint16_t height) {
+/*HAL_StatusTypeDef EVEDriver::CalibrateManual(uint16_t width, uint16_t height) {
 
 }*/
 
@@ -1079,14 +1076,14 @@ void EVE_Driver::WriteString(const char *p_text) {
     meta-commands (commonly used sequences of display-list entries)
 ##################################################################### */
 
-void EVE_Driver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color) {
+void EVEDriver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color) {
   this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
   this->CmdDL(CLEAR(color, stencil, tag));
 }
 
-void EVE_Driver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+void EVEDriver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
   this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(SCISSOR_XY(x, y));
@@ -1095,14 +1092,14 @@ void EVE_Driver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint
   this->CmdDL(CLEAR(color, stencil, tag));
 }
 
-void EVE_Driver::CmdPoint(int16_t x0, int16_t y0, uint16_t size) {
+void EVEDriver::CmdPoint(int16_t x0, int16_t y0, uint16_t size) {
   this->CmdDL(DL_BEGIN | EVE_POINTS);
   this->CmdDL(POINT_SIZE(16 * size));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
   this->CmdDL(DL_END);
 }
 
-void EVE_Driver::CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width) {
+void EVEDriver::CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width) {
   this->CmdDL(DL_BEGIN | EVE_LINES);
   this->CmdDL(LINE_WIDTH(16 * width));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
@@ -1110,7 +1107,7 @@ void EVE_Driver::CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_
   this->CmdDL(DL_END);
 }
 
-void EVE_Driver::CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner) {
+void EVEDriver::CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner) {
   this->CmdDL(DL_BEGIN | EVE_RECTS);
   this->CmdDL(LINE_WIDTH(16 * corner));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
@@ -1118,20 +1115,20 @@ void EVE_Driver::CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_
   this->CmdDL(DL_END);
 }
 
-void EVE_Driver::CmdEndDisplay() {
+void EVEDriver::CmdEndDisplay() {
   this->CmdDL(DL_DISPLAY);
   this->CmdDL(CMD_SWAP);
 }
 
-void EVE_Driver::CmdTag(uint8_t tag) {
+void EVEDriver::CmdTag(uint8_t tag) {
   this->CmdDL(TAG(tag));
 }
 
-void EVE_Driver::CmdTagMask(bool enable_tag) {
+void EVEDriver::CmdTagMask(bool enable_tag) {
   this->CmdDL(TAG_MASK(enable_tag));
 }
 
-void EVE_Driver::CmdScissor(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+void EVEDriver::CmdScissor(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
   this->CmdDL(SCISSOR_XY(x, y));
   this->CmdDL(SCISSOR_SIZE(w, h));
 }

@@ -10,7 +10,6 @@
 
 
 #include "EVE.h"
-#include "gui_screens.h"
 
 
 //time of touch long-press, in milliseconds
@@ -21,20 +20,43 @@
 
 #ifdef __cplusplus
 
-class GUI_Manager {
+
+typedef struct {
+  bool touched;
+  bool initial;
+  bool long_press;
+  bool long_press_tick;
+  bool released;
+
+  uint8_t initial_tag;
+  uint8_t tag;
+  uint16_t tracker_value;
+
+  uint32_t _next_tick_at;
+} GUITouchState;
+
+
+class GUIScreen;
+
+
+class GUIManager {
 public:
-  GUI_Manager(GUI_Screen& init_screen) noexcept : current_screen(init_screen) {}
+  EVEDriver& driver;
+
+  GUIManager(EVEDriver& driver) noexcept;
 
   void Init();
   void Update() noexcept;
 
-  void SetScreen(GUI_Screen& screen);
+  void SetScreen(GUIScreen* screen);
 
 private:
-  GUI_Screen& current_screen;
-  GUI_TouchState touch_state;
+  bool initialised;
+  GUIScreen* current_screen;
+  GUITouchState touch_state;
 
 };
+
 
 #endif
 

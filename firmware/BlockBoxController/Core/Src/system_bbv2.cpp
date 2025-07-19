@@ -202,7 +202,11 @@ void BlockBoxV2System::Init() {
   //this->dap_if.ReadRegister8Async(0x01, std::bind(_AsyncI2CTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
   //this->btrx_if.ReadRegister8Async(0xFE, std::bind(_AsyncUARTTest, std::placeholders::_1, 0, std::placeholders::_2, std::placeholders::_3));
 
-  this->dap_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
+  this->test_screen.Init(this);
+  this->gui_mgr.SetScreen(&this->test_screen);
+  this->gui_mgr.Init();
+
+  /*this->dap_if.RegisterCallback([&](ModuleInterface&, uint32_t event) {
     switch (event) {
       case MODIF_DAP_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("DAP status update: 0x%02X\n", this->dap_if.GetStatus().value);
@@ -323,7 +327,7 @@ void BlockBoxV2System::Init() {
         DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       });
     }
-  });
+  });*/
 }
 
 
@@ -333,6 +337,7 @@ void BlockBoxV2System::LoopTasks() {
   this->dac_if.LoopTasks();
   this->amp_if.LoopTasks();
   this->btrx_if.LoopTasks();
+  this->gui_mgr.Update();
 }
 
 
@@ -341,9 +346,9 @@ BlockBoxV2System::BlockBoxV2System() :
     dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN),
     dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
-    btrx_if(&BBV2_BTRX_UART_HANDLE) {
-
-}
+    btrx_if(&BBV2_BTRX_UART_HANDLE),
+    gui_mgr(this->eve_drv),
+    test_screen(this->gui_mgr) {}
 
 
 /***************************************************/

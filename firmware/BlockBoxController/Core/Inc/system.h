@@ -18,6 +18,7 @@
 #include "hifidac_interface.h"
 #include "power_amp_interface.h"
 #include "bluetooth_receiver_interface.h"
+#include "gui_screens.h"
 
 extern "C" {
 #endif
@@ -43,6 +44,10 @@ public:
   PowerAmpInterface amp_if;
 
   BluetoothReceiverInterface btrx_if;
+
+  EVEDriver eve_drv;
+  GUIManager gui_mgr;
+  GUIScreenTest test_screen;
 
   void Init() override;
   void LoopTasks() override;

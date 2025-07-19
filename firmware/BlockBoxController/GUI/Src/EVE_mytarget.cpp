@@ -207,10 +207,7 @@ static const OSPI_MemoryMappedTypeDef MMAP_CFG = {
 };
 
 
-//EVE_TargetPHY eve_phy;
-
-
-void EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param) {
+void EVETargetPHY::SendHostCommand(uint8_t command, uint8_t param) {
   //host commands are only supported in single-spi mode
   if (this->transfer_mode != TRANSFERMODE_SINGLE) {
     throw std::logic_error("EVE SendHostCommand only supported in single-spi mode");
@@ -242,7 +239,7 @@ void EVE_TargetPHY::SendHostCommand(uint8_t command, uint8_t param) {
 
 
 //directly read from the display; ends any ongoing memory mapping
-void EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout) {
+void EVETargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t size, uint32_t timeout) {
   if (buf == NULL) {
     throw std::invalid_argument("EVE DirectReadBuffer buf pointer must not be null");
   }
@@ -273,21 +270,21 @@ void EVE_TargetPHY::DirectReadBuffer(uint32_t address, uint8_t* buf, uint32_t si
   ThrowOnHALErrorMsg(HAL_OSPI_Receive(&hospi1, buf, timeout), "EVE DirectReadBuffer read");
 }
 
-void EVE_TargetPHY::DirectRead8(uint32_t address, uint8_t* value_ptr) {
+void EVETargetPHY::DirectRead8(uint32_t address, uint8_t* value_ptr) {
   this->DirectReadBuffer(address, value_ptr, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-void EVE_TargetPHY::DirectRead16(uint32_t address, uint16_t* value_ptr) {
+void EVETargetPHY::DirectRead16(uint32_t address, uint16_t* value_ptr) {
   this->DirectReadBuffer(address, (uint8_t*)value_ptr, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-void EVE_TargetPHY::DirectRead32(uint32_t address, uint32_t* value_ptr) {
+void EVETargetPHY::DirectRead32(uint32_t address, uint32_t* value_ptr) {
   this->DirectReadBuffer(address, (uint8_t*)value_ptr, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
 
 //directly write to the display; ends any ongoing memory mapping
-void EVE_TargetPHY::DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout) {
+void EVETargetPHY::DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint32_t size, uint32_t timeout) {
   if (buf == NULL) {
     throw std::invalid_argument("EVE DirectWriteBuffer buf pointer must not be null");
   }
@@ -318,21 +315,21 @@ void EVE_TargetPHY::DirectWriteBuffer(uint32_t address, const uint8_t* buf, uint
   ThrowOnHALErrorMsg(HAL_OSPI_Transmit(&hospi1, (uint8_t*)buf, timeout), "EVE DirectWriteBuffer write");
 }
 
-void EVE_TargetPHY::DirectWrite8(uint32_t address, uint8_t value) {
+void EVETargetPHY::DirectWrite8(uint32_t address, uint8_t value) {
   this->DirectWriteBuffer(address, &value, 1, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-void EVE_TargetPHY::DirectWrite16(uint32_t address, uint16_t value) {
+void EVETargetPHY::DirectWrite16(uint32_t address, uint16_t value) {
    this->DirectWriteBuffer(address, (uint8_t*)&value, 2, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
-void EVE_TargetPHY::DirectWrite32(uint32_t address, uint32_t value) {
+void EVETargetPHY::DirectWrite32(uint32_t address, uint32_t value) {
    this->DirectWriteBuffer(address, (uint8_t*)&value, 4, EVE_PHY_SMALL_TRANSFER_TIMEOUT);
 }
 
 
 
-void EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
+void EVETargetPHY::EnsureMMapMode(EVEMMapMode mode) {
   //reset current state to unknown if OSPI peripheral is not in mmapped state anymore
   if (HAL_OSPI_GetState(&hospi1) != HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     this->mmap_mode = MMAP_UNKNOWN;
@@ -381,7 +378,7 @@ void EVE_TargetPHY::EnsureMMapMode(EVE_MMapMode mode) {
   }
 }
 
-void EVE_TargetPHY::EndMMap() {
+void EVETargetPHY::EndMMap() {
   if (HAL_OSPI_GetState(&hospi1) == HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     //peripheral busy: abort current mmap
     ThrowOnHALErrorMsg(HAL_OSPI_Abort(&hospi1), "EVE EndMMap abort");
@@ -389,7 +386,7 @@ void EVE_TargetPHY::EndMMap() {
   this->mmap_mode = MMAP_UNKNOWN;
 }
 
-void EVE_TargetPHY::SetTransferMode(EVE_TransferMode mode) {
+void EVETargetPHY::SetTransferMode(EVETransferMode mode) {
   if (this->transfer_mode == mode) {
     //already in desired mode
     return;
@@ -401,7 +398,7 @@ void EVE_TargetPHY::SetTransferMode(EVE_TransferMode mode) {
   }
 
   //save currently active mmap mode, stop active mmap if there is one
-  EVE_MMapMode active_mmap_mode = this->GetMMapMode();
+  EVEMMapMode active_mmap_mode = this->GetMMapMode();
   this->EndMMap();
 
   this->transfer_mode = mode;
@@ -412,7 +409,7 @@ void EVE_TargetPHY::SetTransferMode(EVE_TransferMode mode) {
   }
 }
 
-EVE_MMapMode EVE_TargetPHY::GetMMapMode() noexcept {
+EVEMMapMode EVETargetPHY::GetMMapMode() noexcept {
   //reset current state to unknown if OSPI peripheral is not in mmapped state anymore
   if (HAL_OSPI_GetState(&hospi1) != HAL_OSPI_STATE_BUSY_MEM_MAPPED) {
     this->mmap_mode = MMAP_UNKNOWN;
@@ -420,12 +417,12 @@ EVE_MMapMode EVE_TargetPHY::GetMMapMode() noexcept {
   return this->mmap_mode;
 }
 
-EVE_TransferMode EVE_TargetPHY::GetTransferMode() const noexcept {
+EVETransferMode EVETargetPHY::GetTransferMode() const noexcept {
   return this->transfer_mode;
 }
 
 //configure OSPI for main ram mmap mode (direct addressing, needs software-side handling of "read" addresses vs. "write" addresses)
-void EVE_TargetPHY::configure_main_mmap() {
+void EVETargetPHY::configure_main_mmap() {
   const OSPI_RegularCmdTypeDef* read_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_MAIN_QUAD_READ : &CMD_MAIN_SINGLE_READ;
   const OSPI_RegularCmdTypeDef* write_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_MAIN_QUAD_WRITE : &CMD_MAIN_SINGLE_WRITE;
 
@@ -442,7 +439,7 @@ void EVE_TargetPHY::configure_main_mmap() {
 }
 
 //configure OSPI for func ram mmap mode (addressing with upper 6 bits fixed to 0x30, automatically handles read/write bit setting)
-void EVE_TargetPHY::configure_func_mmap() {
+void EVETargetPHY::configure_func_mmap() {
   const OSPI_RegularCmdTypeDef* read_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_FUNC_QUAD_READ : &CMD_FUNC_SINGLE_READ;
   const OSPI_RegularCmdTypeDef* write_cfg = (this->transfer_mode == TRANSFERMODE_QUAD) ? &CMD_FUNC_QUAD_WRITE : &CMD_FUNC_SINGLE_WRITE;
 

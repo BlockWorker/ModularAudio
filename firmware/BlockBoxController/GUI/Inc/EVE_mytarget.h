@@ -143,21 +143,21 @@ typedef enum {
   MMAP_UNKNOWN = 0,
   MMAP_MAIN_RAM = 1,
   MMAP_FUNC_RAM = 2
-} EVE_MMapMode;
+} EVEMMapMode;
 
 typedef enum {
   TRANSFERMODE_SINGLE = 0,
   TRANSFERMODE_QUAD = 1
-} EVE_TransferMode;
+} EVETransferMode;
 
 
 #ifdef __cplusplus
 }
 
-class EVE_Driver;
+class EVEDriver;
 
-class EVE_TargetPHY {
-  friend EVE_Driver;
+class EVETargetPHY {
+  friend EVEDriver;
 public:
   //send a host command to to the display; ends any ongoing memory mapping
   void SendHostCommand(uint8_t command, uint8_t param);
@@ -174,25 +174,23 @@ public:
   void DirectWrite16(uint32_t address, uint16_t value);
   void DirectWrite32(uint32_t address, uint32_t value);
 
-  void EnsureMMapMode(EVE_MMapMode mode);
+  void EnsureMMapMode(EVEMMapMode mode);
   void EndMMap();
 
-  EVE_MMapMode GetMMapMode() noexcept;
-  EVE_TransferMode GetTransferMode() const noexcept;
+  EVEMMapMode GetMMapMode() noexcept;
+  EVETransferMode GetTransferMode() const noexcept;
 
-  EVE_TargetPHY() noexcept : mmap_mode(MMAP_UNKNOWN), transfer_mode(TRANSFERMODE_SINGLE) {}
+  EVETargetPHY() noexcept : mmap_mode(MMAP_UNKNOWN), transfer_mode(TRANSFERMODE_SINGLE) {}
 
 private:
-  EVE_MMapMode mmap_mode;
-  EVE_TransferMode transfer_mode;
+  EVEMMapMode mmap_mode;
+  EVETransferMode transfer_mode;
 
-  void SetTransferMode(EVE_TransferMode mode);
+  void SetTransferMode(EVETransferMode mode);
 
   void configure_main_mmap();
   void configure_func_mmap();
 };
-
-//extern EVE_TargetPHY eve_phy;
 
 #endif
 

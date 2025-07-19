@@ -214,7 +214,9 @@ void I2CHardwareInterface::HandleInterrupt(ModuleInterfaceInterruptType type) no
 
 
 void I2CHardwareInterface::Init() {
-  this->registered_interfaces.clear();
+  //shouldn't be clearing interfaces, since they're constructed by now and won't automatically re-register if cleared
+  //this->registered_interfaces.clear();
+
   this->active_async_interface = NULL;
   this->Reset();
 }

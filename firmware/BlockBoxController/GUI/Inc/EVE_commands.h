@@ -132,11 +132,11 @@ extern "C"
 #ifdef __cplusplus
 }
 
-class EVE_Driver {
+class EVEDriver {
 public:
-  EVE_TargetPHY phy;
+  EVETargetPHY phy;
 
-  EVE_Driver();
+  EVEDriver();
 
 /* ##################################################################
     helper functions
@@ -180,8 +180,8 @@ public:
 
   void WriteDisplayParameters();
   uint8_t Init();
-  void SetTransferMode(EVE_TransferMode mode);
-  EVE_TransferMode GetTransferMode() noexcept;
+  void SetTransferMode(EVETransferMode mode);
+  EVETransferMode GetTransferMode() noexcept;
 
 /* ##################################################################
     functions for display lists
@@ -254,8 +254,6 @@ private:
   void WriteString(const char *p_text);
 
 };
-
-extern EVE_Driver eve_drv;
 
 #endif /* __cplusplus */
 
