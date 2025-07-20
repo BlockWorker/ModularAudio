@@ -16,11 +16,6 @@ GUIManager::GUIManager(EVEDriver& driver) noexcept :
 void GUIManager::Init() {
   this->initialised = false;
 
-  //reset SPI speed to 10MHz if not already set
-  if (this->driver.phy.GetTransferSpeed() != TRANSFERSPEED_10M) {
-    this->driver.phy.SetTransferSpeed(TRANSFERSPEED_10M);
-  }
-
   //start by initialising the display
   uint8_t init_result = this->driver.Init();
   if (init_result != E_OK) {

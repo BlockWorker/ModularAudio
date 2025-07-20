@@ -190,6 +190,7 @@ public:
   void CmdDL(uint32_t command);
 
   void CmdAppend(uint32_t ptr, uint32_t num);
+  void CmdBeginDraw(uint32_t primitive);
   void CmdBGColor(uint32_t color);
   void CmdButton(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t font, uint16_t options, const char *p_text);
   void CmdCalibrate();
@@ -220,8 +221,8 @@ public:
   void CmdTrack(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, uint16_t tag);
   void CmdTranslate(int32_t tr_x, int32_t tr_y);
 
-  void ColorRGB(uint32_t color);
-  void ColorA(uint8_t alpha);
+  void CmdColorRGB(uint32_t color);
+  void CmdColorA(uint8_t alpha);
 
 /* ##################################################################
     special purpose functions

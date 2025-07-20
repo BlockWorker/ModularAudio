@@ -12,20 +12,23 @@
 #include "gui_screen.h"
 
 
-class BlockBoxV2System;
+class BlockBoxV2GUIManager;
 
 
 //common screen base for BlockBox v2, with functions for the global status bar
 class BlockBoxV2Screen : public GUIScreen {
 public:
-  BlockBoxV2Screen(GUIManager& manager, uint32_t display_timeout) : GUIScreen(manager, display_timeout), system(NULL) {}
+  BlockBoxV2GUIManager& bbv2_manager;
 
-  virtual void Init(BlockBoxV2System* system);
+  BlockBoxV2Screen(BlockBoxV2GUIManager& manager, uint32_t display_timeout);
+
+  virtual void Init();
 
 protected:
-  BlockBoxV2System* system;
+  const char* status_text_override; //if set to something non-null, overrides the usual input-based status bar text
 
   virtual void BuildScreenContent() override;
+
 };
 
 

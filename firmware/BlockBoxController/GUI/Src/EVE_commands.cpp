@@ -531,6 +531,11 @@ void EVEDriver::WriteDisplayParameters() {
 uint8_t EVEDriver::Init() {
   uint8_t result = E_NOT_OK;
 
+  //reset SPI speed to 10MHz if not already set
+  if (this->phy.GetTransferSpeed() != TRANSFERSPEED_10M) {
+    this->phy.SetTransferSpeed(TRANSFERSPEED_10M);
+  }
+
   //power cycle
   HAL_GPIO_WritePin(LCD_PD_N_GPIO_Port, LCD_PD_N_Pin, GPIO_PIN_RESET);
   HAL_Delay(6); //minimum time for power-down is 5ms
@@ -689,6 +694,14 @@ void EVEDriver::CmdAppend(uint32_t ptr, uint32_t num) {
   this->dl_cmd_buffer.push_back(CMD_APPEND);
   this->dl_cmd_buffer.push_back(ptr);
   this->dl_cmd_buffer.push_back(num);
+}
+
+/**
+ * @brief Starts drawing the given primitives using following vertex commands, until the next DL_END command.
+ * @note Appends to display-list command buffer
+ */
+void EVEDriver::CmdBeginDraw(uint32_t primitive) {
+  this->CmdDL(DL_BEGIN | (primitive & 0xF));
 }
 
 /**
@@ -959,7 +972,7 @@ void EVEDriver::CmdSlider(int16_t xc0, int16_t yc0, uint16_t wid, uint16_t hgt, 
  * @note Appends to display-list command buffer
  */
 void EVEDriver::CmdSpinner(int16_t xc0, int16_t yc0, uint16_t style, uint16_t scale) {
-  this->dl_cmd_buffer.push_back(CMD_SLIDER);
+  this->dl_cmd_buffer.push_back(CMD_SPINNER);
   this->dl_cmd_buffer.push_back(((uint32_t)xc0) | (((uint32_t)yc0) << 16U));
   this->dl_cmd_buffer.push_back(((uint32_t)style) | (((uint32_t)scale) << 16U));
 }
@@ -1021,7 +1034,7 @@ void EVEDriver::CmdTranslate(int32_t tr_x, int32_t tr_y) {
  * @brief Set the current color red, green and blue.
  * @note Appends to display-list command buffer
  */
-void EVEDriver::ColorRGB(uint32_t color) {
+void EVEDriver::CmdColorRGB(uint32_t color) {
   this->CmdDL(DL_COLOR_RGB | (color & 0xFFFFFFU));
 }
 
@@ -1029,7 +1042,7 @@ void EVEDriver::ColorRGB(uint32_t color) {
  * @brief Set the current color alpha.
  * @note Appends to display-list command buffer
  */
-void EVEDriver::ColorA(uint8_t alpha) {
+void EVEDriver::CmdColorA(uint8_t alpha) {
   this->CmdDL(DL_COLOR_A | ((uint32_t)alpha));
 }
 
@@ -1080,6 +1093,8 @@ void EVEDriver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t cle
   this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
+  this->CmdDL(DL_CLEAR_STENCIL | 0x00);
+  this->CmdDL(DL_CLEAR_TAG | 0x00);
   this->CmdDL(CLEAR(color, stencil, tag));
 }
 
@@ -1089,18 +1104,20 @@ void EVEDriver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint3
   this->CmdDL(SCISSOR_XY(x, y));
   this->CmdDL(SCISSOR_SIZE(w, h));
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
+  this->CmdDL(DL_CLEAR_STENCIL | 0x00);
+  this->CmdDL(DL_CLEAR_TAG | 0x00);
   this->CmdDL(CLEAR(color, stencil, tag));
 }
 
 void EVEDriver::CmdPoint(int16_t x0, int16_t y0, uint16_t size) {
-  this->CmdDL(DL_BEGIN | EVE_POINTS);
+  this->CmdBeginDraw(EVE_POINTS);
   this->CmdDL(POINT_SIZE(16 * size));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
   this->CmdDL(DL_END);
 }
 
 void EVEDriver::CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width) {
-  this->CmdDL(DL_BEGIN | EVE_LINES);
+  this->CmdBeginDraw(EVE_LINES);
   this->CmdDL(LINE_WIDTH(16 * width));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
   this->CmdDL(VERTEX2F(16 * x1, 16 * y1));
@@ -1108,7 +1125,7 @@ void EVEDriver::CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t
 }
 
 void EVEDriver::CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner) {
-  this->CmdDL(DL_BEGIN | EVE_RECTS);
+  this->CmdBeginDraw(EVE_RECTS);
   this->CmdDL(LINE_WIDTH(16 * corner));
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
   this->CmdDL(VERTEX2F(16 * x1, 16 * y1));

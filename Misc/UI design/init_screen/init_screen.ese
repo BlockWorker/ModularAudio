@@ -1,0 +1,51 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "TAG(0)",
+        "//Top bar for reference",
+        "SAVE_CONTEXT()",
+        "BEGIN(RECTS)",
+        "LINE_WIDTH(16)",
+        "COLOR_RGB(48, 48, 48)",
+        "VERTEX2F(0, 0)",
+        "VERTEX2F(16 * 320, 16 * 21)",
+        "COLOR_RGB(255, 255, 255)",
+        "VERTEX2F(16 * 278, 16 * 7)",
+        "VERTEX2F(16 * 282, 16 * 13)",
+        "VERTEX2F(16 * 282, 16 * 3)",
+        "VERTEX2F(16 * 316, 16 * 18)",
+        "COLOR_RGB(128, 128, 128)",
+        "VERTEX2F(16 * 284, 16 * 5)",
+        "VERTEX2F(16 * 314, 16 * 16)",
+        "END()",
+        "COLOR_RGB(255, 255, 255)",
+        "CMD_TEXT(275, 3, 26, OPT_RIGHTX, \"~100%\")",
+        "CMD_TEXT(4, 3, 26, 0, \"BlockBox v2 neo\")",
+        "RESTORE_CONTEXT()",
+        "",
+        "//start of actual screen content",
+        "COLOR_RGB(255, 255, 255)",
+        "CMD_TEXT(160, 170, 27, OPT_CENTERX, \"Failed to init Digital Audio Processor!\")",
+        "COLOR_RGB(255, 64, 64) //error colour",
+        "CMD_SPINNER(160, 120, 0, 0)",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2066
+    },
+    "registers": {
+        "hSize": 320,
+        "hsf": 0,
+        "macro": [
+            "NOP()",
+            "NOP()"
+        ],
+        "rotate": 0,
+        "vSize": 240
+    }
+}

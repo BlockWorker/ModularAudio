@@ -45,12 +45,12 @@ public:
 
   GUIManager(EVEDriver& driver) noexcept;
 
-  void Init();
-  void Update() noexcept;
+  virtual void Init();
+  virtual void Update() noexcept;
 
   void SetScreen(GUIScreen* screen);
 
-private:
+protected:
   bool initialised;
   GUIScreen* current_screen;
   GUITouchState touch_state;

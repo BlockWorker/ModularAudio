@@ -18,7 +18,7 @@
 #include "hifidac_interface.h"
 #include "power_amp_interface.h"
 #include "bluetooth_receiver_interface.h"
-#include "gui_screens.h"
+#include "bbv2_gui_manager.h"
 
 extern "C" {
 #endif
@@ -46,13 +46,19 @@ public:
   BluetoothReceiverInterface btrx_if;
 
   EVEDriver eve_drv;
-  GUIManager gui_mgr;
-  GUIScreenTest test_screen;
+  BlockBoxV2GUIManager gui_mgr;
 
   void Init() override;
   void LoopTasks() override;
 
   BlockBoxV2System();
+
+private:
+  void InitDAP(SuccessCallback&& callback);
+  void InitHiFiDAC(SuccessCallback&& callback);
+  void InitPowerAmp(SuccessCallback&& callback);
+  void InitBluetoothReceiver(SuccessCallback&& callback);
+
 };
 
 
