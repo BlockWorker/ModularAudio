@@ -35,9 +35,9 @@
 
 //timeout for busy peripheral despite idle driver, in main loop cycles
 #ifdef DEBUG
-#define I2C_PERIPHERAL_BUSY_TIMEOUT 20
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 30
 #else
-#define I2C_PERIPHERAL_BUSY_TIMEOUT 10
+#define I2C_PERIPHERAL_BUSY_TIMEOUT 20
 #endif
 
 //I2C instance to use
