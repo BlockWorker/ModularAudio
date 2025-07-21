@@ -45,7 +45,7 @@ static void _BlockBoxV2_I2C_Main_HardwareReset() {
 /***************************************************/
 
 void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
-  this->dap_if.ResetModule([&, callback](bool success) {
+  this->dap_if.ResetModule([&, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -56,7 +56,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
     }
 
     //this->dap_if.monitor_src_stats = true;
-    this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback](bool success) {
+    this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) {
       DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
       if (!success) {
         //propagate failure to external callback
@@ -66,7 +66,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
         return;
       }
 
-      this->dap_if.SetVolumeGains({ -10.0f, -10.0f }, [&, callback](bool success) { //TODO remove this after testing
+      this->dap_if.SetVolumeGains({ -10.0f, -10.0f }, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing
         DEBUG_PRINTF("DAP vol gains set, success %u\n", success);
         //propagate result to external callback
         if (callback) {
@@ -78,7 +78,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
-  this->dac_if.ResetModule([&, callback](bool success) {
+  this->dac_if.ResetModule([&, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("HiFiDAC reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -92,7 +92,7 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
     cfg.dac_enable = true;
     cfg.sync_mode = true;
     cfg.master_mode = false;
-    this->dac_if.SetConfig(cfg, [&, callback](bool success) {
+    this->dac_if.SetConfig(cfg, [&, callback = std::move(callback)](bool success) {
       DEBUG_PRINTF("HiFiDAC config set to enabled/sync/slave, success %u\n", success);
       //propagate result to external callback
       if (callback) {
@@ -104,7 +104,7 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
 
 void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
   //Note: Don't reset the amp module (unless we really have to), since it causes a transient on the PVDD tracking signal, potentially spiking the input voltage too
-  this->amp_if.InitModule([&, callback](bool success) {
+  this->amp_if.InitModule([&, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("PowerAmp reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -115,7 +115,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
     }
 
     this->amp_if.monitor_measurements = true; //TODO disable monitoring at this point later, only here for testing
-    this->amp_if.SetManualShutdownActive(true, [&, callback](bool success) {
+    this->amp_if.SetManualShutdownActive(true, [&, callback = std::move(callback)](bool success) {
       DEBUG_PRINTF("PowerAmp set manual shutdown, success %u\n", success);
       if (!success) {
         //propagate failure to external callback
@@ -125,7 +125,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
         return;
       }
 
-      this->amp_if.SetPVDDTargetVoltage(25.0f, [&, callback](bool success) {
+      this->amp_if.SetPVDDTargetVoltage(25.0f, [&, callback = std::move(callback)](bool success) {
         DEBUG_PRINTF("PowerAmp started voltage reduction, success %u\n", success);
         //propagate result to external callback
         if (callback) {
@@ -137,7 +137,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
-  this->btrx_if.ResetModule([&, callback](bool success) {
+  this->btrx_if.ResetModule([&, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -147,7 +147,7 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
       return;
     }
 
-    this->btrx_if.SetDiscoverable(true, [&, callback](bool success) { //TODO remove this after testing
+    this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing
       DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       //propagate result to external callback
       if (callback) {

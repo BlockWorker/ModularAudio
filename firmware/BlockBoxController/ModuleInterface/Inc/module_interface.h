@@ -51,7 +51,7 @@ typedef enum {
 typedef std::function<void(bool, uint32_t, uint16_t)> ModuleTransferCallback;
 
 //macro for converting a success-or-fail callback reference to a transfer callback (which discards everything except for the success bool)
-#define SuccessToTransferCallback(cb) ((cb) ? [cb](bool success, uint32_t, uint16_t) { cb(success); } : ModuleTransferCallback())
+#define SuccessToTransferCallback(cb) ((cb) ? [cb = std::move(cb)](bool success, uint32_t, uint16_t) { cb(success); } : ModuleTransferCallback())
 
 
 class ModuleTransferQueueItem {

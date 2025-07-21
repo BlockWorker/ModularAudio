@@ -1218,9 +1218,9 @@ void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&&
   switch (this->int_reg_size) {
     case 1:
       //write mask
-      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback](bool, uint32_t, uint16_t) {
+      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
         //read back mask to ensure correctness
-        this->ReadRegister8Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback](bool success, uint32_t value, uint16_t) {
+        this->ReadRegister8Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
           //propagate success and correctness to external callback
           callback(success && (uint8_t)value == (uint8_t)mask);
         } : ModuleTransferCallback());
@@ -1228,9 +1228,9 @@ void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&&
       break;
     case 2:
       //write mask
-      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback](bool, uint32_t, uint16_t) {
+      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
         //read back mask to ensure correctness
-        this->ReadRegister16Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback](bool success, uint32_t value, uint16_t) {
+        this->ReadRegister16Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
           //propagate success and correctness to external callback
           callback(success && (uint16_t)value == mask);
         } : ModuleTransferCallback());

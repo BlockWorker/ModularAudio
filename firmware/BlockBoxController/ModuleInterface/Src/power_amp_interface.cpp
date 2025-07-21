@@ -109,9 +109,9 @@ void PowerAmpInterface::SetManualShutdownActive(bool manual_shutdown, SuccessCal
       (manual_shutdown ? I2CDEF_POWERAMP_CONTROL_AMP_MAN_SD_Msk : 0);
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_POWERAMP_CONTROL, config_val, [&, callback, config_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_POWERAMP_CONTROL, config_val, [&, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_POWERAMP_CONTROL, callback ? [&, callback, config_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_POWERAMP_CONTROL, callback ? [&, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == config_val);
     } : ModuleTransferCallback());
@@ -139,9 +139,9 @@ void PowerAmpInterface::SetPVDDTargetVoltage(float voltage, SuccessCallback&& ca
   ((float*)&voltage_val)[0] = voltage;
 
   //write desired value
-  this->WriteRegister32Async(I2CDEF_POWERAMP_PVDD_TARGET, voltage_val, [&, callback, voltage_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(I2CDEF_POWERAMP_PVDD_TARGET, voltage_val, [&, callback = std::move(callback), voltage_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(I2CDEF_POWERAMP_PVDD_TARGET, callback ? [&, callback, voltage_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(I2CDEF_POWERAMP_PVDD_TARGET, callback ? [&, callback = std::move(callback), voltage_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && value == voltage_val);
     } : ModuleTransferCallback());
@@ -179,9 +179,9 @@ void PowerAmpInterface::SetSafetyThresholds(PowerAmpThresholdType type, const Po
   }
 
   //write desired thresholds
-  this->WriteMultiRegisterAsync(reg, (const uint8_t*)thresholds, 15, [&, callback, reg, thresholds](bool, uint32_t, uint16_t) {
+  this->WriteMultiRegisterAsync(reg, (const uint8_t*)thresholds, 15, [&, callback = std::move(callback), reg, thresholds](bool, uint32_t, uint16_t) {
     //read back thresholds to ensure correctness and up-to-date register state
-    this->ReadMultiRegisterAsync(reg, poweramp_scratch, 15, callback ? [&, callback, reg, thresholds](bool success, uint32_t, uint16_t) {
+    this->ReadMultiRegisterAsync(reg, poweramp_scratch, 15, callback ? [&, callback = std::move(callback), reg, thresholds](bool success, uint32_t, uint16_t) {
       //report result (and threshold correctness) to external callback
       callback(success && memcmp(thresholds, this->registers[reg], sizeof(PowerAmpThresholdSet)) == 0);
     } : ModuleTransferCallback());
@@ -196,7 +196,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
   this->reset_wait_timer = 0;
 
   //read module ID to check communication
-  this->ReadRegister8Async(I2CDEF_POWERAMP_MODULE_ID, [&, callback](bool success, uint32_t value, uint16_t) {
+  this->ReadRegister8Async(I2CDEF_POWERAMP_MODULE_ID, [&, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
     if (!success) {
       //report failure to external callback
       if (callback) {
@@ -216,7 +216,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
     }
 
     //write interrupt mask (enable all interrupts)
-    this->SetInterruptMask(0x7F, [&, callback](bool success) {
+    this->SetInterruptMask(0x7F, [&, callback = std::move(callback)](bool success) {
       if (!success) {
         //report failure to external callback
         if (callback) {
@@ -226,7 +226,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
       }
 
       //set manual shutdown active initially (also enables interrupts)
-      this->SetManualShutdownActive(true, [&, callback](bool success) {
+      this->SetManualShutdownActive(true, [&, callback = std::move(callback)](bool success) {
         if (!success) {
           //report failure to external callback
           if (callback) {
@@ -244,7 +244,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
         this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_SWARN_IRMS_INST_A, poweramp_scratch, 15, ModuleTransferCallback());
         this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_SWARN_PAVG_INST_A, poweramp_scratch, 15, ModuleTransferCallback());
         this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_SWARN_PAPP_INST_A, poweramp_scratch, 15, ModuleTransferCallback());
-        this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_SAFETY_STATUS, poweramp_scratch, 3, [&, callback](bool, uint32_t, uint16_t) {
+        this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_SAFETY_STATUS, poweramp_scratch, 3, [&, callback = std::move(callback)](bool, uint32_t, uint16_t) {
           //after last read is done: init completed successfully (even if read failed - that's non-critical)
           this->initialised = true;
           if (callback) {
