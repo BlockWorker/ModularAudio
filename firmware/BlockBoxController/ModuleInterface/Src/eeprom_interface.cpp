@@ -85,7 +85,7 @@ void EEPROMInterface::WriteAllDirtySections(SuccessCallback&& callback) {
   }
 
   //do actual write, starting at first page of first section
-  this->WriteNextSectionPageIfDirty(0, 0, [&, callback = std::move(callback)](bool success) mutable {
+  this->WriteNextSectionPageIfDirty(0, 0, [&, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -96,7 +96,19 @@ void EEPROMInterface::WriteAllDirtySections(SuccessCallback&& callback) {
 
     //write new header accordingly
     HAL_Delay(4);
-    this->WriteHeader(std::move(callback));
+    this->WriteHeader([&, callback = std::move(callback)](bool success) {
+      if (success) {
+        //write successful: clear all dirty flags
+        for (auto section : this->_sections) {
+          section->SetSectionDirty(false);
+        }
+      }
+
+      //propagate result to external callback
+      if (callback) {
+        callback(success);
+      }
+    });
   });
 }
 

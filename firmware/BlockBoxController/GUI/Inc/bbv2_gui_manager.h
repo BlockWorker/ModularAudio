@@ -11,6 +11,7 @@
 
 #include "gui_manager.h"
 #include "storage.h"
+#include "touch_cal_screen.h"
 #include "init_screen.h"
 #include "test_screen.h"
 
@@ -40,6 +41,7 @@ public:
 
   StorageSection gui_config;
 
+  TouchCalScreen touch_cal_screen;
   InitScreen init_screen;
   TestScreen test_screen;
 

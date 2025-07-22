@@ -179,6 +179,7 @@ void BlockBoxV2System::Init() {
 
 
   //debug printout callbacks
+  /*
   this->dap_if.RegisterCallback([&](EventSource&, uint32_t event) {
     switch (event) {
       case MODIF_DAP_EVENT_STATUS_UPDATE:
@@ -248,6 +249,7 @@ void BlockBoxV2System::Init() {
         break;
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
+  //*/
 
 
   //module init process
