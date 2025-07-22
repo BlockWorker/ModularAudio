@@ -17,6 +17,9 @@
 //period of long-press touch "ticks", in milliseconds
 #define GUI_TOUCH_TICK_PERIOD 500
 
+//debounce time for touches, in milliseconds
+#define GUI_TOUCH_DEBOUNCE_DELAY 20
+
 
 #ifdef __cplusplus
 
@@ -33,6 +36,7 @@ typedef struct {
   uint16_t tracker_value;
 
   uint32_t _next_tick_at;
+  uint32_t _debounce_tick;
 } GUITouchState;
 
 

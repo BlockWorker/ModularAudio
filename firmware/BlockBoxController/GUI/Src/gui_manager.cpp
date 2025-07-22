@@ -47,6 +47,7 @@ void GUIManager::Init() {
   this->touch_state.long_press_tick = false;
   this->touch_state.released = false;
   this->touch_state._next_tick_at = HAL_MAX_DELAY;
+  this->touch_state._debounce_tick = HAL_MAX_DELAY;
   this->touch_state.initial_tag = 0;
   this->touch_state.tag = 0;
   this->touch_state.tracker_value = 0;
@@ -72,10 +73,21 @@ void GUIManager::Update() noexcept {
   uint32_t touch_read_buf;
   try {
     this->driver.phy.DirectRead32(REG_TOUCH_DIRECT_XY, &touch_read_buf);
-    bool new_touched = (touch_read_buf & 0x80000000U) == 0;
+    bool new_touched_raw = (touch_read_buf & 0x80000000U) == 0;
+
+    //apply debouncing logic
+    bool new_touched;
+    if (this->touch_state.touched == new_touched_raw) {
+      //touch state same as stored: propagate directly, ensure next change is debounced
+      new_touched = new_touched_raw;
+      this->touch_state._debounce_tick = tick + GUI_TOUCH_DEBOUNCE_DELAY;
+    } else {
+      //touch state different from stored: propagate new value only if debounce time elapsed, otherwise old value
+      new_touched = ((int32_t)(tick - this->touch_state._debounce_tick) > 0) ? new_touched_raw : this->touch_state.touched;
+    }
 
     //read tag and tracker info if we have a touch
-    if (new_touched) {
+    if (new_touched && new_touched_raw) {
       //get tag and store in touch state
       this->driver.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
       this->touch_state.tag = tag_read_buf;
