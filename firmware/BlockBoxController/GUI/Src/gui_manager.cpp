@@ -13,6 +13,15 @@ GUIManager::GUIManager(EVEDriver& driver) noexcept :
     driver(driver), initialised(false), current_screen(NULL) {}
 
 
+void GUIManager::InitTouchCalibration() {
+  //default behaviour: calibrate touch on every init
+  this->driver.ClearDLCmdBuffer();
+  this->driver.CmdBeginDisplay(true, true, true, 0x000000);
+  this->driver.CmdCalibrate();
+  this->driver.CmdEndDisplay();
+  this->driver.SendBufferedDLCmds(HAL_MAX_DELAY); //TODO: is this wait okay in an overall system context? if yes, keep in mind for other init, if no, implement alternative approach
+}
+
 void GUIManager::Init() {
   this->initialised = false;
 
@@ -28,12 +37,8 @@ void GUIManager::Init() {
   //increase SPI speed above 11MHz
   this->driver.phy.SetTransferSpeed(TRANSFERSPEED_MAX);
 
-  //calibrate touch - TODO: save to flash and restore if saved
-  this->driver.ClearDLCmdBuffer();
-  this->driver.CmdBeginDisplay(true, true, true, 0x000000);
-  this->driver.CmdCalibrate();
-  this->driver.CmdEndDisplay();
-  this->driver.SendBufferedDLCmds(HAL_MAX_DELAY); //TODO: is this wait okay in an overall system context? if yes, keep in mind for other init, if no, implement alternative approach
+  //make sure the touch panel is calibrated
+  this->InitTouchCalibration();
 
   //reset touch state
   this->touch_state.touched = false;

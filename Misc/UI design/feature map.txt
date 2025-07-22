@@ -26,6 +26,7 @@ Sound config screen
 - volume pos gain allowed yes/no (?)
 - sound EQ option (?)
 - sound loudness gain
+- sound loudness track max volume yes/no
 - sound bass/treble settings if want? prob not rn
 - amplifier info
 - amplifier power "limit" (adjustable warning level, tries to stay below)

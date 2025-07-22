@@ -55,6 +55,8 @@ protected:
   GUIScreen* current_screen;
   GUITouchState touch_state;
 
+  virtual void InitTouchCalibration();
+
 };
 
 

@@ -10,11 +10,25 @@
 
 
 #include "gui_manager.h"
+#include "storage.h"
 #include "init_screen.h"
 #include "test_screen.h"
 
 
 #ifdef __cplusplus
+
+
+//EVE touch transform matrix
+typedef struct {
+  int32_t a;
+  int32_t b;
+  int32_t c;
+  int32_t d;
+  int32_t e;
+  int32_t f;
+} TouchTransformMatrix;
+
+static_assert(sizeof(TouchTransformMatrix) == 24);
 
 
 class BlockBoxV2System;
@@ -23,6 +37,8 @@ class BlockBoxV2System;
 class BlockBoxV2GUIManager : public GUIManager {
 public:
   BlockBoxV2System& system;
+
+  StorageSection gui_config;
 
   InitScreen init_screen;
   TestScreen test_screen;
@@ -33,9 +49,20 @@ public:
   void Init() override;
 
 
+  TouchTransformMatrix GetTouchMatrix() const;
+  uint32_t GetThemeColorMain() const;
+  uint32_t GetThemeColorDark() const;
+
+  void SetTouchMatrix(TouchTransformMatrix matrix);
+  void SetThemeColors(uint32_t main, uint32_t dark);
+
   //updates the init progress message, or proceeds past init if given null pointer
   void SetInitProgress(const char* progress_string, bool error);
 
+protected:
+  static void LoadConfigDefaults(StorageSection& section);
+
+  void InitTouchCalibration() override;
 };
 
 

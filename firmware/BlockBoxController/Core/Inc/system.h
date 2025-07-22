@@ -14,6 +14,7 @@
 
 #ifdef __cplusplus
 
+#include "eeprom_interface.h"
 #include "dap_interface.h"
 #include "hifidac_interface.h"
 #include "power_amp_interface.h"
@@ -39,6 +40,7 @@ class BlockBoxV2System : public System {
 public:
   I2CHardwareInterface main_i2c_hw;
 
+  EEPROMInterface eeprom_if;
   DAPInterface dap_if;
   HiFiDACInterface dac_if;
   PowerAmpInterface amp_if;
@@ -54,6 +56,7 @@ public:
   BlockBoxV2System();
 
 private:
+  void InitEEPROM(SuccessCallback&& callback);
   void InitDAP(SuccessCallback&& callback);
   void InitHiFiDAC(SuccessCallback&& callback);
   void InitPowerAmp(SuccessCallback&& callback);

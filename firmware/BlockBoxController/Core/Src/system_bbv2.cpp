@@ -17,6 +17,8 @@
 #define BBV2_I2C_MAIN_FORCE_RESET() __HAL_RCC_I2C5_FORCE_RESET()
 #define BBV2_I2C_MAIN_RELEASE_RESET() __HAL_RCC_I2C5_RELEASE_RESET()
 
+#define BBV2_EEPROM_I2C_ADDR 0x57
+
 #define BBV2_DAP_INT_PORT I2C5_INT3_N_GPIO_Port
 #define BBV2_DAP_INT_PIN I2C5_INT3_N_Pin
 #define BBV2_DAP_I2C_ADDR 0x4A
@@ -43,6 +45,16 @@ static void _BlockBoxV2_I2C_Main_HardwareReset() {
 /***************************************************/
 /*          System class implementation            */
 /***************************************************/
+
+void BlockBoxV2System::InitEEPROM(SuccessCallback&& callback) {
+  this->eeprom_if.InitModule([&, callback = std::move(callback)](bool success) {
+    DEBUG_PRINTF("EEPROM init complete, success %u\n", success);
+    //propagate result to external callback
+    if (callback) {
+      callback(success);
+    }
+  });
+}
 
 void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
   this->dap_if.ResetModule([&, callback = std::move(callback)](bool success) {
@@ -159,12 +171,12 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
 
 void BlockBoxV2System::Init() {
   this->main_i2c_hw.Init();
+  this->eeprom_if.Init();
   this->dap_if.Init();
   this->dac_if.Init();
   this->amp_if.Init();
   this->btrx_if.Init();
 
-  this->gui_mgr.Init();
 
   //debug printout callbacks
   this->dap_if.RegisterCallback([&](EventSource&, uint32_t event) {
@@ -237,39 +249,48 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
 
+
   //module init process
   HAL_Delay(500);
 
-  this->gui_mgr.SetInitProgress("Initialising Power Amplifier...", false);
-  this->InitPowerAmp([&](bool success) {
+  this->InitEEPROM([&](bool success) {
     if (!success) {
-      this->gui_mgr.SetInitProgress("Failed to initialise Power Amplifier!", true);
-      return;
+      DEBUG_PRINTF("* EEPROM init failed, defaults have been loaded, continuing\n");
     }
 
-    this->gui_mgr.SetInitProgress("Initialising HiFi DAC...", false);
-    this->InitHiFiDAC([&](bool success) {
+    this->gui_mgr.Init();
+
+    this->gui_mgr.SetInitProgress("Initialising Power Amplifier...", false);
+    this->InitPowerAmp([&](bool success) {
       if (!success) {
-        this->gui_mgr.SetInitProgress("Failed to initialise HiFi DAC!", true);
+        this->gui_mgr.SetInitProgress("Failed to initialise Power Amplifier!", true);
         return;
       }
 
-      this->gui_mgr.SetInitProgress("Initialising Digital Audio Processor...", false);
-      this->InitDAP([&](bool success) {
+      this->gui_mgr.SetInitProgress("Initialising HiFi DAC...", false);
+      this->InitHiFiDAC([&](bool success) {
         if (!success) {
-          this->gui_mgr.SetInitProgress("Failed to init Digital Audio Processor!", true);
+          this->gui_mgr.SetInitProgress("Failed to initialise HiFi DAC!", true);
           return;
         }
 
-        this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
-        this->InitBluetoothReceiver([&](bool success) {
+        this->gui_mgr.SetInitProgress("Initialising Digital Audio Processor...", false);
+        this->InitDAP([&](bool success) {
           if (!success) {
-            this->gui_mgr.SetInitProgress("Failed to initialise Bluetooth Receiver!", true);
+            this->gui_mgr.SetInitProgress("Failed to init Digital Audio Processor!", true);
             return;
           }
 
-          //init done
-          this->gui_mgr.SetInitProgress(NULL, false);
+          this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
+          this->InitBluetoothReceiver([&](bool success) {
+            if (!success) {
+              this->gui_mgr.SetInitProgress("Failed to initialise Bluetooth Receiver!", true);
+              return;
+            }
+
+            //init done
+            this->gui_mgr.SetInitProgress(NULL, false);
+          });
         });
       });
     });
@@ -279,6 +300,7 @@ void BlockBoxV2System::Init() {
 
 void BlockBoxV2System::LoopTasks() {
   this->main_i2c_hw.LoopTasks();
+  this->eeprom_if.LoopTasks();
   this->dap_if.LoopTasks();
   this->dac_if.LoopTasks();
   this->amp_if.LoopTasks();
@@ -289,6 +311,7 @@ void BlockBoxV2System::LoopTasks() {
 
 BlockBoxV2System::BlockBoxV2System() :
     main_i2c_hw(&BBV2_I2C_MAIN_HANDLE, _BlockBoxV2_I2C_Main_HardwareReset),
+    eeprom_if(this->main_i2c_hw, BBV2_EEPROM_I2C_ADDR),
     dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN),
     dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
