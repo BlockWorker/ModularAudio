@@ -62,7 +62,7 @@ void EventSource::ExecuteCallbacks(uint32_t event) noexcept {
     if ((reg.event_mask & event) != 0) {
       //event mask matches: call function (in exception-safe way)
       try {
-        reg.func(*this, event);
+        reg.func(this, event);
       } catch (const std::exception& err) {
         DEBUG_PRINTF("* EventSource callback exception: %s\n", err.what());
       } catch (...) {

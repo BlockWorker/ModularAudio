@@ -27,7 +27,7 @@ extern "C" {
 class EventSource;
 
 //callback type for events - arguments: reference to event source, event type
-typedef std::function<void(EventSource&, uint32_t)> EventCallback;
+typedef std::function<void(EventSource*, uint32_t)> EventCallback;
 
 
 typedef struct {
