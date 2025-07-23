@@ -19,7 +19,7 @@ void GUIManager::InitTouchCalibration() {
   this->driver.CmdBeginDisplay(true, true, true, 0x000000);
   this->driver.CmdCalibrate();
   this->driver.CmdEndDisplay();
-  this->driver.SendBufferedDLCmds(HAL_MAX_DELAY); //TODO: is this wait okay in an overall system context? if yes, keep in mind for other init, if no, implement alternative approach
+  this->driver.SendBufferedDLCmds(HAL_MAX_DELAY);
 }
 
 void GUIManager::Init() {

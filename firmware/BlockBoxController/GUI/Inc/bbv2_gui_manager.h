@@ -39,8 +39,6 @@ class BlockBoxV2GUIManager : public GUIManager {
 public:
   BlockBoxV2System& system;
 
-  StorageSection gui_config;
-
   TouchCalScreen touch_cal_screen;
   InitScreen init_screen;
   TestScreen test_screen;
@@ -62,6 +60,8 @@ public:
   void SetInitProgress(const char* progress_string, bool error);
 
 protected:
+  StorageSection gui_config;
+
   static void LoadConfigDefaults(StorageSection& section);
 
   void InitTouchCalibration() override;

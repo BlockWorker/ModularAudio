@@ -68,7 +68,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
     }
 
     //this->dap_if.monitor_src_stats = true;
-    this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) {
+    this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing - move to AudioPathManager?
       DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
       if (!success) {
         //propagate failure to external callback
@@ -159,7 +159,7 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
       return;
     }
 
-    this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing
+    this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO change after testing - we want not discoverable + not connectable + disconnected (in off state), do in AudioPathManager?
       DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       //propagate result to external callback
       if (callback) {
