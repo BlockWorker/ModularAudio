@@ -67,8 +67,11 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
       return;
     }
 
+    if (callback) {
+      callback(true);
+    }
     //this->dap_if.monitor_src_stats = true;
-    this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing - move to AudioPathManager?
+    /*this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing - move to AudioPathManager?
       DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
       if (!success) {
         //propagate failure to external callback
@@ -85,7 +88,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
           callback(success);
         }
       });
-    });
+    });*/
   });
 }
 
@@ -100,7 +103,10 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
       return;
     }
 
-    HiFiDACConfig cfg;
+    if (callback) {
+      callback(true);
+    }
+    /*HiFiDACConfig cfg;
     cfg.dac_enable = true;
     cfg.sync_mode = true;
     cfg.master_mode = false;
@@ -110,7 +116,7 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
       if (callback) {
         callback(success);
       }
-    });
+    });*/
   });
 }
 
@@ -159,13 +165,16 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
       return;
     }
 
-    this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO change after testing - we want not discoverable + not connectable + disconnected (in off state), do in AudioPathManager?
+    if (callback) {
+      callback(true);
+    }
+    /*this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO change after testing - we want not discoverable + not connectable + disconnected (in off state), do in AudioPathManager?
       DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
       //propagate result to external callback
       if (callback) {
         callback(success);
       }
-    });
+    });*/
   });
 }
 
@@ -223,12 +232,12 @@ void BlockBoxV2System::Init() {
       default:
         break;
     }
-  }, MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE | MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);
+  }, MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE | MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);*/
 
   this->btrx_if.RegisterCallback([&](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_BTRX_EVENT_STATUS_UPDATE:
-        DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
+        //DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
         break;
       case MODIF_BTRX_EVENT_VOLUME_UPDATE:
         DEBUG_PRINTF("BTRX volume update: %u\n", this->btrx_if.GetAbsoluteVolume());
@@ -250,6 +259,20 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
   //*/
+
+  this->audio_mgr.RegisterCallback([&](EventSource*, uint32_t event) {
+    switch (event) {
+      case AUDIO_EVENT_INPUT_UPDATE:
+        DEBUG_PRINTF("Audio input update: active %u\n", this->audio_mgr.GetActiveInput());
+        break;
+      case AUDIO_EVENT_VOLUME_UPDATE:
+        DEBUG_PRINTF("Audio volume update: %.1f\n", this->audio_mgr.GetCurrentVolumeDB());
+        break;
+      case AUDIO_EVENT_MUTE_UPDATE:
+        DEBUG_PRINTF("Audio mute update: %u\n", this->audio_mgr.IsMute());
+        break;
+    }
+  }, AUDIO_EVENT_INPUT_UPDATE | AUDIO_EVENT_VOLUME_UPDATE | AUDIO_EVENT_MUTE_UPDATE);
 
 
   //module init process
@@ -290,8 +313,16 @@ void BlockBoxV2System::Init() {
               return;
             }
 
-            //init done
-            this->gui_mgr.SetInitProgress(NULL, false);
+            this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
+            this->audio_mgr.Init([&](bool success) {
+              if (!success) {
+                this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
+                return;
+              }
+
+              //init done
+              this->gui_mgr.SetInitProgress(NULL, false);
+            });
           });
         });
       });
@@ -308,6 +339,7 @@ void BlockBoxV2System::LoopTasks() {
   this->amp_if.LoopTasks();
   this->btrx_if.LoopTasks();
   this->gui_mgr.Update();
+  this->audio_mgr.LoopTasks();
 }
 
 
@@ -318,7 +350,8 @@ BlockBoxV2System::BlockBoxV2System() :
     dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
     btrx_if(&BBV2_BTRX_UART_HANDLE),
-    gui_mgr(*this) {}
+    gui_mgr(*this),
+    audio_mgr(*this) {}
 
 
 /***************************************************/

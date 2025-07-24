@@ -20,6 +20,7 @@
 #include "power_amp_interface.h"
 #include "bluetooth_receiver_interface.h"
 #include "bbv2_gui_manager.h"
+#include "audio_path_manager.h"
 
 extern "C" {
 #endif
@@ -49,6 +50,8 @@ public:
 
   EVEDriver eve_drv;
   BlockBoxV2GUIManager gui_mgr;
+
+  AudioPathManager audio_mgr;
 
   void Init() override;
   void LoopTasks() override;
