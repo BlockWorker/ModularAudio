@@ -30,13 +30,19 @@
 #define AUDIO_LIMIT_VOLUME_STEP_MIN 1.0f
 #define AUDIO_LIMIT_VOLUME_STEP_MAX 5.0f
 #define AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE -30.0f
-#define AUDIO_LIMIT_LOUDNESS_GAIN_MAX 0.0f
+#define AUDIO_LIMIT_LOUDNESS_GAIN_MAX IF_DAP_LOUDNESS_GAIN_MAX
 
 //audio path setting lock timeout, in main loop cycles
 #define AUDIO_LOCK_TIMEOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
 
+//bluetooth volume feedback lock timeout, in main loop cycles - to avoid feedback loop when processing bluetooth volume changes, and to avoid too frequent feedback
+#define AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
+
 
 #ifdef __cplusplus
+
+
+#include <deque>
 
 
 typedef enum {
@@ -45,6 +51,8 @@ typedef enum {
   AUDIO_INPUT_USB = IF_DAP_INPUT_USB,
   AUDIO_INPUT_SPDIF = IF_DAP_INPUT_SPDIF
 } AudioPathInput;
+
+typedef std::function<void()> QueuedOperation;
 
 
 class BlockBoxV2System;
@@ -59,23 +67,25 @@ public:
   void Init(SuccessCallback&& callback);
   void LoopTasks();
 
+  void HandlePowerStateChange(bool on, SuccessCallback&& callback);
+
   //input functions
   AudioPathInput GetActiveInput();
   bool IsInputAvailable(AudioPathInput input) const;
 
-  void SetActiveInput(AudioPathInput input, SuccessCallback&& callback);
+  void SetActiveInput(AudioPathInput input, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //current absolute volume functions
   float GetCurrentVolumeDB() const;
 
-  void SetCurrentVolumeDB(float volume_dB, SuccessCallback&& callback);
-  void ChangeCurrentVolumeDB(float volume_change_dB, SuccessCallback&& callback);
-  void StepCurrentVolumeDB(bool up, SuccessCallback&& callback);
+  void SetCurrentVolumeDB(float volume_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void ChangeCurrentVolumeDB(float volume_change_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void StepCurrentVolumeDB(bool up, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //current relative volume functions (0 to 1, relative to current min-max range)
   float GetCurrentRelativeVolume() const;
 
-  void SetCurrentRelativeVolume(float relative_volume, SuccessCallback&& callback);
+  void SetCurrentRelativeVolume(float relative_volume, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //volume min/max/step functions
   float GetMinVolumeDB() const;
@@ -83,22 +93,22 @@ public:
   float GetVolumeStepDB() const;
   bool IsPositiveGainAllowed() const;
 
-  void SetMinVolumeDB(float min_volume_dB, SuccessCallback&& callback);
-  void SetMaxVolumeDB(float max_volume_dB, SuccessCallback&& callback);
-  void SetVolumeStepDB(float volume_step_dB, SuccessCallback&& callback);
-  void SetPositiveGainAllowed(bool pos_gain_allowed, SuccessCallback&& callback);
+  void SetMinVolumeDB(float min_volume_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetMaxVolumeDB(float max_volume_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetVolumeStepDB(float volume_step_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetPositiveGainAllowed(bool pos_gain_allowed, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //mute functions
   bool IsMute() const;
 
-  void SetMute(bool mute, SuccessCallback&& callback);
+  void SetMute(bool mute, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //loudness functions
   float GetLoudnessGainDB() const;
   bool IsLoudnessTrackingMaxVolume() const;
 
-  void SetLoudnessGainDB(float loudness_gain_dB, SuccessCallback&& callback);
-  void SetLoudnessTrackingMaxVolume(bool track_max_volume, SuccessCallback&& callback);
+  void SetLoudnessGainDB(float loudness_gain_dB, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetLoudnessTrackingMaxVolume(bool track_max_volume, SuccessCallback&& callback, bool queue_if_busy = false);
 
   //TODO if desired: different EQ modes, bass/treble, speaker response calibration mode
 
@@ -107,6 +117,9 @@ protected:
 
   bool initialised;
   uint32_t lock_timer;
+  std::deque<QueuedOperation> queued_operations;
+
+  uint32_t bluetooth_volume_lock_timer;
 
   AudioPathInput persistent_active_input;
 
@@ -118,11 +131,18 @@ protected:
 
   static void LoadNonVolatileConfigDefaults(StorageSection& section);
 
+  void InitDACSetup(SuccessCallback&& callback);
+  void InitDAPSetup(SuccessCallback&& callback);
+
   AudioPathInput DetermineActiveInput() const;
 
   void CheckAndFixVolumeLimits();
   void CheckAndFixVolumeStep();
   void ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCallback&& callback);
+
+  void UpdateBluetoothVolume();
+
+  void HandleEvent(EventSource* source, uint32_t event);
 };
 
 

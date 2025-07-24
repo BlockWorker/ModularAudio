@@ -136,6 +136,8 @@ public:
 
   void DisconnectBluetooth(SuccessCallback&& callback);
 
+  void CutAndDisableConnections(SuccessCallback&& callback);
+
   void SendMediaControl(BluetoothReceiverMediaControl action, SuccessCallback&& callback);
 
   void SendTone(std::string& tone, SuccessCallback&& callback);

@@ -65,7 +65,7 @@ const char* BluetoothReceiverInterface::GetActiveCodec() const {
 
 void BluetoothReceiverInterface::SetAbsoluteVolume(uint8_t volume, SuccessCallback&& callback) {
   if (volume > 127) {
-    throw std::logic_error("BluetoothReceiver absolute volume must be in range 0-127");
+    throw std::invalid_argument("BluetoothReceiver absolute volume must be in range 0-127");
   }
 
   this->WriteRegister8Async(UARTDEF_BTRX_VOLUME, volume, SuccessToTransferCallback(callback));
@@ -106,6 +106,15 @@ void BluetoothReceiverInterface::SetDiscoverable(bool discoverable, SuccessCallb
 void BluetoothReceiverInterface::DisconnectBluetooth(SuccessCallback&& callback) {
   //set disconnect bit in control register
   this->WriteRegister8Async(UARTDEF_BTRX_CONN_CONTROL, UARTDEF_BTRX_CONN_CONTROL_DISCONNECT_Msk, SuccessToTransferCallback(callback));
+}
+
+
+
+void BluetoothReceiverInterface::CutAndDisableConnections(SuccessCallback&& callback) {
+  //set connection control register to connectable off + discoverable off + disconnect
+  uint8_t value = UARTDEF_BTRX_CONN_CONTROL_CONNECTABLE_OFF_Msk | UARTDEF_BTRX_CONN_CONTROL_DISCOVERABLE_OFF_Msk | UARTDEF_BTRX_CONN_CONTROL_DISCONNECT_Msk;
+
+  this->WriteRegister8Async(UARTDEF_BTRX_CONN_CONTROL, value, SuccessToTransferCallback(callback));
 }
 
 

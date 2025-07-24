@@ -62,6 +62,7 @@ int cpp_main() {
 
     loop_count++;
     _RefreshWatchdogs();
+    __enable_irq(); //catch-all, in case interrupts are disabled somewhere and the re-enable is missed
     while((HAL_GetTick() - iteration_start_tick) < MAIN_LOOP_PERIOD_MS); //replaces HAL_Delay() to not wait any unnecessary extra ticks
   }
 }
