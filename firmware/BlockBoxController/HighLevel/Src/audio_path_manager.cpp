@@ -1370,6 +1370,28 @@ void AudioPathManager::UpdateBluetoothVolume() {
     return;
   }
 
+  //check whether the current volume (dB) is the same as what the current Bluetooth volume step would round to
+  uint8_t current_bt_volume = this->system.btrx_if.GetAbsoluteVolume();
+  if (current_bt_volume >= AUDIO_BLUETOOTH_VOL_OFFSET) {
+    this->CheckAndFixVolumeLimits();
+    this->CheckAndFixVolumeStep();
+
+    //calculate volume in dB corresponding to current Bluetooth volume, round to nearest step, and clamp to limits
+    float relative_vol = (float)(current_bt_volume - AUDIO_BLUETOOTH_VOL_OFFSET) / (float)(127 - AUDIO_BLUETOOTH_VOL_OFFSET);
+    float vol_dB = this->min_volume_dB + relative_vol * (this->max_volume_dB - this->min_volume_dB);
+    float vol_rounded = roundf(vol_dB / this->volume_step_dB) * this->volume_step_dB;
+    if (vol_rounded < this->min_volume_dB) {
+      vol_rounded = this->min_volume_dB;
+    } else if (vol_rounded > this->max_volume_dB) {
+      vol_rounded = this->max_volume_dB;
+    }
+
+    if (vol_rounded == this->current_volume_dB) {
+      //current Bluetooth volume already rounds to the current volume step: nothing to do
+      return;
+    }
+  }
+
   //calculate new Bluetooth absolute volume (0-127)
   uint8_t bt_volume;
   if (this->IsMute()) {
@@ -1390,19 +1412,21 @@ void AudioPathManager::UpdateBluetoothVolume() {
   }
 
   //check whether there's enough of a difference to the current Bluetooth volume to warrant a write
-  if (abs((int)bt_volume - (int)this->system.btrx_if.GetAbsoluteVolume()) >= AUDIO_BLUETOOTH_VOL_MARGIN) {
-    //difference large enough: write volume to bluetooth (we don't really care about whether this succeeds or not - it's just for synchronisation)
-
-    //lock out further bluetooth volume updates
-    this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
-
-    DEBUG_PRINTF("Setting Bluetooth absolute volume to %u\n", bt_volume); //TODO temporary testing printout, remove later
-    this->system.btrx_if.SetAbsoluteVolume(bt_volume, [](bool success) {
-      if (!success) {
-        DEBUG_PRINTF("* Failed to set Bluetooth absolute volume\n");
-      }
-    });
+  if (abs((int)bt_volume - (int)current_bt_volume) < AUDIO_BLUETOOTH_VOL_MARGIN) {
+    //no: delay update until difference is large enough
+    return;
   }
+
+  //lock out further bluetooth volume updates
+  this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
+
+  //write volume to bluetooth (we don't really care about whether this succeeds or not - it's just for synchronisation)
+  DEBUG_PRINTF("Setting Bluetooth absolute volume to %u\n", bt_volume); //TODO temporary testing printout, remove later
+  this->system.btrx_if.SetAbsoluteVolume(bt_volume, [](bool success) {
+    if (!success) {
+      DEBUG_PRINTF("* Failed to set Bluetooth absolute volume\n");
+    }
+  });
 }
 
 
