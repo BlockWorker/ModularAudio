@@ -13,14 +13,18 @@
  * @brief Write this screen to the display (updated to the latest data).
  */
 void GUIScreen::DisplayScreen() {
-  this->UpdateDisplayList();
+  //only do something if any kind of update is needed
+  if (this->needs_display_list_rebuild || this->needs_existing_list_update) {
+    this->UpdateDisplayList();
 
-  this->driver.SendSavedDLCmds(this->saved_dl_commands, this->display_timeout);
+    //this->driver.SendSavedDLCmds(this->saved_dl_commands, this->display_timeout);
+    this->manager.SendCmdTransferWhenNotBusy(this->saved_dl_commands.data(), this->saved_dl_commands.size());
+  }
 }
 
 
 GUIScreen::GUIScreen(GUIManager& manager, uint32_t display_timeout) noexcept :
-    driver(manager.driver), manager(manager), display_timeout(display_timeout), needs_display_list_rebuild(true) {}
+    driver(manager.driver), manager(manager), display_timeout(display_timeout), needs_display_list_rebuild(true), needs_existing_list_update(false) {}
 
 
 /**
@@ -33,8 +37,6 @@ void GUIScreen::BuildAndSaveDisplayList() {
   this->driver.ClearDLCmdBuffer();
   this->driver.CmdBeginDisplay(true, true, true, 0x000000);
 
-  this->BuildCommonContent();
-
   this->BuildScreenContent();
 
   this->driver.CmdEndDisplay();
@@ -46,6 +48,7 @@ void GUIScreen::BuildAndSaveDisplayList() {
  * @brief Update this screen's display list to the latest data, or build it if not done yet.
  */
 void GUIScreen::UpdateDisplayList() {
+  this->needs_existing_list_update = false;
   if (this->needs_display_list_rebuild || this->saved_dl_commands.empty()) {
     //full (re)build needed
     this->needs_display_list_rebuild = false;
@@ -79,13 +82,5 @@ void GUIScreen::ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset
 void GUIScreen::ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) noexcept {
   int32_t total_word_offset = (int32_t)this->dl_command_offsets[cmd_offset_index] + word_offset;
   ((uint16_t*)(this->saved_dl_commands.data() + total_word_offset))[half_word_offset] = value;
-}
-
-
-/**
- * @brief Build common display list content for all screens.
- */
-void GUIScreen::BuildCommonContent() {
-
 }
 

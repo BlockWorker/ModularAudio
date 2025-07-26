@@ -10,6 +10,7 @@
 
 
 #include "EVE.h"
+#include <deque>
 
 
 //time of touch long-press, in milliseconds
@@ -23,6 +24,11 @@
 
 #ifdef __cplusplus
 
+
+typedef struct {
+  const uint32_t* data;
+  uint32_t length_words;
+} GUICMDTransfer;
 
 typedef struct {
   bool touched;
@@ -54,10 +60,15 @@ public:
 
   void SetScreen(GUIScreen* screen);
 
+  void SendCmdTransferWhenNotBusy(const uint32_t* data, uint32_t length_words);
+
 protected:
   bool initialised;
   GUIScreen* current_screen;
   GUITouchState touch_state;
+
+  bool cmd_busy_waiting;
+  std::deque<GUICMDTransfer> queued_cmd_transfers;
 
   virtual void InitTouchCalibration();
 

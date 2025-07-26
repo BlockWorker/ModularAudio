@@ -35,7 +35,6 @@ void PowerOffScreen::DisplayScreen() {
       //timeout passed: reset this screen and start calibration
       this->auto_calibration_scheduled = false;
       this->auto_calibration_tick = 0;
-      this->needs_display_list_rebuild = true;
       this->bbv2_manager.touch_cal_screen.SetReturnScreen(this);
       this->bbv2_manager.SetScreen(&this->bbv2_manager.touch_cal_screen);
       return;
@@ -75,7 +74,6 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
           DEBUG_PRINTF("PowerOffScreen power-on: PowerAmp success %u\n", success);
           if (success) {
             //reset this screen and go to main screen - TODO actual main screen
-            this->needs_display_list_rebuild = true;
             this->bbv2_manager.SetScreen(&this->bbv2_manager.test_screen);
           }
         });

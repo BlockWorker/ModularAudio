@@ -661,8 +661,8 @@ void GUIDraws::PowerIconHuge(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t ou
   //outline cutoff
   drv.CmdDL(LINE_WIDTH(8 * 15));
   drv.CmdColorRGB(bg_color);
-  drv.CmdDL(VERTEX2F(16 * 35 + 8, 16 * 7 + 8));
-  drv.CmdDL(VERTEX2F(16 * 63 + 8, 16 * 7 + 8));
+  drv.CmdDL(VERTEX2F(16 * 35 + 8, 16 * 7 + 6));
+  drv.CmdDL(VERTEX2F(16 * 63 + 8, 16 * 7 + 6));
   drv.CmdDL(DL_END);
   //background circle
   drv.CmdBeginDraw(EVE_POINTS);

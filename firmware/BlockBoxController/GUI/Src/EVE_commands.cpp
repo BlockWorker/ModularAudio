@@ -1097,7 +1097,6 @@ void EVEDriver::WriteString(const char *p_text) {
 ##################################################################### */
 
 void EVEDriver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t clear_color) {
-  this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(DL_CLEAR_COLOR_RGB | (clear_color & 0xFFFFFFU));
   this->CmdDL(DL_CLEAR_STENCIL | 0x00);
@@ -1106,7 +1105,6 @@ void EVEDriver::CmdBeginDisplay(bool color, bool stencil, bool tag, uint32_t cle
 }
 
 void EVEDriver::CmdBeginDisplayLimited(bool color, bool stencil, bool tag, uint32_t clear_color, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-  this->CmdMemzero(EVE_RAM_DL, EVE_RAM_DL_SIZE);
   this->CmdDL(CMD_DLSTART);
   this->CmdDL(SCISSOR_XY(x, y));
   this->CmdDL(SCISSOR_SIZE(w, h));

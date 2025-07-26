@@ -10,7 +10,7 @@
 
 
 GUIManager::GUIManager(EVEDriver& driver) noexcept :
-    driver(driver), initialised(false), current_screen(NULL) {}
+    driver(driver), initialised(false), current_screen(NULL), cmd_busy_waiting(false) {}
 
 
 void GUIManager::InitTouchCalibration() {
@@ -64,6 +64,20 @@ void GUIManager::Update() noexcept {
   if (!this->initialised) {
     //uninitialised: nothing to do
     return;
+  }
+
+  //check for coprocessor busy state, if we're waiting for that
+  if (this->cmd_busy_waiting && this->driver.IsBusy() == E_OK) {
+    //no longer busy: check if we have any queued transfers to do
+    if (this->queued_cmd_transfers.empty()) {
+      //no queued transfers: mark as not busy anymore
+      this->cmd_busy_waiting = false;
+    } else {
+      //we have a queued transfer: remove it from the queue, send it, remain in busy waiting state
+      GUICMDTransfer transfer = this->queued_cmd_transfers.front();
+      this->queued_cmd_transfers.pop_front();
+      this->driver.phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)transfer.data, transfer.length_words * sizeof(uint32_t), 10);
+    }
   }
 
   uint32_t tick = HAL_GetTick();
@@ -143,8 +157,8 @@ void GUIManager::Update() noexcept {
     DEBUG_PRINTF("* GUI manager touch update failed with unknown exception\n");
   }
 
-  //perform screen update and redraw
-  if (this->current_screen != NULL) {
+  //perform screen update and redraw, if coprocessor is not busy
+  if (this->current_screen != NULL && !this->cmd_busy_waiting) {
     try {
       this->current_screen->DisplayScreen();
     } catch (const std::exception& exc) {
@@ -161,10 +175,52 @@ void GUIManager::SetScreen(GUIScreen* screen) {
     throw std::invalid_argument("GUIManager SetScreen given null pointer");
   }
 
-  //TODO see if we need to do more?
   this->current_screen = screen;
 
-  if (this->initialised) {
+  //ensure the screen gets updated and drawn
+  this->current_screen->needs_display_list_rebuild = true;
+
+  //immediately update and draw screen, if we're initialised and coprocessor is not busy
+  if (this->initialised && !this->cmd_busy_waiting) {
     this->current_screen->DisplayScreen();
+  }
+}
+
+
+void GUIManager::SendCmdTransferWhenNotBusy(const uint32_t* data, uint32_t length_words) {
+  if (data == NULL) {
+    throw std::invalid_argument("GUIManager SendCmdTransferWhenNotBusy given null pointer");
+  }
+
+  if (length_words == 0) {
+    //nothing to do
+    return;
+  }
+
+  //check if coprocessor is currently busy, to see if we need to wait for the first block
+  if (this->driver.IsBusy() != E_OK) {
+    this->cmd_busy_waiting = true;
+  }
+
+  //process data block-by-block, queueing the blocks if we're busy
+  uint32_t words_left = length_words;
+  uint32_t offset_words = 0;
+
+  while (words_left > 0) {
+    uint32_t block_words = MIN(words_left, 960);
+
+    if (this->cmd_busy_waiting) {
+      //already busy: queue block for later transfer
+      auto& transfer = this->queued_cmd_transfers.emplace_back();
+      transfer.data = data + offset_words;
+      transfer.length_words = block_words;
+    } else {
+      //not busy: transfer directly and set as busy
+      this->driver.phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)(data + offset_words), block_words * sizeof(uint32_t), 10);
+      this->cmd_busy_waiting = true;
+    }
+
+    offset_words += block_words;
+    words_left -= block_words;
   }
 }

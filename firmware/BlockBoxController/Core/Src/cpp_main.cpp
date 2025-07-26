@@ -13,6 +13,10 @@
 #include "system.h"
 
 
+#undef MAIN_LOOP_PERFORMANCE_MONITOR
+//#define MAIN_LOOP_PERFORMANCE_MONITOR
+
+
 BlockBoxV2System bbv2_system;
 System& main_system = bbv2_system;
 
@@ -45,6 +49,10 @@ int cpp_main() {
     Error_Handler();
   }
 
+#ifdef MAIN_LOOP_PERFORMANCE_MONITOR
+  float performance_mean_ticks = 0.0f;
+#endif
+
   //infinite loop
   //iteration counter; may overflow eventually but shouldn't be a problem
   uint32_t loop_count = 0;
@@ -59,6 +67,15 @@ int cpp_main() {
     } catch (...) {
       DEBUG_PRINTF("* Unknown exception in main loop\n");
     }
+
+
+#ifdef MAIN_LOOP_PERFORMANCE_MONITOR
+    if (loop_count % 200 == 0) {
+      DEBUG_PRINTF("Mean main loop ticks: %.4f\n", performance_mean_ticks);
+    }
+
+    performance_mean_ticks = .005f * (float)(HAL_GetTick() - iteration_start_tick) + .995f * performance_mean_ticks;
+#endif
 
     loop_count++;
     _RefreshWatchdogs();

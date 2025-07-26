@@ -18,6 +18,7 @@ TestScreen::TestScreen(BlockBoxV2GUIManager& manager) :
 void TestScreen::HandleTouch(const GUITouchState& state) noexcept {
   if (state.touched && state.tag == 1) {
     this->slider_pos = state.tracker_value;
+    this->needs_existing_list_update = true;
   }
 
   if (state.released && state.tag == 2 && state.initial_tag == 2) {
@@ -31,7 +32,7 @@ void TestScreen::BuildScreenContent() {
   this->driver.CmdTag(1);
   this->driver.CmdFGColor(this->bbv2_manager.GetThemeColorMain());
   this->slider_offset_index = this->SaveNextCommandOffset();
-  this->driver.CmdSlider(50, 60, 150, 10, 0, slider_pos, 0xFFFFU);
+  this->driver.CmdSlider(50, 60, 150, 10, 0, this->slider_pos, 0xFFFFU);
   this->driver.CmdTrack(45, 55, 160, 20, 1);
   this->driver.CmdTag(2);
   this->driver.CmdButton(220, 60, 70, 30, 26, EVE_OPT_FLAT, "Calibrate");
@@ -48,5 +49,5 @@ void TestScreen::BuildScreenContent() {
 
 
 void TestScreen::UpdateExistingScreenContent() {
-  this->ModifyDLCommand16(this->slider_offset_index, 3, 1, slider_pos);
+  this->ModifyDLCommand16(this->slider_offset_index, 3, 1, this->slider_pos);
 }

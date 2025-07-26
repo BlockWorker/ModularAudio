@@ -26,6 +26,7 @@ extern "C" {
 
 
 class GUIScreen {
+  friend GUIManager;
 public:
   EVEDriver& driver;
   GUIManager& manager;
@@ -41,6 +42,7 @@ protected:
   std::vector<uint32_t> dl_command_offsets;
   uint32_t display_timeout;
   bool needs_display_list_rebuild;
+  bool needs_existing_list_update;
 
   void BuildAndSaveDisplayList();
   virtual void BuildScreenContent() = 0;
@@ -51,8 +53,6 @@ protected:
   void ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) noexcept;
   void ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) noexcept;
 
-private:
-  void BuildCommonContent();
 };
 
 

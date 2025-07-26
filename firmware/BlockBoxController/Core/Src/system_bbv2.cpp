@@ -344,8 +344,8 @@ void BlockBoxV2System::LoopTasks() {
   this->dac_if.LoopTasks();
   this->amp_if.LoopTasks();
   this->btrx_if.LoopTasks();
-  this->gui_mgr.Update();
   this->audio_mgr.LoopTasks();
+  this->gui_mgr.Update();
 }
 
 
