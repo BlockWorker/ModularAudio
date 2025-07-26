@@ -70,7 +70,7 @@ public:
   void HandlePowerStateChange(bool on, SuccessCallback&& callback);
 
   //input functions
-  AudioPathInput GetActiveInput();
+  AudioPathInput GetActiveInput() const;
   bool IsInputAvailable(AudioPathInput input) const;
 
   void SetActiveInput(AudioPathInput input, SuccessCallback&& callback, bool queue_if_busy = false);

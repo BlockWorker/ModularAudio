@@ -442,6 +442,8 @@ void AudioPathManager::Init(SuccessCallback&& callback) {
 /******************************************************/
 
 void AudioPathManager::LoopTasks() {
+  static uint32_t loop_count = 0;
+
   if (!this->initialised) {
     return;
   }
@@ -474,6 +476,22 @@ void AudioPathManager::LoopTasks() {
     }
   }
   __set_PRIMASK(primask);
+
+  //if not locked, periodically check active input
+  if (this->lock_timer == 0 && loop_count++ % 50 == 0) {
+    primask = __get_PRIMASK();
+    __disable_irq();
+    AudioPathInput determined_input = this->DetermineActiveInput();
+
+    //on change: notify event handlers
+    if (determined_input != this->persistent_active_input) {
+      this->persistent_active_input = determined_input;
+      __set_PRIMASK(primask);
+      this->ExecuteCallbacks(AUDIO_EVENT_INPUT_UPDATE);
+    } else {
+      __set_PRIMASK(primask);
+    }
+  }
 }
 
 
@@ -638,15 +656,7 @@ AudioPathInput AudioPathManager::DetermineActiveInput() const {
   return AUDIO_INPUT_NONE;
 }
 
-AudioPathInput AudioPathManager::GetActiveInput() {
-  AudioPathInput determined_input = this->DetermineActiveInput();
-
-  //on change: notify event handlers
-  if (determined_input != this->persistent_active_input) {
-    this->persistent_active_input = determined_input;
-    this->ExecuteCallbacks(AUDIO_EVENT_INPUT_UPDATE);
-  }
-
+AudioPathInput AudioPathManager::GetActiveInput() const {
   return this->persistent_active_input;
 }
 
