@@ -269,6 +269,10 @@ int main(void)
     }*/
 #endif
 
+    /*if (loop_count % 50 == 0) {
+      DEBUG_PRINTF("USB VBUS: %u\n", HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));
+    }*/
+
     INPUT_LoopUpdate();
     I2C_LoopUpdate();
 

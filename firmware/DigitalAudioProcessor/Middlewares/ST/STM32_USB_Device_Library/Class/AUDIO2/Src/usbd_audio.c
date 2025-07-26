@@ -375,7 +375,7 @@ static uint8_t USBD_AUDIO_Init(USBD_HandleTypeDef* pdev, uint8_t cfgidx) {
   */
 static uint8_t USBD_AUDIO_DeInit(USBD_HandleTypeDef* pdev, uint8_t cfgidx) {
   /* Flush all endpoints */
-  USBD_LL_FlushEP(pdev, AUDIO_OUT_EP);
+  //USBD_LL_FlushEP(pdev, AUDIO_OUT_EP);
   //USBD_LL_FlushEP(pdev, AUDIO_IN_EP);
 
   /* Close EP OUT */
