@@ -161,7 +161,7 @@ void HiFiDACInterface::SetMutes(bool mute_ch1, bool mute_ch2, SuccessCallback&& 
 
 
 void HiFiDACInterface::SetSignalPathSetup(HiFiDACSignalPathSetup setup, SuccessCallback&& callback) {
-  uint8_t setup_val = setup.value;
+  uint8_t setup_val = setup.value & 0x7F;
 
   //write desired value
   this->WriteRegister8Async(I2CDEF_HIFIDAC_PATH, setup_val, [&, callback = std::move(callback), setup_val](bool, uint32_t, uint16_t) {
