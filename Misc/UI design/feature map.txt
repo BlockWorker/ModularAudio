@@ -8,8 +8,11 @@ Global status bar -- RAM_DL usage: no dropdown ~5%, with dropdown ~20%
 - bluetooth pair+disconnect (in dropdown): Tag 252
 => Open/close dropdown: Tag 250
 
+Power off screen
+- sys on: Tag 5
+
 Main screen
-- sys on/off: Tag 19
+- sys off: Tag 19
 - volume info + mute: Tag 14
 - volume up/down: - Tag 13, + Tag 15
 - light on/off: Tag 17

@@ -41,9 +41,9 @@ void TestScreen::BuildScreenContent() {
   this->BlockBoxV2Screen::BuildScreenContent();
 
   //testing icons
-  GUIDraws::BluetoothIconSmall(this->driver, 20, 100);
-  GUIDraws::USBIconSmall(this->driver, 40, 100);
-  GUIDraws::SPDIFIconSmall(this->driver, 60, 100, 0x000000);
+  GUIDraws::BluetoothIconSmall(this->driver, 20, 100, 0x8080FF);
+  GUIDraws::USBIconSmall(this->driver, 40, 100, 0xFFFF80);
+  GUIDraws::SPDIFIconSmall(this->driver, 60, 100, 0xFF80FF, 0x000000);
 }
 
 

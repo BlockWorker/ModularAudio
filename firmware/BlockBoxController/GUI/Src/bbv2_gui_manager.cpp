@@ -22,7 +22,7 @@
 
 
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
-    GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), test_screen(*this),
+    GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), test_screen(*this),
     gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults) {}
 
 
@@ -30,6 +30,8 @@ void BlockBoxV2GUIManager::Init() {
   //initialise screens
   this->touch_cal_screen.Init();
   this->init_screen.Init();
+  this->power_off_screen.Init();
+  this->main_screen.Init();
   this->test_screen.Init();
 
   //pre-set initial screen
@@ -78,12 +80,14 @@ void BlockBoxV2GUIManager::SetInitProgress(const char* progress_string, bool err
     //check for touch calibration validity in the config
     TouchTransformMatrix matrix = this->GetTouchMatrix();
     if (matrix.a != 0 || matrix.b != 0 || matrix.c != 0 || matrix.d != 0 || matrix.e != 0 || matrix.f != 0) {
-      //have valid touch config: write it to EVE and proceed directly to main screen
+      //have valid touch config: write it to EVE and proceed directly to power-off screen
       this->driver.phy.DirectWriteBuffer(REG_TOUCH_TRANSFORM_A, (const uint8_t*)&matrix, sizeof(TouchTransformMatrix), 5);
-      this->SetScreen(&this->test_screen);
+      //schedule auto-calibration, in case the saved touch matrix got corrupted somehow
+      this->power_off_screen.ScheduleAutoCalibration();
+      this->SetScreen(&this->power_off_screen);
     } else {
       //touch config invalid: proceed to calibration screen
-      this->touch_cal_screen.SetReturnScreen(&this->test_screen);
+      this->touch_cal_screen.SetReturnScreen(&this->power_off_screen);
       this->SetScreen(&this->touch_cal_screen);
     }
   } else {

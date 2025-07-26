@@ -188,8 +188,7 @@ void BlockBoxV2System::Init() {
 
 
   //debug printout callbacks
-  /*
-  this->dap_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  /*this->dap_if.RegisterCallback([&](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_DAP_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("DAP status update: 0x%02X\n", this->dap_if.GetStatus().value);
@@ -198,10 +197,10 @@ void BlockBoxV2System::Init() {
         DEBUG_PRINTF("DAP inputs update: active 0x%02X, available 0x%02X\n", this->dap_if.GetActiveInput(), this->dap_if.GetAvailableInputs().value);
         break;
       case MODIF_DAP_EVENT_INPUT_RATE_UPDATE:
-        DEBUG_PRINTF("DAP input rate update: %u\n", this->dap_if.GetSRCInputSampleRate());
+        //DEBUG_PRINTF("DAP input rate update: %u\n", this->dap_if.GetSRCInputSampleRate());
         break;
       case MODIF_DAP_EVENT_SRC_STATS_UPDATE:
-        DEBUG_PRINTF("DAP SRC stats update: rate error %.4f, fill error %.1f\n", this->dap_if.GetSRCInputRateErrorRelative(), this->dap_if.GetSRCBufferFillErrorSamples());
+        //DEBUG_PRINTF("DAP SRC stats update: rate error %.4f, fill error %.1f\n", this->dap_if.GetSRCInputRateErrorRelative(), this->dap_if.GetSRCBufferFillErrorSamples());
         break;
       default:
         break;
@@ -209,13 +208,13 @@ void BlockBoxV2System::Init() {
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
   this->dac_if.RegisterCallback([&](EventSource*, uint32_t event) {
-    DEBUG_PRINTF("HiFiDAC status update: 0x%02X\n", this->dac_if.GetStatus().value);
+    //DEBUG_PRINTF("HiFiDAC status update: 0x%02X\n", this->dac_if.GetStatus().value);
   }, MODIF_HIFIDAC_EVENT_STATUS_UPDATE);
 
   this->amp_if.RegisterCallback([&](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_POWERAMP_EVENT_STATUS_UPDATE:
-        DEBUG_PRINTF("PowerAmp status update: 0x%04X\n", this->amp_if.GetStatus().value);
+        //DEBUG_PRINTF("PowerAmp status update: 0x%04X\n", this->amp_if.GetStatus().value);
         break;
       case MODIF_POWERAMP_EVENT_SAFETY_UPDATE:
         //DEBUG_PRINTF("PowerAmp safety update: shutdown man %u safety %u, err 0x%04X, warn 0x%04X\n", this->amp_if.IsManualShutdownActive(), this->amp_if.IsSafetyShutdownActive(), this->amp_if.GetSafetyErrorSource().value, this->amp_if.GetSafetyWarningSource().value);
@@ -261,10 +260,17 @@ void BlockBoxV2System::Init() {
   //*/
 
   this->audio_mgr.RegisterCallback([&](EventSource*, uint32_t event) {
+    static AudioPathInput last_input = AUDIO_INPUT_SPDIF;
     switch (event) {
       case AUDIO_EVENT_INPUT_UPDATE:
-        DEBUG_PRINTF("Audio input update: active %u\n", this->audio_mgr.GetActiveInput());
+      {
+        AudioPathInput input = this->audio_mgr.GetActiveInput();
+        if (input != last_input) {
+          last_input = input;
+          DEBUG_PRINTF("Audio input update: active %u\n", input);
+        }
         break;
+      }
       case AUDIO_EVENT_VOLUME_UPDATE:
         DEBUG_PRINTF("Audio volume update: %.1f\n", this->audio_mgr.GetCurrentVolumeDB());
         break;

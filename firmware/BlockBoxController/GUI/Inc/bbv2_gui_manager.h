@@ -13,6 +13,8 @@
 #include "storage.h"
 #include "touch_cal_screen.h"
 #include "init_screen.h"
+#include "power_off_screen.h"
+#include "main_screen.h"
 #include "test_screen.h"
 
 
@@ -41,6 +43,10 @@ public:
 
   TouchCalScreen touch_cal_screen;
   InitScreen init_screen;
+
+  PowerOffScreen power_off_screen;
+  MainScreen main_screen;
+
   TestScreen test_screen;
 
 

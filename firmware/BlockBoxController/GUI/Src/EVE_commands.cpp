@@ -32,6 +32,13 @@
 #include "EVE.h"
 
 
+//character widths for fonts 20-34 (first index, font 20 = index 0) for each character (second index, ASCII 32-127, char 32 = index 0)
+const uint8_t eve_font_char_widths[15][96] = {
+#include "../Data/font_char_widths.txt"
+};
+
+
+
 EVEDriver::EVEDriver() : fault_recovered(E_OK) {
   //allocate default size for display list, to avoid excessive allocations during first display list build
   this->dl_cmd_buffer.reserve(EVE_DLBUFFER_DEFAULT_SIZE);

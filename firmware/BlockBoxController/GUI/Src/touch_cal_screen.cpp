@@ -12,7 +12,11 @@
 
 
 //touch lockout after calibration/test, in main loop cycles
-#define TOUCH_CAL_LOCKOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
+#define SCREEN_TOUCH_CAL_LOCKOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
+
+//touch tags for calibration test
+#define SCREEN_TOUCH_CAL_TAG_TEST_HIT 2
+#define SCREEN_TOUCH_CAL_TAG_TEST_MISS 1
 
 
 TouchCalScreen::TouchCalScreen(BlockBoxV2GUIManager& manager) :
@@ -34,7 +38,7 @@ void TouchCalScreen::DisplayScreen() {
         this->state = CAL_START;
       } else if (busy_result == E_OK) {
         //not busy: calibration command done, continue to test
-        this->touch_lockout_counter = TOUCH_CAL_LOCKOUT_CYCLES;
+        this->touch_lockout_counter = SCREEN_TOUCH_CAL_LOCKOUT_CYCLES;
         this->needs_display_list_rebuild = true;
         this->state = CAL_TEST_1;
       }
@@ -86,7 +90,7 @@ void TouchCalScreen::HandleTouch(const GUITouchState& state) noexcept {
       //button hit: proceed
       switch (this->state) {
         case CAL_TEST_1:
-          this->touch_lockout_counter = TOUCH_CAL_LOCKOUT_CYCLES;
+          this->touch_lockout_counter = SCREEN_TOUCH_CAL_LOCKOUT_CYCLES;
           this->needs_display_list_rebuild = true;
           this->state = CAL_TEST_2;
           break;
@@ -169,11 +173,11 @@ void TouchCalScreen::BuildScreenContent() {
   this->driver.CmdText(160, 120, 27, EVE_OPT_CENTER, text);
   if (button_x > 0 && button_y > 0) {
     //invisible background touch area (for when you "miss" the button)
-    this->driver.CmdDL(CLEAR_TAG(1));
+    this->driver.CmdDL(CLEAR_TAG(SCREEN_TOUCH_CAL_TAG_TEST_MISS));
     this->driver.CmdDL(CLEAR(0, 0, 1));
     //actual button
     this->driver.CmdFGColor(0x8080FF);
-    this->driver.CmdTag(2);
+    this->driver.CmdTag(SCREEN_TOUCH_CAL_TAG_TEST_HIT);
     this->driver.CmdButton(button_x, button_y, 20, 20, 26, EVE_OPT_FLAT, "");
   }
 }
