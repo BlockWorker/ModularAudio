@@ -120,6 +120,7 @@ protected:
   std::deque<QueuedOperation> queued_operations;
 
   uint32_t bluetooth_volume_lock_timer;
+  bool bluetooth_previously_connected;
 
   AudioPathInput persistent_active_input;
 
@@ -141,6 +142,7 @@ protected:
   void ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCallback&& callback);
 
   void UpdateBluetoothVolume();
+  void UpdateVolumeFromBluetooth();
 
   void HandleEvent(EventSource* source, uint32_t event);
 };

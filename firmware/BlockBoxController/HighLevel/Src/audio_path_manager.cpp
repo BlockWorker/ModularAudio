@@ -127,8 +127,8 @@ static_assert(_audio_dap_fir_length_ch1 <= 300 && _audio_dap_fir_length_ch2 <= 3
 
 AudioPathManager::AudioPathManager(BlockBoxV2System& system) :
     system(system), non_volatile_config(system.eeprom_if, AUDIO_NVM_TOTAL_BYTES, AudioPathManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0),
-    bluetooth_volume_lock_timer(0), persistent_active_input(AUDIO_INPUT_NONE), current_volume_dB(AUDIO_DEFAULT_VOLUME_DB), min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB),
-    max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB), volume_step_dB(AUDIO_DEFAULT_VOLUME_STEP_DB) {}
+    bluetooth_volume_lock_timer(0), bluetooth_previously_connected(false), persistent_active_input(AUDIO_INPUT_NONE), current_volume_dB(AUDIO_DEFAULT_VOLUME_DB),
+    min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB), max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB), volume_step_dB(AUDIO_DEFAULT_VOLUME_STEP_DB) {}
 
 
 void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
@@ -477,7 +477,7 @@ void AudioPathManager::LoopTasks() {
   }
   __set_PRIMASK(primask);
 
-  //if not locked, periodically check active input
+  //if not locked, periodically check active input and Bluetooth connection state
   if (this->lock_timer == 0 && loop_count++ % 50 == 0) {
     primask = __get_PRIMASK();
     __disable_irq();
@@ -489,6 +489,21 @@ void AudioPathManager::LoopTasks() {
       __set_PRIMASK(primask);
       this->ExecuteCallbacks(AUDIO_EVENT_INPUT_UPDATE);
     } else {
+      __set_PRIMASK(primask);
+    }
+
+    primask = __get_PRIMASK();
+    __disable_irq();
+    //check for new Bluetooth connection
+    BluetoothReceiverStatus bt_status = this->system.btrx_if.GetStatus();
+
+    if (bt_status.avrcp_link && !this->bluetooth_previously_connected) {
+      //new connection established: update volume from Bluetooth
+      this->bluetooth_previously_connected = true;
+      __set_PRIMASK(primask);
+      this->UpdateVolumeFromBluetooth();
+    } else {
+      this->bluetooth_previously_connected = bt_status.avrcp_link;
       __set_PRIMASK(primask);
     }
   }
@@ -507,9 +522,10 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
     return;
   }
 
-  //lock out further operations
+  //lock out further operations, and Bluetooth updates
   this->lock_timer = AUDIO_LOCK_TIMEOUT_CYCLES;
   __set_PRIMASK(primask);
+  this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
 
   //first thing in all cases: mute DAC
   this->system.dac_if.SetMutes(true, true, [&, on, callback = std::move(callback)](bool success) {
@@ -573,43 +589,25 @@ void AudioPathManager::HandleEvent(EventSource* source, uint32_t event) {
   }
 
   if (source == &this->system.btrx_if && event == MODIF_BTRX_EVENT_VOLUME_UPDATE) {
-    //Bluetooth volume update
-    uint8_t bt_volume = this->system.btrx_if.GetAbsoluteVolume();
-
-    //lock out Bluetooth volume updates
-    this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
-
-    if (bt_volume >= AUDIO_BLUETOOTH_VOL_OFFSET) {
-      //not muted: calculate relative volume from Bluetooth volume, clamp to valid range
-      float relative_volume = (float)(bt_volume - AUDIO_BLUETOOTH_VOL_OFFSET) / (float)(127 - AUDIO_BLUETOOTH_VOL_OFFSET);
-      if (relative_volume < 0.0f) {
-        relative_volume = 0.0f;
-      } else if (relative_volume > 1.0f) {
-        relative_volume = 1.0f;
-      }
-      //set relative volume, queue if busy
-      this->SetCurrentRelativeVolume(relative_volume, [&](bool success) {
-        if (!success) {
-          DEBUG_PRINTF("* Volume update from Bluetooth failed\n");
-        } else {
-          DEBUG_PRINTF("Volume updated from Bluetooth, now %.1f\n", this->current_volume_dB); //TODO temporary testing printout, remove later
-        }
-      }, true);
-    }
-
-    //ensure correct mute state, queue if busy
-    this->SetMute(bt_volume < AUDIO_BLUETOOTH_VOL_OFFSET, [&](bool success) {
-      if (!success) {
-        DEBUG_PRINTF("* Mute update from Bluetooth failed\n");
-      } else {
-        DEBUG_PRINTF("Mute updated from Bluetooth, now %u\n", this->IsMute()); //TODO temporary testing printout, remove later
-      }
-    }, true);
+    this->UpdateVolumeFromBluetooth();
   } else {
     //input update (from DAP input info, DAP status, or BTRX status events)
     this->persistent_active_input = this->DetermineActiveInput();
     //trigger event in all cases, because available inputs may have changed (even if active input didn't)
     this->ExecuteCallbacks(AUDIO_EVENT_INPUT_UPDATE);
+
+    if (source == &this->system.btrx_if && event == MODIF_BTRX_EVENT_STATUS_UPDATE) {
+      //Bluetooth status update: check for new connection
+      BluetoothReceiverStatus bt_status = this->system.btrx_if.GetStatus();
+
+      if (bt_status.avrcp_link && !this->bluetooth_previously_connected) {
+        //new connection established: update volume from Bluetooth
+        this->bluetooth_previously_connected = true;
+        this->UpdateVolumeFromBluetooth();
+      } else {
+        this->bluetooth_previously_connected = bt_status.avrcp_link;
+      }
+    }
   }
 }
 
@@ -1372,7 +1370,7 @@ void AudioPathManager::UpdateBluetoothVolume() {
 
   //check whether the current volume (dB) is the same as what the current Bluetooth volume step would round to
   uint8_t current_bt_volume = this->system.btrx_if.GetAbsoluteVolume();
-  if (current_bt_volume >= AUDIO_BLUETOOTH_VOL_OFFSET) {
+  if (current_bt_volume >= AUDIO_BLUETOOTH_VOL_OFFSET && !this->IsMute()) {
     this->CheckAndFixVolumeLimits();
     this->CheckAndFixVolumeStep();
 
@@ -1427,6 +1425,41 @@ void AudioPathManager::UpdateBluetoothVolume() {
       DEBUG_PRINTF("* Failed to set Bluetooth absolute volume\n");
     }
   });
+}
+
+void AudioPathManager::UpdateVolumeFromBluetooth() {
+  //Bluetooth volume update
+  uint8_t bt_volume = this->system.btrx_if.GetAbsoluteVolume();
+
+  //lock out Bluetooth volume updates
+  this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
+
+  if (bt_volume >= AUDIO_BLUETOOTH_VOL_OFFSET) {
+    //not muted: calculate relative volume from Bluetooth volume, clamp to valid range
+    float relative_volume = (float)(bt_volume - AUDIO_BLUETOOTH_VOL_OFFSET) / (float)(127 - AUDIO_BLUETOOTH_VOL_OFFSET);
+    if (relative_volume < 0.0f) {
+      relative_volume = 0.0f;
+    } else if (relative_volume > 1.0f) {
+      relative_volume = 1.0f;
+    }
+    //set relative volume, queue if busy
+    this->SetCurrentRelativeVolume(relative_volume, [&](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("* Volume update from Bluetooth failed\n");
+      } else {
+        DEBUG_PRINTF("Volume updated from Bluetooth, now %.1f\n", this->current_volume_dB); //TODO temporary testing printout, remove later
+      }
+    }, true);
+  }
+
+  //ensure correct mute state, queue if busy
+  this->SetMute(bt_volume < AUDIO_BLUETOOTH_VOL_OFFSET, [&](bool success) {
+    if (!success) {
+      DEBUG_PRINTF("* Mute update from Bluetooth failed\n");
+    } else {
+      DEBUG_PRINTF("Mute updated from Bluetooth, now %u\n", this->IsMute()); //TODO temporary testing printout, remove later
+    }
+  }, true);
 }
 
 
