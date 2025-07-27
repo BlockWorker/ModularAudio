@@ -71,8 +71,8 @@ void BlockBoxV2Screen::CopyOrShortenText(char* dest, const char* src, uint16_t m
 }
 
 
-BlockBoxV2Screen::BlockBoxV2Screen(BlockBoxV2GUIManager& manager, uint32_t display_timeout) :
-    GUIScreen(manager, display_timeout), bbv2_manager(manager), status_text_override(NULL),
+BlockBoxV2Screen::BlockBoxV2Screen(BlockBoxV2GUIManager& manager) :
+    GUIScreen(manager), bbv2_manager(manager), status_text_override(NULL),
     currently_drawn_input(AUDIO_INPUT_NONE), currently_drawn_battery_percent(0), currently_drawn_battery_precise(false) {}
 
 

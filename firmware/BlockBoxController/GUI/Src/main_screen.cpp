@@ -15,7 +15,7 @@
 
 
 MainScreen::MainScreen(BlockBoxV2GUIManager& manager) :
-    BlockBoxV2Screen(manager, 50) {}
+    BlockBoxV2Screen(manager) {}
 
 
 void MainScreen::DisplayScreen() {

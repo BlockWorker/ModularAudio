@@ -23,8 +23,8 @@ void GUIScreen::DisplayScreen() {
 }
 
 
-GUIScreen::GUIScreen(GUIManager& manager, uint32_t display_timeout) noexcept :
-    driver(manager.driver), manager(manager), display_timeout(display_timeout), needs_display_list_rebuild(true), needs_existing_list_update(false) {}
+GUIScreen::GUIScreen(GUIManager& manager) noexcept :
+    driver(manager.driver), manager(manager), needs_display_list_rebuild(true), needs_existing_list_update(false) {}
 
 
 /**

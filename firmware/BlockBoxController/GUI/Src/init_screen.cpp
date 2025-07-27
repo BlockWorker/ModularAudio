@@ -10,7 +10,7 @@
 
 
 InitScreen::InitScreen(BlockBoxV2GUIManager& manager) :
-    BlockBoxV2Screen(manager, 40), init_progress_string("Initialising GUI..."), init_error(false) {
+    BlockBoxV2Screen(manager), init_progress_string("Initialising GUI..."), init_error(false) {
   this->status_text_override = "BlockBox v2 neo";
 }
 

@@ -12,7 +12,7 @@
 
 
 TestScreen::TestScreen(BlockBoxV2GUIManager& manager) :
-    BlockBoxV2Screen(manager, 40), slider_pos(0) {}
+    BlockBoxV2Screen(manager), slider_pos(0) {}
 
 
 void TestScreen::HandleTouch(const GUITouchState& state) noexcept {

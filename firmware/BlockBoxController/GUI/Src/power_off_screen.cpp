@@ -22,7 +22,7 @@
 
 
 PowerOffScreen::PowerOffScreen(BlockBoxV2GUIManager& manager) :
-    BlockBoxV2Screen(manager, 40), auto_calibration_scheduled(false), auto_calibration_tick(0), currently_drawn_auto_cal_seconds(0) {
+    BlockBoxV2Screen(manager), auto_calibration_scheduled(false), auto_calibration_tick(0), currently_drawn_auto_cal_seconds(0) {
   this->status_text_override = "Standby Mode";
 }
 

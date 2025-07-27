@@ -35,12 +35,11 @@ public:
 
   virtual void HandleTouch(const GUITouchState& state) noexcept = 0;
 
-  GUIScreen(GUIManager& manager, uint32_t display_timeout) noexcept;
+  GUIScreen(GUIManager& manager) noexcept;
 
 protected:
   std::vector<uint32_t> saved_dl_commands;
   std::vector<uint32_t> dl_command_offsets;
-  uint32_t display_timeout;
   bool needs_display_list_rebuild;
   bool needs_existing_list_update;
 

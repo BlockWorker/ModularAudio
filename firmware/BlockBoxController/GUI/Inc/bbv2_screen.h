@@ -24,7 +24,7 @@ public:
 
   BlockBoxV2GUIManager& bbv2_manager;
 
-  BlockBoxV2Screen(BlockBoxV2GUIManager& manager, uint32_t display_timeout);
+  BlockBoxV2Screen(BlockBoxV2GUIManager& manager);
 
   virtual void Init();
 
