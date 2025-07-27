@@ -14,9 +14,9 @@
 
 
 //time of touch long-press, in milliseconds
-#define GUI_TOUCH_LONG_DELAY 1500
+#define GUI_TOUCH_LONG_DELAY 1000
 //period of long-press touch "ticks", in milliseconds
-#define GUI_TOUCH_TICK_PERIOD 500
+#define GUI_TOUCH_TICK_PERIOD 300
 
 //debounce time for touches, in milliseconds
 #define GUI_TOUCH_DEBOUNCE_DELAY 20

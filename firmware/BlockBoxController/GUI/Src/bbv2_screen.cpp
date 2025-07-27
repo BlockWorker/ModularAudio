@@ -176,14 +176,14 @@ void BlockBoxV2Screen::BuildScreenContent() {
 
   char status_text[32] = { 0 };
   if (this->status_text_override == NULL) {
-    //active input icon and info - TODO use actual input information
+    //active input icon and info
     AudioPathInput input = this->bbv2_manager.system.audio_mgr.GetActiveInput();
     switch (input) {
       case AUDIO_INPUT_BLUETOOTH:
       {
         //bluetooth
         GUIDraws::BluetoothIconSmall(this->driver, 0, 0, 0xFFFFFF);
-        //get real device name
+        //get device name
         const char* device_name = this->bbv2_manager.system.btrx_if.GetDeviceName();
         if (device_name[0] == 0) {
           //empty name: use default

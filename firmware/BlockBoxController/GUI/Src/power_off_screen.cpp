@@ -73,8 +73,8 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
         this->bbv2_manager.system.amp_if.SetManualShutdownActive(false, [&](bool success) {
           DEBUG_PRINTF("PowerOffScreen power-on: PowerAmp success %u\n", success);
           if (success) {
-            //reset this screen and go to main screen - TODO actual main screen
-            this->bbv2_manager.SetScreen(&this->bbv2_manager.test_screen);
+            //reset this screen and go to main screen
+            this->bbv2_manager.SetScreen(&this->bbv2_manager.main_screen);
           }
         });
       }

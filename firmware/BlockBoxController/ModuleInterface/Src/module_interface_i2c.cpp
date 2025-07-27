@@ -772,9 +772,9 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
       //out of retries: don't retry again
       retry = false;
       DEBUG_PRINTF("* I2CModuleInterface async transfer failed to complete too many times to retry!\n");
-    } else {
+    } /*else {
       DEBUG_PRINTF("I2CModuleInterface async transfer retrying on completion\n");
-    }
+    }*/
   }
 
   if (transfer->success || !retry) {
@@ -921,9 +921,9 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
         //list operation failed: force another retry (should be a very unlikely case)
         DEBUG_PRINTF("*** Retry forced due to exception when trying to mark the failed transfer as done!\n");
       }
-    } else {
+    } /*else {
       DEBUG_PRINTF("I2CModuleInterface async transfer retrying on start\n");
-    }
+    }*/
 
     if (reset_on_fail) {
       this->hw_interface.Reset();
