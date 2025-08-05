@@ -1,0 +1,32 @@
+Filter Settings file
+
+Room EQ V5.31.3
+Dated: Aug 4, 2025 6:17:08 PM
+
+Notes:Tweeter based on BBv2 measurements
+
+Equaliser: Generic
+Tweeter Avg
+Filter  1: ON  PK       Fc    1887 Hz  Gain  -4.70 dB  Q  1.610
+Filter  2: ON  HP       Fc    2000 Hz 
+Filter  3: ON  PK       Fc    2626 Hz  Gain   2.50 dB  Q  2.731
+Filter  4: ON  PK       Fc    3443 Hz  Gain  -1.80 dB  Q  4.746
+Filter  5: ON  PK       Fc    4973 Hz  Gain  -2.80 dB  Q  4.156
+Filter  6: ON  PK       Fc    6182 Hz  Gain   5.10 dB  Q  1.111
+Filter  7: ON  PK       Fc    7707 Hz  Gain  -9.10 dB  Q  1.181
+Filter  8: ON  PK       Fc    9598 Hz  Gain   4.70 dB  Q  7.247
+Filter  9: ON  PK       Fc   11093 Hz  Gain  -3.50 dB  Q  2.765
+Filter 10: ON  PK       Fc   15158 Hz  Gain  -2.70 dB  Q  2.892
+Filter 11: ON  PK       Fc   16205 Hz  Gain  -3.60 dB  Q  2.907
+Filter 12: ON  None   
+Filter 13: ON  None   
+Filter 14: ON  None   
+Filter 15: ON  None   
+Filter 16: ON  None   
+Filter 17: ON  None   
+Filter 18: ON  None   
+Filter 19: ON  None   
+Filter 20: ON  None   
+Filter  1: ON  None      
+Filter  2: ON  None      
+
