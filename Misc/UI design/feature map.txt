@@ -23,13 +23,22 @@ Main screen
 => Open dropdown: Tag 250
 => Settings: Tag 18
 
+Settings menu bar
+- Audio settings tab: Tag 30
+- Screen settings tab: Tag 31
+- Light settings tab: Tag 32
+- Power settings tab: Tag 33
+- Debug settings tab: Tag 35?
+- Close settings menu: Tag 39
+
 Sound config screen
-- volume limits (low+high)
-- volume step
-- volume pos gain allowed yes/no (?)
-- sound EQ option (?)
-- sound loudness gain
-- sound loudness track max volume yes/no
+- volume pos gain allowed yes/no: Tag 40
+- volume limits (low+high): Tags 41, 42
+- volume step: Tag 43
+- DAP stats
+- sound EQ option: Tag 44
+- sound loudness track max volume yes/no: Tag 45
+- sound loudness gain: Tag 46
 - sound bass/treble settings if want? prob not rn
 - amplifier info
 - amplifier power "limit" (adjustable warning level, tries to stay below)
