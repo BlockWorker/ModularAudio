@@ -39,34 +39,42 @@ Sound config screen
 - sound EQ option: Tag 44
 - sound loudness track max volume yes/no: Tag 45
 - sound loudness gain: Tag 46
-- sound bass/treble settings if want? prob not rn
+- sound bass/treble settings (prob not implemented rn): Tags 47, 48
 - amplifier info
-- amplifier power "limit" (adjustable warning level, tries to stay below)
-- amplifier voltage behaviour (?) (unclear about implementation details of that so far anyway)
+- amplifier power "limit" (adjustable warning level, tries to stay below): Tag 49
+- amplifier voltage behaviour (?) (don't think it's needed rn)
+
+Display config screen
+- display brightness: Tag 60
+- display off delay: Tag 61
+- display theme colour(s): Tag 62
+- display touch calibration: Tag 63
+- time+date setup
+  - Day +/-: Tags 64, 65
+  - Month +/-: Tags 66, 67
+  - Year +/-: Tags 68, 69
+  - Hour +/-: Tags 70, 71
+  - Min +/-: Tags 72, 73
+  - Sec +/-: Tags 74, 75
+  - 24h/AM/PM: Tag 76
+  - Apply/cancel: Tags 77, 78
 
 Light config screen
 - light on/off
 - light brightness
 - light mode
 
-Battery config screen
+Power config screen
 - battery info detailed
-- battery charging on/off
-- battery current limit
-- battery charge level/voltage limit
 - battery auto-shutdown time
 - battery manual shutdown
-- battery full shutdown (with confirmation)
-
-Screen config screen
-- screen brightness
-- screen off delay
-- screen theme colour(s)
-- screen touch calibration
+- adapter info
+- battery charge current limit (incl. full disable)
+- battery charge level/voltage limit
+- adapter current limit
 
 Debug screen
 - debug events
 - debug speaker calibration mode
 - debug bluetooth OTA upgrade
-
-- time+date setup
+- battery full shutdown (with confirmation)
