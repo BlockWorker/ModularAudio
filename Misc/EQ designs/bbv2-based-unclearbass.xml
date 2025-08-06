@@ -517,14 +517,14 @@
       <NegateA>true</NegateA>
     </BiquadFilter>
     <BiquadFilter>
-      <b0>1</b0>
-      <b1>0</b1>
-      <b2>0</b2>
-      <a1>0</a1>
-      <a2>0</a2>
-      <Type>Disabled</Type>
-      <Frequency>1000</Frequency>
-      <Q>1</Q>
+      <b0>0.9990748276239032589394908507</b0>
+      <b1>-1.9981496552478065178789817012</b1>
+      <b2>0.9990748276239032589394908507</b2>
+      <a1>1.9981487993036978653100078156</a1>
+      <a2>-0.9981505111919151704479555868</a2>
+      <Type>Highpass</Type>
+      <Frequency>20.0</Frequency>
+      <Q>0.7071067811865475244008443621</Q>
       <Gain>0</Gain>
       <SampleRate>96000</SampleRate>
       <NegateA>true</NegateA>
