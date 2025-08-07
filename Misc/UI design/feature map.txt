@@ -50,9 +50,9 @@ Display config screen
 - display theme colour(s): Tag 62
 - display touch calibration: Tag 63
 - time+date setup
-  - Day +/-: Tags 64, 65
+  - Year +/-: Tags 64, 65
   - Month +/-: Tags 66, 67
-  - Year +/-: Tags 68, 69
+  - Day +/-: Tags 68, 69
   - Hour +/-: Tags 70, 71
   - Min +/-: Tags 72, 73
   - Sec +/-: Tags 74, 75
@@ -60,21 +60,22 @@ Display config screen
   - Apply/cancel: Tags 77, 78
 
 Light config screen
-- light on/off
-- light brightness
-- light mode
+- light on/off: Tag 80
+- light sound-to-light on/off (disabled for now): Tag 81
+- light brightness: Tag 82
+- light colour: Tag 83
 
 Power config screen
 - battery info detailed
-- battery auto-shutdown time
-- battery manual shutdown
+- battery auto-shutdown time: Tag 100
+- battery manual shutdown? (don't think it's needed)
 - adapter info
-- battery charge current limit (incl. full disable)
-- battery charge level/voltage limit
-- adapter current limit
+- adapter current limit: Tag 101
+- battery charge current limit (incl. full disable): Tag 102
+- battery charge level/voltage limit: Tag 103
 
 Debug screen
-- debug events
-- debug speaker calibration mode
-- debug bluetooth OTA upgrade
-- battery full shutdown (with confirmation)
+- debug events (NYI)
+- debug speaker calibration modes: Tags 200, 201
+- debug bluetooth OTA upgrade: Tag 202
+- battery full shutdown (long press): Tag 203
