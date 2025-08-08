@@ -243,6 +243,7 @@ public:
   void CmdPoint(int16_t x0, int16_t y0, uint16_t size);
   void CmdLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t width);
   void CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t corner);
+  void CmdInvisibleRect(int16_t x, int16_t y, int16_t width, int16_t height);
   void CmdEndDisplay();
   void CmdTag(uint8_t tag);
   void CmdTagMask(bool enable_tag);

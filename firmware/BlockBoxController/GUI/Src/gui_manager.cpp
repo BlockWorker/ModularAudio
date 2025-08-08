@@ -50,6 +50,7 @@ void GUIManager::Init() {
   this->touch_state._debounce_tick = HAL_MAX_DELAY;
   this->touch_state.initial_tag = 0;
   this->touch_state.tag = 0;
+  this->touch_state.tracker_tag = 0;
   this->touch_state.tracker_value = 0;
 
   this->initialised = true;
@@ -106,14 +107,14 @@ void GUIManager::Update() noexcept {
       this->driver.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
       this->touch_state.tag = tag_read_buf;
 
-      //get tracker tag and compare it against directly reported tag
+      //get tracker tag
       this->driver.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
-      uint16_t tracker_tag = (uint16_t)touch_read_buf;
-      if (tracker_tag == this->touch_state.tag) {
-        //tag matches: store tracker value
+      this->touch_state.tracker_tag = (uint16_t)touch_read_buf;
+      if (this->touch_state.tracker_tag != 0) {
+        //tag nonzero: update tracker value
         this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16);
       } else {
-        //tag doesn't match: discard tracker value
+        //tag zero: discard tracker value
         this->touch_state.tracker_value = 0;
       }
     }
@@ -167,6 +168,11 @@ void GUIManager::Update() noexcept {
       DEBUG_PRINTF("* GUI manager screen update failed with unknown exception\n");
     }
   }
+}
+
+
+const GUITouchState& GUIManager::GetTouchState() const noexcept {
+  return this->touch_state;
 }
 
 

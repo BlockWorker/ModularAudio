@@ -49,6 +49,7 @@ protected:
   virtual void UpdateDisplayList();
 
   uint32_t SaveNextCommandOffset();
+  uint32_t* GetDLCommandPointer(uint32_t cmd_offset_index, int32_t word_offset) noexcept;
   void ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) noexcept;
   void ModifyDLCommand16(uint32_t cmd_offset_index, int32_t word_offset, uint8_t half_word_offset, uint16_t value) noexcept;
 

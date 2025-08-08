@@ -69,6 +69,14 @@ uint32_t GUIScreen::SaveNextCommandOffset() {
 }
 
 /**
+ * @brief Get a 32-bit word pointer to the display list, relative to a saved command offset (at given `cmd_offset_index`), offset by `word_offset` 32-bit words.
+ */
+uint32_t* GUIScreen::GetDLCommandPointer(uint32_t cmd_offset_index, int32_t word_offset) noexcept {
+  int32_t total_word_offset = (int32_t)this->dl_command_offsets[cmd_offset_index] + word_offset;
+  return this->saved_dl_commands.data() + total_word_offset;
+}
+
+/**
  * @brief Modify a 32-bit word in the display list, relative to a saved command offset (at given `cmd_offset_index`), offset by `word_offset` 32-bit words.
  */
 void GUIScreen::ModifyDLCommand32(uint32_t cmd_offset_index, int32_t word_offset, uint32_t value) noexcept {

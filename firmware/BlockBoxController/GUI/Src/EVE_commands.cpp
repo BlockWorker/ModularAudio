@@ -510,6 +510,7 @@ void EVEDriver::WriteDisplayParameters() {
 
   //Configure Touch
   MMAP_REG_TOUCH_MODE = EVE_TMODE_CONTINUOUS; //enable touch
+  MMAP_REG_TOUCH_OVERSAMPLE = 10; //higher oversampling rate (default 7)
 #if defined (EVE_TOUCH_RZTHRESH)
   MMAP_REG_TOUCH_RZTHRESH = EVE_TOUCH_RZTHRESH; //configure the sensitivity of resistive touch
 #else
@@ -1137,6 +1138,16 @@ void EVEDriver::CmdRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t
   this->CmdDL(VERTEX2F(16 * x0, 16 * y0));
   this->CmdDL(VERTEX2F(16 * x1, 16 * y1));
   this->CmdDL(DL_END);
+}
+
+void EVEDriver::CmdInvisibleRect(int16_t x, int16_t y, int16_t width, int16_t height) {
+  this->CmdBeginDraw(EVE_RECTS);
+  this->CmdDL(COLOR_MASK(0, 0, 0, 0));
+  this->CmdDL(LINE_WIDTH(16));
+  this->CmdDL(VERTEX2F(16 * x, 16 * y));
+  this->CmdDL(VERTEX2F(16 * (x + width), 16 * (y + height)));
+  this->CmdDL(DL_END);
+  this->CmdDL(COLOR_MASK(1, 1, 1, 1));
 }
 
 void EVEDriver::CmdEndDisplay() {

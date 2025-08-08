@@ -1651,12 +1651,26 @@ void AudioPathManager::SetLoudnessTrackingMaxVolume(bool track_max_volume, Succe
   this->lock_timer = AUDIO_LOCK_TIMEOUT_CYCLES;
   __set_PRIMASK(primask);
 
-  this->non_volatile_config.SetValue8(AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL, track_max_volume ? 1 : 0);
+  if (track_max_volume == this->IsLoudnessTrackingMaxVolume()) {
+    //already in desired state: nothing to do, unlock operations and report to external callback
+    this->lock_timer = 0;
+    if (callback) {
+      callback(true);
+    }
+  } else {
+    //set new tracking state and refresh current volume (to ensure correct gain split)
+    this->non_volatile_config.SetValue8(AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL, track_max_volume ? 1 : 0);
+    this->ClampAndApplyVolumeGain(this->current_volume_dB, [&, callback = std::move(callback)](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("* AudioPathManager SetLoudnessTrackingMaxVolume failed to re-apply current volume\n");
+      }
 
-  //unlock operations and report to external callback
-  this->lock_timer = 0;
-  if (callback) {
-    callback(true);
+      //once done: unlock operations and report to external callback (tracking state application is successful, regardless of current volume re-application success)
+      this->lock_timer = 0;
+      if (callback) {
+        callback(true);
+      }
+    });
   }
 }
 
