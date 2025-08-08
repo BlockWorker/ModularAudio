@@ -230,3 +230,18 @@ void BlockBoxV2Screen::BuildScreenContent() {
 }
 
 
+void BlockBoxV2Screen::DrawPopupOverlay() {
+  //TODO: on event, draw tagless translucent cover and popup with message
+}
+
+
+void BlockBoxV2Screen::GoToScreen(GUIScreen* screen) {
+  this->OnScreenExit();
+  this->bbv2_manager.SetScreen(screen);
+}
+
+void BlockBoxV2Screen::OnScreenExit() {
+  //TODO I think nothing to do in the base version, but double-check this
+}
+
+

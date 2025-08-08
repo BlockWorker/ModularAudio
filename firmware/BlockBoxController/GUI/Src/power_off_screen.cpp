@@ -36,7 +36,7 @@ void PowerOffScreen::DisplayScreen() {
       this->auto_calibration_scheduled = false;
       this->auto_calibration_tick = 0;
       this->bbv2_manager.touch_cal_screen.SetReturnScreen(this);
-      this->bbv2_manager.SetScreen(&this->bbv2_manager.touch_cal_screen);
+      this->GoToScreen(&this->bbv2_manager.touch_cal_screen);
       return;
     } else if (tick_difference <= SCREEN_POWEROFF_AUTO_CAL_WARNING_MS) {
       //below warning threshold: warning text should be shown, check if we need to update it
@@ -74,7 +74,7 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
           DEBUG_PRINTF("PowerOffScreen power-on: PowerAmp success %u\n", success);
           if (success) {
             //reset this screen and go to main screen
-            this->bbv2_manager.SetScreen(&this->bbv2_manager.main_screen);
+            this->GoToScreen(&this->bbv2_manager.main_screen);
           }
         });
       }
@@ -136,6 +136,9 @@ void PowerOffScreen::BuildScreenContent() {
   this->driver.CmdDL(VERTEX2F(16 * 215, 16 * 165));
   this->driver.CmdDL(DL_END);
   this->driver.CmdDL(DL_RESTORE_CONTEXT);
+
+  //popup overlay, if any
+  this->DrawPopupOverlay();
 }
 
 

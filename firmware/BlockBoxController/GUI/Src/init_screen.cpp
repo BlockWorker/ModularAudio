@@ -43,6 +43,9 @@ void InitScreen::BuildScreenContent() {
     this->driver.CmdColorRGB(0xFF4040);
   }
   this->driver.CmdSpinner(160, 120, 0, 0);
+
+  //popup overlay, if any
+  this->DrawPopupOverlay();
 }
 
 void InitScreen::UpdateExistingScreenContent() {

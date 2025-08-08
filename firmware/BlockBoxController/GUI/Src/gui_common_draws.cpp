@@ -181,6 +181,34 @@ void GUIDraws::SpeakerIconSmallish(EVEDriver& drv, uint16_t x, uint16_t y, uint3
   drv.CmdDL(DL_RESTORE_CONTEXT);
 }
 
+void GUIDraws::EditIconSmallish(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color) {
+  //setup
+  drv.CmdDL(DL_SAVE_CONTEXT);
+  drv.CmdDL(VERTEX_TRANSLATE_X(16 * x));
+  drv.CmdDL(VERTEX_TRANSLATE_Y(16 * y));
+  //pencil outline
+  drv.CmdBeginDraw(EVE_LINE_STRIP);
+  drv.CmdDL(LINE_WIDTH(16));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(16 * 19, 16 * 3));
+  drv.CmdDL(VERTEX2F(16 * 24, 16 * 8));
+  drv.CmdDL(VERTEX2F(16 * 11, 16 * 21));
+  drv.CmdDL(VERTEX2F(16 * 3, 16 * 24));
+  drv.CmdDL(VERTEX2F(16 * 6, 16 * 16));
+  drv.CmdDL(VERTEX2F(16 * 19, 16 * 3));
+  drv.CmdDL(DL_END);
+  //pencil cross line
+  drv.CmdBeginDraw(EVE_LINES);
+  drv.CmdDL(VERTEX2F(16 * 10, 16 * 20));
+  drv.CmdDL(VERTEX2F(16 * 7, 16 * 17));
+  //right line
+  drv.CmdDL(VERTEX2F(16 * 16, 16 * 24));
+  drv.CmdDL(VERTEX2F(16 * 24, 16 * 24));
+  drv.CmdDL(DL_END);
+  //cleanup
+  drv.CmdDL(DL_RESTORE_CONTEXT);
+}
+
 
 /**********************************************/
 /*              Medium (40x40px)              */
@@ -351,6 +379,156 @@ void GUIDraws::PowerIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t 
   drv.CmdColorRGB(color);
   drv.CmdDL(VERTEX2F(320, 97));
   drv.CmdDL(VERTEX2F(320, 273));
+  drv.CmdDL(DL_END);
+  //cleanup
+  drv.CmdDL(DL_RESTORE_CONTEXT);
+}
+
+void GUIDraws::SpeakerIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color) {
+  //setup
+  drv.CmdDL(DL_SAVE_CONTEXT);
+  drv.CmdDL(VERTEX_TRANSLATE_X(16 * x));
+  drv.CmdDL(VERTEX_TRANSLATE_Y(16 * y));
+  drv.CmdScissor(x + 4, y, 36, 40);
+  //right wave: outer
+  drv.CmdBeginDraw(EVE_POINTS);
+  drv.CmdDL(POINT_SIZE(240));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(320, 320));
+  //right wave: inner
+  drv.CmdDL(POINT_SIZE(208));
+  drv.CmdColorRGB(bg_color);
+  drv.CmdDL(VERTEX2F(320, 320));
+  //middle wave: outer
+  drv.CmdDL(POINT_SIZE(184));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(303, 320));
+  //middle wave: inner
+  drv.CmdDL(POINT_SIZE(152));
+  drv.CmdColorRGB(bg_color);
+  drv.CmdDL(VERTEX2F(303, 320));
+  //left wave: outer
+  drv.CmdDL(POINT_SIZE(128));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(282, 320));
+  //left wave: inner
+  drv.CmdDL(POINT_SIZE(96));
+  drv.CmdColorRGB(bg_color);
+  drv.CmdDL(VERTEX2F(282, 320));
+  drv.CmdDL(DL_END);
+  //wave cutoff
+  drv.CmdBeginDraw(EVE_EDGE_STRIP_L);
+  drv.CmdDL(LINE_WIDTH(8));
+  drv.CmdDL(VERTEX2F(457, 68));
+  drv.CmdDL(VERTEX2F(260, 320));
+  drv.CmdDL(VERTEX2F(457, 571));
+  drv.CmdDL(DL_END);
+  //body rect
+  drv.CmdBeginDraw(EVE_RECTS);
+  drv.CmdDL(LINE_WIDTH(16));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(77, 112));
+  drv.CmdDL(VERTEX2F(265, 528));
+  drv.CmdDL(DL_END);
+  //body cutouts
+  drv.CmdBeginDraw(EVE_EDGE_STRIP_L);
+  drv.CmdDL(LINE_WIDTH(8));
+  drv.CmdColorRGB(bg_color);
+  drv.CmdDL(VERTEX2F(278, 89));
+  drv.CmdDL(VERTEX2F(168, 199));
+  drv.CmdDL(VERTEX2F(65, 199));
+  drv.CmdDL(VERTEX2F(65, 440));
+  drv.CmdDL(VERTEX2F(168, 440));
+  drv.CmdDL(VERTEX2F(278, 551));
+  drv.CmdDL(DL_END);
+  //cleanup
+  drv.CmdDL(DL_RESTORE_CONTEXT);
+}
+
+void GUIDraws::ScreenIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color) {
+  //setup
+  drv.CmdDL(DL_SAVE_CONTEXT);
+  drv.CmdDL(VERTEX_TRANSLATE_X(16 * x));
+  drv.CmdDL(VERTEX_TRANSLATE_Y(16 * y));
+  //border
+  drv.CmdBeginDraw(EVE_LINE_STRIP);
+  drv.CmdDL(LINE_WIDTH(16));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(6 * 16 + 8, 7 * 16 + 8));
+  drv.CmdDL(VERTEX2F(33 * 16 + 8, 7 * 16 + 8));
+  drv.CmdDL(VERTEX2F(33 * 16 + 8, 27 * 16 + 8));
+  drv.CmdDL(VERTEX2F(6 * 16 + 8, 27 * 16 + 8));
+  drv.CmdDL(VERTEX2F(6 * 16 + 8, 7 * 16 + 8));
+  drv.CmdDL(DL_END);
+  //stand
+  drv.CmdBeginDraw(EVE_LINES);
+  drv.CmdDL(VERTEX2F(13 * 16, 32 * 16 + 8));
+  drv.CmdDL(VERTEX2F(27 * 16, 32 * 16 + 8));
+  drv.CmdDL(VERTEX2F(17 * 16 + 8, 27 * 16 + 8));
+  drv.CmdDL(VERTEX2F(17 * 16 + 8, 32 * 16 + 8));
+  drv.CmdDL(VERTEX2F(22 * 16 + 8, 27 * 16 + 8));
+  drv.CmdDL(VERTEX2F(22 * 16 + 8, 32 * 16 + 8));
+  drv.CmdDL(DL_END);
+  //cleanup
+  drv.CmdDL(DL_RESTORE_CONTEXT);
+}
+
+void GUIDraws::LightningIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color) {
+  //setup
+  drv.CmdDL(DL_SAVE_CONTEXT);
+  drv.CmdDL(VERTEX_TRANSLATE_X(16 * x));
+  drv.CmdDL(VERTEX_TRANSLATE_Y(16 * y));
+  //lines
+  drv.CmdBeginDraw(EVE_LINE_STRIP);
+  drv.CmdDL(LINE_WIDTH(16));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(281, 121));
+  drv.CmdDL(VERTEX2F(444, 121));
+  drv.CmdDL(VERTEX2F(344, 279));
+  drv.CmdDL(VERTEX2F(454, 279));
+  drv.CmdDL(VERTEX2F(208, 526));
+  drv.CmdDL(VERTEX2F(279, 325));
+  drv.CmdDL(VERTEX2F(195, 325));
+  drv.CmdDL(VERTEX2F(281, 121));
+  drv.CmdDL(DL_END);
+  //cleanup
+  drv.CmdDL(DL_RESTORE_CONTEXT);
+}
+
+void GUIDraws::BrightnessIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color) {
+  //setup
+  drv.CmdDL(DL_SAVE_CONTEXT);
+  drv.CmdDL(VERTEX_TRANSLATE_X(16 * x));
+  drv.CmdDL(VERTEX_TRANSLATE_Y(16 * y));
+  //lines
+  drv.CmdBeginDraw(EVE_LINES);
+  drv.CmdDL(LINE_WIDTH(16));
+  drv.CmdColorRGB(color);
+  drv.CmdDL(VERTEX2F(320, 87));
+  drv.CmdDL(VERTEX2F(320, 156));
+  drv.CmdDL(VERTEX2F(443, 197));
+  drv.CmdDL(VERTEX2F(492, 148));
+  drv.CmdDL(VERTEX2F(484, 320));
+  drv.CmdDL(VERTEX2F(553, 320));
+  drv.CmdDL(VERTEX2F(443, 443));
+  drv.CmdDL(VERTEX2F(492, 492));
+  drv.CmdDL(VERTEX2F(320, 484));
+  drv.CmdDL(VERTEX2F(320, 553));
+  drv.CmdDL(VERTEX2F(197, 443));
+  drv.CmdDL(VERTEX2F(148, 492));
+  drv.CmdDL(VERTEX2F(87, 320));
+  drv.CmdDL(VERTEX2F(156, 320));
+  drv.CmdDL(VERTEX2F(197, 197));
+  drv.CmdDL(VERTEX2F(148, 148));
+  drv.CmdDL(DL_END);
+  //outer circle
+  drv.CmdBeginDraw(EVE_POINTS);
+  drv.CmdDL(POINT_SIZE(121));
+  drv.CmdDL(VERTEX2F(320, 320));
+  //inner circle
+  drv.CmdDL(POINT_SIZE(89));
+  drv.CmdColorRGB(bg_color);
+  drv.CmdDL(VERTEX2F(320, 320));
   drv.CmdDL(DL_END);
   //cleanup
   drv.CmdDL(DL_RESTORE_CONTEXT);

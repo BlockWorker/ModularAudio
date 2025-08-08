@@ -15,6 +15,7 @@
 #include "init_screen.h"
 #include "power_off_screen.h"
 #include "main_screen.h"
+#include "settings_screen_audio.h"
 #include "test_screen.h"
 
 
@@ -46,6 +47,8 @@ public:
 
   PowerOffScreen power_off_screen;
   MainScreen main_screen;
+
+  SettingsScreenAudio settings_screen_audio;
 
   TestScreen test_screen;
 

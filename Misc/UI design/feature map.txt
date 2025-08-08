@@ -28,7 +28,7 @@ Settings menu bar
 - Screen settings tab: Tag 31
 - Light settings tab: Tag 32
 - Power settings tab: Tag 33
-- Debug settings tab: Tag 35?
+- Debug settings tab: Tag 35
 - Close settings menu: Tag 39
 
 Sound config screen

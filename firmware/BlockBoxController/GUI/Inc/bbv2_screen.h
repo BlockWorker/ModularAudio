@@ -36,6 +36,11 @@ protected:
 
   virtual void BuildScreenContent() override;
 
+  void DrawPopupOverlay();
+
+  void GoToScreen(GUIScreen* screen);
+  virtual void OnScreenExit();
+
 private:
   //values currently drawn on screen - used to check if we need to redraw on update events
   AudioPathInput currently_drawn_input;

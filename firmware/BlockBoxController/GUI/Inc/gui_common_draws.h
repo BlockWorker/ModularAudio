@@ -26,12 +26,17 @@ public:
 
   //small-ish (28x28px)
   static void SpeakerIconSmallish(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color);
+  static void EditIconSmallish(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color);
 
   //medium (40x40px)
   static void BluetoothIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, bool dots);
   static void BulbIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color, bool rays);
   static void CogIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color);
   static void PowerIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color);
+  static void SpeakerIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color);
+  static void ScreenIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color);
+  static void LightningIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color);
+  static void BrightnessIconMedium(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t color, uint32_t bg_color);
 
   //large (50x50px)
   static void PlayIconLarge(EVEDriver& drv, uint16_t x, uint16_t y, uint32_t outline_color, uint32_t fill_color, uint32_t bg_color);

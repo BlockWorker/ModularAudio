@@ -244,7 +244,8 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           this->needs_display_list_rebuild = true;
           break;
         case SCREEN_MAIN_TAG_SETTINGS:
-          //TODO enter settings screen
+          //go to settings (audio tab initially)
+          this->GoToScreen(&this->bbv2_manager.settings_screen_audio);
           break;
         case SCREEN_MAIN_TAG_POWER_OFF:
           //TODO actual power-off, just mock-up for now
@@ -255,7 +256,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
                 DEBUG_PRINTF("MainScreen power-off: PowerAmp success %u\n", success);
                 if (success) {
                   //reset this screen and go to power-off screen
-                  this->bbv2_manager.SetScreen(&this->bbv2_manager.power_off_screen);
+                  this->GoToScreen(&this->bbv2_manager.power_off_screen);
                 }
               });
             }
@@ -821,6 +822,9 @@ void MainScreen::BuildScreenContent() {
     this->driver.CmdDL(DL_END);
     this->driver.CmdDL(DL_RESTORE_CONTEXT);
   }
+
+  //popup overlay, if any
+  this->DrawPopupOverlay();
 }
 
 
