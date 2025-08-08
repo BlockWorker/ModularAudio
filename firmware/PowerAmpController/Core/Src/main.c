@@ -66,6 +66,11 @@ WWDG_HandleTypeDef hwwdg;
 
 /* USER CODE BEGIN PV */
 static uint32_t wwdg_early_wakeups = 0;
+
+static uint32_t clip_otw_last_assert_tick = 0;
+static uint32_t clip_otw_last_clear_tick = 0;
+bool clip_detected = false;
+bool otw_detected = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,8 +101,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_FAULT_Msk);
     }
   } else if (GPIO_Pin == AMP_CLIP_OTW_N_Pin) {
+    //just store the current tick in corresponding variable
     if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET) {
-      I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_AMP_CLIPOTW_Msk);
+      //asserted
+      clip_otw_last_assert_tick = HAL_GetTick();
+    } else {
+      //cleared
+      clip_otw_last_clear_tick = HAL_GetTick();
     }
   }
 }
@@ -224,6 +234,29 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     uint32_t iteration_start_tick = HAL_GetTick();
+
+    //check clip/otw last edges: if close enough to each other and now, detect clipping
+    if (clip_otw_last_assert_tick - clip_otw_last_clear_tick < 25 && iteration_start_tick - clip_otw_last_clear_tick < 40) {
+      if (!clip_detected && !otw_detected) {
+        clip_detected = true;
+        I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_CLIP_DET_Msk);
+      }
+    }
+    //check clip/otw state
+    if (HAL_GPIO_ReadPin(AMP_CLIP_OTW_N_GPIO_Port, AMP_CLIP_OTW_N_Pin) == GPIO_PIN_RESET) {
+      //asserted: detect OTW if last assert edge was long enough ago (i.e. long enough pulse)
+      if (iteration_start_tick - clip_otw_last_assert_tick > 25) {
+        otw_detected = true;
+        clip_detected = false;
+        I2C_TriggerInterrupt(I2CDEF_POWERAMP_INT_FLAGS_INT_OTW_DET_Msk);
+      }
+    } else {
+      //cleared: clear OTW, and if last clear edge is long enough ago, clear clipping too
+      otw_detected = false;
+      if (iteration_start_tick - clip_otw_last_clear_tick > 30) {
+        clip_detected = false;
+      }
+    }
 
 #ifdef DISABLED___DEBUG
     static uint32_t cycle_count = 0;

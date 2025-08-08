@@ -42,8 +42,10 @@ typedef union {
     bool pvdd_offset_nonzero : 1;
     bool pvdd_offset_limit : 1;
     bool safety_warning : 1;
+    bool clip_detected : 1;
+    bool otw_detected : 1;
+    int : 5;
     bool i2c_error : 1;
-    int : 7;
   };
   uint16_t value;
 } PowerAmpStatus;

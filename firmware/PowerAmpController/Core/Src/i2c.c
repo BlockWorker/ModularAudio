@@ -254,6 +254,8 @@ void _I2C_PrepareReadData() {
             ((fabsf(pvdd_voltage_request_offset) > 1e-5f ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_ONZ_Pos) |
             ((fabsf(pvdd_voltage_request_offset) >= PVDD_VOLTAGE_OFFSET_MAX ? 1 : 0) << I2CDEF_POWERAMP_STATUS_PVDD_OLIM_Pos) |
             (((safety_warn_status_inst | safety_warn_status_loop) != 0 ? 1 : 0) << I2CDEF_POWERAMP_STATUS_SWARN_Pos) |
+            (clip_detected ? I2CDEF_POWERAMP_STATUS_CLIP_DET_Msk : 0) |
+            (otw_detected ? I2CDEF_POWERAMP_STATUS_OTW_DET_Msk : 0) |
             ((uint16_t)i2c_err_detected << I2CDEF_POWERAMP_STATUS_I2CERR_Pos);
         i2c_err_detected = 0; //reset comm error detection after read
         break;

@@ -216,7 +216,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
     }
 
     //write interrupt mask (enable all interrupts)
-    this->SetInterruptMask(0x7F, [&, callback = std::move(callback)](bool success) {
+    this->SetInterruptMask(0xFF, [&, callback = std::move(callback)](bool success) {
       if (!success) {
         //report failure to external callback
         if (callback) {

@@ -12,13 +12,13 @@
 #include <math.h>
 
 //absolute maximum safety limits (defined by circuit design), see variables below
-//explanation: circuit rated for 200W/channel max (inductor + trace thermal limitation) and 270W total max (IC thermal/cooling limitation)
+//explanation: circuit rated for 200W/channel max continuous (inductor + trace thermal limitation) and 270W total max (IC thermal/cooling limitation)
 //current limits given extra headroom for inductive effects; apparent power limits are not mandatory
-#define SAFETY_LIMIT_MAX_CURRENT_INST { 12.0f, 12.0f, 12.0f, 12.0f, 15.0f }
-#define SAFETY_LIMIT_MAX_CURRENT_0S1 { 9.5f, 9.5f, 9.5f, 9.5f, 11.0f }
-#define SAFETY_LIMIT_MAX_CURRENT_1S0 { 7.5f, 7.5f, 7.5f, 7.5f, 9.0f }
-#define SAFETY_LIMIT_MAX_REAL_POWER_INST { 300.0f, 300.0f, 300.0f, 300.0f, 500.0f }
-#define SAFETY_LIMIT_MAX_REAL_POWER_0S1 { 230.0f, 230.0f, 230.0f, 230.0f, 350.0f }
+#define SAFETY_LIMIT_MAX_CURRENT_INST { 15.0f, 15.0f, 15.0f, 15.0f, 20.0f }
+#define SAFETY_LIMIT_MAX_CURRENT_0S1 { 10.5f, 10.5f, 10.5f, 10.5f, 13.0f }
+#define SAFETY_LIMIT_MAX_CURRENT_1S0 { 8.0f, 8.0f, 8.0f, 8.0f, 9.5f }
+#define SAFETY_LIMIT_MAX_REAL_POWER_INST { 800.0f, 800.0f, 800.0f, 800.0f, 1500.0f }
+#define SAFETY_LIMIT_MAX_REAL_POWER_0S1 { 400.0f, 400.0f, 400.0f, 400.0f, 600.0f }
 #define SAFETY_LIMIT_MAX_REAL_POWER_1S0 { 200.0f, 200.0f, 200.0f, 200.0f, 270.0f }
 #define SAFETY_LIMIT_MAX_APPARENT_POWER_INST { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }
 #define SAFETY_LIMIT_MAX_APPARENT_POWER_0S1 { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }

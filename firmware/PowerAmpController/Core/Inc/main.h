@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -59,6 +59,10 @@ extern IWDG_HandleTypeDef hiwdg;
 extern UART_HandleTypeDef huart3;
 
 extern WWDG_HandleTypeDef hwwdg;
+
+
+extern bool clip_detected;
+extern bool otw_detected;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
