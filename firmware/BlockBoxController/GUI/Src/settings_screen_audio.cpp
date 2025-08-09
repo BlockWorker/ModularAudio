@@ -33,8 +33,8 @@
 #define SCREEN_AUDIO_TAG_BASS_GAIN 47
 //treble gain
 #define SCREEN_AUDIO_TAG_TREBLE_GAIN 48
-//amplifier power limit
-#define SCREEN_AUDIO_TAG_AMP_POWER_LIMIT 49
+//amplifier power target
+#define SCREEN_AUDIO_TAG_AMP_POWER_TARGET 49
 
 
 //TODO temp bool
@@ -42,7 +42,7 @@ static bool eq_mode = false;
 
 
 SettingsScreenAudio::SettingsScreenAudio(BlockBoxV2GUIManager& manager) :
-    SettingsScreenBase(manager, SCREEN_AUDIO_TAB_INDEX), page_index(0) {}
+    SettingsScreenBase(manager, SCREEN_AUDIO_TAB_INDEX), page_index(0), local_power_target(1.0f) {}
 
 
 void SettingsScreenAudio::DisplayScreen() {
@@ -83,7 +83,7 @@ void SettingsScreenAudio::DisplayScreen() {
       }
       case 2:
       {
-
+        //TODO power target once implemented
         break;
       }
       default:
@@ -260,6 +260,27 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         }
       }
       return;
+    case SCREEN_AUDIO_TAG_AMP_POWER_TARGET:
+      if (state.tracker_tag == state.initial_tag) {
+        //interpolate slider value
+        this->local_power_target = 0.5f + roundf((float)state.tracker_value / (float)UINT16_MAX * 5.0f) / 10.0f;
+        this->needs_existing_list_update = true;
+      }
+
+      //TODO add release handling once implemented
+      /*if (state.released) {
+        //released: check if any change
+        if (this->local_power_target != ...) {
+          //changed: apply value globally
+          ...(this->local_power_target, [&](bool success) {
+            DEBUG_PRINTF("Power target apply success %u\n", success);
+            //update local slider values to true values
+            this->local_power_target = ...;
+            this->needs_existing_list_update = true;
+          });
+        }
+      }*/
+      return;
     default:
       break;
   }
@@ -279,6 +300,13 @@ void SettingsScreenAudio::Init() {
       this->needs_display_list_rebuild = true;
     }
   }, MODIF_DAP_EVENT_SRC_STATS_UPDATE);
+
+  //redraw third page (amp) on PVDD or amp measurement update
+  this->bbv2_manager.system.amp_if.RegisterCallback([&](EventSource*, uint32_t) {
+    if (this->page_index == 2) {
+      this->needs_display_list_rebuild = true;
+    }
+  }, MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);
 
   //TODO register update handlers
 }
@@ -342,19 +370,19 @@ void SettingsScreenAudio::BuildScreenContent() {
       //min volume slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_MIN_VOLUME);
       this->min_slider_oidx = this->SaveNextCommandOffset();
-      this->driver.CmdSlider(57, 147, 200, 11, 0, (uint16_t)(this->local_min_volume - AUDIO_LIMIT_MIN_VOLUME_MIN), (uint16_t)(min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN));
+      this->driver.CmdSlider(57, 147, 200, 11, 0, (uint16_t)roundf(this->local_min_volume - AUDIO_LIMIT_MIN_VOLUME_MIN), (uint16_t)roundf(min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN));
       this->driver.CmdTrack(55, 142, 205, 21, SCREEN_AUDIO_TAG_MIN_VOLUME);
       this->driver.CmdInvisibleRect(44, 141, 226, 23);
       //max volume slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_MAX_VOLUME);
       this->max_slider_oidx = this->SaveNextCommandOffset();
-      this->driver.CmdSlider(57, 180, 200, 11, 0, (uint16_t)(this->local_max_volume - AUDIO_LIMIT_MAX_VOLUME_MIN), (uint16_t)(max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN));
+      this->driver.CmdSlider(57, 180, 200, 11, 0, (uint16_t)roundf(this->local_max_volume - AUDIO_LIMIT_MAX_VOLUME_MIN), (uint16_t)roundf(max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN));
       this->driver.CmdTrack(55, 175, 205, 21, SCREEN_AUDIO_TAG_MAX_VOLUME);
       this->driver.CmdInvisibleRect(44, 174, 226, 23);
       //volume step slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_VOLUME_STEP);
       this->step_slider_oidx = this->SaveNextCommandOffset();
-      this->driver.CmdSlider(57, 213, 200, 11, 0, (uint16_t)(this->local_volume_step - AUDIO_LIMIT_VOLUME_STEP_MIN), (uint16_t)(AUDIO_LIMIT_VOLUME_STEP_MAX - AUDIO_LIMIT_VOLUME_STEP_MIN));
+      this->driver.CmdSlider(57, 213, 200, 11, 0, (uint16_t)roundf(this->local_volume_step - AUDIO_LIMIT_VOLUME_STEP_MIN), (uint16_t)roundf(AUDIO_LIMIT_VOLUME_STEP_MAX - AUDIO_LIMIT_VOLUME_STEP_MIN));
       this->driver.CmdTrack(55, 208, 205, 21, SCREEN_AUDIO_TAG_VOLUME_STEP);
       this->driver.CmdInvisibleRect(44, 207, 226, 23);
       break;
@@ -404,7 +432,7 @@ void SettingsScreenAudio::BuildScreenContent() {
       //loudness gain slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_LOUDNESS_GAIN);
       this->loudness_slider_oidx = this->SaveNextCommandOffset();
-      this->driver.CmdSlider(97, 147, 160, 11, 0, loudness_on ? 3 + (uint16_t)(this->local_loudness - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE) : 0, 3 + (uint16_t)(AUDIO_LIMIT_LOUDNESS_GAIN_MAX - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE));
+      this->driver.CmdSlider(97, 147, 160, 11, 0, loudness_on ? 3 + (uint16_t)roundf(this->local_loudness - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE) : 0, 3 + (uint16_t)roundf(AUDIO_LIMIT_LOUDNESS_GAIN_MAX - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE));
       this->driver.CmdTrack(95, 142, 165, 21, SCREEN_AUDIO_TAG_LOUDNESS_GAIN);
       this->driver.CmdInvisibleRect(84, 141, 186, 23);
       //bass gain slider (disabled)
@@ -424,7 +452,50 @@ void SettingsScreenAudio::BuildScreenContent() {
     }
     case 2:
     {
+      //amp settings page
+      //labels
+      this->driver.CmdText(7, 76, 28, 0, "Amplifier");
+      this->driver.CmdText(125, 125, 27, EVE_OPT_CENTER, "V(rms)");
+      this->driver.CmdText(195, 125, 27, EVE_OPT_CENTER, "A(rms)");
+      this->driver.CmdText(265, 125, 27, EVE_OPT_CENTER, "W(avg)");
+      this->driver.CmdText(85, 150, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Woofer:");
+      this->driver.CmdText(85, 175, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Tweeter:");
+      this->driver.CmdText(110, 214, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Power Target");
 
+      //amp info and stats display
+      char stats_buffer[64];
+      //PVDD
+      snprintf(stats_buffer, 64, "PVDD: %.2f V (Target: %.2f V)", this->bbv2_manager.system.amp_if.GetPVDDMeasuredVoltage(), this->bbv2_manager.system.amp_if.GetPVDDTargetVoltage()); // @suppress("Float formatting support")
+      this->driver.CmdText(300, 88, 20, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, stats_buffer);
+      //measurements
+      PowerAmpMeasurements amp_m = this->bbv2_manager.system.amp_if.GetOutputMeasurements(false);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.voltage_rms.ch_a); // @suppress("Float formatting support")
+      this->driver.CmdText(125, 150, 27, EVE_OPT_CENTER, stats_buffer);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.current_rms.ch_a); // @suppress("Float formatting support")
+      this->driver.CmdText(195, 150, 27, EVE_OPT_CENTER, stats_buffer);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.power_average.ch_a); // @suppress("Float formatting support")
+      this->driver.CmdText(265, 150, 27, EVE_OPT_CENTER, stats_buffer);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.voltage_rms.ch_c); // @suppress("Float formatting support")
+      this->driver.CmdText(125, 175, 27, EVE_OPT_CENTER, stats_buffer);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.current_rms.ch_c); // @suppress("Float formatting support")
+      this->driver.CmdText(195, 175, 27, EVE_OPT_CENTER, stats_buffer);
+      snprintf(stats_buffer, 64, "%.3f", amp_m.power_average.ch_c); // @suppress("Float formatting support")
+      this->driver.CmdText(265, 175, 27, EVE_OPT_CENTER, stats_buffer);
+
+      //power target slider value display
+      char val_buffer[5];
+      snprintf(val_buffer, 5, "%3u%%", (uint8_t)(this->local_power_target * 100.0f));
+      this->power_target_value_oidx = this->SaveNextCommandOffset();
+      this->driver.CmdText(278, 214, 26, EVE_OPT_CENTERY, val_buffer);
+
+      //controls
+      this->driver.CmdTagMask(true);
+      //power target slider
+      this->driver.CmdTag(SCREEN_AUDIO_TAG_AMP_POWER_TARGET);
+      this->power_target_slider_oidx = this->SaveNextCommandOffset();
+      this->driver.CmdSlider(126, 208, 137, 11, 0, (uint16_t)roundf((this->local_power_target - 0.5f) * 10.0f), 5);
+      this->driver.CmdTrack(124, 203, 142, 21, SCREEN_AUDIO_TAG_AMP_POWER_TARGET);
+      this->driver.CmdInvisibleRect(113, 202, 163, 23);
       break;
     }
     default:
@@ -481,13 +552,13 @@ void SettingsScreenAudio::UpdateExistingScreenContent() {
 
       //update sliders
       //min volume (including range)
-      this->ModifyDLCommand16(this->min_slider_oidx, 3, 1, (uint16_t)(this->local_min_volume - AUDIO_LIMIT_MIN_VOLUME_MIN));
-      this->ModifyDLCommand16(this->min_slider_oidx, 4, 0, (uint16_t)(min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN));
+      this->ModifyDLCommand16(this->min_slider_oidx, 3, 1, (uint16_t)roundf(this->local_min_volume - AUDIO_LIMIT_MIN_VOLUME_MIN));
+      this->ModifyDLCommand16(this->min_slider_oidx, 4, 0, (uint16_t)roundf(min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN));
       //max volume (including range)
-      this->ModifyDLCommand16(this->max_slider_oidx, 3, 1, (uint16_t)(this->local_max_volume - AUDIO_LIMIT_MAX_VOLUME_MIN));
-      this->ModifyDLCommand16(this->max_slider_oidx, 4, 0, (uint16_t)(max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN));
+      this->ModifyDLCommand16(this->max_slider_oidx, 3, 1, (uint16_t)roundf(this->local_max_volume - AUDIO_LIMIT_MAX_VOLUME_MIN));
+      this->ModifyDLCommand16(this->max_slider_oidx, 4, 0, (uint16_t)roundf(max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN));
       //volume step
-      this->ModifyDLCommand16(this->step_slider_oidx, 3, 1, (uint16_t)(this->local_volume_step - AUDIO_LIMIT_VOLUME_STEP_MIN));
+      this->ModifyDLCommand16(this->step_slider_oidx, 3, 1, (uint16_t)roundf(this->local_volume_step - AUDIO_LIMIT_VOLUME_STEP_MIN));
       break;
     }
     case 1:
@@ -506,13 +577,19 @@ void SettingsScreenAudio::UpdateExistingScreenContent() {
 
       //update sliders
       //loudness
-      this->ModifyDLCommand16(this->loudness_slider_oidx, 3, 1, loudness_on ? 3 + (uint16_t)(this->local_loudness - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE) : 0);
-      break;
+      this->ModifyDLCommand16(this->loudness_slider_oidx, 3, 1, loudness_on ? 3 + (uint16_t)roundf(this->local_loudness - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE) : 0);
       break;
     }
     case 2:
     {
+      //amp settings page
 
+      //update power target slider value display
+      snprintf((char*)this->GetDLCommandPointer(this->power_target_value_oidx, 3), 5, "%3u%%", (uint8_t)(this->local_power_target * 100.0f));
+
+      //update power target slider
+      this->ModifyDLCommand16(this->power_target_slider_oidx, 3, 1, (uint16_t)roundf((this->local_power_target - 0.5f) * 10.0f));
+      break;
       break;
     }
     default:
