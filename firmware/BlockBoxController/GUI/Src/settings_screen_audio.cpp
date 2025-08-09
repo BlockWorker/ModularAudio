@@ -17,28 +17,26 @@
 //touch tags
 //allow positive gain
 #define SCREEN_AUDIO_TAG_ALLOW_POS_GAIN 40
+//mono mix mode
+#define SCREEN_AUDIO_TAG_MIXER_MODE 41
 //min volume
-#define SCREEN_AUDIO_TAG_MIN_VOLUME 41
+#define SCREEN_AUDIO_TAG_MIN_VOLUME 42
 //max volume
-#define SCREEN_AUDIO_TAG_MAX_VOLUME 42
+#define SCREEN_AUDIO_TAG_MAX_VOLUME 43
 //volume step
-#define SCREEN_AUDIO_TAG_VOLUME_STEP 43
+#define SCREEN_AUDIO_TAG_VOLUME_STEP 44
 //EQ mode
-#define SCREEN_AUDIO_TAG_EQ_MODE 44
+#define SCREEN_AUDIO_TAG_EQ_MODE 45
 //loudness track max volume
-#define SCREEN_AUDIO_TAG_LOUDNESS_TRACKMAX 45
+#define SCREEN_AUDIO_TAG_LOUDNESS_TRACKMAX 46
 //loudness gain
-#define SCREEN_AUDIO_TAG_LOUDNESS_GAIN 46
+#define SCREEN_AUDIO_TAG_LOUDNESS_GAIN 47
 //bass gain
-#define SCREEN_AUDIO_TAG_BASS_GAIN 47
+#define SCREEN_AUDIO_TAG_BASS_GAIN 48
 //treble gain
-#define SCREEN_AUDIO_TAG_TREBLE_GAIN 48
+#define SCREEN_AUDIO_TAG_TREBLE_GAIN 49
 //amplifier power target
-#define SCREEN_AUDIO_TAG_AMP_POWER_TARGET 49
-
-
-//TODO temp bool
-static bool eq_mode = false;
+#define SCREEN_AUDIO_TAG_AMP_POWER_TARGET 50
 
 
 SettingsScreenAudio::SettingsScreenAudio(BlockBoxV2GUIManager& manager) :
@@ -125,6 +123,16 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //toggle positive gain allowed
         this->bbv2_manager.system.audio_mgr.SetPositiveGainAllowed(!this->bbv2_manager.system.audio_mgr.IsPositiveGainAllowed(), [&](bool success) {
           DEBUG_PRINTF("Pos gain allowed toggle success %u\n", success);
+          this->needs_display_list_rebuild = true;
+        });
+      }
+      return;
+    case SCREEN_AUDIO_TAG_MIXER_MODE:
+      if (state.released && state.tag == state.initial_tag) {
+        //toggle mixer mode
+        AudioPathMixerMode mode = (this->bbv2_manager.system.audio_mgr.GetMixerMode() == AUDIO_MIXER_AVG) ? AUDIO_MIXER_LEFT : AUDIO_MIXER_AVG;
+        this->bbv2_manager.system.audio_mgr.SetMixerMode(mode, [&](bool success) {
+          DEBUG_PRINTF("Mixer mode toggle success %u\n", success);
           this->needs_display_list_rebuild = true;
         });
       }
@@ -219,9 +227,12 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       return;
     case SCREEN_AUDIO_TAG_EQ_MODE:
       if (state.released && state.tag == state.initial_tag) {
-        //toggle EQ mode - TODO: real eq mode once implemented
-        eq_mode = !eq_mode;
-        this->needs_display_list_rebuild = true;
+        //toggle EQ mode
+        AudioPathEQMode mode = (this->bbv2_manager.system.audio_mgr.GetEQMode() == AUDIO_EQ_HIFI) ? AUDIO_EQ_POWER : AUDIO_EQ_HIFI;
+        this->bbv2_manager.system.audio_mgr.SetEQMode(mode, [&](bool success) {
+          DEBUG_PRINTF("EQ mode toggle success %u\n", success);
+          this->needs_display_list_rebuild = true;
+        });
       }
       return;
     case SCREEN_AUDIO_TAG_LOUDNESS_TRACKMAX:
@@ -327,8 +338,9 @@ void SettingsScreenAudio::BuildScreenContent() {
     {
       //volume settings page
       //labels
-      this->driver.CmdText(7, 76, 28, 0, "Volume");
-      this->driver.CmdText(173, 120, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Allow >0dB");
+      this->driver.CmdText(7, 76, 28, 0, "Volume & Mix");
+      this->driver.CmdText(87, 121, 26, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Allow >0dB");
+      this->driver.CmdText(239, 121, 26, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Mono Mode");
       this->driver.CmdText(41, 153, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Min");
       this->driver.CmdText(41, 186, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Max");
       this->driver.CmdText(41, 219, 27, EVE_OPT_CENTERY | EVE_OPT_RIGHTX, "Step");
@@ -366,7 +378,10 @@ void SettingsScreenAudio::BuildScreenContent() {
       this->driver.CmdTagMask(true);
       //allow positive gain toggle
       this->driver.CmdTag(SCREEN_AUDIO_TAG_ALLOW_POS_GAIN);
-      this->driver.CmdToggle(190, 115, 31, 26, 0, pos_gain_allowed ? 0xFFFF : 0, " No\xFFYes");
+      this->driver.CmdToggle(104, 115, 31, 26, 0, pos_gain_allowed ? 0xFFFF : 0, " No\xFFYes");
+      //mono mixer mode toggle
+      this->driver.CmdTag(SCREEN_AUDIO_TAG_MIXER_MODE);
+      this->driver.CmdToggle(256, 115, 35, 26, 0, (this->bbv2_manager.system.audio_mgr.GetMixerMode() == AUDIO_MIXER_LEFT) ? 0xFFFF : 0, " Mix\xFFLeft");
       //min volume slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_MIN_VOLUME);
       this->min_slider_oidx = this->SaveNextCommandOffset();
@@ -425,7 +440,7 @@ void SettingsScreenAudio::BuildScreenContent() {
       this->driver.CmdTagMask(true);
       //EQ mode toggle
       this->driver.CmdTag(SCREEN_AUDIO_TAG_EQ_MODE);
-      this->driver.CmdToggle(78, 115, 38, 26, 0, eq_mode ? 0xFFFF : 0, " HiFi\xFFLoud"); //TODO real eq mode once implemented
+      this->driver.CmdToggle(78, 115, 38, 26, 0, (this->bbv2_manager.system.audio_mgr.GetEQMode() == AUDIO_EQ_POWER) ? 0xFFFF : 0, " HiFi\xFFLoud");
       //loudness track max volume toggle
       this->driver.CmdTag(SCREEN_AUDIO_TAG_LOUDNESS_TRACKMAX);
       this->driver.CmdToggle(248, 115, 53, 26, 0, this->bbv2_manager.system.audio_mgr.IsLoudnessTrackingMaxVolume() ? 0xFFFF : 0, "   0dB\xFFMaxVol");

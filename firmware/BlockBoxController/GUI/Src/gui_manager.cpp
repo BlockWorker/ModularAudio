@@ -127,7 +127,7 @@ void GUIManager::Update() noexcept {
       this->touch_state.tracker_tag = (uint16_t)touch_read_buf;
       if (this->touch_state.tracker_tag != 0) {
         //tag nonzero: update tracker value
-        this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16);
+        this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16); //TODO: smooth tracker after initial touch?
       } else {
         //tag zero: discard tracker value
         this->touch_state.tracker_value = 0;

@@ -33,15 +33,16 @@ Settings menu bar
 
 Sound config screen
 - volume pos gain allowed yes/no: Tag 40
-- volume limits (low+high): Tags 41, 42
-- volume step: Tag 43
+- mono mix mode (avg/left): Tag 41
+- volume limits (low+high): Tags 42, 43
+- volume step: Tag 44
 - DAP stats
-- sound EQ option: Tag 44
-- sound loudness track max volume yes/no: Tag 45
-- sound loudness gain: Tag 46
-- sound bass/treble settings (prob not implemented rn): Tags 47, 48
+- sound EQ option: Tag 45
+- sound loudness track max volume yes/no: Tag 46
+- sound loudness gain: Tag 47
+- sound bass/treble settings (prob not implemented rn): Tags 48, 49
 - amplifier info
-- amplifier power "limit" (adjustable warning level, tries to stay below): Tag 49
+- amplifier power "limit" (adjustable warning level, tries to stay below): Tag 50
 - amplifier voltage behaviour (?) (don't think it's needed rn)
 
 Display config screen
