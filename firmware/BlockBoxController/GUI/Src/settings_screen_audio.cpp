@@ -142,17 +142,15 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       //calculate top end of slider
       float min_vol_max = MIN(this->local_max_volume - AUDIO_LIMIT_VOLUME_RANGE_MIN, AUDIO_LIMIT_MIN_VOLUME_MAX);
 
-      if (state.tracker_tag == state.initial_tag) {
-        //interpolate slider value, rounding to nearest step
-        this->local_min_volume = roundf((AUDIO_LIMIT_MIN_VOLUME_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN)) / this->local_volume_step) * this->local_volume_step;
-        //clamp to valid range
-        if (this->local_min_volume < AUDIO_LIMIT_MIN_VOLUME_MIN) {
-          this->local_min_volume = AUDIO_LIMIT_MIN_VOLUME_MIN;
-        } else if (this->local_min_volume > min_vol_max) {
-          this->local_min_volume = min_vol_max;
-        }
-        this->needs_existing_list_update = true;
+      //interpolate slider value, rounding to nearest step
+      this->local_min_volume = roundf((AUDIO_LIMIT_MIN_VOLUME_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (min_vol_max - AUDIO_LIMIT_MIN_VOLUME_MIN)) / this->local_volume_step) * this->local_volume_step;
+      //clamp to valid range
+      if (this->local_min_volume < AUDIO_LIMIT_MIN_VOLUME_MIN) {
+        this->local_min_volume = AUDIO_LIMIT_MIN_VOLUME_MIN;
+      } else if (this->local_min_volume > min_vol_max) {
+        this->local_min_volume = min_vol_max;
       }
+      this->needs_existing_list_update = true;
 
       if (state.released) {
         //released: check if any change
@@ -175,17 +173,15 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       //calculate top end of slider
       float max_vol_max = this->bbv2_manager.system.audio_mgr.IsPositiveGainAllowed() ? AUDIO_LIMIT_MAX_VOLUME_MAX : 0.0f;
 
-      if (state.tracker_tag == state.initial_tag) {
-        //interpolate slider value, rounding to nearest step
-        this->local_max_volume = roundf((AUDIO_LIMIT_MAX_VOLUME_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN)) / this->local_volume_step) * this->local_volume_step;
-        //clamp to valid range
-        if (this->local_max_volume < AUDIO_LIMIT_MAX_VOLUME_MIN) {
-          this->local_max_volume = AUDIO_LIMIT_MAX_VOLUME_MIN;
-        } else if (this->local_max_volume > max_vol_max) {
-          this->local_max_volume = max_vol_max;
-        }
-        this->needs_existing_list_update = true;
+      //interpolate slider value, rounding to nearest step
+      this->local_max_volume = roundf((AUDIO_LIMIT_MAX_VOLUME_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (max_vol_max - AUDIO_LIMIT_MAX_VOLUME_MIN)) / this->local_volume_step) * this->local_volume_step;
+      //clamp to valid range
+      if (this->local_max_volume < AUDIO_LIMIT_MAX_VOLUME_MIN) {
+        this->local_max_volume = AUDIO_LIMIT_MAX_VOLUME_MIN;
+      } else if (this->local_max_volume > max_vol_max) {
+        this->local_max_volume = max_vol_max;
       }
+      this->needs_existing_list_update = true;
 
       if (state.released) {
         //released: check if any change
@@ -204,11 +200,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       return;
     }
     case SCREEN_AUDIO_TAG_VOLUME_STEP:
-      if (state.tracker_tag == state.initial_tag) {
-        //interpolate slider value
-        this->local_volume_step = roundf(AUDIO_LIMIT_VOLUME_STEP_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (AUDIO_LIMIT_VOLUME_STEP_MAX - AUDIO_LIMIT_VOLUME_STEP_MIN));
-        this->needs_existing_list_update = true;
-      }
+      //interpolate slider value
+      this->local_volume_step = roundf(AUDIO_LIMIT_VOLUME_STEP_MIN + ((float)state.tracker_value / (float)UINT16_MAX) * (AUDIO_LIMIT_VOLUME_STEP_MAX - AUDIO_LIMIT_VOLUME_STEP_MIN));
+      this->needs_existing_list_update = true;
 
       if (state.released) {
         //released: check if any change
@@ -245,7 +239,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       }
       return;
     case SCREEN_AUDIO_TAG_LOUDNESS_GAIN:
-      if (state.tracker_tag == state.initial_tag) {
+      {
         //interpolate slider value
         float step_index = roundf(((float)state.tracker_value / (float)UINT16_MAX) * (3.0f + AUDIO_LIMIT_LOUDNESS_GAIN_MAX - AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE));
         if (step_index < 3.0f) {
@@ -256,27 +250,25 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
           this->local_loudness = AUDIO_LIMIT_LOUDNESS_GAIN_MIN_ACTIVE + step_index - 3.0f;
         }
         this->needs_existing_list_update = true;
-      }
 
-      if (state.released) {
-        //released: check if any change
-        if (this->local_loudness != this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB()) {
-          //changed: apply value globally
-          this->bbv2_manager.system.audio_mgr.SetLoudnessGainDB(this->local_loudness, [&](bool success) {
-            DEBUG_PRINTF("Loudness gain apply success %u\n", success);
-            //update local slider values to true values
-            this->local_loudness = this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB();
-            this->needs_existing_list_update = true;
-          });
+        if (state.released) {
+          //released: check if any change
+          if (this->local_loudness != this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB()) {
+            //changed: apply value globally
+            this->bbv2_manager.system.audio_mgr.SetLoudnessGainDB(this->local_loudness, [&](bool success) {
+              DEBUG_PRINTF("Loudness gain apply success %u\n", success);
+              //update local slider values to true values
+              this->local_loudness = this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB();
+              this->needs_existing_list_update = true;
+            });
+          }
         }
+        return;
       }
-      return;
     case SCREEN_AUDIO_TAG_AMP_POWER_TARGET:
-      if (state.tracker_tag == state.initial_tag) {
-        //interpolate slider value
-        this->local_power_target = 0.5f + roundf((float)state.tracker_value / (float)UINT16_MAX * 5.0f) / 10.0f;
-        this->needs_existing_list_update = true;
-      }
+      //interpolate slider value
+      this->local_power_target = 0.5f + roundf((float)state.tracker_value / (float)UINT16_MAX * 5.0f) / 10.0f;
+      this->needs_existing_list_update = true;
 
       //TODO add release handling once implemented
       /*if (state.released) {

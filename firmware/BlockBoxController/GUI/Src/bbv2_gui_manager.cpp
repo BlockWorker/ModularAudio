@@ -148,7 +148,7 @@ void BlockBoxV2GUIManager::LoadConfigDefaults(StorageSection& section) {
 
   //write default brightness and sleep timeout
   section.SetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS, EVE_BACKLIGHT_PWM);
-  section.SetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT, 10000);
+  section.SetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT, 30000);
 }
 
 

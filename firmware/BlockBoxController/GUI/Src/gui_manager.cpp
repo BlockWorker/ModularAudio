@@ -12,10 +12,14 @@
 //minimum timeout for display sleep (in ms) while touched - to avoid annoying sleep while adjusting sliders etc
 #define GUI_DISPLAY_SLEEP_TIMEOUT_MIN_TOUCHED 30000
 
+//tracker exponential moving average coefficients
+#define GUI_TRACK_EMA_ALPHA 0.25f
+#define GUI_TRACK_EMA_1MALPHA (1.0f - GUI_TRACK_EMA_ALPHA)
+
 
 GUIManager::GUIManager(EVEDriver& driver) noexcept :
     driver(driver), initialised(false), current_screen(NULL), cmd_busy_waiting(false), display_brightness(EVE_BACKLIGHT_PWM), display_sleep(false), fade_brightness(EVE_BACKLIGHT_PWM),
-    touch_sleep_locked(false), display_sleep_timeout_ms(10000), last_touched_tick(0), display_force_wake(false) {}
+    touch_sleep_locked(false), display_sleep_timeout_ms(30000), last_touched_tick(0), display_force_wake(false) {}
 
 
 void GUIManager::InitTouchCalibration() {
@@ -55,7 +59,6 @@ void GUIManager::Init() {
   this->touch_state._debounce_tick = HAL_MAX_DELAY;
   this->touch_state.initial_tag = 0;
   this->touch_state.tag = 0;
-  this->touch_state.tracker_tag = 0;
   this->touch_state.tracker_value = 0;
 
   this->display_brightness = EVE_BACKLIGHT_PWM;
@@ -64,7 +67,7 @@ void GUIManager::Init() {
   this->display_sleep = false;
   this->fade_brightness = this->display_brightness;
   this->touch_sleep_locked = false;
-  this->display_sleep_timeout_ms = 10000;
+  this->display_sleep_timeout_ms = 30000;
   this->last_touched_tick = HAL_GetTick();
   this->display_force_wake = false;
 
@@ -117,21 +120,16 @@ void GUIManager::Update() noexcept {
     }
 
     //read tag and tracker info if we have a touch
+    uint16_t tracker_tag = 0, tracker_value = 0;
     if (new_touched && new_touched_raw) {
       //get tag and store in touch state
       this->driver.phy.DirectRead8(REG_TOUCH_TAG, &tag_read_buf);
       this->touch_state.tag = tag_read_buf;
 
-      //get tracker tag
+      //get tracker
       this->driver.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
-      this->touch_state.tracker_tag = (uint16_t)touch_read_buf;
-      if (this->touch_state.tracker_tag != 0) {
-        //tag nonzero: update tracker value
-        this->touch_state.tracker_value = (uint16_t)(touch_read_buf >> 16); //TODO: smooth tracker after initial touch?
-      } else {
-        //tag zero: discard tracker value
-        this->touch_state.tracker_value = 0;
-      }
+      tracker_tag = (uint16_t)touch_read_buf;
+      tracker_value = (uint16_t)(touch_read_buf >> 16);
     }
 
     //clear initial, release, and tick flags - only set for one update if applicable
@@ -161,6 +159,17 @@ void GUIManager::Update() noexcept {
       this->touch_state.long_press = false;
       this->touch_state.initial_tag = tag_read_buf;
       this->touch_state._next_tick_at = tick + GUI_TOUCH_LONG_DELAY; //set up delay until long press
+    }
+
+    if (this->touch_state.touched && this->touch_state.initial_tag == tracker_tag) {
+      //touched and on tracker: update tracker values
+      if (this->touch_state.initial) {
+        //initial touch: copy tracker value to state
+        this->touch_state.tracker_value = tracker_value;
+      } else {
+        //ongoing touch: smoothly adjust tracker value
+        this->touch_state.tracker_value = (uint16_t)roundf(GUI_TRACK_EMA_ALPHA * (float)tracker_value + GUI_TRACK_EMA_1MALPHA * (float)this->touch_state.tracker_value);
+      }
     }
 
     if (this->display_force_wake || this->touch_state.initial || this->touch_state.released) {

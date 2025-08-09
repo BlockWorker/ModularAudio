@@ -39,7 +39,6 @@ typedef struct {
 
   uint8_t initial_tag;
   uint8_t tag;
-  uint8_t tracker_tag;
   uint16_t tracker_value;
 
   uint32_t _next_tick_at;
