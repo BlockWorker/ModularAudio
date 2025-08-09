@@ -36,8 +36,8 @@
 #define AUDIO_DEFAULT_LOUDNESS_TRACK_MAX_VOL false
 
 //calibrated volume gain offsets, per channel, for DAC and DAP, in dB
-#define AUDIO_GAIN_OFFSET_DAC_CH1 -6.0f
-#define AUDIO_GAIN_OFFSET_DAC_CH2 -6.0f
+#define AUDIO_GAIN_OFFSET_DAC_CH1 -10.0f
+#define AUDIO_GAIN_OFFSET_DAC_CH2 -5.0f
 #define AUDIO_GAIN_OFFSET_DAP_CH1 0.0f
 #define AUDIO_GAIN_OFFSET_DAP_CH2 0.0f
 
@@ -85,24 +85,20 @@ static const DAPMixerConfig _audio_dap_mixer_config_left = {
 
 //DAP biquad configs, per channel
 //hifi config
-static const q31_t _audio_dap_biquad_hifi_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
-//#include "..."
-  0
+static const uint32_t _audio_dap_biquad_hifi_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(uint32_t)] = {
+#include "../Data/biquad_coeffs_hifi_tweeter.txt"
 };
-static const q31_t _audio_dap_biquad_hifi_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
-//#include "..."
-  0
+static const uint32_t _audio_dap_biquad_hifi_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(uint32_t)] = {
+#include "../Data/biquad_coeffs_hifi_woofer.txt"
 };
-static const DAPBiquadSetup _audio_dap_biquad_hifi_setup = { 0, 0, 1, 1 };
+static const DAPBiquadSetup _audio_dap_biquad_hifi_setup = { 11, 12, 1, 1 };
 
 //power config
-static const q31_t _audio_dap_biquad_power_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
-//#include "..."
-  0
+static const uint32_t _audio_dap_biquad_power_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(uint32_t)] = {
+#include "../Data/biquad_coeffs_power_tweeter.txt"
 };
-static const q31_t _audio_dap_biquad_power_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
-//#include "..."
-  0
+static const uint32_t _audio_dap_biquad_power_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(uint32_t)] = {
+#include "../Data/biquad_coeffs_power_woofer.txt"
 };
 static const DAPBiquadSetup _audio_dap_biquad_power_setup = { 0, 0, 1, 1 };
 
@@ -1702,8 +1698,8 @@ void AudioPathManager::UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPat
   memcpy(&update_params.mixer_cfg, (mixer == AUDIO_MIXER_AVG) ? &_audio_dap_mixer_config_avg : &_audio_dap_mixer_config_left, sizeof(DAPMixerConfig));
 
   //select biquad coefficients and setup params
-  update_params.biquad_coeffs_ch1 = (eq == AUDIO_EQ_HIFI) ? _audio_dap_biquad_hifi_coeffs_ch1 : _audio_dap_biquad_power_coeffs_ch1;
-  update_params.biquad_coeffs_ch2 = (eq == AUDIO_EQ_HIFI) ? _audio_dap_biquad_hifi_coeffs_ch2 : _audio_dap_biquad_power_coeffs_ch2;
+  update_params.biquad_coeffs_ch1 = (eq == AUDIO_EQ_HIFI) ? (const q31_t*)_audio_dap_biquad_hifi_coeffs_ch1 : (const q31_t*)_audio_dap_biquad_power_coeffs_ch1;
+  update_params.biquad_coeffs_ch2 = (eq == AUDIO_EQ_HIFI) ? (const q31_t*)_audio_dap_biquad_hifi_coeffs_ch2 : (const q31_t*)_audio_dap_biquad_power_coeffs_ch2;
   memcpy(&update_params.biquad_setup, (eq == AUDIO_EQ_HIFI) ? &_audio_dap_biquad_hifi_setup : &_audio_dap_biquad_power_setup, sizeof(DAPBiquadSetup));
 
   //modify parameters based on calibration requirements
