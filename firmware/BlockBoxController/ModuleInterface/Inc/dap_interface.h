@@ -95,9 +95,25 @@ typedef enum {
   IF_DAP_CH2 = 2
 } DAPChannel;
 
+//DAP biquad setup
+typedef struct {
+  uint8_t ch1_stages;
+  uint8_t ch2_stages;
+  uint8_t ch1_shift;
+  uint8_t ch2_shift;
+} DAPBiquadSetup;
+
+//DAP FIR setup
+typedef struct {
+  uint16_t ch1_length;
+  uint16_t ch2_length;
+} DAPFIRSetup;
+
 
 static_assert(sizeof(DAPMixerConfig) == 16);
 static_assert(sizeof(DAPGains) == 8);
+static_assert(sizeof(DAPBiquadSetup) == 4);
+static_assert(sizeof(DAPFIRSetup) == 4);
 
 
 #ifdef __cplusplus
@@ -132,8 +148,11 @@ public:
   DAPGains GetVolumeGains() const;
   DAPGains GetLoudnessGains() const;
 
-  void GetBiquadSetup(DAPChannel channel, uint8_t& stage_count, uint8_t& coeff_shift, q31_t* coeff_buffer) const;
-  void GetFIRSetup(DAPChannel channel, uint16_t& fir_length, q31_t* coeff_buffer) const;
+  const q31_t* GetBiquadCoefficients(DAPChannel channel) const;
+  DAPBiquadSetup GetBiquadSetup() const;
+
+  const q31_t* GetFIRCoefficients(DAPChannel channel) const;
+  DAPFIRSetup GetFIRSetup() const;
 
 
   void SetConfig(bool sp_enabled, bool pos_gain_allowed, SuccessCallback&& callback);
@@ -149,10 +168,10 @@ public:
   void SetLoudnessGains(DAPGains gains, SuccessCallback&& callback);
 
   void SetBiquadCoefficients(DAPChannel channel, const q31_t* coeff_buffer, SuccessCallback&& callback);
-  void SetBiquadSetup(uint8_t stage_count_ch1, uint8_t stage_count_ch2, uint8_t coeff_shift_ch1, uint8_t coeff_shift_ch2, SuccessCallback&& callback);
+  void SetBiquadSetup(DAPBiquadSetup setup, SuccessCallback&& callback);
 
   void SetFIRCoefficients(DAPChannel channel, const q31_t* coeff_buffer, SuccessCallback&& callback);
-  void SetFIRSetup(uint16_t fir_length_ch1, uint16_t fir_length_ch2, SuccessCallback&& callback);
+  void SetFIRSetup(DAPFIRSetup setup, SuccessCallback&& callback);
 
 
   void InitModule(SuccessCallback&& callback);

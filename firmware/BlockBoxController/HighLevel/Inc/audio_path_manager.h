@@ -52,6 +52,22 @@ typedef enum {
   AUDIO_INPUT_SPDIF = IF_DAP_INPUT_SPDIF
 } AudioPathInput;
 
+typedef enum {
+  AUDIO_MIXER_AVG = 0,
+  AUDIO_MIXER_LEFT = 1
+} AudioPathMixerMode;
+
+typedef enum {
+  AUDIO_EQ_HIFI = 0,
+  AUDIO_EQ_POWER = 1
+} AudioPathEQMode;
+
+typedef enum {
+  AUDIO_CAL_NONE = 0,
+  AUDIO_CAL_CH1 = 1,
+  AUDIO_CAL_CH2 = 2
+} AudioPathCalibrationMode;
+
 typedef std::function<void()> QueuedOperation;
 
 
@@ -110,7 +126,16 @@ public:
   void SetLoudnessGainDB(float loudness_gain_dB, SuccessCallback&& callback, bool queue_if_busy = false);
   void SetLoudnessTrackingMaxVolume(bool track_max_volume, SuccessCallback&& callback, bool queue_if_busy = false);
 
-  //TODO if desired: different EQ modes, bass/treble, speaker response calibration mode
+  //mixer and EQ functions
+  AudioPathMixerMode GetMixerMode() const;
+  AudioPathEQMode GetEQMode() const;
+  AudioPathCalibrationMode GetCalibrationMode() const;
+
+  void SetMixerMode(AudioPathMixerMode mode, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetEQMode(AudioPathEQMode mode, SuccessCallback&& callback, bool queue_if_busy = false);
+  void SetCalibrationMode(AudioPathCalibrationMode mode, SuccessCallback&& callback, bool queue_if_busy = false);
+
+  //TODO if desired: bass/treble
 
 protected:
   StorageSection non_volatile_config;
@@ -129,6 +154,9 @@ protected:
   float min_volume_dB;
   float max_volume_dB;
 
+  AudioPathEQMode eq_mode;
+  AudioPathCalibrationMode calibration_mode;
+
   static void LoadNonVolatileConfigDefaults(StorageSection& section);
 
   void InitDACSetup(SuccessCallback&& callback);
@@ -142,6 +170,8 @@ protected:
 
   void UpdateBluetoothVolume();
   void UpdateVolumeFromBluetooth();
+
+  void UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPathEQMode eq, AudioPathCalibrationMode cal, SuccessCallback&& callback);
 
   void HandleEvent(EventSource* source, uint32_t event);
 };

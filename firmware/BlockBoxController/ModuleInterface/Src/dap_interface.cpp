@@ -109,48 +109,38 @@ DAPGains DAPInterface::GetLoudnessGains() const {
 }
 
 
-void DAPInterface::GetBiquadSetup(DAPChannel channel, uint8_t& stage_count, uint8_t& coeff_shift, q31_t* coeff_buffer) const {
-  uint8_t coeff_reg;
+const q31_t* DAPInterface::GetBiquadCoefficients(DAPChannel channel) const {
   switch (channel) {
     case IF_DAP_CH1:
-      stage_count = this->registers[I2CDEF_DAP_BIQUAD_SETUP][0];
-      coeff_shift = this->registers[I2CDEF_DAP_BIQUAD_SETUP][2];
-      coeff_reg = I2CDEF_DAP_BIQUAD_COEFFS_CH1;
-      break;
+      return (const q31_t*)this->registers[I2CDEF_DAP_BIQUAD_COEFFS_CH1];
     case IF_DAP_CH2:
-      stage_count = this->registers[I2CDEF_DAP_BIQUAD_SETUP][1];
-      coeff_shift = this->registers[I2CDEF_DAP_BIQUAD_SETUP][3];
-      coeff_reg = I2CDEF_DAP_BIQUAD_COEFFS_CH2;
-      break;
+      return (const q31_t*)this->registers[I2CDEF_DAP_BIQUAD_COEFFS_CH2];
     default:
-      throw std::invalid_argument("DAPInterface GetBiquadSetup given invalid channel");
-  }
-
-  if (coeff_buffer != NULL) {
-    //return coefficients if desired
-    memcpy(coeff_buffer, this->registers[coeff_reg], this->registers.reg_sizes[coeff_reg]);
+      throw std::invalid_argument("DAPInterface GetBiquadCoefficients given invalid channel");
   }
 }
 
-void DAPInterface::GetFIRSetup(DAPChannel channel, uint16_t& fir_length, q31_t* coeff_buffer) const {
-  uint8_t coeff_reg;
+DAPBiquadSetup DAPInterface::GetBiquadSetup() const {
+  DAPBiquadSetup setup;
+  memcpy(&setup, this->registers[I2CDEF_DAP_BIQUAD_SETUP], sizeof(DAPBiquadSetup));
+  return setup;
+}
+
+const q31_t* DAPInterface::GetFIRCoefficients(DAPChannel channel) const {
   switch (channel) {
     case IF_DAP_CH1:
-      fir_length = ((uint16_t*)this->registers[I2CDEF_DAP_FIR_SETUP])[0];
-      coeff_reg = I2CDEF_DAP_FIR_COEFFS_CH1;
-      break;
+      return (const q31_t*)this->registers[I2CDEF_DAP_FIR_COEFFS_CH1];
     case IF_DAP_CH2:
-      fir_length = ((uint16_t*)this->registers[I2CDEF_DAP_FIR_SETUP])[1];
-      coeff_reg = I2CDEF_DAP_FIR_COEFFS_CH2;
-      break;
+      return (const q31_t*)this->registers[I2CDEF_DAP_FIR_COEFFS_CH2];
     default:
-      throw std::invalid_argument("DAPInterface GetFIRSetup given invalid channel");
+      throw std::invalid_argument("DAPInterface GetFIRCoefficients given invalid channel");
   }
+}
 
-  if (coeff_buffer != NULL) {
-    //return coefficients if desired
-    memcpy(coeff_buffer, this->registers[coeff_reg], this->registers.reg_sizes[coeff_reg]);
-  }
+DAPFIRSetup DAPInterface::GetFIRSetup() const {
+  DAPFIRSetup setup;
+  memcpy(&setup, this->registers[I2CDEF_DAP_FIR_SETUP], sizeof(DAPFIRSetup));
+  return setup;
 }
 
 
@@ -319,14 +309,11 @@ void DAPInterface::SetBiquadCoefficients(DAPChannel channel, const q31_t* coeff_
   });
 }
 
-void DAPInterface::SetBiquadSetup(uint8_t stage_count_ch1, uint8_t stage_count_ch2, uint8_t coeff_shift_ch1, uint8_t coeff_shift_ch2, SuccessCallback&& callback) {
+void DAPInterface::SetBiquadSetup(DAPBiquadSetup setup, SuccessCallback&& callback) {
   _DAPInterface_EnsureSignalProcessorDisabled(this);
 
-  uint32_t setup_value = stage_count_ch1;
-  uint8_t* setup_bytes = (uint8_t*)&setup_value;
-  setup_bytes[1] = stage_count_ch2;
-  setup_bytes[2] = coeff_shift_ch1;
-  setup_bytes[3] = coeff_shift_ch2;
+  uint32_t setup_value;
+  memcpy(&setup_value, &setup, sizeof(uint32_t));
 
   //write desired setup
   this->WriteRegister32Async(I2CDEF_DAP_BIQUAD_SETUP, setup_value, [&, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {
@@ -368,11 +355,11 @@ void DAPInterface::SetFIRCoefficients(DAPChannel channel, const q31_t* coeff_buf
   });
 }
 
-void DAPInterface::SetFIRSetup(uint16_t fir_length_ch1, uint16_t fir_length_ch2, SuccessCallback&& callback) {
+void DAPInterface::SetFIRSetup(DAPFIRSetup setup, SuccessCallback&& callback) {
   _DAPInterface_EnsureSignalProcessorDisabled(this);
 
-  uint32_t setup_value = fir_length_ch1;
-  ((uint16_t*)&setup_value)[1] = fir_length_ch2;
+  uint32_t setup_value;
+  memcpy(&setup_value, &setup, sizeof(uint32_t));
 
   //write desired setup
   this->WriteRegister32Async(I2CDEF_DAP_FIR_SETUP, setup_value, [&, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {

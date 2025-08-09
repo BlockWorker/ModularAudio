@@ -19,6 +19,8 @@
 #define AUDIO_NVM_INIT_LOUDNESS_GAIN 0
 //whether the loudness target tracks the maximum volume, bool (1B)
 #define AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL 4
+//mixer config (1B)
+#define AUDIO_NVM_MIXER_CONFIG 5
 //volume step in dB, float (4B)
 #define AUDIO_NVM_VOLUME_STEP 8
 //total storage size in bytes
@@ -67,40 +69,53 @@
 #define AUDIO_DAP_I2S1_SAMPLE_RATE IF_DAP_SR_96K
 
 
-//DAP mixer config - each output channel is average of input channels (mono downmix), TODO: investigate whether this is good, or alternatively just take one channel or something?
-static const DAPMixerConfig _audio_dap_mixer_config = {
+//DAP mixer configs
+//avg config: each output channel is average of input channels (mono downmix)
+static const DAPMixerConfig _audio_dap_mixer_config_avg = {
 //input ch1   input ch2
   0x20000000, 0x20000000, //output ch1
   0x20000000, 0x20000000  //output ch2
 };
+//left config: each output channel is copy of left channel (mono select)
+static const DAPMixerConfig _audio_dap_mixer_config_left = {
+//input ch1   input ch2
+  0x40000000, 0x00000000, //output ch1
+  0x40000000, 0x00000000  //output ch2
+};
 
 //DAP biquad configs, per channel
-static const q31_t _audio_dap_biquad_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
+//hifi config
+static const q31_t _audio_dap_biquad_hifi_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
 //#include "..."
   0
 };
-static const uint8_t _audio_dap_biquad_stages_ch1 = 0;
-static const uint8_t _audio_dap_biquad_shift_ch1 = 1;
+static const q31_t _audio_dap_biquad_hifi_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
+//#include "..."
+  0
+};
+static const DAPBiquadSetup _audio_dap_biquad_hifi_setup = { 0, 0, 1, 1 };
 
-static const q31_t _audio_dap_biquad_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
+//power config
+static const q31_t _audio_dap_biquad_power_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
 //#include "..."
   0
 };
-static const uint8_t _audio_dap_biquad_stages_ch2 = 0;
-static const uint8_t _audio_dap_biquad_shift_ch2 = 1;
+static const q31_t _audio_dap_biquad_power_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(q31_t)] = {
+//#include "..."
+  0
+};
+static const DAPBiquadSetup _audio_dap_biquad_power_setup = { 0, 0, 1, 1 };
 
 //DAP FIR configs, per channel
 static const q31_t _audio_dap_fir_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_FIR / sizeof(q31_t)] = {
 //#include "..."
   0
 };
-static const uint16_t _audio_dap_fir_length_ch1 = 0;
-
 static const q31_t _audio_dap_fir_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_FIR / sizeof(q31_t)] = {
 //#include "..."
   0
 };
-static const uint16_t _audio_dap_fir_length_ch2 = 0;
+static const DAPFIRSetup _audio_dap_fir_setup = { 0, 0 };
 
 
 //check validity of audio limits in accordance with DAP limits
@@ -117,10 +132,6 @@ static_assert(AUDIO_DEFAULT_VOLUME_STEP_DB >= AUDIO_LIMIT_VOLUME_STEP_MIN && AUD
 static_assert(AUDIO_DEFAULT_MAX_VOLUME_DB - AUDIO_DEFAULT_MIN_VOLUME_DB >= AUDIO_LIMIT_VOLUME_RANGE_MIN);
 static_assert(AUDIO_DEFAULT_VOLUME_DB >= AUDIO_DEFAULT_MIN_VOLUME_DB && AUDIO_DEFAULT_VOLUME_DB <= AUDIO_DEFAULT_MAX_VOLUME_DB);
 static_assert(roundf(AUDIO_DEFAULT_VOLUME_STEP_DB) == AUDIO_DEFAULT_VOLUME_STEP_DB);
-//check validity of filter setups
-static_assert(_audio_dap_biquad_stages_ch1 <= 16 && _audio_dap_biquad_stages_ch2 <= 16);
-static_assert(_audio_dap_biquad_shift_ch1 <= 31 && _audio_dap_biquad_shift_ch2 <= 31);
-static_assert(_audio_dap_fir_length_ch1 <= 300 && _audio_dap_fir_length_ch2 <= 300);
 
 
 /******************************************************/
@@ -130,7 +141,7 @@ static_assert(_audio_dap_fir_length_ch1 <= 300 && _audio_dap_fir_length_ch2 <= 3
 AudioPathManager::AudioPathManager(BlockBoxV2System& system) :
     system(system), non_volatile_config(system.eeprom_if, AUDIO_NVM_TOTAL_BYTES, AudioPathManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0),
     bluetooth_volume_lock_timer(0), bluetooth_previously_connected(false), persistent_active_input(AUDIO_INPUT_NONE), current_volume_dB(AUDIO_DEFAULT_VOLUME_DB),
-    min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB), max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB) {}
+    min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB), max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB), eq_mode(AUDIO_EQ_HIFI), calibration_mode(AUDIO_CAL_NONE) {}
 
 
 void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
@@ -267,120 +278,79 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
         return;
       }
 
-      //configure mixer
-      this->system.dap_if.SetMixerConfig(_audio_dap_mixer_config, [&, callback = std::move(callback)](bool success) {
+      //configure initial loudness gains
+      //get value from non-volatile config and convert to float
+      uint32_t loudness_gain_int = this->non_volatile_config.GetValue32(AUDIO_NVM_INIT_LOUDNESS_GAIN);
+      float loudness_gain_float = *(float*)&loudness_gain_int;
+      if (isnanf(loudness_gain_float) || loudness_gain_float > AUDIO_LIMIT_LOUDNESS_GAIN_MAX) {
+        //value is bad somehow: reset to default
+        loudness_gain_float = AUDIO_DEFAULT_LOUDNESS_GAIN_DB;
+        this->non_volatile_config.SetValue32(AUDIO_NVM_INIT_LOUDNESS_GAIN, *(uint32_t*)&loudness_gain_float);
+      }
+      //put gain into structure and apply
+      DAPGains loudness_gains;
+      loudness_gains.ch1 = loudness_gains.ch2 = loudness_gain_float;
+      this->system.dap_if.SetLoudnessGains(loudness_gains, [&, callback = std::move(callback)](bool success) {
         if (!success) {
           //propagate failure to external callback
-          DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to configure mixer\n");
+          DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to configure initial loudness gains\n");
           if (callback) {
             callback(false);
           }
           return;
         }
 
-        //configure initial loudness gains
-        //get value from non-volatile config and convert to float
-        uint32_t loudness_gain_int = this->non_volatile_config.GetValue32(AUDIO_NVM_INIT_LOUDNESS_GAIN);
-        float loudness_gain_float = *(float*)&loudness_gain_int;
-        if (isnanf(loudness_gain_float) || loudness_gain_float > AUDIO_LIMIT_LOUDNESS_GAIN_MAX) {
-          //value is bad somehow: reset to default
-          loudness_gain_float = AUDIO_DEFAULT_LOUDNESS_GAIN_DB;
-          this->non_volatile_config.SetValue32(AUDIO_NVM_INIT_LOUDNESS_GAIN, *(uint32_t*)&loudness_gain_float);
-        }
-        //put gain into structure and apply
-        DAPGains loudness_gains;
-        loudness_gains.ch1 = loudness_gains.ch2 = loudness_gain_float;
-        this->system.dap_if.SetLoudnessGains(loudness_gains, [&, callback = std::move(callback)](bool success) {
+        //write FIR coefficients for channel 1
+        this->system.dap_if.SetFIRCoefficients(IF_DAP_CH1, _audio_dap_fir_coeffs_ch1, [&, callback = std::move(callback)](bool success) {
           if (!success) {
             //propagate failure to external callback
-            DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to configure initial loudness gains\n");
+            DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 1\n");
             if (callback) {
               callback(false);
             }
             return;
           }
 
-          //write biquad coefficients for channel 1
-          this->system.dap_if.SetBiquadCoefficients(IF_DAP_CH1, _audio_dap_biquad_coeffs_ch1, [&, callback = std::move(callback)](bool success) {
+          //write FIR coefficients for channel 2
+          this->system.dap_if.SetFIRCoefficients(IF_DAP_CH2, _audio_dap_fir_coeffs_ch2, [&, callback = std::move(callback)](bool success) {
             if (!success) {
               //propagate failure to external callback
-              DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write biquad coefficients for channel 1\n");
+              DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 2\n");
               if (callback) {
                 callback(false);
               }
               return;
             }
 
-            //write biquad coefficients for channel 2
-            this->system.dap_if.SetBiquadCoefficients(IF_DAP_CH2, _audio_dap_biquad_coeffs_ch2, [&, callback = std::move(callback)](bool success) {
+            //set up FIRs (for both channels)
+            this->system.dap_if.SetFIRSetup(_audio_dap_fir_setup, [&, callback = std::move(callback)](bool success) {
               if (!success) {
                 //propagate failure to external callback
-                DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write biquad coefficients for channel 2\n");
+                DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up FIRs\n");
                 if (callback) {
                   callback(false);
                 }
                 return;
               }
 
-              //set up biquads (for both channels)
-              this->system.dap_if.SetBiquadSetup(_audio_dap_biquad_stages_ch1, _audio_dap_biquad_stages_ch2, _audio_dap_biquad_shift_ch1, _audio_dap_biquad_shift_ch2,
-                                                 [&, callback = std::move(callback)](bool success) {
+              //check validity of mixer mode
+              AudioPathMixerMode mixer_mode = this->GetMixerMode();
+              if (mixer_mode != AUDIO_MIXER_AVG && mixer_mode != AUDIO_MIXER_LEFT) {
+                //invalid mode: reset
+                mixer_mode = AUDIO_MIXER_AVG;
+                this->non_volatile_config.SetValue8(AUDIO_NVM_MIXER_CONFIG, mixer_mode);
+              }
+
+              //set up mixer, EQ and calibration (no cal) - includes re-enabling the signal processor
+              this->UpdateMixerAndEQParams(mixer_mode, AUDIO_EQ_HIFI, AUDIO_CAL_NONE, [&, callback = std::move(callback)](bool success) {
                 if (!success) {
-                  //propagate failure to external callback
-                  DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up biquads\n");
-                  if (callback) {
-                    callback(false);
-                  }
-                  return;
+                  DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up mixer and EQ\n");
                 }
 
-                //write FIR coefficients for channel 1
-                this->system.dap_if.SetFIRCoefficients(IF_DAP_CH1, _audio_dap_fir_coeffs_ch1, [&, callback = std::move(callback)](bool success) {
-                  if (!success) {
-                    //propagate failure to external callback
-                    DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 1\n");
-                    if (callback) {
-                      callback(false);
-                    }
-                    return;
-                  }
-
-                  //write FIR coefficients for channel 2
-                  this->system.dap_if.SetFIRCoefficients(IF_DAP_CH2, _audio_dap_fir_coeffs_ch2, [&, callback = std::move(callback)](bool success) {
-                    if (!success) {
-                      //propagate failure to external callback
-                      DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 2\n");
-                      if (callback) {
-                        callback(false);
-                      }
-                      return;
-                    }
-
-                    //set up FIRs (for both channels)
-                    this->system.dap_if.SetFIRSetup(_audio_dap_fir_length_ch1, _audio_dap_fir_length_ch2, [&, callback = std::move(callback)](bool success) {
-                      if (!success) {
-                        //propagate failure to external callback
-                        DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up FIRs\n");
-                        if (callback) {
-                          callback(false);
-                        }
-                        return;
-                      }
-
-                      //re-enable signal processor
-                      this->system.dap_if.SetConfig(true, false, [&, callback = std::move(callback)](bool success) {
-                        if (!success) {
-                          DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to re-enable signal processor\n");
-                        }
-
-                        //propagate success to external callback
-                        if (callback) {
-                          callback(success);
-                        }
-                      });
-                    });
-                  });
-                });
+                //propagate success to external callback
+                if (callback) {
+                  callback(success);
+                }
               });
             });
           });
@@ -394,6 +364,9 @@ void AudioPathManager::Init(SuccessCallback&& callback) {
   this->initialised = false;
   this->lock_timer = 0;
   this->bluetooth_volume_lock_timer = 0;
+
+  this->eq_mode = AUDIO_EQ_HIFI;
+  this->calibration_mode = AUDIO_CAL_NONE;
 
   //enter power-off state, including volatile config resets
   this->HandlePowerStateChange(false, [&, callback = std::move(callback)](bool success) {
@@ -621,6 +594,9 @@ void AudioPathManager::LoadNonVolatileConfigDefaults(StorageSection& section) {
 
   //write default loudness tracking behaviour
   section.SetValue8(AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL, AUDIO_DEFAULT_LOUDNESS_TRACK_MAX_VOL ? 1 : 0);
+
+  //write default mixer config
+  section.SetValue8(AUDIO_NVM_MIXER_CONFIG, (uint8_t)AUDIO_MIXER_AVG);
 
   //write default volume step
   float default_step = AUDIO_DEFAULT_VOLUME_STEP_DB;
@@ -1550,7 +1526,6 @@ void AudioPathManager::SetMute(bool mute, SuccessCallback&& callback, bool queue
 /*                 Loudness Handling                  */
 /******************************************************/
 
-//loudness functions
 float AudioPathManager::GetLoudnessGainDB() const {
   DAPGains loudness_gains = this->system.dap_if.GetLoudnessGains();
   //report maximum loudness gain - these should really be the same at all times, but it's better to over-report than under-report
@@ -1687,4 +1662,324 @@ void AudioPathManager::SetLoudnessTrackingMaxVolume(bool track_max_volume, Succe
     });
   }
 }
+
+
+/******************************************************/
+/*               Mixer and EQ Handling                */
+/******************************************************/
+
+AudioPathMixerMode AudioPathManager::GetMixerMode() const {
+  return (AudioPathMixerMode)this->non_volatile_config.GetValue8(AUDIO_NVM_MIXER_CONFIG);
+}
+
+AudioPathEQMode AudioPathManager::GetEQMode() const {
+  return this->eq_mode;
+}
+
+AudioPathCalibrationMode AudioPathManager::GetCalibrationMode() const {
+  return this->calibration_mode;
+}
+
+
+void AudioPathManager::UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPathEQMode eq, AudioPathCalibrationMode cal, SuccessCallback&& callback) {
+  //prepare struct for passing parameters down
+  struct {
+    AudioPathMixerMode mixer;
+    AudioPathEQMode eq;
+    AudioPathCalibrationMode cal;
+    DAPMixerConfig mixer_cfg;
+    const q31_t* biquad_coeffs_ch1;
+    const q31_t* biquad_coeffs_ch2;
+    DAPBiquadSetup biquad_setup;
+  } update_params;
+
+  //copy function parameters
+  update_params.mixer = mixer;
+  update_params.eq = eq;
+  update_params.cal = cal;
+
+  //configure mixer based on selected mode
+  memcpy(&update_params.mixer_cfg, (mixer == AUDIO_MIXER_AVG) ? &_audio_dap_mixer_config_avg : &_audio_dap_mixer_config_left, sizeof(DAPMixerConfig));
+
+  //select biquad coefficients and setup params
+  update_params.biquad_coeffs_ch1 = (eq == AUDIO_EQ_HIFI) ? _audio_dap_biquad_hifi_coeffs_ch1 : _audio_dap_biquad_power_coeffs_ch1;
+  update_params.biquad_coeffs_ch2 = (eq == AUDIO_EQ_HIFI) ? _audio_dap_biquad_hifi_coeffs_ch2 : _audio_dap_biquad_power_coeffs_ch2;
+  memcpy(&update_params.biquad_setup, (eq == AUDIO_EQ_HIFI) ? &_audio_dap_biquad_hifi_setup : &_audio_dap_biquad_power_setup, sizeof(DAPBiquadSetup));
+
+  //modify parameters based on calibration requirements
+  if (cal == AUDIO_CAL_CH2) {
+    //ch2 cal: disable mixer output to ch1, disable ch2 biquads
+    update_params.mixer_cfg.ch1_into_ch1 = 0;
+    update_params.mixer_cfg.ch2_into_ch1 = 0;
+    update_params.biquad_setup.ch2_stages = 0;
+  } else if (cal == AUDIO_CAL_CH1) {
+    //ch1 cal: disable mixer output to ch2, disable ch1 biquads
+    update_params.mixer_cfg.ch1_into_ch2 = 0;
+    update_params.mixer_cfg.ch2_into_ch2 = 0;
+    update_params.biquad_setup.ch1_stages = 0;
+  }
+
+  //start by disabling signal processor (and positive gain)
+  this->system.dap_if.SetConfig(false, false, [&, callback = std::move(callback), update_params](bool success) {
+    if (!success) {
+      //propagate failure to external callback
+      DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to disable signal processor\n");
+      if (callback) {
+        callback(false);
+      }
+      return;
+    }
+
+    //callback for further processing after mixer is configured
+    auto post_mixer_cb = [&, callback = std::move(callback), update_params](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure mixer\n");
+      }
+
+      //callback for further processing after biquad ch1 is configured
+      auto post_ch1_cb = [&, callback = std::move(callback), update_params, prev_success = success](bool success) {
+        if (!success) {
+          DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch1\n");
+        }
+
+        //callback for further processing after biquad ch2 is configured
+        auto post_ch2_cb = [&, callback = std::move(callback), update_params, prev_success = prev_success && success](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch2\n");
+          }
+
+          //callback for further processing after biquad setup is configured
+          auto post_setup_cb = [&, callback = std::move(callback), update_params, prev_success = prev_success && success](bool success) {
+            if (!success) {
+              DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad setup\n");
+            }
+
+            //if successful to this point: save new mixer/eq/cal params
+            if (success && prev_success) {
+              this->non_volatile_config.SetValue8(AUDIO_NVM_MIXER_CONFIG, (uint8_t)update_params.mixer);
+              this->eq_mode = update_params.eq;
+              this->calibration_mode = update_params.cal;
+            }
+
+            //re-enable signal processor (in all cases)
+            this->system.dap_if.SetConfig(true, false, [&, callback = std::move(callback), prev_success = prev_success && success](bool success) {
+              if (!success) {
+                DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to re-enable signal processor\n");
+              }
+
+              //propagate overall success to callback
+              if (callback) {
+                callback(success && prev_success);
+              }
+            });
+          };
+
+          //compare biquad setup against existing setup
+          DAPBiquadSetup current_setup = this->system.dap_if.GetBiquadSetup();
+          if (!success || !prev_success || memcmp(&current_setup, &update_params.biquad_setup, sizeof(DAPBiquadSetup)) == 0) {
+            //previously failed, or already configured correctly: skip to next step
+            post_setup_cb(true);
+          } else {
+            //configure new biquad setup
+            this->system.dap_if.SetBiquadSetup(update_params.biquad_setup, std::move(post_setup_cb));
+          }
+        };
+
+        //compare biquad ch2 coefficients against existing coefficients
+        const q31_t* current_ch2 = this->system.dap_if.GetBiquadCoefficients(IF_DAP_CH2);
+        if (!success || !prev_success || memcmp(current_ch2, update_params.biquad_coeffs_ch2, I2CDEF_DAP_REG_SIZE_SP_BIQUAD) == 0) {
+          //previously failed, or already configured correctly: skip to next step
+          post_ch2_cb(true);
+        } else {
+          //configure new ch2 coefficients
+          this->system.dap_if.SetBiquadCoefficients(IF_DAP_CH2, update_params.biquad_coeffs_ch2, std::move(post_ch2_cb));
+        }
+      };
+
+      //compare biquad ch1 coefficients against existing coefficients
+      const q31_t* current_ch1 = this->system.dap_if.GetBiquadCoefficients(IF_DAP_CH1);
+      if (!success || memcmp(current_ch1, update_params.biquad_coeffs_ch1, I2CDEF_DAP_REG_SIZE_SP_BIQUAD) == 0) {
+        //previously failed, or already configured correctly: skip to next step
+        post_ch1_cb(true);
+      } else {
+        //configure new ch1 coefficients
+        this->system.dap_if.SetBiquadCoefficients(IF_DAP_CH1, update_params.biquad_coeffs_ch1, std::move(post_ch1_cb));
+      }
+    };
+
+    //compare mixer against existing mixer
+    DAPMixerConfig current_mixer = this->system.dap_if.GetMixerConfig();
+    if (memcmp(&current_mixer, &update_params.mixer_cfg, sizeof(DAPMixerConfig)) == 0) {
+      //already configured correctly: skip to next step
+      post_mixer_cb(true);
+    } else {
+      //configure new mixer setup
+      this->system.dap_if.SetMixerConfig(update_params.mixer_cfg, std::move(post_mixer_cb));
+    }
+  });
+}
+
+
+void AudioPathManager::SetMixerMode(AudioPathMixerMode mode, SuccessCallback&& callback, bool queue_if_busy) {
+  if (mode != AUDIO_MIXER_AVG && mode != AUDIO_MIXER_LEFT) {
+    throw std::invalid_argument("AudioPathManager SetMixerMode given invalid mode");
+  }
+
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (!this->initialised) {
+    //uninitialised: failure, propagate to callback
+    __set_PRIMASK(primask);
+    if (callback) {
+      callback(false);
+    }
+    return;
+  }
+
+  if (this->lock_timer > 0) {
+    //locked out: failure, queue or propagate to callback
+    if (queue_if_busy) {
+      this->queued_operations.push_back([&, mode, callback = std::move(callback)]() mutable {
+        this->SetMixerMode(mode, std::move(callback), false);
+      });
+      __set_PRIMASK(primask);
+    } else {
+      __set_PRIMASK(primask);
+      if (callback) {
+        callback(false);
+      }
+    }
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AUDIO_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  if (mode == this->GetMixerMode()) {
+    //already in desired state: nothing to do, unlock operations and report to external callback
+    this->lock_timer = 0;
+    if (callback) {
+      callback(true);
+    }
+  } else {
+    //set new mixer mode and update EQ parameters
+    this->UpdateMixerAndEQParams(mode, this->eq_mode, this->calibration_mode, [&, callback = std::move(callback)](bool success) {
+      //once done: unlock operations and propagate success to external callback
+      this->lock_timer = 0;
+      if (callback) {
+        callback(success);
+      }
+    });
+  }
+}
+
+void AudioPathManager::SetEQMode(AudioPathEQMode mode, SuccessCallback&& callback, bool queue_if_busy) {
+  if (mode != AUDIO_EQ_HIFI && mode != AUDIO_EQ_POWER) {
+    throw std::invalid_argument("AudioPathManager SetEQMode given invalid mode");
+  }
+
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (!this->initialised) {
+    //uninitialised: failure, propagate to callback
+    __set_PRIMASK(primask);
+    if (callback) {
+      callback(false);
+    }
+    return;
+  }
+
+  if (this->lock_timer > 0) {
+    //locked out: failure, queue or propagate to callback
+    if (queue_if_busy) {
+      this->queued_operations.push_back([&, mode, callback = std::move(callback)]() mutable {
+        this->SetEQMode(mode, std::move(callback), false);
+      });
+      __set_PRIMASK(primask);
+    } else {
+      __set_PRIMASK(primask);
+      if (callback) {
+        callback(false);
+      }
+    }
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AUDIO_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  if (mode == this->eq_mode) {
+    //already in desired state: nothing to do, unlock operations and report to external callback
+    this->lock_timer = 0;
+    if (callback) {
+      callback(true);
+    }
+  } else {
+    //set new EQ mode and update EQ parameters
+    this->UpdateMixerAndEQParams(this->GetMixerMode(), mode, this->calibration_mode, [&, callback = std::move(callback)](bool success) {
+      //once done: unlock operations and propagate success to external callback
+      this->lock_timer = 0;
+      if (callback) {
+        callback(success);
+      }
+    });
+  }
+}
+
+void AudioPathManager::SetCalibrationMode(AudioPathCalibrationMode mode, SuccessCallback&& callback, bool queue_if_busy) {
+  if (mode != AUDIO_CAL_NONE && mode != AUDIO_CAL_CH1 && mode != AUDIO_CAL_CH2) {
+    throw std::invalid_argument("AudioPathManager SetCalibrationMode given invalid mode");
+  }
+
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (!this->initialised) {
+    //uninitialised: failure, propagate to callback
+    __set_PRIMASK(primask);
+    if (callback) {
+      callback(false);
+    }
+    return;
+  }
+
+  if (this->lock_timer > 0) {
+    //locked out: failure, queue or propagate to callback
+    if (queue_if_busy) {
+      this->queued_operations.push_back([&, mode, callback = std::move(callback)]() mutable {
+        this->SetCalibrationMode(mode, std::move(callback), false);
+      });
+      __set_PRIMASK(primask);
+    } else {
+      __set_PRIMASK(primask);
+      if (callback) {
+        callback(false);
+      }
+    }
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AUDIO_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  if (mode == this->calibration_mode) {
+    //already in desired state: nothing to do, unlock operations and report to external callback
+    this->lock_timer = 0;
+    if (callback) {
+      callback(true);
+    }
+  } else {
+    //set new calibration mode and update EQ parameters
+    this->UpdateMixerAndEQParams(this->GetMixerMode(), this->eq_mode, mode, [&, callback = std::move(callback)](bool success) {
+      //once done: unlock operations and propagate success to external callback
+      this->lock_timer = 0;
+      if (callback) {
+        callback(success);
+      }
+    });
+  }
+}
+
 
