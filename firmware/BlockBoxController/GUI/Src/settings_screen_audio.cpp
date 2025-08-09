@@ -606,9 +606,10 @@ void SettingsScreenAudio::OnScreenExit() {
   this->bbv2_manager.system.dap_if.monitor_src_stats = false;
   this->bbv2_manager.system.amp_if.monitor_measurements = false;
 
-  //TODO: save settings
-
-  DEBUG_PRINTF("Audio screen exiting\n");
+  //save settings
+  this->bbv2_manager.system.eeprom_if.WriteAllDirtySections([](bool success) {
+    DEBUG_PRINTF("Audio screen exit EEPROM write success %u\n", success);
+  });
 }
 
 

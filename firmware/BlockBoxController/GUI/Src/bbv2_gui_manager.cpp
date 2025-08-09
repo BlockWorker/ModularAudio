@@ -17,8 +17,12 @@
 #define GUI_CONFIG_THEME_COLOR_MAIN 24
 //theme colour dark (size: 4B)
 #define GUI_CONFIG_THEME_COLOR_DARK 28
+//display brightness (size: 1B)
+#define GUI_CONFIG_DISPLAY_BRIGHTNESS 32
+//display sleep timeout (size: 4B)
+#define GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT 36
 //total storage bytes
-#define GUI_CONFIG_SIZE_BYTES 32
+#define GUI_CONFIG_SIZE_BYTES 40
 
 
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
@@ -40,6 +44,13 @@ void BlockBoxV2GUIManager::Init() {
 
   //base call to initialise the base manager itself
   this->GUIManager::Init();
+
+  //force wake screen until init done
+  this->display_force_wake = true;
+
+  //apply brightness and sleep delay from NVM
+  this->GUIManager::SetDisplayBrightness(this->gui_config.GetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS));
+  this->GUIManager::SetDisplaySleepTimeoutMS(this->gui_config.GetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT));
 }
 
 
@@ -68,6 +79,31 @@ void BlockBoxV2GUIManager::SetThemeColors(uint32_t main, uint32_t dark) {
 }
 
 
+void BlockBoxV2GUIManager::SetDisplayBrightness(uint8_t brightness) noexcept {
+  //base handling
+  this->GUIManager::SetDisplayBrightness(brightness);
+
+  //update NVM
+  try {
+    this->gui_config.SetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS, this->display_brightness);
+  } catch (...) {
+    DEBUG_PRINTF("* BlockBoxV2GUIManager SetDisplayBrightness failed to write to NVM\n");
+  }
+}
+
+void BlockBoxV2GUIManager::SetDisplaySleepTimeoutMS(uint32_t timeout_ms) noexcept {
+  //base handling
+  this->GUIManager::SetDisplaySleepTimeoutMS(timeout_ms);
+
+  //update NVM
+  try {
+    this->gui_config.SetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT, this->display_sleep_timeout_ms);
+  } catch (...) {
+    DEBUG_PRINTF("* BlockBoxV2GUIManager SetDisplaySleepTimeoutMS failed to write to NVM\n");
+  }
+}
+
+
 //updates the init progress message, or proceeds past init if given null pointer
 void BlockBoxV2GUIManager::SetInitProgress(const char* progress_string, bool error) {
   if (this->current_screen != &this->init_screen) {
@@ -77,6 +113,9 @@ void BlockBoxV2GUIManager::SetInitProgress(const char* progress_string, bool err
 
   if (progress_string == NULL) {
     //null string signals that init is done - proceed past init screen
+
+    //stop forcing the screen to stay awake
+    this->display_force_wake = false;
 
     //check for touch calibration validity in the config
     TouchTransformMatrix matrix = this->GetTouchMatrix();
@@ -106,6 +145,10 @@ void BlockBoxV2GUIManager::LoadConfigDefaults(StorageSection& section) {
   //write default theme colours
   section.SetValue32(GUI_CONFIG_THEME_COLOR_MAIN, 0x0060FF);
   section.SetValue32(GUI_CONFIG_THEME_COLOR_DARK, 0x002060);
+
+  //write default brightness and sleep timeout
+  section.SetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS, EVE_BACKLIGHT_PWM);
+  section.SetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT, 10000);
 }
 
 

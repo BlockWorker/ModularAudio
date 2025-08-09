@@ -65,6 +65,9 @@ public:
   void SetTouchMatrix(TouchTransformMatrix matrix);
   void SetThemeColors(uint32_t main, uint32_t dark);
 
+  void SetDisplayBrightness(uint8_t brightness) noexcept override;
+  void SetDisplaySleepTimeoutMS(uint32_t timeout_ms) noexcept override;
+
   //updates the init progress message, or proceeds past init if given null pointer
   void SetInitProgress(const char* progress_string, bool error);
 

@@ -65,6 +65,16 @@ public:
 
   void SendCmdTransferWhenNotBusy(const uint32_t* data, uint32_t length_words);
 
+  uint8_t GetDisplayBrightness() const noexcept;
+  virtual void SetDisplayBrightness(uint8_t brightness) noexcept;
+
+  uint32_t GetDisplaySleepTimeoutMS() const noexcept;
+  bool IsDisplayAsleep() const noexcept;
+  virtual void SetDisplaySleepTimeoutMS(uint32_t timeout_ms) noexcept;
+
+  bool IsDisplayForceWake() const noexcept;
+  void SetDisplayForceWake(bool force_wake) noexcept;
+
 protected:
   bool initialised;
   GUIScreen* current_screen;
@@ -72,6 +82,15 @@ protected:
 
   bool cmd_busy_waiting;
   std::deque<GUICMDTransfer> queued_cmd_transfers;
+
+  uint8_t display_brightness;
+
+  bool display_sleep;
+  uint8_t fade_brightness;
+  bool touch_sleep_locked;
+  uint32_t display_sleep_timeout_ms;
+  uint32_t last_touched_tick;
+  bool display_force_wake;
 
   virtual void InitTouchCalibration();
 

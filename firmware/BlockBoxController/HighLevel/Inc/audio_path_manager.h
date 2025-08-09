@@ -128,7 +128,6 @@ protected:
 
   float min_volume_dB;
   float max_volume_dB;
-  float volume_step_dB;
 
   static void LoadNonVolatileConfigDefaults(StorageSection& section);
 

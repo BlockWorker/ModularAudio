@@ -88,6 +88,7 @@ the IOT5
 #define EVE_NHD_35
 #define EVE_TOUCH_RZTHRESH (1100L)
 #define EVE_BACKLIGHT_FREQ (500L)
+#define EVE_BACKLIGHT_PWM (0x20U)
 
 
 /* define one of these in your build-environment to select the settings for the TFT attached */

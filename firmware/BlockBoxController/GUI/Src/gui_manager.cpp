@@ -9,8 +9,13 @@
 #include "gui_screen.h"
 
 
+//minimum timeout for display sleep (in ms) while touched - to avoid annoying sleep while adjusting sliders etc
+#define GUI_DISPLAY_SLEEP_TIMEOUT_MIN_TOUCHED 30000
+
+
 GUIManager::GUIManager(EVEDriver& driver) noexcept :
-    driver(driver), initialised(false), current_screen(NULL), cmd_busy_waiting(false) {}
+    driver(driver), initialised(false), current_screen(NULL), cmd_busy_waiting(false), display_brightness(EVE_BACKLIGHT_PWM), display_sleep(false), fade_brightness(EVE_BACKLIGHT_PWM),
+    touch_sleep_locked(false), display_sleep_timeout_ms(10000), last_touched_tick(0), display_force_wake(false) {}
 
 
 void GUIManager::InitTouchCalibration() {
@@ -52,6 +57,16 @@ void GUIManager::Init() {
   this->touch_state.tag = 0;
   this->touch_state.tracker_tag = 0;
   this->touch_state.tracker_value = 0;
+
+  this->display_brightness = EVE_BACKLIGHT_PWM;
+
+  //reset display sleep
+  this->display_sleep = false;
+  this->fade_brightness = this->display_brightness;
+  this->touch_sleep_locked = false;
+  this->display_sleep_timeout_ms = 10000;
+  this->last_touched_tick = HAL_GetTick();
+  this->display_force_wake = false;
 
   this->initialised = true;
 
@@ -148,8 +163,37 @@ void GUIManager::Update() noexcept {
       this->touch_state._next_tick_at = tick + GUI_TOUCH_LONG_DELAY; //set up delay until long press
     }
 
-    //send touch update to screen if there's anything to report
-    if (this->current_screen != NULL && (this->touch_state.touched || this->touch_state.released)) {
+    if (this->display_force_wake || this->touch_state.initial || this->touch_state.released) {
+      //encountered touch event (not just constant touched/not touched), or forced awake: update last touch tick
+      this->last_touched_tick = tick;
+
+      //also wake up display if it's asleep
+      if (this->display_sleep) {
+        this->display_sleep = false;
+      }
+    } else {
+      //no touch event: check if we should go to sleep (based on last touch event)
+
+      //if screen is being touched: don't go to sleep too quickly, to avoid sleep while adjusting sliders etc
+      uint32_t sleep_timeout = this->display_sleep_timeout_ms;
+      if (this->touch_state.touched && sleep_timeout < GUI_DISPLAY_SLEEP_TIMEOUT_MIN_TOUCHED) {
+        sleep_timeout = GUI_DISPLAY_SLEEP_TIMEOUT_MIN_TOUCHED;
+      }
+
+      if (tick - this->last_touched_tick > sleep_timeout) {
+        //set to sleep and lock touch
+        this->display_sleep = true;
+        this->touch_sleep_locked = true;
+      }
+    }
+
+    if (this->touch_sleep_locked) {
+      //locked: check if we're okay to unlock (not sleeping, screen fade-in complete, not touching)
+      if (!this->display_sleep && this->fade_brightness == this->display_brightness && !this->touch_state.touched) {
+        this->touch_sleep_locked = false;
+      }
+    } else if (this->current_screen != NULL && (this->touch_state.touched || this->touch_state.released)) {
+      //not locked: send touch update to screen if there's anything to report
       this->current_screen->HandleTouch(touch_state);
     }
   } catch (const std::exception& exc) {
@@ -158,8 +202,25 @@ void GUIManager::Update() noexcept {
     DEBUG_PRINTF("* GUI manager touch update failed with unknown exception\n");
   }
 
-  //perform screen update and redraw, if coprocessor is not busy
-  if (this->current_screen != NULL && !this->cmd_busy_waiting) {
+  //process fade-in/fade-out for sleep/wake
+  try {
+    if (this->display_sleep && this->fade_brightness > 0) {
+      uint8_t new_brightness = this->fade_brightness - MIN(this->display_brightness / 20, this->fade_brightness);
+      this->driver.phy.DirectWrite8(REG_PWM_DUTY, new_brightness);
+      this->fade_brightness = new_brightness;
+    } else if (!this->display_sleep && this->fade_brightness < this->display_brightness) {
+      uint8_t new_brightness = MIN(this->fade_brightness + this->display_brightness / 20, this->display_brightness);
+      this->driver.phy.DirectWrite8(REG_PWM_DUTY, new_brightness);
+      this->fade_brightness = new_brightness;
+    }
+  } catch (const std::exception& exc) {
+    DEBUG_PRINTF("* GUI manager fade brightness update failed: %s\n", exc.what());
+  } catch (...) {
+    DEBUG_PRINTF("* GUI manager fade brightness update failed with unknown exception\n");
+  }
+
+  //perform screen update and redraw, if coprocessor is not busy and we're not fully faded out
+  if (this->current_screen != NULL && !this->cmd_busy_waiting && this->fade_brightness > 0) {
     try {
       this->current_screen->DisplayScreen();
     } catch (const std::exception& exc) {
@@ -230,3 +291,52 @@ void GUIManager::SendCmdTransferWhenNotBusy(const uint32_t* data, uint32_t lengt
     words_left -= block_words;
   }
 }
+
+
+uint8_t GUIManager::GetDisplayBrightness() const noexcept {
+  return this->display_brightness;
+}
+
+void GUIManager::SetDisplayBrightness(uint8_t brightness) noexcept {
+  //clamp and save brightness
+  this->display_brightness = MIN(brightness, 127);
+
+  //if not asleep, try to apply it directly - no problem if we fail, will be retried on next update
+  if (!this->display_sleep) {
+    try {
+      this->driver.phy.DirectWrite8(REG_PWM_DUTY, this->display_brightness);
+      this->fade_brightness = this->display_brightness;
+    } catch (const std::exception& exc) {
+      DEBUG_PRINTF("* GUI manager brightness apply failed: %s\n", exc.what());
+    } catch (...) {
+      DEBUG_PRINTF("* GUI manager brightness apply failed with unknown exception\n");
+    }
+  }
+}
+
+
+uint32_t GUIManager::GetDisplaySleepTimeoutMS() const noexcept {
+  return this->display_sleep_timeout_ms;
+}
+
+bool GUIManager::IsDisplayAsleep() const noexcept {
+  return this->display_sleep;
+}
+
+void GUIManager::SetDisplaySleepTimeoutMS(uint32_t timeout_ms) noexcept {
+  //pretend that the last touch event was now; to avoid instant sleep when lowering timeout
+  this->last_touched_tick = HAL_GetTick();
+
+  //clamp timeout to reasonable minimum and save
+  this->display_sleep_timeout_ms = MAX(timeout_ms, 5000);
+}
+
+
+bool GUIManager::IsDisplayForceWake() const noexcept {
+  return this->display_force_wake;
+}
+
+void GUIManager::SetDisplayForceWake(bool force_wake) noexcept {
+  this->display_force_wake = force_wake;
+}
+

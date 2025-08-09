@@ -64,6 +64,9 @@ void TouchCalScreen::DisplayScreen() {
       std::vector<uint32_t> cmds;
       this->driver.SaveBufferedDLCmds(cmds);
 
+      //force screen to be awake while calibrating
+      this->manager.SetDisplayForceWake(true);
+
       //send commands to command buffer, without waiting for completion
       this->driver.phy.DirectWriteBuffer(REG_CMDB_WRITE, (const uint8_t*)cmds.data(), cmds.size() * sizeof(uint32_t), 10);
 
@@ -103,6 +106,9 @@ void TouchCalScreen::HandleTouch(const GUITouchState& state) noexcept {
           TouchTransformMatrix matrix;
           this->driver.phy.DirectReadBuffer(REG_TOUCH_TRANSFORM_A, (uint8_t*)&matrix, sizeof(TouchTransformMatrix), 5);
           this->bbv2_manager.SetTouchMatrix(matrix);
+
+          //stop forcing the screen to be awake
+          this->manager.SetDisplayForceWake(false);
 
           //start EEPROM write
           this->bbv2_manager.system.eeprom_if.WriteAllDirtySections([&](bool) {

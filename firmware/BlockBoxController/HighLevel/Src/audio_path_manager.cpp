@@ -19,8 +19,10 @@
 #define AUDIO_NVM_INIT_LOUDNESS_GAIN 0
 //whether the loudness target tracks the maximum volume, bool (1B)
 #define AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL 4
+//volume step in dB, float (4B)
+#define AUDIO_NVM_VOLUME_STEP 8
 //total storage size in bytes
-#define AUDIO_NVM_TOTAL_BYTES 32
+#define AUDIO_NVM_TOTAL_BYTES 12
 
 //default values for audio path settings (volatile and non-volatile)
 #define AUDIO_DEFAULT_VOLUME_DB -30.0f
@@ -128,7 +130,7 @@ static_assert(_audio_dap_fir_length_ch1 <= 300 && _audio_dap_fir_length_ch2 <= 3
 AudioPathManager::AudioPathManager(BlockBoxV2System& system) :
     system(system), non_volatile_config(system.eeprom_if, AUDIO_NVM_TOTAL_BYTES, AudioPathManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0),
     bluetooth_volume_lock_timer(0), bluetooth_previously_connected(false), persistent_active_input(AUDIO_INPUT_NONE), current_volume_dB(AUDIO_DEFAULT_VOLUME_DB),
-    min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB), max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB), volume_step_dB(AUDIO_DEFAULT_VOLUME_STEP_DB) {}
+    min_volume_dB(AUDIO_DEFAULT_MIN_VOLUME_DB), max_volume_dB(AUDIO_DEFAULT_MAX_VOLUME_DB) {}
 
 
 void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
@@ -619,6 +621,10 @@ void AudioPathManager::LoadNonVolatileConfigDefaults(StorageSection& section) {
 
   //write default loudness tracking behaviour
   section.SetValue8(AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL, AUDIO_DEFAULT_LOUDNESS_TRACK_MAX_VOL ? 1 : 0);
+
+  //write default volume step
+  float default_step = AUDIO_DEFAULT_VOLUME_STEP_DB;
+  section.SetValue32(AUDIO_NVM_VOLUME_STEP, *(uint32_t*)&default_step);
 }
 
 
@@ -787,14 +793,19 @@ void AudioPathManager::CheckAndFixVolumeLimits() {
 }
 
 void AudioPathManager::CheckAndFixVolumeStep() {
-  if (isnanf(this->volume_step_dB) || this->volume_step_dB < AUDIO_LIMIT_VOLUME_STEP_MIN || this->volume_step_dB > AUDIO_LIMIT_VOLUME_STEP_MAX) {
+  float vol_step = this->GetVolumeStepDB();
+  if (isnanf(vol_step) || vol_step < AUDIO_LIMIT_VOLUME_STEP_MIN || vol_step > AUDIO_LIMIT_VOLUME_STEP_MAX) {
     //invalid step: reset to default
-    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeStep found invalid volume step %.1f\n", this->volume_step_dB);
-    this->volume_step_dB = AUDIO_DEFAULT_VOLUME_STEP_DB;
+    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeStep found invalid volume step %.1f\n", vol_step);
+    vol_step = AUDIO_DEFAULT_VOLUME_STEP_DB;
+    this->non_volatile_config.SetValue32(AUDIO_NVM_VOLUME_STEP, *(uint32_t*)&vol_step);
   }
 
   //ensure the step is an integer dB multiple
-  this->volume_step_dB = roundf(this->volume_step_dB);
+  if (vol_step != roundf(vol_step)) {
+    vol_step = roundf(vol_step);
+    this->non_volatile_config.SetValue32(AUDIO_NVM_VOLUME_STEP, *(uint32_t*)&vol_step);
+  }
 }
 
 void AudioPathManager::ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCallback&& callback) {
@@ -974,7 +985,8 @@ void AudioPathManager::SetCurrentVolumeDB(float volume_dB, SuccessCallback&& cal
 
   //round volume to nearest step
   this->CheckAndFixVolumeStep();
-  float rounded_volume = roundf(volume_dB / this->volume_step_dB) * this->volume_step_dB;
+  float vol_step = this->GetVolumeStepDB();
+  float rounded_volume = roundf(volume_dB / vol_step) * vol_step;
 
   //clamp and apply volume gain to DAC and DAP
   this->ClampAndApplyVolumeGain(rounded_volume, [&, callback = std::move(callback)](bool success) {
@@ -999,7 +1011,7 @@ void AudioPathManager::StepCurrentVolumeDB(bool up, SuccessCallback&& callback, 
   __disable_irq();
   this->CheckAndFixVolumeStep();
 
-  float vol_change = up ? this->volume_step_dB : -this->volume_step_dB;
+  float vol_change = up ? this->GetVolumeStepDB() : -this->GetVolumeStepDB();
   __set_PRIMASK(primask);
 
   this->ChangeCurrentVolumeDB(vol_change, std::move(callback), queue_if_busy);
@@ -1045,7 +1057,8 @@ float AudioPathManager::GetMaxVolumeDB() const {
 }
 
 float AudioPathManager::GetVolumeStepDB() const {
-  return this->volume_step_dB;
+  uint32_t step_int = this->non_volatile_config.GetValue32(AUDIO_NVM_VOLUME_STEP);
+  return *(float*)&step_int;
 }
 
 bool AudioPathManager::IsPositiveGainAllowed() const {
@@ -1239,7 +1252,7 @@ void AudioPathManager::SetVolumeStepDB(float volume_step_dB, SuccessCallback&& c
   //round step to next integer dB multiple
   float rounded_step = roundf(volume_step_dB);
 
-  if (rounded_step == this->volume_step_dB) {
+  if (rounded_step == this->GetVolumeStepDB()) {
     //already at desired volume step: nothing to do, unlock operations and report to callback
     this->lock_timer = 0;
     if (callback) {
@@ -1247,10 +1260,10 @@ void AudioPathManager::SetVolumeStepDB(float volume_step_dB, SuccessCallback&& c
     }
   } else {
     //apply new volume step
-    this->volume_step_dB = rounded_step;
+    this->non_volatile_config.SetValue32(AUDIO_NVM_VOLUME_STEP, *(uint32_t*)&rounded_step);
 
     //align current volume gain with new step size
-    float aligned_volume = roundf(this->current_volume_dB / this->volume_step_dB) * this->volume_step_dB;
+    float aligned_volume = roundf(this->current_volume_dB / rounded_step) * rounded_step;
 
     this->CheckAndFixVolumeLimits();
     if (this->current_volume_dB == aligned_volume || this->current_volume_dB == this->min_volume_dB || this->current_volume_dB == this->max_volume_dB) {
@@ -1377,7 +1390,8 @@ void AudioPathManager::UpdateBluetoothVolume() {
     //calculate volume in dB corresponding to current Bluetooth volume, round to nearest step, and clamp to limits
     float relative_vol = (float)(current_bt_volume - AUDIO_BLUETOOTH_VOL_OFFSET) / (float)(127 - AUDIO_BLUETOOTH_VOL_OFFSET);
     float vol_dB = this->min_volume_dB + relative_vol * (this->max_volume_dB - this->min_volume_dB);
-    float vol_rounded = roundf(vol_dB / this->volume_step_dB) * this->volume_step_dB;
+    float vol_step = this->GetVolumeStepDB();
+    float vol_rounded = roundf(vol_dB / vol_step) * vol_step;
     if (vol_rounded < this->min_volume_dB) {
       vol_rounded = this->min_volume_dB;
     } else if (vol_rounded > this->max_volume_dB) {
