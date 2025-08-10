@@ -27,7 +27,8 @@ void SettingsScreenBase::HandleTouch(const GUITouchState& state) noexcept {
         break;
       case SCREEN_SETTINGS_TAG_TAB_1:
         if (this->tab_index != 1) {
-          //TODO: goto tab 1 (display)
+          //goto tab 1 (display)
+          this->GoToScreen(&this->bbv2_manager.settings_screen_display);
         }
         break;
       case SCREEN_SETTINGS_TAG_TAB_2:

@@ -16,6 +16,7 @@
 #include "power_off_screen.h"
 #include "main_screen.h"
 #include "settings_screen_audio.h"
+#include "settings_screen_display.h"
 #include "test_screen.h"
 
 
@@ -49,8 +50,12 @@ public:
   MainScreen main_screen;
 
   SettingsScreenAudio settings_screen_audio;
+  SettingsScreenDisplay settings_screen_display;
 
   TestScreen test_screen;
+
+
+  static uint32_t ColorHCLToRGB(float hue, float chroma, float luma);
 
 
   BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept;

@@ -25,8 +25,68 @@
 #define GUI_CONFIG_SIZE_BYTES 40
 
 
+//hue/chroma/luma conversion to RGB - https://en.wikipedia.org/wiki/HSL_and_HSV#Luma,_chroma_and_hue_to_RGB
+uint32_t BlockBoxV2GUIManager::ColorHCLToRGB(float hue, float chroma, float luma) {
+  float hp = hue / 60.0f;
+  float x = chroma * (1.0f - fabsf(fmodf(hp, 2.0f) - 1.0f));
+
+  float r1 = 0.0f, g1 = 0.0f, b1 = 0.0f;
+  if (hp < 1) {
+      r1 = chroma;
+      g1 = x;
+  } else if (hp < 2) {
+      r1 = x;
+      g1 = chroma;
+  } else if (hp < 3) {
+      g1 = chroma;
+      b1 = x;
+  } else if (hp < 4) {
+      g1 = x;
+      b1 = chroma;
+  } else if (hp < 5) {
+      b1 = chroma;
+      r1 = x;
+  } else {
+      b1 = x;
+      r1 = chroma;
+  }
+
+  float current_luma = 0.299f * r1 + 0.587f * g1 + 0.114f * b1;
+  float m = luma - current_luma;
+
+  float r = r1 + m;
+  if (r < 0.0f) {
+    r = 0.0f;
+  } else if (r > 1.0f) {
+    r = 1.0f;
+  }
+
+  float g = g1 + m;
+  if (g < 0.0f) {
+    g = 0.0f;
+  } else if (g > 1.0f) {
+    g = 1.0f;
+  }
+
+  float b = b1 + m;
+  if (b < 0.0f) {
+    b = 0.0f;
+  } else if (b > 1.0f) {
+    b = 1.0f;
+  }
+
+  uint32_t ri = (uint32_t)roundf(r * 255.0f);
+  uint32_t gi = (uint32_t)roundf(g * 255.0f);
+  uint32_t bi = (uint32_t)roundf(b * 255.0f);
+
+  return (ri << 16) | (gi << 8) | bi;
+}
+
+
+
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
-    GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), settings_screen_audio(*this), test_screen(*this),
+    GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), settings_screen_audio(*this),
+    settings_screen_display(*this), test_screen(*this),
     gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults) {}
 
 
@@ -37,6 +97,7 @@ void BlockBoxV2GUIManager::Init() {
   this->power_off_screen.Init();
   this->main_screen.Init();
   this->settings_screen_audio.Init();
+  this->settings_screen_display.Init();
   this->test_screen.Init();
 
   //pre-set initial screen
