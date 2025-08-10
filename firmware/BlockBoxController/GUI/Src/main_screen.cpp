@@ -303,6 +303,11 @@ void MainScreen::Init() {
   //allow base handling
   this->BlockBoxV2Screen::Init();
 
+  //redraw on RTC minutes update
+  this->bbv2_manager.system.rtc_if.RegisterCallback([&](EventSource*, uint32_t) {
+    this->needs_display_list_rebuild = true;
+  }, MODIF_RTC_EVENT_MINUTE_UPDATE);
+
   //redraw on input and volume/mute changes
   this->bbv2_manager.system.audio_mgr.RegisterCallback([&](EventSource*, uint32_t event) {
     switch (event) {
@@ -579,8 +584,11 @@ void MainScreen::BuildScreenContent() {
   GUIDraws::PowerIconMedium(this->driver, 274, 191, 0xFFFFFF, 0x000000);
 
 
-  //time+date text - TODO actual time+date
-  this->driver.CmdText(160, 167, 20, EVE_OPT_CENTERX, "Fri Jul 18 2025 - 06:23 PM");
+  //time+date text
+  RTCDateTime datetime = this->bbv2_manager.system.rtc_if.GetDateTime();
+  snprintf(info_lines[0], 96, "%.3s %.3s %u %u - %u:%02u%s", RTCInterface::GetWeekdayName(datetime.weekday), RTCInterface::GetMonthName(datetime.month), datetime.day, datetime.year,
+           datetime.hours, datetime.minutes, (datetime.hour_mode == IF_RTC_24H) ? "" : ((datetime.hour_mode == IF_RTC_12H_PM) ? " PM" : " AM"));
+  this->driver.CmdText(160, 166, 20, EVE_OPT_CENTERX, info_lines[0]);
 
 
   //input dropdown, if open

@@ -567,7 +567,7 @@
         "//cleanup",
         "RESTORE_CONTEXT()",
         "",
-        "CMD_TEXT(160, 167, 20, OPT_CENTERX, \"Fri Jul 18 2025 - 06:23 PM\")",
+        "CMD_TEXT(160, 166, 20, OPT_CENTERX, \"Fri Jul 18 2025 - 06:23 PM\")",
         "",
         "//Invisible touch areas",
         "SAVE_CONTEXT()",

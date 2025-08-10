@@ -87,7 +87,10 @@ void PowerOffScreen::Init() {
   //allow base handling
   this->BlockBoxV2Screen::Init();
 
-  //TODO: register RTC update handler to redraw screen
+  //redraw on RTC minutes update
+  this->bbv2_manager.system.rtc_if.RegisterCallback([&](EventSource*, uint32_t) {
+    this->needs_display_list_rebuild = true;
+  }, MODIF_RTC_EVENT_MINUTE_UPDATE);
 }
 
 
@@ -101,14 +104,15 @@ void PowerOffScreen::BuildScreenContent() {
   this->driver.CmdTag(0);
   this->driver.CmdColorRGB(0xFFFFFF);
 
+  char text_buf[64];
+
   //main text, or auto-calibration warning) TODO: auto-shutdown warning too
   uint32_t auto_cal_tick_difference = this->auto_calibration_tick - HAL_GetTick();
   if (this->auto_calibration_scheduled && auto_cal_tick_difference <= SCREEN_POWEROFF_AUTO_CAL_WARNING_MS) {
     //show auto-calibration warning
     uint8_t warning_seconds = (uint8_t)((auto_cal_tick_difference + 999) / 1000);
-    char warning_text[40] = { 0 };
-    snprintf(warning_text, 40, "Touch calibration in %u seconds", warning_seconds);
-    this->driver.CmdText(160, 165, 28, EVE_OPT_CENTERX, warning_text);
+    snprintf(text_buf, 64, "Touch calibration in %u seconds", warning_seconds);
+    this->driver.CmdText(160, 165, 28, EVE_OPT_CENTERX, text_buf);
     this->currently_drawn_auto_cal_seconds = warning_seconds;
   } else {
     //normal main text
@@ -117,7 +121,10 @@ void PowerOffScreen::BuildScreenContent() {
   }
 
   //time+date text
-  this->driver.CmdText(160, 222, 20, EVE_OPT_CENTERX, "Fri Jul 18 2025 - 06:23 PM"); //TODO: use actual date+time and format
+  RTCDateTime datetime = this->bbv2_manager.system.rtc_if.GetDateTime();
+  snprintf(text_buf, 64, "%.3s %.3s %u %u - %u:%02u%s", RTCInterface::GetWeekdayName(datetime.weekday), RTCInterface::GetMonthName(datetime.month), datetime.day, datetime.year,
+           datetime.hours, datetime.minutes, (datetime.hour_mode == IF_RTC_24H) ? "" : ((datetime.hour_mode == IF_RTC_12H_PM) ? " PM" : " AM"));
+  this->driver.CmdText(160, 222, 20, EVE_OPT_CENTERX, text_buf);
 
   //big power button
   GUIDraws::PowerIconHuge(this->driver, 110, 60, 0xFFFFFF, this->bbv2_manager.GetThemeColorMain(), 0x000000);

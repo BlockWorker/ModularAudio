@@ -31,6 +31,8 @@
 #define BBV2_POWERAMP_INT_PIN I2C5_INT1_N_Pin
 #define BBV2_POWERAMP_I2C_ADDR 0x11
 
+#define BBV2_RTC_I2C_ADDR 0x68
+
 #define BBV2_BTRX_UART_HANDLE huart1
 
 
@@ -184,6 +186,7 @@ void BlockBoxV2System::Init() {
   this->dap_if.Init();
   this->dac_if.Init();
   this->amp_if.Init();
+  this->rtc_if.Init();
   this->btrx_if.Init();
 
 
@@ -312,22 +315,30 @@ void BlockBoxV2System::Init() {
             return;
           }
 
-          this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
-          this->InitBluetoothReceiver([&](bool success) {
+          this->gui_mgr.SetInitProgress("Initialising Real-Time Clock...", false);
+          this->rtc_if.InitModule([&](bool success) {
             if (!success) {
-              this->gui_mgr.SetInitProgress("Failed to initialise Bluetooth Receiver!", true);
-              return;
+              //ignore failure, RTC is non-critical
+              DEBUG_PRINTF("* System failed to initialise RTC!");
             }
 
-            this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
-            this->audio_mgr.Init([&](bool success) {
+            this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
+            this->InitBluetoothReceiver([&](bool success) {
               if (!success) {
-                this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
+                this->gui_mgr.SetInitProgress("Failed to initialise Bluetooth Receiver!", true);
                 return;
               }
 
-              //init done
-              this->gui_mgr.SetInitProgress(NULL, false);
+              this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
+              this->audio_mgr.Init([&](bool success) {
+                if (!success) {
+                  this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
+                  return;
+                }
+
+                //init done
+                this->gui_mgr.SetInitProgress(NULL, false);
+              });
             });
           });
         });
@@ -343,6 +354,7 @@ void BlockBoxV2System::LoopTasks() {
   this->dap_if.LoopTasks();
   this->dac_if.LoopTasks();
   this->amp_if.LoopTasks();
+  this->rtc_if.LoopTasks();
   this->btrx_if.LoopTasks();
   this->audio_mgr.LoopTasks();
   this->gui_mgr.Update();
@@ -355,6 +367,7 @@ BlockBoxV2System::BlockBoxV2System() :
     dap_if(this->main_i2c_hw, BBV2_DAP_I2C_ADDR, BBV2_DAP_INT_PORT, BBV2_DAP_INT_PIN),
     dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
+    rtc_if(this->main_i2c_hw, BBV2_RTC_I2C_ADDR),
     btrx_if(&BBV2_BTRX_UART_HANDLE),
     gui_mgr(*this),
     audio_mgr(*this) {}
