@@ -1,0 +1,441 @@
+/*
+ * amp_manager.cpp
+ *
+ *  Created on: Aug 10, 2025
+ *      Author: Alex
+ */
+
+
+#include "amp_manager.h"
+#include "system.h"
+
+
+/******************************************************/
+/*       Constant definitions and configuration       */
+/******************************************************/
+
+//PVDD configuration
+//volume/gain in dB, at (and above) which PVDD should be at maximum
+#define AMP_PVDD_MAX_VOLUME_DB -1.0f
+//hysteresis for lowering PVDD: only lower if the current target is at least this factor above the desired target
+#define AMP_PVDD_LOWERING_HYST 1.2f
+
+
+//default warning limit factor
+#define AMP_WARNING_FACTOR_DEFAULT 0.8f
+
+
+//Safety limit configuration (error limits)
+static const PowerAmpThresholdSet _amp_safety_limits_irms = { //current; calculated as sqrt(P_desired / R_dc) + a bit of margin (0.3A)
+  { 7.8f, 7.8f, 6.1f, 6.1f, 13.0f }, //instantaneous
+  { 5.8f, 5.8f, 4.4f, 4.4f, 10.0f }, //fast (0.1s)
+  { 4.3f, 4.3f, 3.2f, 3.2f, 7.0f }, //slow (1s)
+};
+static const PowerAmpThresholdSet _amp_safety_limits_pavg = { //power; calculated as a P_desired + margin for the warnings to trigger first
+  { 500.0f, 500.0f, 250.0f, 250.0f, 600.0f }, //instantaneous (woofer should never trigger)
+  { 300.0f, 300.0f, 150.0f, 150.0f, 400.0f }, //fast (0.1s)
+  { 120.0f, 120.0f, 60.0f, 60.0f, 200.0f }, //slow (1s)
+};
+static const PowerAmpThresholdSet _amp_safety_limits_papp = { //apparent power; disabled
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //instantaneous
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //fast (0.1s)
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //slow (1s)
+};
+
+//Base warning limit configuration (= 100% of power target); sum warnings not used
+static const PowerAmpThresholdSet _amp_warning_base_limits_irms = { //current; calculated as sqrt(P_desired / Z_nom) + a bit of margin (0.3A)
+  { 7.4f, 7.4f, 5.3f, 5.3f, INFINITY }, //instantaneous
+  { 5.3f, 5.3f, 3.8f, 3.8f, INFINITY }, //fast (0.1s)
+  { 3.8f, 3.8f, 2.8f, 2.8f, INFINITY }, //slow (1s)
+};
+static const PowerAmpThresholdSet _amp_warning_base_limits_pavg = { //power; P_desired levels: slow = RMS rating, fast = program/music rating (= 2x RMS rating), instantaneous = 2x program/music rating (= 4x RMS rating)
+  { 400.0f, 400.0f, 200.0f, 200.0f, INFINITY }, //instantaneous (woofer should never trigger at 100% target)
+  { 200.0f, 200.0f, 100.0f, 100.0f, INFINITY }, //fast (0.1s)
+  { 100.0f, 100.0f, 50.0f, 50.0f, INFINITY }, //slow (1s)
+};
+static const PowerAmpThresholdSet _amp_warning_base_limits_papp = { //apparent power; disabled
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //instantaneous
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //fast (0.1s)
+  { INFINITY, INFINITY, INFINITY, INFINITY, INFINITY }, //slow (1s)
+};
+
+
+static_assert(AMP_WARNING_FACTOR_DEFAULT >= AMP_WARNING_FACTOR_MIN && AMP_WARNING_FACTOR_DEFAULT <= AMP_WARNING_FACTOR_MAX);
+
+
+/******************************************************/
+/*                  Initialisation                    */
+/******************************************************/
+
+AmpManager::AmpManager(BlockBoxV2System& system) :
+    system(system), initialised(false), lock_timer(0), pvdd_lock_timer(0), clip_lock_timer(0), warning_limit_factor(AMP_WARNING_FACTOR_DEFAULT) {}
+
+
+void AmpManager::Init(SuccessCallback&& callback) {
+  this->initialised = false;
+  this->lock_timer = 0;
+  this->pvdd_lock_timer = 0;
+  this->clip_lock_timer = 0;
+  this->warning_limit_factor = AMP_WARNING_FACTOR_DEFAULT;
+
+  //enter power-off state
+  this->HandlePowerStateChange(false, [&, callback = std::move(callback)](bool success) {
+    if (!success) {
+      //propagate failure to external callback
+      DEBUG_PRINTF("* AmpManager Init failed to enter power-off state\n");
+      if (callback) {
+        callback(false);
+      }
+      return;
+    }
+
+    //write safety error limits - RMS current
+    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_ERROR, &_amp_safety_limits_irms, [&, callback = std::move(callback)](bool success) {
+      if (!success) {
+        //propagate failure to external callback
+        DEBUG_PRINTF("* AmpManager Init failed to set Irms error thresholds\n");
+        if (callback) {
+          callback(false);
+        }
+        return;
+      }
+
+      //write safety error limits - Average power
+      this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_ERROR, &_amp_safety_limits_pavg, [&, callback = std::move(callback)](bool success) {
+        if (!success) {
+          //propagate failure to external callback
+          DEBUG_PRINTF("* AmpManager Init failed to set Pavg error thresholds\n");
+          if (callback) {
+            callback(false);
+          }
+          return;
+        }
+
+        //write safety error limits - Apparent power (disabled)
+        this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_ERROR, &_amp_safety_limits_papp, [&, callback = std::move(callback)](bool success) {
+          if (!success) {
+            //propagate failure to external callback
+            DEBUG_PRINTF("* AmpManager Init failed to set Papp error thresholds\n");
+            if (callback) {
+              callback(false);
+            }
+            return;
+          }
+
+          //write safety warning limits - Apparent power (disabled)
+          this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_WARNING, &_amp_warning_base_limits_papp, [&, callback = std::move(callback)](bool success) {
+            if (!success) {
+              //propagate failure to external callback
+              DEBUG_PRINTF("* AmpManager Init failed to set Papp warning thresholds\n");
+              if (callback) {
+                callback(false);
+              }
+              return;
+            }
+
+            //write safety warning limits - RMS current and average power, scaled according to default factor
+            this->UpdateWarningLimits(AMP_WARNING_FACTOR_DEFAULT, [&, callback = std::move(callback)](bool success) {
+              if (success) {
+                //register event callbacks
+                this->system.amp_if.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                                     MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE);
+                this->system.audio_mgr.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                                        AUDIO_EVENT_VOLUME_UPDATE);
+
+                //init done
+                this->initialised = true;
+              } else {
+                DEBUG_PRINTF("* AmpManager Init failed to set initial Irms and Pavg warning thresholds\n");
+              }
+
+              //propagate success to external callback
+              if (callback) {
+                callback(success);
+              }
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+
+/******************************************************/
+/*          Basic Tasks and Event Handling            */
+/******************************************************/
+
+void AmpManager::LoopTasks() {
+  //static uint32_t loop_count = 0;
+
+  if (!this->initialised) {
+    return;
+  }
+
+  //decrement lock timers, under disabled interrupts
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->pvdd_lock_timer > 0) {
+    if (--this->pvdd_lock_timer == 0) {
+      //PVDD lowering lock timed out: trigger update to make sure we're aligned with the volume
+      this->UpdatePVDDForVolume(this->system.audio_mgr.GetCurrentVolumeDB(), SuccessCallback());
+    }
+  }
+
+  if (this->clip_lock_timer > 0) {
+    this->clip_lock_timer--;
+  }
+
+  if (this->lock_timer > 0) {
+    if (--this->lock_timer == 0) {
+      //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
+      DEBUG_PRINTF("* AmpManager lock timed out!\n");
+    }
+  }
+
+  //if not locked, check for queued operations
+  if (this->lock_timer == 0 && !this->queued_operations.empty()) {
+    //have queued operation: remove from queue, lock again
+    QueuedOperation op = std::move(this->queued_operations.front());
+    this->queued_operations.pop_front();
+    //begin operation under disabled interrupts
+    if (op) {
+      op();
+    }
+  }
+  __set_PRIMASK(primask);
+}
+
+
+void AmpManager::HandlePowerStateChange(bool on, SuccessCallback&& callback) {
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->lock_timer > 0) {
+    //locked out: queue for later execution
+    this->queued_operations.push_back([&, on, callback = std::move(callback)]() mutable {
+      this->HandlePowerStateChange(on, std::move(callback));
+    });
+    __set_PRIMASK(primask);
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AMP_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  //set amp manual shutdown according to state
+  this->system.amp_if.SetManualShutdownActive(!on, [&, on, callback = std::move(callback)](bool success) {
+    if (!success) {
+      DEBUG_PRINTF("* AmpManager HandlePowerStateChange failed to set amp shutdown\n");
+    }
+
+    //callback for after PVDD adjustment
+    auto post_pvdd_cb = [&, callback = std::move(callback), prev_success = success](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("* AmpManager HandlePowerStateChange failed to set PVDD target\n");
+      }
+
+      //once done: unlock operations and propagate success (true = all succeeded, false otherwise) to external callback
+      this->lock_timer = 0;
+      if (callback) {
+        callback(prev_success && success);
+      }
+    };
+
+    //continue regardless of success: set PVDD according to state
+    if (on) {
+      //turning on: configure based on volume
+      this->UpdatePVDDForVolume(this->system.audio_mgr.GetCurrentVolumeDB(), std::move(post_pvdd_cb));
+    } else {
+      //turning off: lower to minimum, lock out other lowering
+      this->pvdd_lock_timer = AMP_PVDD_LOCK_TIMEOUT_CYCLES;
+      this->system.amp_if.SetPVDDTargetVoltage(IF_POWERAMP_PVDD_TARGET_MIN, std::move(post_pvdd_cb));
+    }
+  });
+}
+
+
+void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
+  if (source == &this->system.audio_mgr) {
+    //handle volume change event: update PVDD target
+    this->UpdatePVDDForVolume(this->system.audio_mgr.GetCurrentVolumeDB(), SuccessCallback());
+  } else {
+    //handle amp module events
+    switch (event) {
+      case MODIF_POWERAMP_EVENT_STATUS_UPDATE:
+
+        break;
+      case MODIF_POWERAMP_EVENT_SAFETY_UPDATE:
+
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+
+/******************************************************/
+/*                  PVDD Handling                     */
+/******************************************************/
+
+void AmpManager::ApplyNewPVDDTarget(float pvdd_volts, SuccessCallback&& callback) {
+  float current_pvdd_target = this->system.amp_if.GetPVDDTargetVoltage();
+  bool apply = false;
+
+  //apply new PVDD target if it's higher than the existing target, or much lower than the existing target and not locked
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (isnanf(current_pvdd_target) || current_pvdd_target < pvdd_volts) {
+    apply = true;
+  } else if (current_pvdd_target / pvdd_volts > AMP_PVDD_LOWERING_HYST && this->pvdd_lock_timer == 0) {
+    apply = true;
+    //lock further lowering for a while
+    this->pvdd_lock_timer = AMP_PVDD_LOCK_TIMEOUT_CYCLES;
+  }
+  __set_PRIMASK(primask);
+
+  //apply if needed
+  if (apply) {
+    this->system.amp_if.SetPVDDTargetVoltage(pvdd_volts, std::move(callback));
+  } else {
+    //not applying because too close or lowered to recently: report success
+    if (callback) {
+      callback(true);
+    }
+  }
+}
+
+void AmpManager::UpdatePVDDForVolume(float volume_dB, SuccessCallback&& callback) {
+  if (isnanf(volume_dB)) {
+    throw std::invalid_argument("AmpManager UpdatePVDDForVolume given invalid volume");
+  }
+
+  //calculate desired PVDD voltage, based on difference between volume and max-pvdd threshold (accounting for dB scale)
+  float desired_pvdd = IF_POWERAMP_PVDD_TARGET_MAX * powf(10.0f, (volume_dB - AMP_PVDD_MAX_VOLUME_DB) / 20.0f);
+  //clamp to valid PVDD target range
+  if (desired_pvdd < IF_POWERAMP_PVDD_TARGET_MIN) {
+    desired_pvdd = IF_POWERAMP_PVDD_TARGET_MIN;
+  } else if (desired_pvdd > IF_POWERAMP_PVDD_TARGET_MAX) {
+    desired_pvdd = IF_POWERAMP_PVDD_TARGET_MAX;
+  }
+
+  //apply new PVDD voltage
+  this->ApplyNewPVDDTarget(desired_pvdd, std::move(callback));
+}
+
+
+/******************************************************/
+/*                  Limit Handling                    */
+/******************************************************/
+
+static void _AmpManager_ScaleThresholdSet(PowerAmpThresholdSet* set, float factor) {
+  float* raw_ptr = (float*)set;
+  int i;
+  for (i = 0; i < 15; i++) {
+    raw_ptr[i] *= factor;
+  }
+}
+
+void AmpManager::UpdateWarningLimits(float factor, SuccessCallback&& callback) {
+  //ensure validity of limit factor
+  if (isnanf(factor) || factor < AMP_WARNING_FACTOR_MIN) {
+    factor = AMP_WARNING_FACTOR_MIN;
+  } else if (factor > AMP_WARNING_FACTOR_MAX) {
+    factor = AMP_WARNING_FACTOR_MAX;
+  }
+
+  //copy base threshold sets
+  memcpy(&this->warning_limits_irms, &_amp_warning_base_limits_irms, sizeof(PowerAmpThresholdSet));
+  memcpy(&this->warning_limits_pavg, &_amp_warning_base_limits_pavg, sizeof(PowerAmpThresholdSet));
+
+  //scale threshold sets with factor
+  _AmpManager_ScaleThresholdSet(&this->warning_limits_irms, factor);
+  _AmpManager_ScaleThresholdSet(&this->warning_limits_pavg, factor);
+
+  //apply current set
+  this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_WARNING, &this->warning_limits_irms, [&, factor, callback = std::move(callback)](bool success) {
+    if (!success) {
+      DEBUG_PRINTF("* AmpManager UpdateWarningLimits failed to set Irms warning thresholds\n");
+    }
+
+    //continue regardless of success: apply power set
+    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_WARNING, &this->warning_limits_pavg, [&, factor, callback = std::move(callback), prev_success = success](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("* AmpManager UpdateWarningLimits failed to set Pavg warning thresholds\n");
+      }
+
+      if (success && prev_success) {
+        //save factor if successful
+        this->warning_limit_factor = factor;
+      }
+
+      //report overall success (both operations) to external callback
+      if (callback) {
+        callback(success && prev_success);
+      }
+    });
+  });
+}
+
+
+float AmpManager::GetWarningLimitFactor() const {
+  return this->warning_limit_factor;
+}
+
+
+void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& callback, bool queue_if_busy) {
+  if (isnanf(limit_factor) || limit_factor < AMP_WARNING_FACTOR_MIN || limit_factor > AMP_WARNING_FACTOR_MAX) {
+    throw std::invalid_argument("AmpManager SetWarningLimitFactor given invalid factor, must be in range [0.5, 1]");
+  }
+
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (!this->initialised) {
+    //uninitialised: failure, propagate to callback
+    __set_PRIMASK(primask);
+    if (callback) {
+      callback(false);
+    }
+    return;
+  }
+
+  if (this->lock_timer > 0) {
+    //locked out: failure, queue or propagate to callback
+    if (queue_if_busy) {
+      this->queued_operations.push_back([&, limit_factor, callback = std::move(callback)]() mutable {
+        this->SetWarningLimitFactor(limit_factor, std::move(callback), false);
+      });
+      __set_PRIMASK(primask);
+    } else {
+      __set_PRIMASK(primask);
+      if (callback) {
+        callback(false);
+      }
+    }
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AMP_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  if (this->warning_limit_factor == limit_factor) {
+    //already in desired state: unlock operations and propagate success to external callback
+    this->lock_timer = 0;
+    if (callback) {
+      callback(true);
+    }
+  } else {
+    //apply new factor
+    this->UpdateWarningLimits(limit_factor, [&, callback = std::move(callback)](bool success) {
+      //once done: unlock operations and propagate success to external callback
+      this->lock_timer = 0;
+      if (callback) {
+        callback(success);
+      }
+    });
+  }
+}
+
+

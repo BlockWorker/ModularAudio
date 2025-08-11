@@ -68,8 +68,6 @@ typedef enum {
   AUDIO_CAL_CH2 = 2
 } AudioPathCalibrationMode;
 
-typedef std::function<void()> QueuedOperation;
-
 
 class BlockBoxV2System;
 

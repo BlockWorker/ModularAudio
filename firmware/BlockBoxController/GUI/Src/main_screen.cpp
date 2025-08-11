@@ -248,17 +248,12 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           this->GoToScreen(&this->bbv2_manager.settings_screen_audio);
           break;
         case SCREEN_MAIN_TAG_POWER_OFF:
-          //TODO actual power-off, just mock-up for now
-          this->bbv2_manager.system.audio_mgr.HandlePowerStateChange(false, [&](bool success) {
-            DEBUG_PRINTF("MainScreen power-off: AudioPathManager success %u\n", success);
+          //power off system
+          this->bbv2_manager.system.SetPowerState(false, [&](bool success) {
+            DEBUG_PRINTF("MainScreen power-off success %u\n", success);
             if (success) {
-              this->bbv2_manager.system.amp_if.SetManualShutdownActive(true, [&](bool success) {
-                DEBUG_PRINTF("MainScreen power-off: PowerAmp success %u\n", success);
-                if (success) {
-                  //reset this screen and go to power-off screen
-                  this->GoToScreen(&this->bbv2_manager.power_off_screen);
-                }
-              });
+              //reset this screen and go to power-off screen
+              this->GoToScreen(&this->bbv2_manager.power_off_screen);
             }
           });
           break;

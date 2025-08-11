@@ -22,6 +22,7 @@
 #include "bluetooth_receiver_interface.h"
 #include "bbv2_gui_manager.h"
 #include "audio_path_manager.h"
+#include "amp_manager.h"
 
 extern "C" {
 #endif
@@ -54,9 +55,12 @@ public:
   BlockBoxV2GUIManager gui_mgr;
 
   AudioPathManager audio_mgr;
+  AmpManager amp_mgr;
 
   void Init() override;
   void LoopTasks() override;
+
+  void SetPowerState(bool on, SuccessCallback&& callback);
 
   BlockBoxV2System();
 

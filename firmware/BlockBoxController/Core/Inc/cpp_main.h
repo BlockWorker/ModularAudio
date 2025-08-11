@@ -49,6 +49,10 @@ int cpp_main();
 //simple success-or-failure callback
 typedef std::function<void(bool)> SuccessCallback;
 
+//parameterless operation for queueing
+typedef std::function<void()> QueuedOperation;
+
+
 typedef enum {
   DRV_FAILED = HAL_ERROR,
   DRV_BUSY = HAL_BUSY,
