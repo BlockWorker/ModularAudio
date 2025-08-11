@@ -16,9 +16,19 @@
 #undef MAIN_LOOP_PERFORMANCE_MONITOR
 //#define MAIN_LOOP_PERFORMANCE_MONITOR
 
+#undef MAIN_HEAP_MONITOR
+#define MAIN_HEAP_MONITOR
+
 
 BlockBoxV2System bbv2_system;
 System& main_system = bbv2_system;
+
+
+//memory monitoring helpers
+extern "C" {
+ptrdiff_t _mem_get_max_heap_size();
+ptrdiff_t _mem_get_free_heap_size();
+}
 
 
 static inline void _RefreshWatchdogs() {
@@ -75,6 +85,14 @@ int cpp_main() {
     }
 
     performance_mean_ticks = .005f * (float)(HAL_GetTick() - iteration_start_tick) + .995f * performance_mean_ticks;
+#endif
+
+#ifdef MAIN_HEAP_MONITOR
+    if (loop_count % 500 == 0) {
+      ptrdiff_t heap_size = _mem_get_max_heap_size();
+      ptrdiff_t heap_free = _mem_get_free_heap_size();
+      DEBUG_PRINTF("Free heap: %tu / %tu (%.2f used)\n", heap_free, heap_size, 1.0f - (float)heap_free / (float)heap_size);
+    }
 #endif
 
     loop_count++;

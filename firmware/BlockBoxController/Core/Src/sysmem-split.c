@@ -62,3 +62,15 @@ void *_sbrk(ptrdiff_t incr)
 
   return (void *)prev_heap_end;
 }
+
+
+ptrdiff_t _mem_get_max_heap_size() {
+  extern uint8_t _end; /* Symbol defined in the linker script */
+  extern uint8_t _eheap; /* Symbol defined in the linker script */
+  return &_eheap - &_end;
+}
+
+ptrdiff_t _mem_get_free_heap_size() {
+  extern uint8_t _eheap; /* Symbol defined in the linker script */
+  return &_eheap - __sbrk_heap_end;
+}
