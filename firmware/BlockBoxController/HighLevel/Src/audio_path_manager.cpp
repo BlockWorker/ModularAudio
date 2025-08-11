@@ -1100,6 +1100,9 @@ void AudioPathManager::SetMinVolumeDB(float min_volume_dB, SuccessCallback&& cal
         DEBUG_PRINTF("* AudioPathManager SetMinVolumeDB failed to re-apply current volume\n");
       }
 
+      //update Bluetooth volume due to new range
+      this->UpdateBluetoothVolume();
+
       //once done: unlock operations and report to external callback (min volume application is successful, regardless of current volume re-application success)
       this->lock_timer = 0;
       if (callback) {
@@ -1173,6 +1176,9 @@ void AudioPathManager::SetMaxVolumeDB(float max_volume_dB, SuccessCallback&& cal
       if (!success) {
         DEBUG_PRINTF("* AudioPathManager SetMaxVolumeDB failed to re-apply current volume\n");
       }
+
+      //update Bluetooth volume due to new range
+      this->UpdateBluetoothVolume();
 
       //once done: unlock operations and report to external callback (max volume application is successful, regardless of current volume re-application success)
       this->lock_timer = 0;
