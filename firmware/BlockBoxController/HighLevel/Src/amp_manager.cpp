@@ -573,13 +573,52 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
       callback(true);
     }
   } else {
-    //apply new factor
-    this->UpdateWarningLimits(limit_factor, [&, callback = std::move(callback)](bool success) {
-      //once done: unlock operations and propagate success to external callback
-      this->lock_timer = 0;
-      if (callback) {
-        callback(success);
+    //shut down amplifier first
+    bool amp_was_on = !this->system.amp_if.IsManualShutdownActive();
+    this->system.amp_if.SetManualShutdownActive(true, [&, limit_factor, amp_was_on, callback = std::move(callback)](bool success) {
+      if (!success) {
+        //propagate failure to external callback
+        DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to set manual amp shutdown\n");
+        this->lock_timer = 0;
+        if (callback) {
+          callback(false);
+        }
+        return;
       }
+
+      //apply new factor
+      this->UpdateWarningLimits(limit_factor, [&, amp_was_on, callback = std::move(callback)](bool success) {
+        if (!success) {
+          //propagate failure to external callback
+          DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to apply new limits\n");
+          this->lock_timer = 0;
+          if (callback) {
+            callback(false);
+          }
+          return;
+        }
+
+        if (amp_was_on) {
+          //restart amplifier
+          this->system.amp_if.SetManualShutdownActive(false, [&, callback = std::move(callback)](bool success) {
+            if (!success) {
+              DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to reset manual amp shutdown\n");
+            }
+
+            //once done: unlock operations and propagate success to external callback
+            this->lock_timer = 0;
+            if (callback) {
+              callback(success);
+            }
+          });
+        } else {
+          //no need to restart: done, unlock operations and propagate success to external callback
+          this->lock_timer = 0;
+          if (callback) {
+            callback(success);
+          }
+        }
+      });
     });
   }
 }
