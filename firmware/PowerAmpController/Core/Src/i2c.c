@@ -48,16 +48,13 @@ static uint8_t non_idle_timeout = 0;
 //sightings of busy peripheral in idle state
 static uint8_t idle_busy_count = 0;
 
-//initial interrupt active
-static uint8_t init_interrupt_active = 0;
-
 //register size map
 static const uint16_t reg_size_map[] = I2CDEF_POWERAMP_REG_SIZES;
 
 //configured state
 static uint8_t interrupts_enabled = 0;
 static uint8_t interrupt_mask = 0;
-static uint8_t interrupt_flags = 0;
+static uint8_t interrupt_flags = I2CDEF_POWERAMP_INT_FLAGS_INT_RESET_Msk;
 
 //I2C CRC data
 static const uint8_t _i2c_crc_table[256] = {
@@ -82,7 +79,7 @@ static uint8_t _i2c_crc_state = 0;
 
 
 void _I2C_UpdateInterruptPin() {
-  if (init_interrupt_active || (interrupts_enabled && (interrupt_flags & interrupt_mask) != 0)) {
+  if (((interrupt_flags & I2CDEF_POWERAMP_INT_FLAGS_INT_RESET_Msk) != 0) || (interrupts_enabled && (interrupt_flags & interrupt_mask) != 0)) {
     HAL_GPIO_WritePin(I2C_INT_PORT, I2C_INT_PIN, GPIO_PIN_RESET);
   } else {
     HAL_GPIO_WritePin(I2C_INT_PORT, I2C_INT_PIN, GPIO_PIN_SET);
@@ -269,14 +266,7 @@ void _I2C_PrepareReadData() {
         read_buf[0] = interrupt_mask;
         break;
       case I2CDEF_POWERAMP_INT_FLAGS:
-        if (init_interrupt_active) {
-          //init interrupt: report no flags (to signal init), then clear init interrupt
-          read_buf[0] = 0;
-          init_interrupt_active = 0;
-          _I2C_UpdateInterruptPin();
-        } else {
-          read_buf[0] = interrupt_flags;
-        }
+        read_buf[0] = interrupt_flags;
         break;
       case I2CDEF_POWERAMP_PVDD_TARGET:
         ((float*)read_buf)[0] = pvdd_voltage_target;
@@ -622,7 +612,7 @@ HAL_StatusTypeDef I2C_Init() {
   //reset interrupt and error state
   interrupts_enabled = 0;
   interrupt_mask = 0;
-  interrupt_flags = 0;
+  interrupt_flags = I2CDEF_POWERAMP_INT_FLAGS_INT_RESET_Msk;
   i2c_err_detected = 0;
   non_idle_timeout = 0;
   idle_busy_count = 0;
@@ -636,9 +626,8 @@ HAL_StatusTypeDef I2C_Init() {
   //reset internal state
   state = I2C_IDLE;
 
-  //assert init interrupt (notify master that the controller has been reset - cleared once INT_FLAGS register is accessed)
-  init_interrupt_active = 1;
-  HAL_GPIO_WritePin(I2C_INT_PORT, I2C_INT_PIN, GPIO_PIN_RESET);
+  //update interrupt pin for init interrupt
+  _I2C_UpdateInterruptPin();
 
   return HAL_OK;
 }

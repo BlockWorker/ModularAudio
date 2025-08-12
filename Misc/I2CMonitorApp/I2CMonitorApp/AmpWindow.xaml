@@ -36,9 +36,9 @@
             <Label Content="Status" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.RowSpan="2"/>
             <local:BitField x:Name="controlField" LabelFontSize="12" Labels="AMS&#xA;ITE&#xA;&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="3" Grid.Column="1"/>
             <Label Content="Control" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="3"/>
-            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;POL&#xA;" AllowSwitches="True" Grid.Row="5" Grid.Column="1"/>
+            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="AFT&#xA;CLP&#xA;OTW&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;RST" AllowSwitches="True" Grid.Row="5" Grid.Column="1"/>
             <Label Content="Int Mask" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="5"/>
-            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="AFT&#xA;ACO&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;POL&#xA;" ActiveColor="Yellow" Grid.Row="7" Grid.Column="1"/>
+            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="AFT&#xA;CLP&#xA;OTW&#xA;SER&#xA;SWN&#xA;PVE&#xA;PRD&#xA;RST" ActiveColor="Yellow" Grid.Row="7" Grid.Column="1"/>
             <Label Content="Int Flags" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="7"/>
             <local:BitField x:Name="safetyStatusField" LabelFontSize="12" Labels="SSD&#xA;MSD&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;" ActiveColor="IndianRed" Grid.Row="9" Grid.Column="1"/>
             <Label Content="Safety" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="9"/>

@@ -12,8 +12,10 @@
 #include "event_source.h"
 
 //common constants
+//blocking operation busy wait timeout
+#define MODIF_BLOCKING_BUSY_TIMEOUT_MS 500
 //blocking operation timeout
-#define MODIF_BLOCKING_TIMEOUT_MS 20
+#define MODIF_BLOCKING_OP_TIMEOUT_MS 20
 //common interface events
 #define MODIF_EVENT_INTERRUPT (1u << 0)
 #define MODIF_EVENT_ERROR (1u << 1)

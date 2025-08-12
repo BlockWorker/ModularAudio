@@ -95,7 +95,16 @@ void I2CHardwareInterface::Read(uint8_t i2c_addr, uint16_t reg_addr, uint16_t re
     throw std::invalid_argument("I2CHardwareInterface transfers require non-null buffer and non-zero length");
   }
 
-  ThrowOnHALErrorMsg(HAL_I2C_Mem_Read(this->i2c_handle, (uint16_t)i2c_addr << 1, reg_addr, reg_addr_size, buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C read");
+  //wait for peripheral to not be busy
+  uint32_t start_tick = HAL_GetTick();
+  while (this->i2c_handle->State != HAL_I2C_STATE_READY) {
+    if (HAL_GetTick() - start_tick > MODIF_BLOCKING_BUSY_TIMEOUT_MS) {
+      ThrowOnHALErrorMsg(HAL_TIMEOUT, "I2C read busy wait");
+    }
+  }
+
+  //do actual transfer
+  ThrowOnHALErrorMsg(HAL_I2C_Mem_Read(this->i2c_handle, (uint16_t)i2c_addr << 1, reg_addr, reg_addr_size, buf, length, MODIF_BLOCKING_OP_TIMEOUT_MS), "I2C read");
 }
 
 void I2CHardwareInterface::ReadAsync(I2CModuleInterface* interface, uint16_t reg_addr, uint8_t* buf, uint16_t length) {
@@ -137,7 +146,16 @@ void I2CHardwareInterface::Write(uint8_t i2c_addr, uint16_t reg_addr, uint16_t r
     throw std::invalid_argument("I2CHardwareInterface transfers require non-null buffer and non-zero length");
   }
 
-  ThrowOnHALErrorMsg(HAL_I2C_Mem_Write(i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, reg_addr_size, (uint8_t*)buf, length, MODIF_BLOCKING_TIMEOUT_MS), "I2C write");
+  //wait for peripheral to not be busy
+  uint32_t start_tick = HAL_GetTick();
+  while (this->i2c_handle->State != HAL_I2C_STATE_READY) {
+    if (HAL_GetTick() - start_tick > MODIF_BLOCKING_BUSY_TIMEOUT_MS) {
+      ThrowOnHALErrorMsg(HAL_TIMEOUT, "I2C write busy wait");
+    }
+  }
+
+  //do actual transfer
+  ThrowOnHALErrorMsg(HAL_I2C_Mem_Write(this->i2c_handle, (uint16_t)i2c_addr << 1, (uint16_t)reg_addr, reg_addr_size, (uint8_t*)buf, length, MODIF_BLOCKING_OP_TIMEOUT_MS), "I2C write");
 }
 
 void I2CHardwareInterface::WriteAsync(I2CModuleInterface* interface, uint16_t reg_addr, const uint8_t* buf, uint16_t length) {

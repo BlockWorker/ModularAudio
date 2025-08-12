@@ -53,8 +53,8 @@
             <Label Content="I2S3 Sa. Rate" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14"/>
             <local:BitField x:Name="statusField" LabelFontSize="12" Labels="STR&#xA;SCR&#xA;&#xA;&#xA;&#xA;&#xA;&#xA;I2E" Grid.Column="1"/>
             <local:BitField x:Name="controlField" LabelFontSize="12" Labels="ITE&#xA;SPE&#xA;APG&#xA;&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
-            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
-            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
+            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;RST" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
+            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="SCR&#xA;AIN&#xA;IAV&#xA;IRT&#xA;&#xA;&#xA;&#xA;RST" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
             <ComboBox x:Name="inputBox" Grid.Row="8" Grid.Column="1" VerticalContentAlignment="Center">
                 <ComboBoxItem Content="I2S1"/>
                 <ComboBoxItem Content="I2S2"/>

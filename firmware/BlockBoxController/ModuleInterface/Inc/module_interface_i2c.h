@@ -18,7 +18,7 @@
 #define MODIF_I2C_INT_MASK_REG 0x10
 #define MODIF_I2C_INT_FLAGS_REG 0x11
 //interrupt flag for universal "reset" interrupt - all other values reflect the respective INT_FLAGS register exactly
-#define MODIF_I2C_INT_RESET_FLAG 0
+#define MODIF_I2C_INT_RESET_FLAG (1u << 7)
 
 //timeout for interrupt handling, in main loop cycles
 #define MODIF_I2C_INT_HANDLING_TIMEOUT (200 / MAIN_LOOP_PERIOD_MS)

@@ -10,6 +10,9 @@
 #include "math.h"
 
 
+static_assert(MODIF_I2C_INT_RESET_FLAG == I2CDEF_POWERAMP_INT_FLAGS_INT_RESET_Msk);
+
+
 static uint8_t poweramp_scratch[128];
 
 
@@ -340,7 +343,7 @@ void PowerAmpInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   //allow base handling
   this->IntRegI2CModuleInterface::OnI2CInterrupt(interrupt_flags);
 
-  if (interrupt_flags == MODIF_I2C_INT_RESET_FLAG) {
+  if ((interrupt_flags & MODIF_I2C_INT_RESET_FLAG) != 0) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
       if (this->reset_wait_timer == 0) {
@@ -360,8 +363,10 @@ void PowerAmpInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
     return;
   }
 
-  //all other interrupts indicate a status update, so read status
-  this->ReadRegister16Async(I2CDEF_POWERAMP_STATUS, ModuleTransferCallback());
+  if (interrupt_flags != 0) {
+    //all other interrupts indicate a status update, so read status
+    this->ReadRegister16Async(I2CDEF_POWERAMP_STATUS, ModuleTransferCallback());
+  }
 
   if ((interrupt_flags & I2CDEF_POWERAMP_INT_FLAGS_INT_SERR_Msk) != 0) {
     //safety error: read safety status and error source
@@ -373,7 +378,7 @@ void PowerAmpInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
     this->ReadRegister16Async(I2CDEF_POWERAMP_SWARN_SOURCE, ModuleTransferCallback());
   }
 
-  if ((interrupt_flags & (I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk | I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_REDDONE_Msk | I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_OLIM_Msk)) != 0) {
+  if ((interrupt_flags & (I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_ERR_Msk | I2CDEF_POWERAMP_INT_FLAGS_INT_PVDD_REDDONE_Msk)) != 0) {
     //PVDD event: read PVDD information
     this->ReadMultiRegisterAsync(I2CDEF_POWERAMP_PVDD_TARGET, poweramp_scratch, 3, ModuleTransferCallback());
   }

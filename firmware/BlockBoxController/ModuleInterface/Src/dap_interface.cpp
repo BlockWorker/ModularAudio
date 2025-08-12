@@ -10,6 +10,9 @@
 #include <math.h>
 
 
+static_assert(MODIF_I2C_INT_RESET_FLAG == I2CDEF_DAP_INT_FLAGS_INT_RESET_Msk);
+
+
 //write buffers for larger structures - TODO make something more flexible if overlapping writes become a problem
 static DAPMixerConfig mixer_write_buf;
 static DAPGains volume_write_buf;
@@ -511,7 +514,7 @@ void DAPInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   //allow base handling
   this->IntRegI2CModuleInterface::OnI2CInterrupt(interrupt_flags);
 
-  if (interrupt_flags == MODIF_I2C_INT_RESET_FLAG) {
+  if ((interrupt_flags & MODIF_I2C_INT_RESET_FLAG) != 0) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
       if (this->reset_wait_timer == 0) {

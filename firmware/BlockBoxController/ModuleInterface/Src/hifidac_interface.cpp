@@ -9,6 +9,9 @@
 #include "hifidac_interface.h"
 
 
+static_assert(MODIF_I2C_INT_RESET_FLAG == I2CDEF_HIFIDAC_INT_FLAGS_INT_RESET_Msk);
+
+
 static uint8_t hifidac_scratch[16];
 
 
@@ -400,7 +403,7 @@ void HiFiDACInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   //allow base handling
   this->IntRegI2CModuleInterface::OnI2CInterrupt(interrupt_flags);
 
-  if (interrupt_flags == MODIF_I2C_INT_RESET_FLAG) {
+  if ((interrupt_flags & MODIF_I2C_INT_RESET_FLAG) != 0) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
       if (this->reset_wait_timer == 0) {
@@ -418,7 +421,7 @@ void HiFiDACInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
       });
     }
     return;
-  } else {
+  } else if (interrupt_flags != 0) {
     //all other DAC interrupts just affect the status register, so read that
     this->ReadRegister8Async(I2CDEF_HIFIDAC_STATUS, ModuleTransferCallback());
   }

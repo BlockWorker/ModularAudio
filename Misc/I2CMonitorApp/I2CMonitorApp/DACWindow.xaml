@@ -41,8 +41,8 @@
             <Label Content="THD C3 2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Row="14"/>
             <local:BitField x:Name="statusField" LabelFontSize="12" Labels="LCK&#xA;AM1&#xA;AM2&#xA;RD1&#xA;RD2&#xA;MOE&#xA;&#xA;I2E" Grid.Column="1"/>
             <local:BitField x:Name="controlField" LabelFontSize="12" Labels="ITE&#xA;DAE&#xA;SNC&#xA;MST&#xA;RST&#xA;RST&#xA;RST&#xA;RST" AllowSwitches="True" Grid.Row="2" Grid.Column="1"/>
-            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="LCK&#xA;AMT&#xA;RMP&#xA;MON&#xA;&#xA;&#xA;&#xA;" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
-            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="LCK&#xA;AMT&#xA;RMP&#xA;MON&#xA;&#xA;&#xA;&#xA;" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
+            <local:BitField x:Name="intMaskField" LabelFontSize="12" Labels="LCK&#xA;AMT&#xA;RMP&#xA;MON&#xA;&#xA;&#xA;&#xA;RST" AllowSwitches="True" Grid.Row="4" Grid.Column="1"/>
+            <local:BitField x:Name="intFlagsField" LabelFontSize="12" Labels="LCK&#xA;AMT&#xA;RMP&#xA;MON&#xA;&#xA;&#xA;&#xA;RST" ActiveColor="Yellow" Grid.Row="6" Grid.Column="1"/>
             <ComboBox x:Name="filterBox" Grid.Row="8" Grid.Column="1" SelectedIndex="0" VerticalContentAlignment="Center">
                 <ComboBoxItem Content="Minimum Phase"/>
                 <ComboBoxItem Content="Linear Phase FRO apodizing"/>
