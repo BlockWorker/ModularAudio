@@ -71,8 +71,8 @@ static_assert(AMP_WARNING_FACTOR_DEFAULT >= AMP_WARNING_FACTOR_MIN && AMP_WARNIN
 /******************************************************/
 
 AmpManager::AmpManager(BlockBoxV2System& system) :
-    system(system), initialised(false), lock_timer(0), pvdd_lock_timer(0), clip_lock_timer(0), otw_lock_timer(0), warn_lock_timer(0), warning_limit_factor(AMP_WARNING_FACTOR_DEFAULT),
-    prev_amp_fault(false), prev_pvdd_fault(false), prev_safety_error(0) {}
+    system(system), initialised(false), callbacks_registered(false), lock_timer(0), pvdd_lock_timer(0), clip_lock_timer(0), otw_lock_timer(0), warn_lock_timer(0),
+    warning_limit_factor(AMP_WARNING_FACTOR_DEFAULT), prev_amp_fault(false), prev_pvdd_fault(false), prev_safety_error(0) {}
 
 
 void AmpManager::Init(SuccessCallback&& callback) {
@@ -145,11 +145,14 @@ void AmpManager::Init(SuccessCallback&& callback) {
             //write safety warning limits - RMS current and average power, scaled according to default factor
             this->UpdateWarningLimits(AMP_WARNING_FACTOR_DEFAULT, [&, callback = std::move(callback)](bool success) {
               if (success) {
-                //register event callbacks
-                this->system.amp_if.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
-                                                     MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE);
-                this->system.audio_mgr.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
-                                                        AUDIO_EVENT_VOLUME_UPDATE);
+                if (!this->callbacks_registered) {
+                  //register event callbacks
+                  this->system.amp_if.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                                       MODIF_EVENT_MODULE_RESET | MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE);
+                  this->system.audio_mgr.RegisterCallback(std::bind(&AmpManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                                          AUDIO_EVENT_VOLUME_UPDATE);
+                  this->callbacks_registered = true;
+                }
 
                 //init done
                 this->initialised = true;
@@ -273,6 +276,29 @@ void AmpManager::HandlePowerStateChange(bool on, SuccessCallback&& callback) {
 
 
 void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
+  if (source == &this->system.amp_if && event == MODIF_EVENT_MODULE_RESET) {
+    //amp module reset: attempt re-init of this manager and return to correct state
+    this->Init([&](bool success) {
+      if (!success) {
+        DEBUG_PRINTF("*** AmpManager failed to re-init after amp module reset!\n");
+        return;
+      }
+
+      //if we're supposed to be powered on, attempt to adjust state correspondingly
+      if (this->system.IsPoweredOn()) {
+        this->HandlePowerStateChange(true, [](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* AmpManager failed to turn on again after amp module reset\n");
+          }
+        });
+      }
+    });
+    return;
+  } else if (!this->initialised) {
+    //don't handle other events until initialised
+    return;
+  }
+
   if (source == &this->system.audio_mgr) {
     //handle volume change event: update PVDD target
     this->UpdatePVDDForVolume(this->system.audio_mgr.GetCurrentVolumeDB(), SuccessCallback());
@@ -470,6 +496,8 @@ void AmpManager::UpdateWarningLimits(float factor, SuccessCallback&& callback) {
   //scale threshold sets with factor
   _AmpManager_ScaleThresholdSet(&this->warning_limits_irms, factor);
   _AmpManager_ScaleThresholdSet(&this->warning_limits_pavg, factor);
+
+  //TODO: shutdown amp if it's active
 
   //apply current set
   this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_WARNING, &this->warning_limits_irms, [&, factor, callback = std::move(callback)](bool success) {

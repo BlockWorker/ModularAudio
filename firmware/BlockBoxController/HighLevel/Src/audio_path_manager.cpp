@@ -389,10 +389,12 @@ void AudioPathManager::Init(SuccessCallback&& callback) {
       this->InitDAPSetup([&, callback = std::move(callback)](bool success) {
         if (success) {
           //register event callbacks
+          this->system.dac_if.RegisterCallback(std::bind(&AudioPathManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                               MODIF_EVENT_MODULE_RESET);
           this->system.dap_if.RegisterCallback(std::bind(&AudioPathManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
-                                               MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE);
+                                               MODIF_EVENT_MODULE_RESET | MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE);
           this->system.btrx_if.RegisterCallback(std::bind(&AudioPathManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
-                                                MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE);
+                                                MODIF_EVENT_MODULE_RESET | MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE);
 
           //init done
           this->initialised = true;
@@ -554,8 +556,86 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
 }
 
 
+void AudioPathManager::HandleDACDAPReset(bool dac) {
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->lock_timer > 0) {
+    //locked out: queue for later execution
+    this->queued_operations.push_back([&, dac]() mutable {
+      this->HandleDACDAPReset(dac);
+    });
+    __set_PRIMASK(primask);
+    return;
+  }
+
+  //lock out further operations
+  this->lock_timer = AUDIO_LOCK_LONG_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  //DAC/DAP module reset: start by muting DAC
+  this->system.dac_if.SetMutes(true, true, [&, dac](bool success) {
+    if (!success) {
+      DEBUG_PRINTF("*** AudioPathManager failed to mute DAC after DAC/DAP module reset!\n");
+    }
+
+    //callback for after re-init
+    auto post_reinit_cb = [&]() {
+      //reconfigure DAC and DAP for the correct power state
+      this->HandlePowerStateChange(this->system.IsPoweredOn(), [&](bool success) {
+        if (!success) {
+          DEBUG_PRINTF("* AudioPathManager failed to reconfigure power state after DAC/DAP module reset\n");
+        }
+      });
+    };
+
+    //continue regardless of success: re-init the corresponding module's setup
+    if (dac) {
+      this->InitDACSetup([&, cb = std::move(post_reinit_cb)](bool success) {
+        this->lock_timer = 0;
+        if (success) {
+          cb();
+        } else {
+          DEBUG_PRINTF("*** AudioPathManager failed to re-init DAC after DAC module reset!\n");
+        }
+      });
+    } else {
+      this->InitDAPSetup([&, cb = std::move(post_reinit_cb)](bool success) {
+        this->lock_timer = 0;
+        if (success) {
+          cb();
+        } else {
+          DEBUG_PRINTF("*** AudioPathManager failed to re-init DAP after DAP module reset!\n");
+        }
+      });
+    }
+  });
+}
+
+
 void AudioPathManager::HandleEvent(EventSource* source, uint32_t event) {
-  if (!this->initialised) {
+  if (event == MODIF_EVENT_MODULE_RESET) {
+    //module reset
+    if (source == &this->system.btrx_if) {
+      //bluetooth module reset: just ensure correct connectable state
+      if (this->system.IsPoweredOn()) {
+        this->system.btrx_if.SetConnectable(true, [](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* AudioPathManager failed to set Bluetooth connectable after Bluetooth module reset\n");
+          }
+        });
+      } else {
+        this->system.btrx_if.CutAndDisableConnections([](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* AudioPathManager failed to cut and disable Bluetooth connections after Bluetooth module reset\n");
+          }
+        });
+      }
+    } else if (source == &this->system.dac_if || source == &this->system.dap_if) {
+      //DAC/DAP reset
+      this->HandleDACDAPReset(source == &this->system.dac_if);
+    }
+    return;
+  } else if (!this->initialised) {
     return;
   }
 

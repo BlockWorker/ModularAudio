@@ -60,11 +60,14 @@ public:
   void Init() override;
   void LoopTasks() override;
 
+  bool IsPoweredOn() const;
   void SetPowerState(bool on, SuccessCallback&& callback);
 
   BlockBoxV2System();
 
 private:
+  bool powered_on;
+
   void InitEEPROM(SuccessCallback&& callback);
   void InitDAP(SuccessCallback&& callback);
   void InitHiFiDAC(SuccessCallback&& callback);

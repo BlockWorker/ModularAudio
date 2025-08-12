@@ -408,8 +408,8 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
         return;
       }
 
-      //set config to enable interrupts and signal processor - positive gain disallowed for now
-      this->SetConfig(true, false, [&, callback = std::move(callback)](bool success) {
+      //set config to enable interrupts and disable signal processor and positive gain for now
+      this->SetConfig(false, false, [&, callback = std::move(callback)](bool success) {
         if (!success) {
           //report failure to external callback
           if (callback) {
@@ -514,6 +514,9 @@ void DAPInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   if (interrupt_flags == MODIF_I2C_INT_RESET_FLAG) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
+      if (this->reset_wait_timer == 0) {
+        DEBUG_PRINTF("DAP module spurious reset detected\n");
+      }
       //perform module re-init
       this->InitModule([&](bool success) {
         //notify system of reset, then call reset callback

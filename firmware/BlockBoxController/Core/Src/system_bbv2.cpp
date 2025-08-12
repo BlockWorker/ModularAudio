@@ -72,25 +72,6 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
     if (callback) {
       callback(true);
     }
-    //this->dap_if.monitor_src_stats = true;
-    /*this->dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, IF_DAP_SR_96K, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing - move to AudioPathManager?
-      DEBUG_PRINTF("DAP I2S1 sample rate set to 96K, success %u\n", success);
-      if (!success) {
-        //propagate failure to external callback
-        if (callback) {
-          callback(false);
-        }
-        return;
-      }
-
-      this->dap_if.SetVolumeGains({ -10.0f, -10.0f }, [&, callback = std::move(callback)](bool success) { //TODO remove this after testing
-        DEBUG_PRINTF("DAP vol gains set, success %u\n", success);
-        //propagate result to external callback
-        if (callback) {
-          callback(success);
-        }
-      });
-    });*/
   });
 }
 
@@ -108,17 +89,6 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
     if (callback) {
       callback(true);
     }
-    /*HiFiDACConfig cfg;
-    cfg.dac_enable = true;
-    cfg.sync_mode = true;
-    cfg.master_mode = false;
-    this->dac_if.SetConfig(cfg, [&, callback = std::move(callback)](bool success) {
-      DEBUG_PRINTF("HiFiDAC config set to enabled/sync/slave, success %u\n", success);
-      //propagate result to external callback
-      if (callback) {
-        callback(success);
-      }
-    });*/
   });
 }
 
@@ -134,7 +104,6 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
       return;
     }
 
-    this->amp_if.monitor_measurements = true; //TODO disable monitoring at this point later, only here for testing
     this->amp_if.SetManualShutdownActive(true, [&, callback = std::move(callback)](bool success) {
       DEBUG_PRINTF("PowerAmp set manual shutdown, success %u\n", success);
       if (!success) {
@@ -145,7 +114,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
         return;
       }
 
-      this->amp_if.SetPVDDTargetVoltage(25.0f, [&, callback = std::move(callback)](bool success) {
+      this->amp_if.SetPVDDTargetVoltage(IF_POWERAMP_PVDD_TARGET_MIN, [&, callback = std::move(callback)](bool success) {
         DEBUG_PRINTF("PowerAmp started voltage reduction, success %u\n", success);
         //propagate result to external callback
         if (callback) {
@@ -170,17 +139,12 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
     if (callback) {
       callback(true);
     }
-    /*this->btrx_if.SetDiscoverable(true, [&, callback = std::move(callback)](bool success) { //TODO change after testing - we want not discoverable + not connectable + disconnected (in off state), do in AudioPathManager?
-      DEBUG_PRINTF("BTRX set discoverable, success %u\n", success);
-      //propagate result to external callback
-      if (callback) {
-        callback(success);
-      }
-    });*/
   });
 }
 
 void BlockBoxV2System::Init() {
+  this->powered_on = false;
+
   this->main_i2c_hw.Init();
   this->eeprom_if.Init();
   this->dap_if.Init();
@@ -370,6 +334,10 @@ void BlockBoxV2System::LoopTasks() {
 }
 
 
+bool BlockBoxV2System::IsPoweredOn() const {
+  return this->powered_on;
+}
+
 void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
   //apply state to audio manager first (mute, volume reset etc)
   this->audio_mgr.HandlePowerStateChange(on, [&, on, callback = std::move(callback)](bool success) {
@@ -413,6 +381,11 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
         return;
       }
 
+      if (success) {
+        //save new power state
+        this->powered_on = on;
+      }
+
       //propagate success to external callback
       if (callback) {
         callback(success);
@@ -432,7 +405,8 @@ BlockBoxV2System::BlockBoxV2System() :
     btrx_if(&BBV2_BTRX_UART_HANDLE),
     gui_mgr(*this),
     audio_mgr(*this),
-    amp_mgr(*this) {}
+    amp_mgr(*this),
+    powered_on(false) {}
 
 
 /***************************************************/

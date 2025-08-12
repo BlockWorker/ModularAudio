@@ -64,6 +64,7 @@ public:
 
 protected:
   bool initialised;
+  bool callbacks_registered;
   uint32_t lock_timer;
   std::deque<QueuedOperation> queued_operations;
 

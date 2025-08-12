@@ -403,6 +403,9 @@ void HiFiDACInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   if (interrupt_flags == MODIF_I2C_INT_RESET_FLAG) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
+      if (this->reset_wait_timer == 0) {
+        DEBUG_PRINTF("HiFiDAC module spurious reset detected\n");
+      }
       //perform module re-init
       this->InitModule([&](bool success) {
         //notify system of reset, then call reset callback

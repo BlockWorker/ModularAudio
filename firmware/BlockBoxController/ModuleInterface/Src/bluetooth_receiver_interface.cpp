@@ -281,6 +281,9 @@ void BluetoothReceiverInterface::HandleNotificationData(bool error, bool unsolic
         case IF_BTRX_EVENT_BT_RESET:
           //only re-initialise if already initialised, or reset is pending
           if (this->initialised || this->reset_wait_timer > 0) {
+            if (this->reset_wait_timer == 0) {
+              DEBUG_PRINTF("BluetoothReceiver module spurious reset detected\n");
+            }
             //perform module re-init
             this->InitModule([&](bool success) {
               //notify system of reset, then call reset callback

@@ -33,7 +33,9 @@
 #define AUDIO_LIMIT_LOUDNESS_GAIN_MAX IF_DAP_LOUDNESS_GAIN_MAX
 
 //audio path setting lock timeout, in main loop cycles
-#define AUDIO_LOCK_TIMEOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
+#define AUDIO_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
+//audio path setting lock long timeout, in main loop cycles (used after resets)
+#define AUDIO_LOCK_LONG_TIMEOUT_CYCLES (2000 / MAIN_LOOP_PERIOD_MS)
 
 //bluetooth volume feedback lock timeout, in main loop cycles - to avoid feedback loop when processing bluetooth volume changes, and to avoid too frequent feedback
 #define AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
@@ -170,6 +172,8 @@ protected:
   void UpdateVolumeFromBluetooth();
 
   void UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPathEQMode eq, AudioPathCalibrationMode cal, SuccessCallback&& callback);
+
+  void HandleDACDAPReset(bool dac);
 
   void HandleEvent(EventSource* source, uint32_t event);
 };
