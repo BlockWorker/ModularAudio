@@ -19,7 +19,8 @@
 #define AMP_PVDD_MAX_VOLUME_DB -1.0f
 //hysteresis for lowering PVDD: only lower if the current target is at least this factor above the desired target
 #define AMP_PVDD_LOWERING_HYST 1.2f
-
+//PVDD clipping increase factor: multiply PVDD target by this factor when detecting clipping
+#define AMP_PVDD_CLIPPING_INCREASE 1.1f
 
 //default warning limit factor
 #define AMP_WARNING_FACTOR_DEFAULT 0.8f
@@ -60,6 +61,8 @@ static const PowerAmpThresholdSet _amp_warning_base_limits_papp = { //apparent p
 };
 
 
+static_assert(AMP_PVDD_LOWERING_HYST > 1.0f);
+static_assert(AMP_PVDD_CLIPPING_INCREASE > 1.0f);
 static_assert(AMP_WARNING_FACTOR_DEFAULT >= AMP_WARNING_FACTOR_MIN && AMP_WARNING_FACTOR_DEFAULT <= AMP_WARNING_FACTOR_MAX);
 
 
@@ -68,7 +71,8 @@ static_assert(AMP_WARNING_FACTOR_DEFAULT >= AMP_WARNING_FACTOR_MIN && AMP_WARNIN
 /******************************************************/
 
 AmpManager::AmpManager(BlockBoxV2System& system) :
-    system(system), initialised(false), lock_timer(0), pvdd_lock_timer(0), clip_lock_timer(0), warning_limit_factor(AMP_WARNING_FACTOR_DEFAULT) {}
+    system(system), initialised(false), lock_timer(0), pvdd_lock_timer(0), clip_lock_timer(0), otw_lock_timer(0), warn_lock_timer(0), warning_limit_factor(AMP_WARNING_FACTOR_DEFAULT),
+    prev_amp_fault(false), prev_pvdd_fault(false), prev_safety_error(0) {}
 
 
 void AmpManager::Init(SuccessCallback&& callback) {
@@ -76,7 +80,12 @@ void AmpManager::Init(SuccessCallback&& callback) {
   this->lock_timer = 0;
   this->pvdd_lock_timer = 0;
   this->clip_lock_timer = 0;
+  this->otw_lock_timer = 0;
+  this->warn_lock_timer = 0;
   this->warning_limit_factor = AMP_WARNING_FACTOR_DEFAULT;
+  this->prev_amp_fault = false;
+  this->prev_pvdd_fault = false;
+  this->prev_safety_error = 0;
 
   //enter power-off state
   this->HandlePowerStateChange(false, [&, callback = std::move(callback)](bool success) {
@@ -186,6 +195,14 @@ void AmpManager::LoopTasks() {
     this->clip_lock_timer--;
   }
 
+  if (this->otw_lock_timer > 0) {
+    this->otw_lock_timer--;
+  }
+
+  if (this->warn_lock_timer > 0) {
+    this->warn_lock_timer--;
+  }
+
   if (this->lock_timer > 0) {
     if (--this->lock_timer == 0) {
       //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
@@ -263,11 +280,112 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
     //handle amp module events
     switch (event) {
       case MODIF_POWERAMP_EVENT_STATUS_UPDATE:
+      {
+        //status update
+        PowerAmpStatus status = this->system.amp_if.GetStatus();
 
+        //check for faults first
+        if (status.amp_fault) {
+          if (!this->prev_amp_fault) {
+            //log fault
+            DEBUG_PRINTF("*** Amplifier fault\n");
+            this->prev_amp_fault = true;
+          }
+        } else {
+          this->prev_amp_fault = false;
+        }
+
+        if (!status.pvdd_valid) {
+          if (!this->prev_pvdd_fault) {
+            //log PVDD fault
+            DEBUG_PRINTF("*** Amp PVDD fault: %.2f V\n", this->system.amp_if.GetPVDDMeasuredVoltage());
+            this->prev_pvdd_fault = true;
+          }
+        } else {
+          this->prev_pvdd_fault = false;
+        }
+
+        //check for safety warning and respond
+        if (status.safety_warning) {
+          uint32_t primask = __get_PRIMASK();
+          __disable_irq();
+          if (this->warn_lock_timer == 0) {
+            //warning detected and not locked out: lock out and respond by lowering volume
+            this->warn_lock_timer = AMP_WARN_LOCK_TIMEOUT_CYCLES;
+            __set_PRIMASK(primask);
+            DEBUG_PRINTF("AmpManager responding to safety warning\n");
+            this->ReduceVolume([&](bool success) {
+              if (!success) {
+                //on failure, unlock immediately
+                DEBUG_PRINTF("* AmpManager failed to reduce volume in response to safety warning!\n");
+                this->warn_lock_timer = 0;
+              }
+            });
+            //don't do anything else for now
+            return;
+          } else {
+            //locked out: don't respond
+            __set_PRIMASK(primask);
+          }
+        } else {
+          //no safety warning: unlock for immediate handling of the next one
+          this->warn_lock_timer = 0;
+        }
+
+        //check for overtemperature warning and respond
+        if (status.otw_detected) {
+          uint32_t primask = __get_PRIMASK();
+          __disable_irq();
+          if (this->otw_lock_timer == 0) {
+            //otw detected and not locked out: lock out and respond by lowering volume
+            this->otw_lock_timer = AMP_OTW_LOCK_TIMEOUT_CYCLES;
+            __set_PRIMASK(primask);
+            DEBUG_PRINTF("AmpManager responding to overtemperature warning\n");
+            this->ReduceVolume([&](bool success) {
+              if (!success) {
+                //on failure, unlock immediately
+                DEBUG_PRINTF("* AmpManager failed to reduce volume in response to overtemperature warning!\n");
+                this->otw_lock_timer = 0;
+              }
+            });
+            //don't do anything else for now
+            return;
+          } else {
+            //locked out: don't respond
+            __set_PRIMASK(primask);
+          }
+        } else {
+          //no overtemperature warning: unlock for immediate handling of the next one
+          this->otw_lock_timer = 0;
+        }
+
+        //check for clipping and respond
+        if (status.clip_detected) {
+          this->HandleClipping([&](bool success) {
+            if (!success) {
+              //on failure, unlock immediately
+              DEBUG_PRINTF("* AmpManager failed to respond to clipping!\n");
+              this->clip_lock_timer = 0;
+            }
+          });
+        }
         break;
+      }
       case MODIF_POWERAMP_EVENT_SAFETY_UPDATE:
-
+      {
+        //safety update: just check for safety error shutdown (warnings handled in status update above)
+        if (this->system.amp_if.IsSafetyShutdownActive()) {
+          uint16_t err = this->system.amp_if.GetSafetyErrorSource().value;
+          if (this->prev_safety_error != err) {
+            //log error
+            DEBUG_PRINTF("*** Amp safety error: 0x%04X\n", err);
+            this->prev_safety_error = err;
+          }
+        } else {
+          this->prev_safety_error = 0;
+        }
         break;
+      }
       default:
         break;
     }
@@ -326,7 +444,7 @@ void AmpManager::UpdatePVDDForVolume(float volume_dB, SuccessCallback&& callback
 
 
 /******************************************************/
-/*                  Limit Handling                    */
+/*              Limit & Safety Handling               */
 /******************************************************/
 
 static void _AmpManager_ScaleThresholdSet(PowerAmpThresholdSet* set, float factor) {
@@ -438,4 +556,45 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
   }
 }
 
+
+void AmpManager::HandleClipping(SuccessCallback&& callback) {
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->clip_lock_timer > 0) {
+    //locked out, return success (i.e. nothing to do right now)
+    if (callback) {
+      callback(true);
+    }
+    return;
+  }
+
+  //lock out further clipping responses for a while
+  this->clip_lock_timer = AMP_CLIP_LOCK_TIMEOUT_CYCLES;
+  __set_PRIMASK(primask);
+
+  DEBUG_PRINTF("AmpManager responding to clipping\n");
+
+  float current_pvdd_target = this->system.amp_if.GetPVDDTargetVoltage();
+  if (current_pvdd_target - this->system.amp_if.GetPVDDMeasuredVoltage() > 5.0f) {
+    //voltage is already trying to increase, but not done yet: nothing to do, report success to callback
+    if (callback) {
+      callback(true);
+    }
+  } else if (current_pvdd_target < IF_POWERAMP_PVDD_TARGET_MAX) {
+    //voltage not maxed out yet: increase voltage, clamping to limit
+    float new_target = current_pvdd_target * AMP_PVDD_CLIPPING_INCREASE;
+    if (new_target > IF_POWERAMP_PVDD_TARGET_MAX) {
+      new_target = IF_POWERAMP_PVDD_TARGET_MAX;
+    }
+    this->ApplyNewPVDDTarget(new_target, std::move(callback));
+  } else {
+    //voltage already at limit, still clipping: reduce volume
+    this->ReduceVolume(std::move(callback));
+  }
+}
+
+void AmpManager::ReduceVolume(SuccessCallback&& callback) {
+  //go one volume step down, ensuring that it happens (queueing if busy)
+  this->system.audio_mgr.StepCurrentVolumeDB(false, std::move(callback), true);
+}
 

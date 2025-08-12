@@ -81,7 +81,12 @@ void SettingsScreenAudio::DisplayScreen() {
       }
       case 2:
       {
-        //TODO power target once implemented
+        //amp power target (warning limit factor)
+        float power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
+        if (this->local_power_target != power_target) {
+          this->local_power_target = power_target;
+          this->needs_existing_list_update = true;
+        }
         break;
       }
       default:
@@ -267,22 +272,21 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       }
     case SCREEN_AUDIO_TAG_AMP_POWER_TARGET:
       //interpolate slider value
-      this->local_power_target = 0.5f + roundf((float)state.tracker_value / (float)UINT16_MAX * 5.0f) / 10.0f;
+      this->local_power_target = AMP_WARNING_FACTOR_MIN + roundf((float)state.tracker_value / (float)UINT16_MAX * 10.0f * (AMP_WARNING_FACTOR_MAX - AMP_WARNING_FACTOR_MIN)) / 10.0f;
       this->needs_existing_list_update = true;
 
-      //TODO add release handling once implemented
-      /*if (state.released) {
+      if (state.released) {
         //released: check if any change
-        if (this->local_power_target != ...) {
+        if (this->local_power_target != this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor()) {
           //changed: apply value globally
-          ...(this->local_power_target, [&](bool success) {
+          this->bbv2_manager.system.amp_mgr.SetWarningLimitFactor(this->local_power_target, [&](bool success) {
             DEBUG_PRINTF("Power target apply success %u\n", success);
             //update local slider values to true values
-            this->local_power_target = ...;
+            this->local_power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
             this->needs_existing_list_update = true;
           });
         }
-      }*/
+      }
       return;
     default:
       break;
@@ -500,7 +504,7 @@ void SettingsScreenAudio::BuildScreenContent() {
       //power target slider
       this->driver.CmdTag(SCREEN_AUDIO_TAG_AMP_POWER_TARGET);
       this->power_target_slider_oidx = this->SaveNextCommandOffset();
-      this->driver.CmdSlider(126, 208, 137, 11, 0, (uint16_t)roundf((this->local_power_target - 0.5f) * 10.0f), 5);
+      this->driver.CmdSlider(126, 208, 137, 11, 0, (uint16_t)roundf((this->local_power_target - AMP_WARNING_FACTOR_MIN) * 10.0f), (uint16_t)roundf(10.0f * (AMP_WARNING_FACTOR_MAX - AMP_WARNING_FACTOR_MIN)));
       this->driver.CmdTrack(124, 203, 142, 21, SCREEN_AUDIO_TAG_AMP_POWER_TARGET);
       this->driver.CmdInvisibleRect(113, 202, 163, 23);
       break;
@@ -595,7 +599,7 @@ void SettingsScreenAudio::UpdateExistingScreenContent() {
       snprintf((char*)this->GetDLCommandPointer(this->power_target_value_oidx, 3), 5, "%3u%%", (uint8_t)(this->local_power_target * 100.0f));
 
       //update power target slider
-      this->ModifyDLCommand16(this->power_target_slider_oidx, 3, 1, (uint16_t)roundf((this->local_power_target - 0.5f) * 10.0f));
+      this->ModifyDLCommand16(this->power_target_slider_oidx, 3, 1, (uint16_t)roundf((this->local_power_target - AMP_WARNING_FACTOR_MIN) * 10.0f));
       break;
       break;
     }
