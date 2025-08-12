@@ -138,13 +138,13 @@ void ModuleInterface::Init() {
 
   //callback clearing disabled - I think we want them to stick around, to allow re-init without losing callbacks, as well as callback registration before init
 
-  for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
-    delete *i;
+  for (auto transfer : this->queued_transfers) {
+    delete transfer;
   }
   this->queued_transfers.clear();
 
-  for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {
-    delete *i;
+  for (auto transfer : this->completed_transfers) {
+    delete transfer;
   }
   this->completed_transfers.clear();
 
@@ -152,23 +152,31 @@ void ModuleInterface::Init() {
 }
 
 void ModuleInterface::LoopTasks() {
-  //iterate through completed async transfers, executing their callbacks
-  for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {
-    auto transfer = *i;
+  //vector to store copy of completed transfers
+  static std::vector<ModuleTransferQueueItem*> completions;
 
+  //make copy of completed async transfers to iterate through, under disabled interrupts to avoid modifications in the meantime
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  completions = this->completed_transfers;
+  //clear completed transfers
+  this->completed_transfers.clear();
+  __set_PRIMASK(primask);
+
+  //iterate through copied list, executing callbacks
+  for (auto transfer : completions) {
     if (transfer->callback) {
       try {
         transfer->callback(transfer->success, transfer->value_buffer, transfer->length);
+      } catch (const std::exception& exc) {
+        DEBUG_PRINTF("* Exception in ModuleInterface transfer callback: %s\n", exc.what());
       } catch (...) {
-        //on error: erase successfully executed callbacks from completed list (all before current one), then rethrow
-        this->completed_transfers.erase(this->completed_transfers.begin(), i);
-        throw;
+        DEBUG_PRINTF("* Unknown exception in ModuleInterface transfer callback!\n");
       }
     }
 
     delete transfer;
   }
-  this->completed_transfers.clear();
 
   //try to start the next async transfer if possible
   this->StartQueuedAsyncTransfer();
@@ -176,12 +184,12 @@ void ModuleInterface::LoopTasks() {
 
 
 ModuleInterface::~ModuleInterface() {
-  for (auto i = this->queued_transfers.begin(); i < this->queued_transfers.end(); i++) {
-    delete *i;
+  for (auto transfer : this->queued_transfers) {
+    delete transfer;
   }
 
-  for (auto i = this->completed_transfers.begin(); i < this->completed_transfers.end(); i++) {
-    delete *i;
+  for (auto transfer : this->completed_transfers) {
+    delete transfer;
   }
 }
 
