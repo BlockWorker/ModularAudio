@@ -249,7 +249,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           break;
         case SCREEN_MAIN_TAG_POWER_OFF:
           //power off system
-          this->bbv2_manager.system.SetPowerState(false, [&](bool success) {
+          this->bbv2_manager.system.SetPowerState(false, [this](bool success) {
             DEBUG_PRINTF("MainScreen power-off success %u\n", success);
             if (success) {
               //reset this screen and go to power-off screen
@@ -299,12 +299,12 @@ void MainScreen::Init() {
   this->BlockBoxV2Screen::Init();
 
   //redraw on RTC minutes update
-  this->bbv2_manager.system.rtc_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.rtc_if.RegisterCallback([this](EventSource*, uint32_t) {
     this->needs_display_list_rebuild = true;
   }, MODIF_RTC_EVENT_MINUTE_UPDATE);
 
   //redraw on input and volume/mute changes
-  this->bbv2_manager.system.audio_mgr.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->bbv2_manager.system.audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
     switch (event) {
       case AUDIO_EVENT_INPUT_UPDATE:
         if (this->dropdown_open || this->bbv2_manager.system.audio_mgr.GetActiveInput() != this->currently_drawn_input) {
@@ -325,7 +325,7 @@ void MainScreen::Init() {
   }, AUDIO_EVENT_INPUT_UPDATE | AUDIO_EVENT_VOLUME_UPDATE | AUDIO_EVENT_MUTE_UPDATE);
 
   //redraw in dropdown on any Bluetooth changes, or in main screen on connection/playback/metadata changes
-  this->bbv2_manager.system.btrx_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->bbv2_manager.system.btrx_if.RegisterCallback([this](EventSource*, uint32_t event) {
     if (this->dropdown_open) {
       this->needs_display_list_rebuild = true;
     } else {
@@ -350,7 +350,7 @@ void MainScreen::Init() {
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
 
   //redraw in dropdown on any DAP changes, or on streaming status change if any input is active, or on input rate change if USB or SPDIF is active
-  this->bbv2_manager.system.dap_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->bbv2_manager.system.dap_if.RegisterCallback([this](EventSource*, uint32_t event) {
     if (this->dropdown_open) {
       this->needs_display_list_rebuild = true;
     } else {

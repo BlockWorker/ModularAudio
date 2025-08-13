@@ -65,7 +65,7 @@ void EEPROMInterface::ReadAllSections(SuccessCallback&& callback) {
   memset(this->data.data(), 0, this->data.size());
 
   //do actual read, starting at first section
-  this->ReadNextSection(0, [&, callback = std::move(callback)](bool success) mutable {
+  this->ReadNextSection(0, [this, callback = std::move(callback)](bool success) mutable {
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -85,7 +85,7 @@ void EEPROMInterface::WriteAllDirtySections(SuccessCallback&& callback) {
   }
 
   //do actual write, starting at first page of first section
-  this->WriteNextSectionPageIfDirty(0, 0, [&, callback = std::move(callback)](bool success) {
+  this->WriteNextSectionPageIfDirty(0, 0, [this, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -96,7 +96,7 @@ void EEPROMInterface::WriteAllDirtySections(SuccessCallback&& callback) {
 
     //write new header accordingly
     HAL_Delay(4);
-    this->WriteHeader([&, callback = std::move(callback)](bool success) {
+    this->WriteHeader([this, callback = std::move(callback)](bool success) {
       if (success) {
         //write successful: clear all dirty flags
         for (auto section : this->_sections) {
@@ -127,7 +127,7 @@ void EEPROMInterface::InitModule(SuccessCallback&& callback) {
   this->initialised = false;
 
   //attempt to read all data from the EEPROM
-  this->ReadAllSections([&, callback = std::move(callback)](bool success) {
+  this->ReadAllSections([this, callback = std::move(callback)](bool success) {
     if (success) {
       //success: init done
       this->initialised = true;
@@ -156,7 +156,7 @@ void EEPROMInterface::ReadNextSection(uint32_t section_index, SuccessCallback&& 
   uint32_t storage_offset = section->GetStorageOffset();
 
   this->ReadRegisterAsync(IF_EEPROM_STORAGE_START + storage_offset, this->data.data() + storage_offset, section->size_bytes,
-                          [&, section_index, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
+                          [this, section_index, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
     if (!success) {
       //propagate failure to external callback
       DEBUG_PRINTF("* EEPROM read failed at section %lu\n", section_index);
@@ -207,7 +207,7 @@ void EEPROMInterface::WriteNextSectionPageIfDirty(uint32_t section_index, uint32
   uint32_t write_length = MIN(section->size_bytes - offset_in_section, IF_EEPROM_PAGE_SIZE);
 
   this->WriteRegisterAsync(IF_EEPROM_STORAGE_START + data_array_offset, this->data.data() + data_array_offset, write_length,
-                           [&, section_index, page_index, sec_size = section->size_bytes, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
+                           [this, section_index, page_index, sec_size = section->size_bytes, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
     if (!success) {
       //propagate failure to external callback
       DEBUG_PRINTF("* EEPROM write failed at section %lu page %lu\n", section_index, page_index);
@@ -237,7 +237,7 @@ void EEPROMInterface::WriteNextSectionPageIfDirty(uint32_t section_index, uint32
 
 void EEPROMInterface::ReadAndCheckHeader(SuccessCallback&& callback) {
   //read header page
-  this->ReadRegisterAsync(0, this->header_data, IF_EEPROM_STORAGE_START, [&, callback = std::move(callback)](bool success, uint32_t, uint16_t) {
+  this->ReadRegisterAsync(0, this->header_data, IF_EEPROM_STORAGE_START, [this, callback = std::move(callback)](bool success, uint32_t, uint16_t) {
     if (!success) {
       //propagate failure to external callback
       DEBUG_PRINTF("* EEPROM header read failed\n");

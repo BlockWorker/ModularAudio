@@ -126,7 +126,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
     case SCREEN_AUDIO_TAG_ALLOW_POS_GAIN:
       if (state.released && state.tag == state.initial_tag) {
         //toggle positive gain allowed
-        this->bbv2_manager.system.audio_mgr.SetPositiveGainAllowed(!this->bbv2_manager.system.audio_mgr.IsPositiveGainAllowed(), [&](bool success) {
+        this->bbv2_manager.system.audio_mgr.SetPositiveGainAllowed(!this->bbv2_manager.system.audio_mgr.IsPositiveGainAllowed(), [this](bool success) {
           DEBUG_PRINTF("Pos gain allowed toggle success %u\n", success);
           this->needs_display_list_rebuild = true;
         });
@@ -136,7 +136,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag) {
         //toggle mixer mode
         AudioPathMixerMode mode = (this->bbv2_manager.system.audio_mgr.GetMixerMode() == AUDIO_MIXER_AVG) ? AUDIO_MIXER_LEFT : AUDIO_MIXER_AVG;
-        this->bbv2_manager.system.audio_mgr.SetMixerMode(mode, [&](bool success) {
+        this->bbv2_manager.system.audio_mgr.SetMixerMode(mode, [this](bool success) {
           DEBUG_PRINTF("Mixer mode toggle success %u\n", success);
           this->needs_display_list_rebuild = true;
         });
@@ -161,7 +161,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //released: check if any change
         if (this->local_min_volume != this->bbv2_manager.system.audio_mgr.GetMinVolumeDB()) {
           //changed: apply value globally
-          this->bbv2_manager.system.audio_mgr.SetMinVolumeDB(this->local_min_volume, [&](bool success) {
+          this->bbv2_manager.system.audio_mgr.SetMinVolumeDB(this->local_min_volume, [this](bool success) {
             DEBUG_PRINTF("Min volume apply success %u\n", success);
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
@@ -192,7 +192,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //released: check if any change
         if (this->local_max_volume != this->bbv2_manager.system.audio_mgr.GetMaxVolumeDB()) {
           //changed: apply value globally
-          this->bbv2_manager.system.audio_mgr.SetMaxVolumeDB(this->local_max_volume, [&](bool success) {
+          this->bbv2_manager.system.audio_mgr.SetMaxVolumeDB(this->local_max_volume, [this](bool success) {
             DEBUG_PRINTF("Max volume apply success %u\n", success);
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
@@ -213,7 +213,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //released: check if any change
         if (this->local_volume_step != this->bbv2_manager.system.audio_mgr.GetVolumeStepDB()) {
           //changed: apply value globally
-          this->bbv2_manager.system.audio_mgr.SetVolumeStepDB(this->local_volume_step, [&](bool success) {
+          this->bbv2_manager.system.audio_mgr.SetVolumeStepDB(this->local_volume_step, [this](bool success) {
             DEBUG_PRINTF("Volume step apply success %u\n", success);
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
@@ -228,7 +228,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag) {
         //toggle EQ mode
         AudioPathEQMode mode = (this->bbv2_manager.system.audio_mgr.GetEQMode() == AUDIO_EQ_HIFI) ? AUDIO_EQ_POWER : AUDIO_EQ_HIFI;
-        this->bbv2_manager.system.audio_mgr.SetEQMode(mode, [&](bool success) {
+        this->bbv2_manager.system.audio_mgr.SetEQMode(mode, [this](bool success) {
           DEBUG_PRINTF("EQ mode toggle success %u\n", success);
           this->needs_display_list_rebuild = true;
         });
@@ -237,7 +237,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
     case SCREEN_AUDIO_TAG_LOUDNESS_TRACKMAX:
       if (state.released && state.tag == state.initial_tag) {
         //toggle loudness track max volume
-        this->bbv2_manager.system.audio_mgr.SetLoudnessTrackingMaxVolume(!this->bbv2_manager.system.audio_mgr.IsLoudnessTrackingMaxVolume(), [&](bool success) {
+        this->bbv2_manager.system.audio_mgr.SetLoudnessTrackingMaxVolume(!this->bbv2_manager.system.audio_mgr.IsLoudnessTrackingMaxVolume(), [this](bool success) {
           DEBUG_PRINTF("Loudness track max vol toggle success %u\n", success);
           this->needs_display_list_rebuild = true;
         });
@@ -260,7 +260,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
           //released: check if any change
           if (this->local_loudness != this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB()) {
             //changed: apply value globally
-            this->bbv2_manager.system.audio_mgr.SetLoudnessGainDB(this->local_loudness, [&](bool success) {
+            this->bbv2_manager.system.audio_mgr.SetLoudnessGainDB(this->local_loudness, [this](bool success) {
               DEBUG_PRINTF("Loudness gain apply success %u\n", success);
               //update local slider values to true values
               this->local_loudness = this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB();
@@ -279,7 +279,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //released: check if any change
         if (this->local_power_target != this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor()) {
           //changed: apply value globally
-          this->bbv2_manager.system.amp_mgr.SetWarningLimitFactor(this->local_power_target, [&](bool success) {
+          this->bbv2_manager.system.amp_mgr.SetWarningLimitFactor(this->local_power_target, [this](bool success) {
             DEBUG_PRINTF("Power target apply success %u\n", success);
             //update local slider values to true values
             this->local_power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
@@ -302,14 +302,14 @@ void SettingsScreenAudio::Init() {
   this->SettingsScreenBase::Init();
 
   //redraw second page (sound) on SRC stats update
-  this->bbv2_manager.system.dap_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.dap_if.RegisterCallback([this](EventSource*, uint32_t) {
     if (this->page_index == 1) {
       this->needs_display_list_rebuild = true;
     }
   }, MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
   //redraw third page (amp) on PVDD or amp measurement update
-  this->bbv2_manager.system.amp_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.amp_if.RegisterCallback([this](EventSource*, uint32_t) {
     if (this->page_index == 2) {
       this->needs_display_list_rebuild = true;
     }

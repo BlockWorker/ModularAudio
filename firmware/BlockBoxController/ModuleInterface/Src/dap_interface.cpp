@@ -155,9 +155,9 @@ void DAPInterface::SetConfig(bool sp_enabled, bool pos_gain_allowed, SuccessCall
       (pos_gain_allowed ? I2CDEF_DAP_CONTROL_ALLOW_POS_GAIN_Msk : 0);
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_DAP_CONTROL, config_val, [&, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_DAP_CONTROL, config_val, [this, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_DAP_CONTROL, callback ? [&, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_DAP_CONTROL, callback ? [this, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == config_val);
     } : ModuleTransferCallback());
@@ -182,9 +182,9 @@ void DAPInterface::SetActiveInput(DAPInput input, SuccessCallback&& callback) {
   }
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_DAP_INPUT_ACTIVE, (uint8_t)input, [&, callback = std::move(callback), input](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_DAP_INPUT_ACTIVE, (uint8_t)input, [this, callback = std::move(callback), input](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_DAP_INPUT_ACTIVE, callback ? [&, callback = std::move(callback), input](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_DAP_INPUT_ACTIVE, callback ? [this, callback = std::move(callback), input](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == (uint8_t)input);
     } : ModuleTransferCallback());
@@ -213,9 +213,9 @@ void DAPInterface::SetI2SInputSampleRate(DAPInput input, DAPSampleRate sample_ra
   }
 
   //write desired value
-  this->WriteRegister32Async(reg, (uint32_t)sample_rate, [&, callback = std::move(callback), sample_rate, reg](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(reg, (uint32_t)sample_rate, [this, callback = std::move(callback), sample_rate, reg](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(reg, callback ? [&, callback = std::move(callback), sample_rate](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(reg, callback ? [this, callback = std::move(callback), sample_rate](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && value == (uint32_t)sample_rate);
     } : ModuleTransferCallback());
@@ -227,9 +227,9 @@ void DAPInterface::SetMixerConfig(DAPMixerConfig config, SuccessCallback&& callb
   memcpy(&mixer_write_buf, &config, sizeof(DAPMixerConfig));
 
   //write desired config
-  this->WriteRegisterAsync(I2CDEF_DAP_MIXER_GAINS, (const uint8_t*)&mixer_write_buf, [&, callback = std::move(callback), config](bool, uint32_t, uint16_t) {
+  this->WriteRegisterAsync(I2CDEF_DAP_MIXER_GAINS, (const uint8_t*)&mixer_write_buf, [this, callback = std::move(callback), config](bool, uint32_t, uint16_t) {
     //read back config to ensure correctness and up-to-date register state
-    this->ReadRegisterAsync(I2CDEF_DAP_MIXER_GAINS, dap_scratch, callback ? [&, callback = std::move(callback), config](bool success, uint32_t, uint16_t) {
+    this->ReadRegisterAsync(I2CDEF_DAP_MIXER_GAINS, dap_scratch, callback ? [this, callback = std::move(callback), config](bool success, uint32_t, uint16_t) {
       //report result (and config correctness) to external callback
       callback(success && memcmp(this->registers[I2CDEF_DAP_MIXER_GAINS], &config, sizeof(DAPMixerConfig)) == 0);
     } : ModuleTransferCallback());
@@ -247,9 +247,9 @@ void DAPInterface::SetVolumeGains(DAPGains gains, SuccessCallback&& callback) {
   memcpy(&volume_write_buf, &gains, sizeof(DAPGains));
 
   //write desired config
-  this->WriteRegisterAsync(I2CDEF_DAP_VOLUME_GAINS, (const uint8_t*)&volume_write_buf, [&, callback = std::move(callback), gains](bool, uint32_t, uint16_t) {
+  this->WriteRegisterAsync(I2CDEF_DAP_VOLUME_GAINS, (const uint8_t*)&volume_write_buf, [this, callback = std::move(callback), gains](bool, uint32_t, uint16_t) {
     //read back config to ensure correctness and up-to-date register state
-    this->ReadRegisterAsync(I2CDEF_DAP_VOLUME_GAINS, dap_scratch, callback ? [&, callback = std::move(callback), gains](bool success, uint32_t, uint16_t) {
+    this->ReadRegisterAsync(I2CDEF_DAP_VOLUME_GAINS, dap_scratch, callback ? [this, callback = std::move(callback), gains](bool success, uint32_t, uint16_t) {
       //report result (and config correctness) to external callback
       callback(success && memcmp(this->registers[I2CDEF_DAP_VOLUME_GAINS], &gains, sizeof(DAPGains)) == 0);
     } : ModuleTransferCallback());
@@ -265,9 +265,9 @@ void DAPInterface::SetLoudnessGains(DAPGains gains, SuccessCallback&& callback) 
   memcpy(&loudness_write_buf, &gains, sizeof(DAPGains));
 
   //write desired config
-  this->WriteRegisterAsync(I2CDEF_DAP_LOUDNESS_GAINS, (const uint8_t*)&loudness_write_buf, [&, callback = std::move(callback), gains](bool, uint32_t, uint16_t) {
+  this->WriteRegisterAsync(I2CDEF_DAP_LOUDNESS_GAINS, (const uint8_t*)&loudness_write_buf, [this, callback = std::move(callback), gains](bool, uint32_t, uint16_t) {
     //read back config to ensure correctness and up-to-date register state
-    this->ReadRegisterAsync(I2CDEF_DAP_LOUDNESS_GAINS, dap_scratch, callback ? [&, callback = std::move(callback), gains](bool success, uint32_t, uint16_t) {
+    this->ReadRegisterAsync(I2CDEF_DAP_LOUDNESS_GAINS, dap_scratch, callback ? [this, callback = std::move(callback), gains](bool success, uint32_t, uint16_t) {
       //report result (and config correctness) to external callback
       callback(success && memcmp(this->registers[I2CDEF_DAP_LOUDNESS_GAINS], &gains, sizeof(DAPGains)) == 0);
     } : ModuleTransferCallback());
@@ -303,9 +303,9 @@ void DAPInterface::SetBiquadCoefficients(DAPChannel channel, const q31_t* coeff_
   _DAPInterface_EnsureSignalProcessorDisabled(this);
 
   //write desired coefficients
-  this->WriteRegisterAsync(reg, (const uint8_t*)coeff_buffer, [&, callback = std::move(callback), coeff_buffer, reg](bool, uint32_t, uint16_t) {
+  this->WriteRegisterAsync(reg, (const uint8_t*)coeff_buffer, [this, callback = std::move(callback), coeff_buffer, reg](bool, uint32_t, uint16_t) {
     //read back coefficients to ensure correctness and up-to-date register state
-    this->ReadRegisterAsync(reg, dap_scratch, callback ? [&, callback = std::move(callback), coeff_buffer, reg](bool success, uint32_t, uint16_t) {
+    this->ReadRegisterAsync(reg, dap_scratch, callback ? [this, callback = std::move(callback), coeff_buffer, reg](bool success, uint32_t, uint16_t) {
       //report result (and coefficient correctness) to external callback
       callback(success && memcmp(this->registers[reg], coeff_buffer, this->registers.reg_sizes[reg]) == 0);
     } : ModuleTransferCallback());
@@ -319,9 +319,9 @@ void DAPInterface::SetBiquadSetup(DAPBiquadSetup setup, SuccessCallback&& callba
   memcpy(&setup_value, &setup, sizeof(uint32_t));
 
   //write desired setup
-  this->WriteRegister32Async(I2CDEF_DAP_BIQUAD_SETUP, setup_value, [&, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(I2CDEF_DAP_BIQUAD_SETUP, setup_value, [this, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {
     //read back setup to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(I2CDEF_DAP_BIQUAD_SETUP, callback ? [&, callback = std::move(callback), setup_value](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(I2CDEF_DAP_BIQUAD_SETUP, callback ? [this, callback = std::move(callback), setup_value](bool success, uint32_t value, uint16_t) {
       //report result (and setup correctness) to external callback
       callback(success && value == setup_value);
     } : ModuleTransferCallback());
@@ -349,9 +349,9 @@ void DAPInterface::SetFIRCoefficients(DAPChannel channel, const q31_t* coeff_buf
   _DAPInterface_EnsureSignalProcessorDisabled(this);
 
   //write desired coefficients
-  this->WriteRegisterAsync(reg, (const uint8_t*)coeff_buffer, [&, callback = std::move(callback), coeff_buffer, reg](bool, uint32_t, uint16_t) {
+  this->WriteRegisterAsync(reg, (const uint8_t*)coeff_buffer, [this, callback = std::move(callback), coeff_buffer, reg](bool, uint32_t, uint16_t) {
     //read back coefficients to ensure correctness and up-to-date register state
-    this->ReadRegisterAsync(reg, dap_scratch, callback ? [&, callback = std::move(callback), coeff_buffer, reg](bool success, uint32_t, uint16_t) {
+    this->ReadRegisterAsync(reg, dap_scratch, callback ? [this, callback = std::move(callback), coeff_buffer, reg](bool success, uint32_t, uint16_t) {
       //report result (and coefficient correctness) to external callback
       callback(success && memcmp(this->registers[reg], coeff_buffer, this->registers.reg_sizes[reg]) == 0);
     } : ModuleTransferCallback());
@@ -365,9 +365,9 @@ void DAPInterface::SetFIRSetup(DAPFIRSetup setup, SuccessCallback&& callback) {
   memcpy(&setup_value, &setup, sizeof(uint32_t));
 
   //write desired setup
-  this->WriteRegister32Async(I2CDEF_DAP_FIR_SETUP, setup_value, [&, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(I2CDEF_DAP_FIR_SETUP, setup_value, [this, callback = std::move(callback), setup_value](bool, uint32_t, uint16_t) {
     //read back setup to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(I2CDEF_DAP_FIR_SETUP, callback ? [&, callback = std::move(callback), setup_value](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(I2CDEF_DAP_FIR_SETUP, callback ? [this, callback = std::move(callback), setup_value](bool success, uint32_t value, uint16_t) {
       //report result (and setup correctness) to external callback
       callback(success && value == setup_value);
     } : ModuleTransferCallback());
@@ -382,7 +382,7 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
   this->reset_wait_timer = 0;
 
   //read module ID to check communication
-  this->ReadRegister8Async(I2CDEF_DAP_MODULE_ID, [&, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
+  this->ReadRegister8Async(I2CDEF_DAP_MODULE_ID, [this, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
     if (!success) {
       //report failure to external callback
       if (callback) {
@@ -402,7 +402,7 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
     }
 
     //write interrupt mask (enable all interrupts)
-    this->SetInterruptMask(0xF, [&, callback = std::move(callback)](bool success) {
+    this->SetInterruptMask(0xF, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //report failure to external callback
         if (callback) {
@@ -412,7 +412,7 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
       }
 
       //set config to enable interrupts and disable signal processor and positive gain for now
-      this->SetConfig(false, false, [&, callback = std::move(callback)](bool success) {
+      this->SetConfig(false, false, [this, callback = std::move(callback)](bool success) {
         if (!success) {
           //report failure to external callback
           if (callback) {
@@ -428,7 +428,7 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
         this->ReadMultiRegisterAsync(I2CDEF_DAP_MIXER_GAINS, dap_scratch, 5, ModuleTransferCallback());
         this->ReadMultiRegisterAsync(I2CDEF_DAP_BIQUAD_COEFFS_CH1, dap_scratch, 2, ModuleTransferCallback());
         this->ReadRegisterAsync(I2CDEF_DAP_FIR_COEFFS_CH1, dap_scratch, ModuleTransferCallback());
-        this->ReadRegisterAsync(I2CDEF_DAP_FIR_COEFFS_CH2, dap_scratch, [&, callback = std::move(callback)](bool, uint32_t, uint16_t) {
+        this->ReadRegisterAsync(I2CDEF_DAP_FIR_COEFFS_CH2, dap_scratch, [this, callback = std::move(callback)](bool, uint32_t, uint16_t) {
           //after last read is done: init completed successfully (even if read failed - that's non-critical)
           this->initialised = true;
           if (callback) {
@@ -521,7 +521,7 @@ void DAPInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
         DEBUG_PRINTF("DAP module spurious reset detected\n");
       }
       //perform module re-init
-      this->InitModule([&](bool success) {
+      this->InitModule([this](bool success) {
         //notify system of reset, then call reset callback
         this->ExecuteCallbacks(MODIF_EVENT_MODULE_RESET);
         if (this->reset_callback) {

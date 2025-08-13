@@ -144,7 +144,7 @@ void RTCInterface::SetDateTime(RTCDateTime datetime, SuccessCallback&& callback)
   this->write_buffer[6] = ((datetime.year % 10) << I2CDEF_RTC_YEAR_ONES_Pos) | (((datetime.year % 100) / 10) << I2CDEF_RTC_YEAR_TENS_Pos);
 
   //write data to RTC chip
-  this->WriteMultiRegisterAsync(I2CDEF_RTC_SECONDS, this->write_buffer, 7, [&, callback = std::move(callback)](bool success, uint32_t, uint16_t) {
+  this->WriteMultiRegisterAsync(I2CDEF_RTC_SECONDS, this->write_buffer, 7, [this, callback = std::move(callback)](bool success, uint32_t, uint16_t) {
     //once done: unlock write, read back registers (without waiting), and report success to external callback
     this->write_lock_timer = 0;
     this->ReadMultiRegisterAsync(I2CDEF_RTC_SECONDS, rtc_scratch, 7, ModuleTransferCallback());
@@ -170,7 +170,7 @@ void RTCInterface::InitModule(SuccessCallback&& callback) {
   this->current_date_time.seconds = 0;
 
   //read all registers once to update registers to their initial values
-  this->ReadMultiRegisterAsync(I2CDEF_RTC_SECONDS, rtc_scratch, 19, [&, callback = std::move(callback)](bool, uint32_t, uint16_t) {
+  this->ReadMultiRegisterAsync(I2CDEF_RTC_SECONDS, rtc_scratch, 19, [this, callback = std::move(callback)](bool, uint32_t, uint16_t) {
     //after last read is done: init completed successfully (even if read failed - that's non-critical)
     this->initialised = true;
     this->write_lock_timer = 0;
@@ -189,7 +189,7 @@ void RTCInterface::LoopTasks() {
 
     //save current date+time, read new one, check for second/minute changes once done (for notifications)
     RTCDateTime prev_dt = this->current_date_time;
-    this->ReadMultiRegisterAsync(I2CDEF_RTC_SECONDS, rtc_scratch, 7, [&, prev_dt](bool, uint32_t, uint16_t) {
+    this->ReadMultiRegisterAsync(I2CDEF_RTC_SECONDS, rtc_scratch, 7, [this, prev_dt](bool, uint32_t, uint16_t) {
       if (this->current_date_time.seconds != prev_dt.seconds) {
         this->ExecuteCallbacks(MODIF_RTC_EVENT_SECOND_UPDATE);
       }

@@ -331,7 +331,7 @@ void SettingsScreenDisplay::HandleTouch(const GUITouchState& state) noexcept {
         //no longer editing
         this->editing_datetime = false;
         //apply new date+time
-        this->bbv2_manager.system.rtc_if.SetDateTime(this->edit_dt, [&](bool success) {
+        this->bbv2_manager.system.rtc_if.SetDateTime(this->edit_dt, [this](bool success) {
           DEBUG_PRINTF("RTC settings date+time apply success %u\n", success);
           //once done: refresh screen
           this->needs_display_list_rebuild = true;
@@ -357,7 +357,7 @@ void SettingsScreenDisplay::Init() {
   this->SettingsScreenBase::Init();
 
   //redraw second page (datetime) on RTC seconds update, if not editing
-  this->bbv2_manager.system.rtc_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.rtc_if.RegisterCallback([this](EventSource*, uint32_t) {
     if (this->page_index == 1 && !this->editing_datetime) {
       this->needs_display_list_rebuild = true;
     }

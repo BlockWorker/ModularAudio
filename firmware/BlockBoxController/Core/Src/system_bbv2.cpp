@@ -49,7 +49,7 @@ static void _BlockBoxV2_I2C_Main_HardwareReset() {
 /***************************************************/
 
 void BlockBoxV2System::InitEEPROM(SuccessCallback&& callback) {
-  this->eeprom_if.InitModule([&, callback = std::move(callback)](bool success) {
+  this->eeprom_if.InitModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("EEPROM init complete, success %u\n", success);
     //propagate result to external callback
     if (callback) {
@@ -59,7 +59,7 @@ void BlockBoxV2System::InitEEPROM(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
-  this->dap_if.ResetModule([&, callback = std::move(callback)](bool success) {
+  this->dap_if.ResetModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -76,7 +76,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
-  this->dac_if.ResetModule([&, callback = std::move(callback)](bool success) {
+  this->dac_if.ResetModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("HiFiDAC reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -94,7 +94,7 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
 
 void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
   //Note: Don't reset the amp module (unless we really have to), since it causes a transient on the PVDD tracking signal, potentially spiking the input voltage too
-  this->amp_if.InitModule([&, callback = std::move(callback)](bool success) {
+  this->amp_if.InitModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("PowerAmp reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -104,7 +104,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
       return;
     }
 
-    this->amp_if.SetManualShutdownActive(true, [&, callback = std::move(callback)](bool success) {
+    this->amp_if.SetManualShutdownActive(true, [this, callback = std::move(callback)](bool success) {
       DEBUG_PRINTF("PowerAmp set manual shutdown, success %u\n", success);
       if (!success) {
         //propagate failure to external callback
@@ -114,7 +114,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
         return;
       }
 
-      this->amp_if.SetPVDDTargetVoltage(IF_POWERAMP_PVDD_TARGET_MIN, [&, callback = std::move(callback)](bool success) {
+      this->amp_if.SetPVDDTargetVoltage(IF_POWERAMP_PVDD_TARGET_MIN, [this, callback = std::move(callback)](bool success) {
         DEBUG_PRINTF("PowerAmp started voltage reduction, success %u\n", success);
         //propagate result to external callback
         if (callback) {
@@ -126,7 +126,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
-  this->btrx_if.ResetModule([&, callback = std::move(callback)](bool success) {
+  this->btrx_if.ResetModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
@@ -155,7 +155,7 @@ void BlockBoxV2System::Init() {
 
 
   //debug printout callbacks
-  /*this->dap_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  /*this->dap_if.RegisterCallback([this](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_DAP_EVENT_STATUS_UPDATE:
         DEBUG_PRINTF("DAP status update: 0x%02X\n", this->dap_if.GetStatus().value);
@@ -174,11 +174,11 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUTS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE | MODIF_DAP_EVENT_SRC_STATS_UPDATE);
 
-  this->dac_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->dac_if.RegisterCallback([this](EventSource*, uint32_t event) {
     //DEBUG_PRINTF("HiFiDAC status update: 0x%02X\n", this->dac_if.GetStatus().value);
   }, MODIF_HIFIDAC_EVENT_STATUS_UPDATE);
 
-  this->amp_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->amp_if.RegisterCallback([this](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_POWERAMP_EVENT_STATUS_UPDATE:
         //DEBUG_PRINTF("PowerAmp status update: 0x%04X\n", this->amp_if.GetStatus().value);
@@ -200,7 +200,7 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_POWERAMP_EVENT_STATUS_UPDATE | MODIF_POWERAMP_EVENT_SAFETY_UPDATE | MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);
 
-  this->btrx_if.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->btrx_if.RegisterCallback([this](EventSource*, uint32_t event) {
     switch (event) {
       case MODIF_BTRX_EVENT_STATUS_UPDATE:
         //DEBUG_PRINTF("BTRX status update: 0x%04X\n", this->btrx_if.GetStatus().value);
@@ -226,7 +226,7 @@ void BlockBoxV2System::Init() {
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
   //*/
 
-  this->audio_mgr.RegisterCallback([&](EventSource*, uint32_t event) {
+  this->audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
     static AudioPathInput last_input = AUDIO_INPUT_SPDIF;
     switch (event) {
       case AUDIO_EVENT_INPUT_UPDATE:
@@ -251,7 +251,7 @@ void BlockBoxV2System::Init() {
   //module init process
   HAL_Delay(500);
 
-  this->InitEEPROM([&](bool success) {
+  this->InitEEPROM([this](bool success) {
     if (!success) {
       DEBUG_PRINTF("* EEPROM init failed, defaults have been loaded, continuing\n");
     }
@@ -259,49 +259,49 @@ void BlockBoxV2System::Init() {
     this->gui_mgr.Init();
 
     this->gui_mgr.SetInitProgress("Initialising Power Amplifier...", false);
-    this->InitPowerAmp([&](bool success) {
+    this->InitPowerAmp([this](bool success) {
       if (!success) {
         this->gui_mgr.SetInitProgress("Failed to initialise Power Amplifier!", true);
         return;
       }
 
       this->gui_mgr.SetInitProgress("Initialising HiFi DAC...", false);
-      this->InitHiFiDAC([&](bool success) {
+      this->InitHiFiDAC([this](bool success) {
         if (!success) {
           this->gui_mgr.SetInitProgress("Failed to initialise HiFi DAC!", true);
           return;
         }
 
         this->gui_mgr.SetInitProgress("Initialising Digital Audio Processor...", false);
-        this->InitDAP([&](bool success) {
+        this->InitDAP([this](bool success) {
           if (!success) {
             this->gui_mgr.SetInitProgress("Failed to init Digital Audio Processor!", true);
             return;
           }
 
           this->gui_mgr.SetInitProgress("Initialising Real-Time Clock...", false);
-          this->rtc_if.InitModule([&](bool success) {
+          this->rtc_if.InitModule([this](bool success) {
             if (!success) {
               //ignore failure, RTC is non-critical
               DEBUG_PRINTF("* System failed to initialise RTC!");
             }
 
             this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
-            this->InitBluetoothReceiver([&](bool success) {
+            this->InitBluetoothReceiver([this](bool success) {
               if (!success) {
                 this->gui_mgr.SetInitProgress("Failed to initialise Bluetooth Receiver!", true);
                 return;
               }
 
               this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
-              this->audio_mgr.Init([&](bool success) {
+              this->audio_mgr.Init([this](bool success) {
                 if (!success) {
                   this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
                   return;
                 }
 
                 this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
-                this->amp_mgr.Init([&](bool success) {
+                this->amp_mgr.Init([this](bool success) {
                   if (!success) {
                     this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
                     return;
@@ -340,7 +340,7 @@ bool BlockBoxV2System::IsPoweredOn() const {
 
 void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
   //apply state to audio manager first (mute, volume reset etc)
-  this->audio_mgr.HandlePowerStateChange(on, [&, on, callback = std::move(callback)](bool success) {
+  this->audio_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
     if (!success) {
       DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AudioManager power state\n");
       //attempt reset
@@ -358,11 +358,11 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
     }
 
     //apply state to amplifier manager next (amp shutdown state, PVDD update etc)
-    this->amp_mgr.HandlePowerStateChange(on, [&, on, callback = std::move(callback)](bool success) {
+    this->amp_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
       if (!success) {
         DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state\n");
         //attempt reset
-        this->audio_mgr.HandlePowerStateChange(!on, [&, on, callback = std::move(callback)](bool success) {
+        this->audio_mgr.HandlePowerStateChange(!on, [this, on, callback = std::move(callback)](bool success) {
           if (!success) {
             DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state, then failed to reset AudioManager!\n");
           }

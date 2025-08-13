@@ -67,7 +67,7 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
   //power-on button
   if (state.released && state.tag == SCREEN_POWEROFF_TAG_PWRON && state.initial_tag == SCREEN_POWEROFF_TAG_PWRON) {
     //power on system
-    this->bbv2_manager.system.SetPowerState(true, [&](bool success) {
+    this->bbv2_manager.system.SetPowerState(true, [this](bool success) {
       DEBUG_PRINTF("PowerOffScreen power-on success %u\n", success);
       if (success) {
         //reset this screen and go to main screen
@@ -83,7 +83,7 @@ void PowerOffScreen::Init() {
   this->BlockBoxV2Screen::Init();
 
   //redraw on RTC minutes update
-  this->bbv2_manager.system.rtc_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.rtc_if.RegisterCallback([this](EventSource*, uint32_t) {
     this->needs_display_list_rebuild = true;
   }, MODIF_RTC_EVENT_MINUTE_UPDATE);
 }

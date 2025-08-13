@@ -78,14 +78,14 @@ BlockBoxV2Screen::BlockBoxV2Screen(BlockBoxV2GUIManager& manager) :
 
 void BlockBoxV2Screen::Init() {
   //rebuild on active input change
-  this->bbv2_manager.system.audio_mgr.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.audio_mgr.RegisterCallback([this](EventSource*, uint32_t) {
     if (this->status_text_override == NULL && this->bbv2_manager.system.audio_mgr.GetActiveInput() != this->currently_drawn_input) {
       this->needs_display_list_rebuild = true;
     }
   }, AUDIO_EVENT_INPUT_UPDATE);
 
   //rebuild on Bluetooth device name change
-  this->bbv2_manager.system.btrx_if.RegisterCallback([&](EventSource*, uint32_t) {
+  this->bbv2_manager.system.btrx_if.RegisterCallback([this](EventSource*, uint32_t) {
     if (this->status_text_override == NULL && this->currently_drawn_input == AUDIO_INPUT_BLUETOOTH) {
       this->needs_display_list_rebuild = true;
     }

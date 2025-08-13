@@ -1236,9 +1236,9 @@ void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&&
   switch (this->int_reg_size) {
     case 1:
       //write mask
-      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [&, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
+      this->WriteRegister8Async(MODIF_I2C_INT_MASK_REG, (uint8_t)mask, [this, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
         //read back mask to ensure correctness
-        this->ReadRegister8Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
+        this->ReadRegister8Async(MODIF_I2C_INT_MASK_REG, callback ? [this, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
           //propagate success and correctness to external callback
           callback(success && (uint8_t)value == (uint8_t)mask);
         } : ModuleTransferCallback());
@@ -1246,9 +1246,9 @@ void IntRegI2CModuleInterface::SetInterruptMask(uint16_t mask, SuccessCallback&&
       break;
     case 2:
       //write mask
-      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [&, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
+      this->WriteRegister16Async(MODIF_I2C_INT_MASK_REG, mask, [this, mask, callback = std::move(callback)](bool, uint32_t, uint16_t) {
         //read back mask to ensure correctness
-        this->ReadRegister16Async(MODIF_I2C_INT_MASK_REG, callback ? [&, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
+        this->ReadRegister16Async(MODIF_I2C_INT_MASK_REG, callback ? [this, mask, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
           //propagate success and correctness to external callback
           callback(success && (uint16_t)value == mask);
         } : ModuleTransferCallback());
@@ -1277,7 +1277,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
       //read interrupt flags register with corresponding size
       switch (this->int_reg_size) {
         case 1:
-          this->ReadRegister8Async(MODIF_I2C_INT_FLAGS_REG, [&](bool success, uint32_t value, uint16_t) {
+          this->ReadRegister8Async(MODIF_I2C_INT_FLAGS_REG, [this](bool success, uint32_t value, uint16_t) {
             if (!success) {
               //handle read failure
               DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
@@ -1287,7 +1287,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
 
             //clear given flags in register
             uint8_t flags = (uint8_t)value;
-            this->WriteRegister8Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [&](bool, uint32_t, uint16_t) {
+            this->WriteRegister8Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [this](bool, uint32_t, uint16_t) {
               //after clear, interrupt handling will be complete
               this->current_interrupt_timer = 0;
             });
@@ -1297,7 +1297,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
           });
           break;
         case 2:
-          this->ReadRegister16Async(MODIF_I2C_INT_FLAGS_REG, [&](bool success, uint32_t value, uint16_t) {
+          this->ReadRegister16Async(MODIF_I2C_INT_FLAGS_REG, [this](bool success, uint32_t value, uint16_t) {
             if (!success) {
               //handle read failure
               DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
@@ -1307,7 +1307,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
 
             //clear given flags in register
             uint16_t flags = (uint16_t)value;
-            this->WriteRegister16Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [&](bool, uint32_t, uint16_t) {
+            this->WriteRegister16Async(MODIF_I2C_INT_FLAGS_REG, ~flags, [this](bool, uint32_t, uint16_t) {
               //after clear, interrupt handling will be complete
               this->current_interrupt_timer = 0;
             });

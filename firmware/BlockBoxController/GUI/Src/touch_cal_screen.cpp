@@ -111,7 +111,7 @@ void TouchCalScreen::HandleTouch(const GUITouchState& state) noexcept {
           this->manager.SetDisplayForceWake(false);
 
           //start EEPROM write
-          this->bbv2_manager.system.eeprom_if.WriteAllDirtySections([&](bool) {
+          this->bbv2_manager.system.eeprom_if.WriteAllDirtySections([this](bool) {
             //once EEPROM write completes (regardless of success): go to specified return screen and reset this screen
             this->GoToScreen(this->return_screen);
             this->state = CAL_START;

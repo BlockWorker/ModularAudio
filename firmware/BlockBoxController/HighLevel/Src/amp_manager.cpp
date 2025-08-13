@@ -88,7 +88,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
   this->prev_safety_error = 0;
 
   //enter power-off state
-  this->HandlePowerStateChange(false, [&, callback = std::move(callback)](bool success) {
+  this->HandlePowerStateChange(false, [this, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
       DEBUG_PRINTF("* AmpManager Init failed to enter power-off state\n");
@@ -99,7 +99,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
     }
 
     //write safety error limits - RMS current
-    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_ERROR, &_amp_safety_limits_irms, [&, callback = std::move(callback)](bool success) {
+    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_ERROR, &_amp_safety_limits_irms, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //propagate failure to external callback
         DEBUG_PRINTF("* AmpManager Init failed to set Irms error thresholds\n");
@@ -110,7 +110,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
       }
 
       //write safety error limits - Average power
-      this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_ERROR, &_amp_safety_limits_pavg, [&, callback = std::move(callback)](bool success) {
+      this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_ERROR, &_amp_safety_limits_pavg, [this, callback = std::move(callback)](bool success) {
         if (!success) {
           //propagate failure to external callback
           DEBUG_PRINTF("* AmpManager Init failed to set Pavg error thresholds\n");
@@ -121,7 +121,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
         }
 
         //write safety error limits - Apparent power (disabled)
-        this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_ERROR, &_amp_safety_limits_papp, [&, callback = std::move(callback)](bool success) {
+        this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_ERROR, &_amp_safety_limits_papp, [this, callback = std::move(callback)](bool success) {
           if (!success) {
             //propagate failure to external callback
             DEBUG_PRINTF("* AmpManager Init failed to set Papp error thresholds\n");
@@ -132,7 +132,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
           }
 
           //write safety warning limits - Apparent power (disabled)
-          this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_WARNING, &_amp_warning_base_limits_papp, [&, callback = std::move(callback)](bool success) {
+          this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAPP_WARNING, &_amp_warning_base_limits_papp, [this, callback = std::move(callback)](bool success) {
             if (!success) {
               //propagate failure to external callback
               DEBUG_PRINTF("* AmpManager Init failed to set Papp warning thresholds\n");
@@ -143,7 +143,7 @@ void AmpManager::Init(SuccessCallback&& callback) {
             }
 
             //write safety warning limits - RMS current and average power, scaled according to default factor
-            this->UpdateWarningLimits(AMP_WARNING_FACTOR_DEFAULT, [&, callback = std::move(callback)](bool success) {
+            this->UpdateWarningLimits(AMP_WARNING_FACTOR_DEFAULT, [this, callback = std::move(callback)](bool success) {
               if (success) {
                 if (!this->callbacks_registered) {
                   //register event callbacks
@@ -232,7 +232,7 @@ void AmpManager::HandlePowerStateChange(bool on, SuccessCallback&& callback) {
   __disable_irq();
   if (this->lock_timer > 0) {
     //locked out: queue for later execution
-    this->queued_operations.push_back([&, on, callback = std::move(callback)]() mutable {
+    this->queued_operations.push_back([this, on, callback = std::move(callback)]() mutable {
       this->HandlePowerStateChange(on, std::move(callback));
     });
     __set_PRIMASK(primask);
@@ -244,13 +244,13 @@ void AmpManager::HandlePowerStateChange(bool on, SuccessCallback&& callback) {
   __set_PRIMASK(primask);
 
   //set amp manual shutdown according to state
-  this->system.amp_if.SetManualShutdownActive(!on, [&, on, callback = std::move(callback)](bool success) {
+  this->system.amp_if.SetManualShutdownActive(!on, [this, on, callback = std::move(callback)](bool success) {
     if (!success) {
       DEBUG_PRINTF("* AmpManager HandlePowerStateChange failed to set amp shutdown\n");
     }
 
     //callback for after PVDD adjustment
-    auto post_pvdd_cb = [&, callback = std::move(callback), prev_success = success](bool success) {
+    auto post_pvdd_cb = [this, callback = std::move(callback), prev_success = success](bool success) {
       if (!success) {
         DEBUG_PRINTF("* AmpManager HandlePowerStateChange failed to set PVDD target\n");
       }
@@ -278,7 +278,7 @@ void AmpManager::HandlePowerStateChange(bool on, SuccessCallback&& callback) {
 void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
   if (source == &this->system.amp_if && event == MODIF_EVENT_MODULE_RESET) {
     //amp module reset: attempt re-init of this manager and return to correct state
-    this->Init([&](bool success) {
+    this->Init([this](bool success) {
       if (!success) {
         DEBUG_PRINTF("*** AmpManager failed to re-init after amp module reset!\n");
         return;
@@ -340,7 +340,7 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
             this->warn_lock_timer = AMP_WARN_LOCK_TIMEOUT_CYCLES;
             __set_PRIMASK(primask);
             DEBUG_PRINTF("AmpManager responding to safety warning\n");
-            this->ReduceVolume([&](bool success) {
+            this->ReduceVolume([this](bool success) {
               if (!success) {
                 //on failure, unlock immediately
                 DEBUG_PRINTF("* AmpManager failed to reduce volume in response to safety warning!\n");
@@ -367,7 +367,7 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
             this->otw_lock_timer = AMP_OTW_LOCK_TIMEOUT_CYCLES;
             __set_PRIMASK(primask);
             DEBUG_PRINTF("AmpManager responding to overtemperature warning\n");
-            this->ReduceVolume([&](bool success) {
+            this->ReduceVolume([this](bool success) {
               if (!success) {
                 //on failure, unlock immediately
                 DEBUG_PRINTF("* AmpManager failed to reduce volume in response to overtemperature warning!\n");
@@ -387,7 +387,7 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
 
         //check for clipping and respond
         if (status.clip_detected) {
-          this->HandleClipping([&](bool success) {
+          this->HandleClipping([this](bool success) {
             if (!success) {
               //on failure, unlock immediately
               DEBUG_PRINTF("* AmpManager failed to respond to clipping!\n");
@@ -500,13 +500,13 @@ void AmpManager::UpdateWarningLimits(float factor, SuccessCallback&& callback) {
   //TODO: shutdown amp if it's active
 
   //apply current set
-  this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_WARNING, &this->warning_limits_irms, [&, factor, callback = std::move(callback)](bool success) {
+  this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_WARNING, &this->warning_limits_irms, [this, factor, callback = std::move(callback)](bool success) {
     if (!success) {
       DEBUG_PRINTF("* AmpManager UpdateWarningLimits failed to set Irms warning thresholds\n");
     }
 
     //continue regardless of success: apply power set
-    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_WARNING, &this->warning_limits_pavg, [&, factor, callback = std::move(callback), prev_success = success](bool success) {
+    this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_PAVG_WARNING, &this->warning_limits_pavg, [this, factor, callback = std::move(callback), prev_success = success](bool success) {
       if (!success) {
         DEBUG_PRINTF("* AmpManager UpdateWarningLimits failed to set Pavg warning thresholds\n");
       }
@@ -549,7 +549,7 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
   if (this->lock_timer > 0) {
     //locked out: failure, queue or propagate to callback
     if (queue_if_busy) {
-      this->queued_operations.push_back([&, limit_factor, callback = std::move(callback)]() mutable {
+      this->queued_operations.push_back([this, limit_factor, callback = std::move(callback)]() mutable {
         this->SetWarningLimitFactor(limit_factor, std::move(callback), false);
       });
       __set_PRIMASK(primask);
@@ -575,7 +575,7 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
   } else {
     //shut down amplifier first
     bool amp_was_on = !this->system.amp_if.IsManualShutdownActive();
-    this->system.amp_if.SetManualShutdownActive(true, [&, limit_factor, amp_was_on, callback = std::move(callback)](bool success) {
+    this->system.amp_if.SetManualShutdownActive(true, [this, limit_factor, amp_was_on, callback = std::move(callback)](bool success) {
       if (!success) {
         //propagate failure to external callback
         DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to set manual amp shutdown\n");
@@ -587,7 +587,7 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
       }
 
       //apply new factor
-      this->UpdateWarningLimits(limit_factor, [&, amp_was_on, callback = std::move(callback)](bool success) {
+      this->UpdateWarningLimits(limit_factor, [this, amp_was_on, callback = std::move(callback)](bool success) {
         if (!success) {
           //propagate failure to external callback
           DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to apply new limits\n");
@@ -600,7 +600,7 @@ void AmpManager::SetWarningLimitFactor(float limit_factor, SuccessCallback&& cal
 
         if (amp_was_on) {
           //restart amplifier
-          this->system.amp_if.SetManualShutdownActive(false, [&, callback = std::move(callback)](bool success) {
+          this->system.amp_if.SetManualShutdownActive(false, [this, callback = std::move(callback)](bool success) {
             if (!success) {
               DEBUG_PRINTF("* AmpManager SetWarningLimitFactor failed to reset manual amp shutdown\n");
             }

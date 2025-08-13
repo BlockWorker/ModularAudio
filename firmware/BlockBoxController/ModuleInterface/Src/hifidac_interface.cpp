@@ -102,9 +102,9 @@ void HiFiDACInterface::SetConfig(HiFiDACConfig config, SuccessCallback&& callbac
   uint8_t config_val = (config.value & 0xF) | I2CDEF_HIFIDAC_CONTROL_INT_EN_Msk;
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_CONTROL, config_val, [&, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_CONTROL, config_val, [this, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_CONTROL, callback ? [&, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_CONTROL, callback ? [this, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == config_val);
     } : ModuleTransferCallback());
@@ -128,9 +128,9 @@ void HiFiDACInterface::SetVolumes(uint8_t volume_ch1, uint8_t volume_ch2, Succes
   ((uint8_t*)&volume_val)[1] = volume_ch2;
 
   //write desired value
-  this->WriteRegister16Async(I2CDEF_HIFIDAC_VOLUME, volume_val, [&, callback = std::move(callback), volume_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister16Async(I2CDEF_HIFIDAC_VOLUME, volume_val, [this, callback = std::move(callback), volume_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister16Async(I2CDEF_HIFIDAC_VOLUME, callback ? [&, callback = std::move(callback), volume_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister16Async(I2CDEF_HIFIDAC_VOLUME, callback ? [this, callback = std::move(callback), volume_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint16_t)value == volume_val);
     } : ModuleTransferCallback());
@@ -153,9 +153,9 @@ void HiFiDACInterface::SetMutes(bool mute_ch1, bool mute_ch2, SuccessCallback&& 
       (mute_ch2 ? I2CDEF_HIFIDAC_MUTE_MUTE_CH2_Msk : 0);
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_MUTE, mute_val, [&, callback = std::move(callback), mute_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_MUTE, mute_val, [this, callback = std::move(callback), mute_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_MUTE, callback ? [&, callback = std::move(callback), mute_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_MUTE, callback ? [this, callback = std::move(callback), mute_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == mute_val);
     } : ModuleTransferCallback());
@@ -167,9 +167,9 @@ void HiFiDACInterface::SetSignalPathSetup(HiFiDACSignalPathSetup setup, SuccessC
   uint8_t setup_val = setup.value & 0x7F;
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_PATH, setup_val, [&, callback = std::move(callback), setup_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_PATH, setup_val, [this, callback = std::move(callback), setup_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_PATH, callback ? [&, callback = std::move(callback), setup_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_PATH, callback ? [this, callback = std::move(callback), setup_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == setup_val);
     } : ModuleTransferCallback());
@@ -181,9 +181,9 @@ void HiFiDACInterface::SetInternalClockConfig(HiFiDACInternalClockConfig config,
   uint8_t config_val = config.value;
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_CLK_CFG, config_val, [&, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_CLK_CFG, config_val, [this, callback = std::move(callback), config_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_CLK_CFG, callback ? [&, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_CLK_CFG, callback ? [this, callback = std::move(callback), config_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == config_val);
     } : ModuleTransferCallback());
@@ -198,9 +198,9 @@ void HiFiDACInterface::SetI2SMasterClockDivider(uint16_t divider, SuccessCallbac
   uint8_t divider_val = (uint8_t)(divider - 1);
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_MASTER_DIV, divider_val, [&, callback = std::move(callback), divider_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_MASTER_DIV, divider_val, [this, callback = std::move(callback), divider_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_MASTER_DIV, callback ? [&, callback = std::move(callback), divider_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_MASTER_DIV, callback ? [this, callback = std::move(callback), divider_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == divider_val);
     } : ModuleTransferCallback());
@@ -216,9 +216,9 @@ void HiFiDACInterface::SetTDMSlotCount(uint8_t slot_count, SuccessCallback&& cal
   uint8_t count_val = slot_count - 1;
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_TDM_SLOT_NUM, count_val, [&, callback = std::move(callback), count_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_TDM_SLOT_NUM, count_val, [this, callback = std::move(callback), count_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_TDM_SLOT_NUM, callback ? [&, callback = std::move(callback), count_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_TDM_SLOT_NUM, callback ? [this, callback = std::move(callback), count_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == count_val);
     } : ModuleTransferCallback());
@@ -235,9 +235,9 @@ void HiFiDACInterface::SetChannelTDMSlots(uint8_t slot_ch1, uint8_t slot_ch2, Su
   ((uint8_t*)&slots_val)[1] = slot_ch2;
 
   //write desired value
-  this->WriteRegister16Async(I2CDEF_HIFIDAC_CH_SLOTS, slots_val, [&, callback = std::move(callback), slots_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister16Async(I2CDEF_HIFIDAC_CH_SLOTS, slots_val, [this, callback = std::move(callback), slots_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister16Async(I2CDEF_HIFIDAC_CH_SLOTS, callback ? [&, callback = std::move(callback), slots_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister16Async(I2CDEF_HIFIDAC_CH_SLOTS, callback ? [this, callback = std::move(callback), slots_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint16_t)value == slots_val);
     } : ModuleTransferCallback());
@@ -251,9 +251,9 @@ void HiFiDACInterface::SetInterpolationFilterShape(HiFiDACFilterShape filter_sha
   }
 
   //write desired value
-  this->WriteRegister8Async(I2CDEF_HIFIDAC_FILTER_SHAPE, filter_shape, [&, callback = std::move(callback), filter_shape](bool, uint32_t, uint16_t) {
+  this->WriteRegister8Async(I2CDEF_HIFIDAC_FILTER_SHAPE, filter_shape, [this, callback = std::move(callback), filter_shape](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister8Async(I2CDEF_HIFIDAC_FILTER_SHAPE, callback ? [&, callback = std::move(callback), filter_shape](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister8Async(I2CDEF_HIFIDAC_FILTER_SHAPE, callback ? [this, callback = std::move(callback), filter_shape](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && (uint8_t)value == filter_shape);
     } : ModuleTransferCallback());
@@ -267,9 +267,9 @@ void HiFiDACInterface::SetSecondHarmonicCorrectionCoefficients(int16_t thd_c2_ch
   ((int16_t*)&coeff_val)[1] = thd_c2_ch2;
 
   //write desired value
-  this->WriteRegister32Async(I2CDEF_HIFIDAC_THD_C2, coeff_val, [&, callback = std::move(callback), coeff_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(I2CDEF_HIFIDAC_THD_C2, coeff_val, [this, callback = std::move(callback), coeff_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(I2CDEF_HIFIDAC_THD_C2, callback ? [&, callback = std::move(callback), coeff_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(I2CDEF_HIFIDAC_THD_C2, callback ? [this, callback = std::move(callback), coeff_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && value == coeff_val);
     } : ModuleTransferCallback());
@@ -282,9 +282,9 @@ void HiFiDACInterface::SetThirdHarmonicCorrectionCoefficients(int16_t thd_c3_ch1
   ((int16_t*)&coeff_val)[1] = thd_c3_ch2;
 
   //write desired value
-  this->WriteRegister32Async(I2CDEF_HIFIDAC_THD_C3, coeff_val, [&, callback = std::move(callback), coeff_val](bool, uint32_t, uint16_t) {
+  this->WriteRegister32Async(I2CDEF_HIFIDAC_THD_C3, coeff_val, [this, callback = std::move(callback), coeff_val](bool, uint32_t, uint16_t) {
     //read back value to ensure correctness and up-to-date register state
-    this->ReadRegister32Async(I2CDEF_HIFIDAC_THD_C3, callback ? [&, callback = std::move(callback), coeff_val](bool success, uint32_t value, uint16_t) {
+    this->ReadRegister32Async(I2CDEF_HIFIDAC_THD_C3, callback ? [this, callback = std::move(callback), coeff_val](bool success, uint32_t value, uint16_t) {
       //report result (and value correctness) to external callback
       callback(success && value == coeff_val);
     } : ModuleTransferCallback());
@@ -299,7 +299,7 @@ void HiFiDACInterface::InitModule(SuccessCallback&& callback) {
   this->reset_wait_timer = 0;
 
   //read module ID to check communication
-  this->ReadRegister8Async(I2CDEF_HIFIDAC_MODULE_ID, [&, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
+  this->ReadRegister8Async(I2CDEF_HIFIDAC_MODULE_ID, [this, callback = std::move(callback)](bool success, uint32_t value, uint16_t) {
     if (!success) {
       //report failure to external callback
       if (callback) {
@@ -319,7 +319,7 @@ void HiFiDACInterface::InitModule(SuccessCallback&& callback) {
     }
 
     //write interrupt mask (enable all interrupts)
-    this->SetInterruptMask(0xF, [&, callback = std::move(callback)](bool success) {
+    this->SetInterruptMask(0xF, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //report failure to external callback
         if (callback) {
@@ -333,7 +333,7 @@ void HiFiDACInterface::InitModule(SuccessCallback&& callback) {
       cfg.dac_enable = false;
       cfg.sync_mode = false;
       cfg.master_mode = false;
-      this->SetConfig(cfg, [&, callback = std::move(callback)](bool success) {
+      this->SetConfig(cfg, [this, callback = std::move(callback)](bool success) {
         if (!success) {
           //report failure to external callback
           if (callback) {
@@ -344,7 +344,7 @@ void HiFiDACInterface::InitModule(SuccessCallback&& callback) {
 
         //read all registers once to update registers to their initial values
         this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_VOLUME, hifidac_scratch, 7, ModuleTransferCallback());
-        this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_FILTER_SHAPE, hifidac_scratch, 3, [&, callback = std::move(callback)](bool, uint32_t, uint16_t) {
+        this->ReadMultiRegisterAsync(I2CDEF_HIFIDAC_FILTER_SHAPE, hifidac_scratch, 3, [this, callback = std::move(callback)](bool, uint32_t, uint16_t) {
           //after last read is done: init completed successfully (even if read failed - that's non-critical)
           this->initialised = true;
           if (callback) {
@@ -410,7 +410,7 @@ void HiFiDACInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
         DEBUG_PRINTF("HiFiDAC module spurious reset detected\n");
       }
       //perform module re-init
-      this->InitModule([&](bool success) {
+      this->InitModule([this](bool success) {
         //notify system of reset, then call reset callback
         this->ExecuteCallbacks(MODIF_EVENT_MODULE_RESET);
         if (this->reset_callback) {
