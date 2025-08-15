@@ -17,7 +17,7 @@
 //#define MAIN_LOOP_PERFORMANCE_MONITOR
 
 #undef MAIN_HEAP_MONITOR
-#define MAIN_HEAP_MONITOR
+//#define MAIN_HEAP_MONITOR
 
 
 BlockBoxV2System bbv2_system;
@@ -29,6 +29,10 @@ extern "C" {
 ptrdiff_t _mem_get_max_heap_size();
 ptrdiff_t _mem_get_free_heap_size();
 }
+
+
+static uint32_t single_err_count = 0;
+static uint32_t double_err_count = 0;
 
 
 static inline void _RefreshWatchdogs() {
@@ -95,6 +99,14 @@ int cpp_main() {
     }
 #endif
 
+    if (loop_count % 100 == 0) {
+      if (single_err_count > 0 || double_err_count > 0) {
+        DEBUG_PRINTF("*** ECC errors detected: single %lu double %lu\n", single_err_count, double_err_count);
+        single_err_count = 0;
+        double_err_count = 0;
+      }
+    }
+
     loop_count++;
     _RefreshWatchdogs();
     __enable_irq(); //catch-all, in case interrupts are disabled somewhere and the re-enable is missed
@@ -103,114 +115,60 @@ int cpp_main() {
 }
 
 
-//old code for OSPI testing
-#if 0
-  HAL_Delay(100);
-
-  if (eve_phy.SendHostCommand(0x49, 0x40) == HAL_OK) {
-    DEBUG_PRINTF("Host command sent\n");
-  } else {
-    DEBUG_PRINTF("*** Host command send failed!!\n");
+//RAMECC handling
+void HAL_RAMECC_DetectErrorCallback(RAMECC_HandleTypeDef *hramecc) {
+  if (hramecc->RAMECCErrorCode == HAL_RAMECC_NO_ERROR) {
+    return;
   }
 
-  HAL_Delay(100);
-
-  if (eve_phy.EnsureMMapMode(MMAP_FUNC_RAM) == HAL_OK) {
-    DEBUG_PRINTF("MMap enabled\n");
-  } else {
-    DEBUG_PRINTF("*** MMap enable failed!!\n");
+  uintptr_t base_address;
+  uintptr_t addr_step;
+  switch ((uintptr_t)hramecc->Instance) {
+    case RAMECC1_Monitor1_BASE:
+      base_address = 0x24000000U;
+      addr_step = 8;
+      break;
+    case RAMECC1_Monitor2_BASE:
+      base_address = 0x00000000U;
+      addr_step = 8;
+      break;
+    case RAMECC1_Monitor3_BASE:
+      base_address = 0x20000000U;
+      addr_step = 8;
+      break;
+    case RAMECC1_Monitor4_BASE:
+      base_address = 0x20000004U;
+      addr_step = 8;
+      break;
+    case RAMECC1_Monitor6_BASE:
+      base_address = 0x24020000U;
+      addr_step = 8;
+      break;
+    case RAMECC2_Monitor1_BASE:
+      base_address = 0x30000000U;
+      addr_step = 4;
+      break;
+    case RAMECC2_Monitor2_BASE:
+      base_address = 0x30004000U;
+      addr_step = 4;
+      break;
+    case RAMECC3_Monitor1_BASE:
+      base_address = 0x38000000U;
+      addr_step = 4;
+      break;
+    default:
+      return;
   }
 
-  HAL_Delay(10);
+  uintptr_t address = base_address + addr_step * HAL_RAMECC_GetFailingAddress(hramecc);
 
-  uint32_t temp = MMAP_REG_PWM_DUTY;
-
-  HAL_Delay(10);
-
-  *(uint32_t*)&MMAP_REG_PWM_DUTY = 0x12345678;
-  HAL_Delay(1);
-  MMAP_REG_PWM_DUTY = 0x55;
-  HAL_Delay(1);
-  *(uint16_t*)&MMAP_REG_PWM_DUTY = 0xAABB;
-
-  HAL_Delay(10);
-
-  temp = MMAP_REG_ID;
-
-  HAL_Delay(10);
-
-  uint32_t buf[] = { 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF, 0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF };
-  memcpy((void*)(0x90308000UL), buf, 32);
-
-  HAL_Delay(10);
-
-  for (int i = 0; i < 10; i++) {
-    if (eve_phy.DirectRead8(REG_ID, (uint8_t*)&temp) != HAL_OK) {
-      DEBUG_PRINTF("*** Direct Read 8 failed!!\n");
-    }
+  if ((hramecc->RAMECCErrorCode & HAL_RAMECC_DOUBLEERROR_DETECTED) != 0) {
+    DEBUG_PRINTF("***** ECC Double Error %p\n", (void*)address);
+    double_err_count++;
+  } else if ((hramecc->RAMECCErrorCode & HAL_RAMECC_SINGLEERROR_DETECTED) != 0) {
+    DEBUG_PRINTF("*** ECC Single Error %p\n", (void*)address);
+    single_err_count++; //TODO: write back corrected value
   }
 
-  if (eve_phy.SetTransferMode(TRANSFERMODE_QUAD) == HAL_OK) {
-    DEBUG_PRINTF("Quad mode enabled\n");
-  } else {
-    DEBUG_PRINTF("*** Quad mode enable failed!!\n");
-  }
-
-  if (eve_phy.DirectRead16(REG_ID, (uint16_t*)&temp) != HAL_OK) {
-    DEBUG_PRINTF("*** Direct Read 16 failed!!\n");
-  }
-
-  if (eve_phy.EnsureMMapMode(MMAP_FUNC_RAM) == HAL_OK) {
-    DEBUG_PRINTF("MMap re-enabled\n");
-  } else {
-    DEBUG_PRINTF("*** MMap re-enable failed!!\n");
-  }
-
-  HAL_Delay(10);
-
-  MMAP_REG_PWM_DUTY = 2;
-  *(&MMAP_REG_PWM_DUTY + 1) = 3;
-  *(&MMAP_REG_PWM_DUTY + 2) = temp;
-  temp = *(&MMAP_REG_ID + 1);
-  if (eve_phy.DirectRead32(REG_TOUCH_TRANSFORM_A, &temp) == HAL_OK) {
-    DEBUG_PRINTF("Direct Read 32 success\n");
-  } else {
-    DEBUG_PRINTF("*** Direct Read 32 failed!!\n");
-  }
-  if (eve_phy.EnsureMMapMode(MMAP_FUNC_RAM) == HAL_OK) {
-    DEBUG_PRINTF("MMap re-enabled\n");
-  } else {
-    DEBUG_PRINTF("*** MMap re-enable failed!!\n");
-  }
-  temp = *(&MMAP_REG_ID + 2);
-
-  if (eve_phy.SetTransferMode(TRANSFERMODE_SINGLE) == HAL_OK) {
-    DEBUG_PRINTF("Quad mode disabled\n");
-  } else {
-    DEBUG_PRINTF("*** Quad mode disable failed!!\n");
-  }
-
-  temp = MMAP_REG_PWM_DUTY;
-
-  MMAP_REG_PWM_DUTY = 1;
-  MMAP_REG_ID = 5;
-  MMAP_REG_PWM_DUTY = 22;
-
-  if (eve_phy.EndMMap() == HAL_OK) {
-    DEBUG_PRINTF("MMap aborted\n");
-  } else {
-    DEBUG_PRINTF("*** MMap abort failed!!\n");
-  }
-
-  if (eve_phy.DirectRead8(REG_ID, (uint8_t*)&temp) == HAL_OK) {
-    DEBUG_PRINTF("Direct Read 8 success\n");
-  } else {
-    DEBUG_PRINTF("*** Direct Read 8 failed!!\n");
-  }
-
-  if (eve_phy.DirectWrite16(REG_ID, 0x1234) == HAL_OK) {
-    DEBUG_PRINTF("Direct Write 16 success\n");
-  } else {
-    DEBUG_PRINTF("*** Direct Write 16 failed!!\n");
-  }
-#endif
+  hramecc->RAMECCErrorCode = HAL_RAMECC_NO_ERROR;
+}

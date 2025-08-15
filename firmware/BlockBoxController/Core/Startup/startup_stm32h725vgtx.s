@@ -63,6 +63,16 @@ Reset_Handler:
 /* Call the clock system initialization function.*/
   bl  SystemInit
 
+  ldr r0, =0x24000000
+  ldr r1, =0x24050000
+  ldr r2, =0
+  b LoopFillRAMAll
+FillRAMAll:
+  str r2, [r0], #4
+LoopFillRAMAll:
+  cmp r0, r1
+  blo FillRAMAll
+
 /* Copy the data segment initializers from flash to SRAM */
   ldr r0, =_sdata
   ldr r1, =_edata
@@ -136,7 +146,17 @@ LoopCopyD3Data:
   cmp r0, r1
   blo CopyD3Data
 
-  ldr r0, =_BeginDTCMBss
+  ldr r0, =0x20000000
+  ldr r1, =0x20020000
+  ldr r2, =0
+  b LoopFillDTCMAll
+FillDTCMAll:
+  str r2, [r0], #4
+LoopFillDTCMAll:
+  cmp r0, r1
+  blo FillDTCMAll
+
+/*  ldr r0, =_BeginDTCMBss
   ldr r1, =_EndDTCMBss
   ldr r2, =0
   b LoopFillDTCMBss
@@ -144,7 +164,7 @@ FillDTCMBss:
   str r2, [r0], #4
 LoopFillDTCMBss:
   cmp r0, r1
-  blo FillDTCMBss
+  blo FillDTCMBss*/
 
   ldr r0, =_BeginDTCMData
   ldr r1, =_EndDTCMData
@@ -156,6 +176,16 @@ CopyDTCMData:
 LoopCopyDTCMData:
   cmp r0, r1
   blo CopyDTCMData
+
+  ldr r0, =0x00000000
+  ldr r1, =0x00010000
+  ldr r2, =0
+  b LoopFillITCMAll
+FillITCMAll:
+  str r2, [r0], #4
+LoopFillITCMAll:
+  cmp r0, r1
+  blo FillITCMAll
 
   ldr r0, =_BeginITCMText
   ldr r1, =_EndITCMText

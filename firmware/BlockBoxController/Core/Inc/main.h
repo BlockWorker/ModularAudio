@@ -51,6 +51,15 @@ extern I2S_HandleTypeDef hi2s6;
 
 extern OSPI_HandleTypeDef hospi1;
 
+extern RAMECC_HandleTypeDef hramecc1_m1;
+extern RAMECC_HandleTypeDef hramecc1_m2;
+extern RAMECC_HandleTypeDef hramecc1_m3;
+extern RAMECC_HandleTypeDef hramecc1_m4;
+extern RAMECC_HandleTypeDef hramecc1_m6;
+extern RAMECC_HandleTypeDef hramecc2_m1;
+extern RAMECC_HandleTypeDef hramecc2_m2;
+extern RAMECC_HandleTypeDef hramecc3_m1;
+
 extern SPI_HandleTypeDef hspi2;
 
 extern TIM_HandleTypeDef htim2;

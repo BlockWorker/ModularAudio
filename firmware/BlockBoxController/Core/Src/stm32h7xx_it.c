@@ -59,7 +59,14 @@ extern I2C_HandleTypeDef hi2c5;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
-
+extern RAMECC_HandleTypeDef hramecc1_m1;
+extern RAMECC_HandleTypeDef hramecc1_m2;
+extern RAMECC_HandleTypeDef hramecc1_m3;
+extern RAMECC_HandleTypeDef hramecc1_m4;
+extern RAMECC_HandleTypeDef hramecc1_m6;
+extern RAMECC_HandleTypeDef hramecc2_m1;
+extern RAMECC_HandleTypeDef hramecc2_m2;
+extern RAMECC_HandleTypeDef hramecc3_m1;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -327,5 +334,30 @@ void I2C5_ER_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+void ECC_IRQHandler(void) {
+  if (hramecc1_m1.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc1_m1);
+  }
+  if (hramecc1_m2.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc1_m2);
+  }
+  if (hramecc1_m3.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc1_m3);
+  }
+  if (hramecc1_m4.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc1_m4);
+  }
+  if (hramecc1_m6.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc1_m6);
+  }
+  /*if (hramecc2_m1.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc2_m1);
+  }
+  if (hramecc2_m2.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc2_m2);
+  }
+  if (hramecc3_m1.Instance->SR != 0) {
+    HAL_RAMECC_IRQHandler(&hramecc3_m1);
+  }*/
+}
 /* USER CODE END 1 */

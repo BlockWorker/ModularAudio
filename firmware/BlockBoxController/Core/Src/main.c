@@ -578,7 +578,24 @@ static void MX_RAMECC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RAMECC_Init 2 */
-
+  HAL_RAMECC_EnableNotification(&hramecc1_m1, RAMECC_IT_MONITOR_ALL);
+  HAL_RAMECC_EnableNotification(&hramecc1_m2, RAMECC_IT_MONITOR_ALL);
+  HAL_RAMECC_EnableNotification(&hramecc1_m3, RAMECC_IT_MONITOR_ALL);
+  HAL_RAMECC_EnableNotification(&hramecc1_m4, RAMECC_IT_MONITOR_ALL);
+  HAL_RAMECC_EnableNotification(&hramecc1_m6, RAMECC_IT_MONITOR_ALL);
+  //HAL_RAMECC_EnableNotification(&hramecc2_m1, RAMECC_IT_MONITOR_ALL);
+  //HAL_RAMECC_EnableNotification(&hramecc2_m2, RAMECC_IT_MONITOR_ALL);
+  //HAL_RAMECC_EnableNotification(&hramecc3_m1, RAMECC_IT_MONITOR_ALL);
+  HAL_NVIC_SetPriority(ECC_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(ECC_IRQn);
+  HAL_RAMECC_StartMonitor(&hramecc1_m1);
+  HAL_RAMECC_StartMonitor(&hramecc1_m2);
+  HAL_RAMECC_StartMonitor(&hramecc1_m3);
+  HAL_RAMECC_StartMonitor(&hramecc1_m4);
+  HAL_RAMECC_StartMonitor(&hramecc1_m6);
+  //HAL_RAMECC_StartMonitor(&hramecc2_m1);
+  //HAL_RAMECC_StartMonitor(&hramecc2_m2);
+  //HAL_RAMECC_StartMonitor(&hramecc3_m1);
   /* USER CODE END RAMECC_Init 2 */
 
 }
