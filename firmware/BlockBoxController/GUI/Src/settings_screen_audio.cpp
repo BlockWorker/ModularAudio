@@ -81,12 +81,12 @@ void SettingsScreenAudio::DisplayScreen() {
       }
       case 2:
       {
-        //amp power target (warning limit factor)
-        float power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
+        //amp power target (warning limit factor) - TODO disabled because amp controller dead
+        /*float power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
         if (this->local_power_target != power_target) {
           this->local_power_target = power_target;
           this->needs_existing_list_update = true;
-        }
+        }*/
         break;
       }
       default:
@@ -275,7 +275,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       this->local_power_target = AMP_WARNING_FACTOR_MIN + roundf((float)state.tracker_value / (float)UINT16_MAX * 10.0f * (AMP_WARNING_FACTOR_MAX - AMP_WARNING_FACTOR_MIN)) / 10.0f;
       this->needs_existing_list_update = true;
 
-      if (state.released) {
+      /*if (state.released) { TODO disabled because amp controller dead
         //released: check if any change
         if (this->local_power_target != this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor()) {
           //changed: apply value globally
@@ -286,7 +286,7 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
             this->needs_existing_list_update = true;
           });
         }
-      }
+      }*/
       return;
     default:
       break;

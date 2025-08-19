@@ -93,6 +93,7 @@ void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
 }
 
 void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
+  /* TODO amp controller dead, disabled this
   //Note: Don't reset the amp module (unless we really have to), since it causes a transient on the PVDD tracking signal, potentially spiking the input voltage too
   this->amp_if.InitModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("PowerAmp reset/init complete, success %u\n", success);
@@ -123,6 +124,10 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
       });
     });
   });
+  */
+  if (callback) {
+    callback(true);
+  }
 }
 
 void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
@@ -300,7 +305,9 @@ void BlockBoxV2System::Init() {
                   return;
                 }
 
-                this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
+                //init done - TODO only because amp controller is dead
+                this->gui_mgr.SetInitProgress(NULL, false);
+                /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
                 this->amp_mgr.Init([this](bool success) {
                   if (!success) {
                     this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
@@ -309,7 +316,7 @@ void BlockBoxV2System::Init() {
 
                   //init done
                   this->gui_mgr.SetInitProgress(NULL, false);
-                });
+                });*/
               });
             });
           });
@@ -357,8 +364,18 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
       return;
     }
 
-    //apply state to amplifier manager next (amp shutdown state, PVDD update etc)
-    this->amp_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
+    if (success) {
+      //save new power state
+      this->powered_on = on;
+    }
+
+    //propagate success to external callback
+    if (callback) {
+      callback(success);
+    }
+
+    //apply state to amplifier manager next (amp shutdown state, PVDD update etc) - TODO disabled because amp controller dead
+    /*this->amp_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
       if (!success) {
         DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state\n");
         //attempt reset
@@ -390,7 +407,7 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
       if (callback) {
         callback(success);
       }
-    });
+    });*/
   });
 }
 
