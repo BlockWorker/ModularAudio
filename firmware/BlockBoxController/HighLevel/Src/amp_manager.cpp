@@ -16,7 +16,7 @@
 
 //PVDD configuration
 //volume/gain in dB, at (and above) which PVDD should be at maximum
-#define AMP_PVDD_MAX_VOLUME_DB -1.0f
+#define AMP_PVDD_MAX_VOLUME_DB -2.0f
 //hysteresis for lowering PVDD: only lower if the current target is at least this factor above the desired target
 #define AMP_PVDD_LOWERING_HYST 1.2f
 //PVDD clipping increase factor: multiply PVDD target by this factor when detecting clipping
@@ -639,8 +639,6 @@ void AmpManager::HandleClipping(SuccessCallback&& callback) {
   this->clip_lock_timer = AMP_CLIP_LOCK_TIMEOUT_CYCLES;
   __set_PRIMASK(primask);
 
-  DEBUG_PRINTF("AmpManager responding to clipping\n");
-
   float current_pvdd_target = this->system.amp_if.GetPVDDTargetVoltage();
   if (current_pvdd_target - this->system.amp_if.GetPVDDMeasuredVoltage() > 5.0f) {
     //voltage is already trying to increase, but not done yet: nothing to do, report success to callback
@@ -649,15 +647,16 @@ void AmpManager::HandleClipping(SuccessCallback&& callback) {
     }
   } else if (current_pvdd_target < IF_POWERAMP_PVDD_TARGET_MAX) {
     //voltage not maxed out yet: increase voltage, clamping to limit
+    DEBUG_PRINTF("AmpManager increasing voltage due to clipping\n");
     float new_target = current_pvdd_target * AMP_PVDD_CLIPPING_INCREASE;
     if (new_target > IF_POWERAMP_PVDD_TARGET_MAX) {
       new_target = IF_POWERAMP_PVDD_TARGET_MAX;
     }
     this->ApplyNewPVDDTarget(new_target, std::move(callback));
-  } else {
-    //voltage already at limit, still clipping: reduce volume
+  }/* else {
+    //voltage already at limit, still clipping: reduce volume - TODO disabled this for now, may not be desired
     this->ReduceVolume(std::move(callback));
-  }
+  }*/
 }
 
 void AmpManager::ReduceVolume(SuccessCallback&& callback) {

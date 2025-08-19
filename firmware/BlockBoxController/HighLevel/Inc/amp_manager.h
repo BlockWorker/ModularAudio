@@ -14,7 +14,7 @@
 #include "power_amp_interface.h"
 
 
-//amplifier events
+//amplifier events - TODO add relevant ones?
 #define AMP_EVENT_XYZ (1u << 8)
 
 //amp setting lock timeout, in main loop cycles
@@ -24,7 +24,7 @@
 #define AMP_PVDD_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
 
 //clipping response lock timeout, in main loop cycles - to avoid responding multiple times to the "same" clipping event
-#define AMP_CLIP_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
+#define AMP_CLIP_LOCK_TIMEOUT_CYCLES (1000 / MAIN_LOOP_PERIOD_MS)
 
 //overtemperature warning response lock timeout, in main loop cycles - to avoid responding multiple times to the "same" warning event
 #define AMP_OTW_LOCK_TIMEOUT_CYCLES (1000 / MAIN_LOOP_PERIOD_MS)
