@@ -48,5 +48,9 @@ namespace I2CMonitorApp {
         private void OpenRTCWindow(object sender, RoutedEventArgs e) {
             new RTCWindow().Show();
         }
+
+        private void OpenUSBPanelWindow(object sender, RoutedEventArgs e) {
+            new USBPanelWindow().Show();
+        }
     }
 }

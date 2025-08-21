@@ -22,6 +22,8 @@
                 <RowDefinition/>
                 <RowDefinition Height="10"/>
                 <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <Button Content="Amplifier" Margin="3" Click="OpenAmpWindow"/>
             <Button Content="Charger" Grid.Row="2" Margin="3" Click="OpenChargerWindow"/>
@@ -30,6 +32,7 @@
             <Button Content="DAC" Grid.Row="8" Margin="3" Click="OpenDACWindow"/>
             <Button Content="DAP" Grid.Row="10" Margin="3" Click="OpenDAPWindow"/>
             <Button Content="RTC/EEPROM" Grid.Row="12" Margin="3" Click="OpenRTCWindow"/>
+            <Button Content="USBPanel" Grid.Row="14" Margin="3" Click="OpenUSBPanelWindow"/>
         </Grid>
 
     </Grid>
