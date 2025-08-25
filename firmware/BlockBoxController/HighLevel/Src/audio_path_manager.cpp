@@ -36,8 +36,8 @@
 #define AUDIO_DEFAULT_LOUDNESS_TRACK_MAX_VOL false
 
 //calibrated volume gain offsets, per channel, for DAC and DAP, in dB
-#define AUDIO_GAIN_OFFSET_DAC_CH1 -10.0f
-#define AUDIO_GAIN_OFFSET_DAC_CH2 -5.0f
+#define AUDIO_GAIN_OFFSET_DAC_CH1 -5.0f
+#define AUDIO_GAIN_OFFSET_DAC_CH2 -0.0f
 #define AUDIO_GAIN_OFFSET_DAP_CH1 0.0f
 #define AUDIO_GAIN_OFFSET_DAP_CH2 0.0f
 

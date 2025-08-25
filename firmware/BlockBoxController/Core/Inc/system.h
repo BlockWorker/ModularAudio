@@ -20,6 +20,7 @@
 #include "power_amp_interface.h"
 #include "rtc_interface.h"
 #include "bluetooth_receiver_interface.h"
+#include "battery_interface.h"
 #include "bbv2_gui_manager.h"
 #include "audio_path_manager.h"
 #include "amp_manager.h"
@@ -50,6 +51,7 @@ public:
   RTCInterface rtc_if;
 
   BluetoothReceiverInterface btrx_if;
+  BatteryInterface bat_if;
 
   EVEDriver eve_drv;
   BlockBoxV2GUIManager gui_mgr;
@@ -73,6 +75,7 @@ private:
   void InitHiFiDAC(SuccessCallback&& callback);
   void InitPowerAmp(SuccessCallback&& callback);
   void InitBluetoothReceiver(SuccessCallback&& callback);
+  void InitBattery(SuccessCallback&& callback);
 
 };
 

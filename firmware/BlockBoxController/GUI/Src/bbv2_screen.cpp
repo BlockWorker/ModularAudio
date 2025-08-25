@@ -91,7 +91,12 @@ void BlockBoxV2Screen::Init() {
     }
   }, MODIF_BTRX_EVENT_DEVICE_UPDATE);
 
-  //TODO register event handler with battery and charger to force list re-build as well
+  //rebuild on battery presence or SoC change
+  this->bbv2_manager.system.bat_if.RegisterCallback([this](EventSource*, uint32_t) {
+    this->needs_display_list_rebuild = true;
+  }, MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_SOC_UPDATE);
+
+  //TODO register event handler with charger to force list re-build as well
 }
 
 
@@ -112,12 +117,16 @@ void BlockBoxV2Screen::BuildScreenContent() {
   this->driver.CmdDL(VERTEX2F(16 * 282, 16 * 3));
   this->driver.CmdDL(VERTEX2F(16 * 316, 16 * 18));
 
-  //battery icon fill - TODO: use actual battery status
-  bool battery_present = true;
-  bool battery_soc_valid = true;
-  bool battery_soc_precise = false;
-  float battery_soc_fraction = 0.8556f;
+  //process battery status
+  bool battery_present = this->bbv2_manager.system.bat_if.IsBatteryPresent();
+  BatterySoCLevel battery_soc_level = this->bbv2_manager.system.bat_if.GetSoCConfidenceLevel();
+  bool battery_soc_valid = (battery_soc_level != IF_BMS_SOCLVL_INVALID) && (battery_soc_level <= IF_BMS_SOCLVL_MEASURED_REF);
+  bool battery_soc_precise = (battery_soc_level == IF_BMS_SOCLVL_MEASURED_REF);
+  float battery_soc_fraction = this->bbv2_manager.system.bat_if.GetSoCFraction();
   bool display_battery_soc = battery_present && battery_soc_valid && !isnanf(battery_soc_fraction) && battery_soc_fraction >= 0.0f && battery_soc_fraction <= 1.0f;
+  bool charging = false; //TODO: use actual charging status
+
+  //battery icon fill
   if (display_battery_soc) {
     //valid: split battery fill
     uint16_t split_x = (uint16_t)roundf(16.0f * 314.0f - 16.0f * 30.0f * battery_soc_fraction);
@@ -140,7 +149,6 @@ void BlockBoxV2Screen::BuildScreenContent() {
   this->driver.CmdDL(DL_END);
 
   //icons for missing battery or charging
-  bool charging = false; //TODO: use actual charging status
   this->driver.CmdColorRGB(0xFFFFFF);
   if (!battery_present) {
     //battery missing: draw X

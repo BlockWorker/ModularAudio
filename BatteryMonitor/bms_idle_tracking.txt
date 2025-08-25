@@ -18,3 +18,10 @@ FETs enabled: 1, FET state: DSG 1 CHG 1
 Cell voltages: 3827 3832 3827 3818 3802, Stack voltage: 15296, Current: 0
 SoC: Mode: 1, Energy: 112.29, Fraction: 0.6671, Health: 1.00
 Temps: Bat 25 Int 30, Charge: -369923, Time: 4797, Balancing: 0x04
+
+*** 2025-08-25 13:33 --- Count: 878572
+Mode: Normal, Sealed: 0, Alerts: 0x0000, Faults: 0x0000
+FETs enabled: 1, FET state: DSG 1 CHG 1
+Cell voltages: 3818 3823 3818 3809 3802, Stack voltage: 15256, Current: 0
+SoC: Mode: 1, Energy: 110.66, Fraction: 0.6574, Health: 1.00
+Temps: Bat 25 Int 34, Charge: 0, Time: 2988, Balancing: 0x0A

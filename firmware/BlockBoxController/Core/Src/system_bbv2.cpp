@@ -35,6 +35,8 @@
 
 #define BBV2_BTRX_UART_HANDLE huart1
 
+#define BBV2_BMS_UART_HANDLE huart4
+
 
 static void _BlockBoxV2_I2C_Main_HardwareReset() {
   BBV2_I2C_MAIN_FORCE_RESET();
@@ -60,7 +62,7 @@ void BlockBoxV2System::InitEEPROM(SuccessCallback&& callback) {
 
 void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
   this->dap_if.ResetModule([this, callback = std::move(callback)](bool success) {
-    DEBUG_PRINTF("DAP reset/init complete, success %u\n", success);
+    DEBUG_PRINTF("DAP reset+init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -77,7 +79,7 @@ void BlockBoxV2System::InitDAP(SuccessCallback&& callback) {
 
 void BlockBoxV2System::InitHiFiDAC(SuccessCallback&& callback) {
   this->dac_if.ResetModule([this, callback = std::move(callback)](bool success) {
-    DEBUG_PRINTF("HiFiDAC reset/init complete, success %u\n", success);
+    DEBUG_PRINTF("HiFiDAC reset+init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -96,7 +98,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
   /* TODO amp controller dead, disabled this
   //Note: Don't reset the amp module (unless we really have to), since it causes a transient on the PVDD tracking signal, potentially spiking the input voltage too
   this->amp_if.InitModule([this, callback = std::move(callback)](bool success) {
-    DEBUG_PRINTF("PowerAmp reset/init complete, success %u\n", success);
+    DEBUG_PRINTF("PowerAmp init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -132,7 +134,7 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
 
 void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
   this->btrx_if.ResetModule([this, callback = std::move(callback)](bool success) {
-    DEBUG_PRINTF("BTRX reset/init complete, success %u\n", success);
+    DEBUG_PRINTF("BTRX reset+init complete, success %u\n", success);
     if (!success) {
       //propagate failure to external callback
       if (callback) {
@@ -141,6 +143,18 @@ void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
       return;
     }
 
+    if (callback) {
+      callback(true);
+    }
+  });
+}
+
+void BlockBoxV2System::InitBattery(SuccessCallback&& callback) {
+  //Don't reset the BMS, it's supposed to run uninterrupted
+  this->bat_if.InitModule([this, callback = std::move(callback)](bool success) {
+    DEBUG_PRINTF("BMS init complete, success %u\n", success);
+
+    //always consider the init successful, since the battery may not be present initially
     if (callback) {
       callback(true);
     }
@@ -157,6 +171,7 @@ void BlockBoxV2System::Init() {
   this->amp_if.Init();
   this->rtc_if.Init();
   this->btrx_if.Init();
+  this->bat_if.Init();
 
 
   //debug printout callbacks
@@ -230,6 +245,39 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BTRX_EVENT_STATUS_UPDATE | MODIF_BTRX_EVENT_VOLUME_UPDATE | MODIF_BTRX_EVENT_MEDIA_META_UPDATE | MODIF_BTRX_EVENT_DEVICE_UPDATE | MODIF_BTRX_EVENT_CONN_STATS_UPDATE | MODIF_BTRX_EVENT_CODEC_UPDATE);
   //*/
+  this->bat_if.RegisterCallback([this](EventSource*, uint32_t event) {
+    switch (event) {
+      case MODIF_BMS_EVENT_PRESENCE_UPDATE:
+        DEBUG_PRINTF("BMS presence update: %u\n", this->bat_if.IsBatteryPresent());
+        break;
+      case MODIF_BMS_EVENT_STATUS_UPDATE:
+        //DEBUG_PRINTF("BMS status update: 0x%02X\n", this->bat_if.GetStatus().value);
+        break;
+      case MODIF_BMS_EVENT_VOLTAGE_UPDATE:
+        //DEBUG_PRINTF("BMS voltage update: %u; cell0 %d\n", this->bat_if.GetStackVoltageMV(), this->bat_if.GetCellVoltageMV(0));
+        break;
+      case MODIF_BMS_EVENT_CURRENT_UPDATE:
+        DEBUG_PRINTF("BMS current update: %ld\n", this->bat_if.GetCurrentMA());
+        break;
+      case MODIF_BMS_EVENT_SOC_UPDATE:
+        //DEBUG_PRINTF("BMS SoC update: level %u; %.3f %.2f\n", this->bat_if.GetSoCConfidenceLevel(), this->bat_if.GetSoCFraction(), this->bat_if.GetSoCEnergyWh());
+        break;
+      case MODIF_BMS_EVENT_HEALTH_UPDATE:
+        DEBUG_PRINTF("BMS health update: %.3f\n", this->bat_if.GetBatteryHealth());
+        break;
+      case MODIF_BMS_EVENT_TEMP_UPDATE:
+        DEBUG_PRINTF("BMS temp update: bat %d; int %d\n", this->bat_if.GetBatteryTemperatureC(), this->bat_if.GetBMSTemperatureC());
+        break;
+      case MODIF_BMS_EVENT_SAFETY_UPDATE:
+        DEBUG_PRINTF("BMS safety update: alerts 0x%04X; faults 0x%04X\n", this->bat_if.GetSafetyAlerts().value, this->bat_if.GetSafetyFaults().value);
+        break;
+      case MODIF_BMS_EVENT_SHUTDOWN_UPDATE:
+        DEBUG_PRINTF("BMS shutdown update: type %u; time %u\n", this->bat_if.GetScheduledShutdown(), this->bat_if.GetShutdownCountdownMS());
+        break;
+      default:
+        break;
+    }
+  }, MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_STATUS_UPDATE | MODIF_BMS_EVENT_VOLTAGE_UPDATE | MODIF_BMS_EVENT_CURRENT_UPDATE | MODIF_BMS_EVENT_SOC_UPDATE | MODIF_BMS_EVENT_HEALTH_UPDATE | MODIF_BMS_EVENT_TEMP_UPDATE | MODIF_BMS_EVENT_SAFETY_UPDATE | MODIF_BMS_EVENT_SHUTDOWN_UPDATE);
 
   this->audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
     static AudioPathInput last_input = AUDIO_INPUT_SPDIF;
@@ -298,25 +346,34 @@ void BlockBoxV2System::Init() {
                 return;
               }
 
-              this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
-              this->audio_mgr.Init([this](bool success) {
+              this->gui_mgr.SetInitProgress("Attempting Battery Init...", false);
+              this->InitBattery([this](bool success) {
                 if (!success) {
-                  this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
+                  //note: this should never happen, battery init should always "succeed" (even if battery not present)
+                  this->gui_mgr.SetInitProgress("Failed to initialise Battery!", true);
                   return;
                 }
 
-                //init done - TODO only because amp controller is dead
-                this->gui_mgr.SetInitProgress(NULL, false);
-                /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
-                this->amp_mgr.Init([this](bool success) {
+                this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
+                this->audio_mgr.Init([this](bool success) {
                   if (!success) {
-                    this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
+                    this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
                     return;
                   }
 
-                  //init done
+                  //init done - TODO only because amp controller is dead
                   this->gui_mgr.SetInitProgress(NULL, false);
-                });*/
+                  /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
+                  this->amp_mgr.Init([this](bool success) {
+                    if (!success) {
+                      this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
+                      return;
+                    }
+
+                    //init done
+                    this->gui_mgr.SetInitProgress(NULL, false);
+                  });*/
+                });
               });
             });
           });
@@ -335,9 +392,17 @@ void BlockBoxV2System::LoopTasks() {
   this->amp_if.LoopTasks();
   this->rtc_if.LoopTasks();
   this->btrx_if.LoopTasks();
+  this->bat_if.LoopTasks();
   this->audio_mgr.LoopTasks();
   this->amp_mgr.LoopTasks();
   this->gui_mgr.Update();
+
+  /*static uint32_t loop_count = 0;
+  if (loop_count++ % 1000 == 0) { //TODO temporary printout, trying to catch display shift bug
+    uint16_t hoffset;
+    this->gui_mgr.driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
+    DEBUG_PRINTF("HOFFSET = %u\n", hoffset);
+  }*/
 }
 
 
@@ -420,6 +485,7 @@ BlockBoxV2System::BlockBoxV2System() :
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
     rtc_if(this->main_i2c_hw, BBV2_RTC_I2C_ADDR),
     btrx_if(&BBV2_BTRX_UART_HANDLE),
+    bat_if(&BBV2_BMS_UART_HANDLE),
     gui_mgr(*this),
     audio_mgr(*this),
     amp_mgr(*this),
@@ -469,12 +535,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   if (huart == &BBV2_BTRX_UART_HANDLE) {
     bbv2_system.btrx_if.HandleInterrupt(IF_RX_COMPLETE, Size);
+  } else if (huart == &BBV2_BMS_UART_HANDLE) {
+    bbv2_system.bat_if.HandleInterrupt(IF_RX_COMPLETE, Size);
   }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   if (huart == &BBV2_BTRX_UART_HANDLE) {
     bbv2_system.btrx_if.HandleInterrupt(IF_TX_COMPLETE, 0);
+  } else if (huart == &BBV2_BMS_UART_HANDLE) {
+    bbv2_system.bat_if.HandleInterrupt(IF_TX_COMPLETE, 0);
   } else {
     Retarget_UART_TxCpltCallback(huart);
   }
@@ -483,6 +553,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
   if (huart == &BBV2_BTRX_UART_HANDLE) {
     bbv2_system.btrx_if.HandleInterrupt(IF_ERROR, 0);
+  } else if (huart == &BBV2_BMS_UART_HANDLE) {
+    bbv2_system.bat_if.HandleInterrupt(IF_ERROR, 0);
   }
 }
 
