@@ -147,8 +147,8 @@ uint32_t BatteryInterface::GetMaxChargeCurrentMA() const {
 
 
 void BatteryInterface::SetBatteryHealth(float health, SuccessCallback&& callback) {
-  if (isnanf(health) || health <= 0.0f || health > 1.0f) {
-    throw std::invalid_argument("BatteryInterface SetBatteryHealth given invalid health, must be in (0, 1]");
+  if (isnanf(health) || health < 0.1f || health > 1.0f) {
+    throw std::invalid_argument("BatteryInterface SetBatteryHealth given invalid health, must be in [0.1, 1]");
   }
 
   this->WriteRegister32Async(UARTDEF_BMS_HEALTH, *(uint32_t*)&health, SuccessToTransferCallback(callback));

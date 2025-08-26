@@ -138,10 +138,27 @@ void UARTModuleInterface::LoopTasks() {
     this->Reset();
   }
 
+  //detect receive ready state if interrupt failed (receive should always be busy and waiting for data)
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if ((this->uart_handle->RxState & HAL_UART_STATE_BUSY_RX) != HAL_UART_STATE_BUSY_RX) {
+    //not busy (when it should be): restart reception
+    DEBUG_PRINTF("* UARTModuleInterface receiver found in idle state, restarting receive...\n");
+    if (HAL_UARTEx_ReceiveToIdle_IT(this->uart_handle, this->rx_buffer + this->rx_buffer_write_offset, MODIF_UART_RXBUF_SIZE - this->rx_buffer_write_offset) != HAL_OK) {
+      DEBUG_PRINTF("*** UARTModuleInterface receiver failed to restart after found in idle state!\n");
+      __set_PRIMASK(primask);
+      this->Reset();
+    } else {
+      __set_PRIMASK(primask);
+    }
+  } else {
+    __set_PRIMASK(primask);
+  }
+
   this->ProcessRawReceivedData();
 
   //transfer timeout handling: to be done under disabled interrupts
-  uint32_t primask = __get_PRIMASK();
+  primask = __get_PRIMASK();
   __disable_irq();
 
   //decrement transfer timeout counters

@@ -644,7 +644,7 @@ void UARTH_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 }
 
 void UARTH_UART_ErrorCallback(UART_HandleTypeDef* huart) {
-  DEBUG_PRINTF("*** UART1 internal error!\n");
+  DEBUG_PRINTF("*** UART1 internal error 0x%lX!\n", HAL_UART_GetError(huart));
   _interrupt_error = true;
 }
 
@@ -844,6 +844,21 @@ void UARTH_Update(uint32_t loop_counter) {
     _UARTH_ErrorReset();
     return;
   }
+
+  //detect receive ready state if interrupt failed (receive should always be busy and waiting for data)
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  if ((huart1.RxState & HAL_UART_STATE_BUSY_RX) != HAL_UART_STATE_BUSY_RX) {
+    //not busy (when it should be): restart reception
+    DEBUG_PRINTF("* UART receiver found in idle state, restarting receive...\n");
+    if (HAL_UARTEx_ReceiveToIdle_IT(&huart1, _rx_buffer + _rx_buffer_write_offset, UARTH_RXBUF_SIZE - _rx_buffer_write_offset) != HAL_OK) {
+      DEBUG_PRINTF("*** UART receiver failed to restart after found in idle state!\n");
+      __set_PRIMASK(primask);
+      _UARTH_ErrorReset();
+      return;
+    }
+  }
+  __set_PRIMASK(primask);
 
   //handle received data
   _UARTH_ProcessReceivedData();
