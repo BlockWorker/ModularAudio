@@ -107,6 +107,8 @@ protected:
   void HandleAsyncTransferDone(ModuleInterfaceInterruptType itype) noexcept;
 
   virtual void HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf, uint16_t length) noexcept;
+
+  void ResetHardwareInterface() noexcept;
 };
 
 

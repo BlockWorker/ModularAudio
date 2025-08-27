@@ -44,7 +44,7 @@ extern "C" {
 /* USER CODE BEGIN EC */
 extern ADC_HandleTypeDef hadc1;
 
-extern SMBUS_HandleTypeDef hsmbus3;
+extern I2C_HandleTypeDef hi2c3;
 extern I2C_HandleTypeDef hi2c5;
 
 extern I2S_HandleTypeDef hi2s6;

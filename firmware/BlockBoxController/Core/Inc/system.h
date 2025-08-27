@@ -21,6 +21,7 @@
 #include "rtc_interface.h"
 #include "bluetooth_receiver_interface.h"
 #include "battery_interface.h"
+#include "charger_interface.h"
 #include "bbv2_gui_manager.h"
 #include "audio_path_manager.h"
 #include "amp_manager.h"
@@ -43,12 +44,14 @@ public:
 class BlockBoxV2System : public System {
 public:
   I2CHardwareInterface main_i2c_hw;
-
   EEPROMInterface eeprom_if;
   DAPInterface dap_if;
   HiFiDACInterface dac_if;
   PowerAmpInterface amp_if;
   RTCInterface rtc_if;
+
+  I2CHardwareInterface chg_i2c_hw;
+  ChargerInterface chg_if;
 
   BluetoothReceiverInterface btrx_if;
   BatteryInterface bat_if;
@@ -74,6 +77,7 @@ private:
   void InitDAP(SuccessCallback&& callback);
   void InitHiFiDAC(SuccessCallback&& callback);
   void InitPowerAmp(SuccessCallback&& callback);
+  void InitCharger(SuccessCallback&& callback);
   void InitBluetoothReceiver(SuccessCallback&& callback);
   void InitBattery(SuccessCallback&& callback);
 

@@ -222,6 +222,13 @@ RTCInterface::RTCInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_addre
 
 
 void RTCInterface::OnRegisterUpdate(uint8_t address) {
+  //allow base handling
+  this->RegI2CModuleInterface::OnRegisterUpdate(address);
+
+  if (!this->initialised) {
+    return;
+  }
+
   switch (address) {
     case I2CDEF_RTC_SECONDS:
     {

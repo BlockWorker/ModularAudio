@@ -104,6 +104,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+    /* ADC1 interrupt Init */
+    HAL_NVIC_SetPriority(ADC_IRQn, 13, 0);
+    HAL_NVIC_EnableIRQ(ADC_IRQn);
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
   /* USER CODE END ADC1_MspInit 1 */
@@ -133,6 +136,8 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_1);
 
+    /* ADC1 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(ADC_IRQn);
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
@@ -141,15 +146,15 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 }
 
 /**
-* @brief SMBUS MSP Initialization
+* @brief I2C MSP Initialization
 * This function configures the hardware resources used in this example
-* @param hsmbus: SMBUS handle pointer
+* @param hi2c: I2C handle pointer
 * @retval None
 */
-void HAL_SMBUS_MspInit(SMBUS_HandleTypeDef* hsmbus)
+void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(hsmbus->Instance==I2C3)
+  if(hi2c->Instance==I2C3)
   {
   /* USER CODE BEGIN I2C3_MspInit 0 */
 
@@ -177,23 +182,16 @@ void HAL_SMBUS_MspInit(SMBUS_HandleTypeDef* hsmbus)
 
     /* Peripheral clock enable */
     __HAL_RCC_I2C3_CLK_ENABLE();
+    /* I2C3 interrupt Init */
+    HAL_NVIC_SetPriority(I2C3_EV_IRQn, 13, 0);
+    HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C3_ER_IRQn, 13, 0);
+    HAL_NVIC_EnableIRQ(I2C3_ER_IRQn);
   /* USER CODE BEGIN I2C3_MspInit 1 */
 
   /* USER CODE END I2C3_MspInit 1 */
   }
-
-}
-
-/**
-* @brief I2C MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hi2c: I2C handle pointer
-* @retval None
-*/
-void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(hi2c->Instance==I2C5)
+  else if(hi2c->Instance==I2C5)
   {
   /* USER CODE BEGIN I2C5_MspInit 0 */
 
@@ -226,14 +224,14 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 }
 
 /**
-* @brief SMBUS MSP De-Initialization
+* @brief I2C MSP De-Initialization
 * This function freeze the hardware resources used in this example
-* @param hsmbus: SMBUS handle pointer
+* @param hi2c: I2C handle pointer
 * @retval None
 */
-void HAL_SMBUS_MspDeInit(SMBUS_HandleTypeDef* hsmbus)
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 {
-  if(hsmbus->Instance==I2C3)
+  if(hi2c->Instance==I2C3)
   {
   /* USER CODE BEGIN I2C3_MspDeInit 0 */
 
@@ -249,22 +247,14 @@ void HAL_SMBUS_MspDeInit(SMBUS_HandleTypeDef* hsmbus)
 
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_8);
 
+    /* I2C3 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(I2C3_EV_IRQn);
+    HAL_NVIC_DisableIRQ(I2C3_ER_IRQn);
   /* USER CODE BEGIN I2C3_MspDeInit 1 */
 
   /* USER CODE END I2C3_MspDeInit 1 */
   }
-
-}
-
-/**
-* @brief I2C MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param hi2c: I2C handle pointer
-* @retval None
-*/
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
-{
-  if(hi2c->Instance==I2C5)
+  else if(hi2c->Instance==I2C5)
   {
   /* USER CODE BEGIN I2C5_MspDeInit 0 */
 

@@ -960,6 +960,11 @@ void I2CModuleInterface::HandleDataUpdate(uint16_t reg_addr, const uint8_t* buf,
 }
 
 
+void I2CModuleInterface::ResetHardwareInterface() noexcept {
+  this->hw_interface.Reset();
+}
+
+
 
 /*********************************************************/
 /*          Reg I2C Module Interface - Helpers           */

@@ -35,7 +35,8 @@ typedef enum {
   IF_EXTI,
   IF_TX_COMPLETE,
   IF_RX_COMPLETE,
-  IF_ERROR
+  IF_ERROR,
+  IF_ADC
 } ModuleInterfaceInterruptType;
 
 #ifdef __cplusplus

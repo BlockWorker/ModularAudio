@@ -42,7 +42,7 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-SMBUS_HandleTypeDef hsmbus3;
+I2C_HandleTypeDef hi2c3;
 I2C_HandleTypeDef hi2c5;
 
 I2S_HandleTypeDef hi2s6;
@@ -76,7 +76,7 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C3_SMBUS_Init(void);
+static void MX_I2C3_Init(void);
 static void MX_I2C5_Init(void);
 static void MX_OCTOSPI1_Init(void);
 static void MX_SPI2_Init(void);
@@ -134,7 +134,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C3_SMBUS_Init();
+  MX_I2C3_Init();
   MX_I2C5_Init();
   MX_OCTOSPI1_Init();
   MX_SPI2_Init();
@@ -323,7 +323,7 @@ static void MX_ADC1_Init(void)
   * @param None
   * @retval None
   */
-static void MX_I2C3_SMBUS_Init(void)
+static void MX_I2C3_Init(void)
 {
 
   /* USER CODE BEGIN I2C3_Init 0 */
@@ -333,27 +333,30 @@ static void MX_I2C3_SMBUS_Init(void)
   /* USER CODE BEGIN I2C3_Init 1 */
 
   /* USER CODE END I2C3_Init 1 */
-  hsmbus3.Instance = I2C3;
-  hsmbus3.Init.Timing = 0x2000090E;
-  hsmbus3.Init.AnalogFilter = SMBUS_ANALOGFILTER_ENABLE;
-  hsmbus3.Init.OwnAddress1 = 2;
-  hsmbus3.Init.AddressingMode = SMBUS_ADDRESSINGMODE_7BIT;
-  hsmbus3.Init.DualAddressMode = SMBUS_DUALADDRESS_DISABLE;
-  hsmbus3.Init.OwnAddress2 = 0;
-  hsmbus3.Init.OwnAddress2Masks = SMBUS_OA2_NOMASK;
-  hsmbus3.Init.GeneralCallMode = SMBUS_GENERALCALL_DISABLE;
-  hsmbus3.Init.NoStretchMode = SMBUS_NOSTRETCH_DISABLE;
-  hsmbus3.Init.PacketErrorCheckMode = SMBUS_PEC_DISABLE;
-  hsmbus3.Init.PeripheralMode = SMBUS_PERIPHERAL_MODE_SMBUS_SLAVE;
-  hsmbus3.Init.SMBusTimeout = 0x00008061;
-  if (HAL_SMBUS_Init(&hsmbus3) != HAL_OK)
+  hi2c3.Instance = I2C3;
+  hi2c3.Init.Timing = 0x2000090E;
+  hi2c3.Init.OwnAddress1 = 0;
+  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c3.Init.OwnAddress2 = 0;
+  hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     Error_Handler();
   }
 
   /** Configure Digital filter
   */
-  if (HAL_SMBUS_ConfigDigitalFilter(&hsmbus3, 0) != HAL_OK)
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -979,7 +982,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : CHG_ACOK_Pin */
   GPIO_InitStruct.Pin = CHG_ACOK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(CHG_ACOK_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : AMP_CLIP_OTW_N_Pin AMP_FAULT_N_Pin AMP_RESET_N_Pin */

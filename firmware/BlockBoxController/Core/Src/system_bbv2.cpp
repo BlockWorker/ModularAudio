@@ -33,6 +33,15 @@
 
 #define BBV2_RTC_I2C_ADDR 0x68
 
+#define BBV2_I2C_CHG_HANDLE hi2c3
+#define BBV2_I2C_CHG_FORCE_RESET() __HAL_RCC_I2C3_FORCE_RESET()
+#define BBV2_I2C_CHG_RELEASE_RESET() __HAL_RCC_I2C3_RELEASE_RESET()
+
+#define BBV2_CHG_I2C_ADDR 0x09
+#define BBV2_CHG_ACOK_PORT CHG_ACOK_GPIO_Port
+#define BBV2_CHG_ACOK_PIN CHG_ACOK_Pin
+#define BBV2_CHG_ADC_HANDLE hadc1
+
 #define BBV2_BTRX_UART_HANDLE huart1
 
 #define BBV2_BMS_UART_HANDLE huart4
@@ -43,6 +52,13 @@ static void _BlockBoxV2_I2C_Main_HardwareReset() {
   int i;
   for (i = 0; i < 10; i++) __NOP();
   BBV2_I2C_MAIN_RELEASE_RESET();
+}
+
+static void _BlockBoxV2_I2C_Charger_HardwareReset() {
+  BBV2_I2C_CHG_FORCE_RESET();
+  int i;
+  for (i = 0; i < 10; i++) __NOP();
+  BBV2_I2C_CHG_RELEASE_RESET();
 }
 
 
@@ -132,6 +148,17 @@ void BlockBoxV2System::InitPowerAmp(SuccessCallback&& callback) {
   }
 }
 
+void BlockBoxV2System::InitCharger(SuccessCallback&& callback) {
+  this->chg_if.InitModule([this, callback = std::move(callback)](bool success) {
+    DEBUG_PRINTF("Charger init complete, success %u\n", success);
+
+    //always consider the init successful, since the charger may not be present initially
+    if (callback) {
+      callback(true);
+    }
+  });
+}
+
 void BlockBoxV2System::InitBluetoothReceiver(SuccessCallback&& callback) {
   this->btrx_if.ResetModule([this, callback = std::move(callback)](bool success) {
     DEBUG_PRINTF("BTRX reset+init complete, success %u\n", success);
@@ -170,6 +197,10 @@ void BlockBoxV2System::Init() {
   this->dac_if.Init();
   this->amp_if.Init();
   this->rtc_if.Init();
+
+  this->chg_i2c_hw.Init();
+  this->chg_if.Init();
+
   this->btrx_if.Init();
   this->bat_if.Init();
 
@@ -279,6 +310,19 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_STATUS_UPDATE | MODIF_BMS_EVENT_VOLTAGE_UPDATE | MODIF_BMS_EVENT_CURRENT_UPDATE | MODIF_BMS_EVENT_SOC_UPDATE | MODIF_BMS_EVENT_HEALTH_UPDATE | MODIF_BMS_EVENT_TEMP_UPDATE | MODIF_BMS_EVENT_SAFETY_UPDATE | MODIF_BMS_EVENT_SHUTDOWN_UPDATE);
 
+  this->chg_if.RegisterCallback([this](EventSource*, uint32_t event) {
+    switch (event) {
+      case MODIF_CHG_EVENT_PRESENCE_UPDATE:
+        DEBUG_PRINTF("Charger presence update: %u\n", this->chg_if.IsAdapterPresent());
+        break;
+      case MODIF_CHG_EVENT_LEARN_UPDATE:
+        //DEBUG_PRINTF("Charger learn status update: %u\n", this->chg_if.IsLearnModeActive());
+        break;
+      default:
+        break;
+    }
+  }, MODIF_CHG_EVENT_PRESENCE_UPDATE | MODIF_CHG_EVENT_LEARN_UPDATE);
+
   this->audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
     static AudioPathInput last_input = AUDIO_INPUT_SPDIF;
     switch (event) {
@@ -354,25 +398,34 @@ void BlockBoxV2System::Init() {
                   return;
                 }
 
-                this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
-                this->audio_mgr.Init([this](bool success) {
+                this->gui_mgr.SetInitProgress("Attempting Charger Init...", false);
+                this->InitCharger([this](bool success) {
                   if (!success) {
-                    this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
+                    //note: this should never happen, charger init should always "succeed" (even if charger not present)
+                    this->gui_mgr.SetInitProgress("Failed to initialise Charger!", true);
                     return;
                   }
 
-                  //init done - TODO only because amp controller is dead
-                  this->gui_mgr.SetInitProgress(NULL, false);
-                  /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
-                  this->amp_mgr.Init([this](bool success) {
+                  this->gui_mgr.SetInitProgress("Initialising Audio Manager...", false);
+                  this->audio_mgr.Init([this](bool success) {
                     if (!success) {
-                      this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
+                      this->gui_mgr.SetInitProgress("Failed to initialise Audio Manager!", true);
                       return;
                     }
 
-                    //init done
+                    //init done - TODO only because amp controller is dead
                     this->gui_mgr.SetInitProgress(NULL, false);
-                  });*/
+                    /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
+                    this->amp_mgr.Init([this](bool success) {
+                      if (!success) {
+                        this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
+                        return;
+                      }
+
+                      //init done
+                      this->gui_mgr.SetInitProgress(NULL, false);
+                    });*/
+                  });
                 });
               });
             });
@@ -391,18 +444,27 @@ void BlockBoxV2System::LoopTasks() {
   this->dac_if.LoopTasks();
   this->amp_if.LoopTasks();
   this->rtc_if.LoopTasks();
+
+  this->chg_i2c_hw.LoopTasks();
+  this->chg_if.LoopTasks();
+
   this->btrx_if.LoopTasks();
   this->bat_if.LoopTasks();
+
   this->audio_mgr.LoopTasks();
   this->amp_mgr.LoopTasks();
+
   this->gui_mgr.Update();
 
-  /*static uint32_t loop_count = 0;
+  static uint32_t loop_count = 0;
+  if (this->chg_if.IsAdapterPresent() && loop_count % 200 == 0) {
+    DEBUG_PRINTF("Adapter current: %.3f A\n", this->chg_if.GetAdapterCurrentA());
+  }
   if (loop_count++ % 1000 == 0) { //TODO temporary printout, trying to catch display shift bug
     uint16_t hoffset;
     this->gui_mgr.driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
     DEBUG_PRINTF("HOFFSET = %u\n", hoffset);
-  }*/
+  }
 }
 
 
@@ -484,6 +546,8 @@ BlockBoxV2System::BlockBoxV2System() :
     dac_if(this->main_i2c_hw, BBV2_HIFIDAC_I2C_ADDR, BBV2_HIFIDAC_INT_PORT, BBV2_HIFIDAC_INT_PIN),
     amp_if(this->main_i2c_hw, BBV2_POWERAMP_I2C_ADDR, BBV2_POWERAMP_INT_PORT, BBV2_POWERAMP_INT_PIN),
     rtc_if(this->main_i2c_hw, BBV2_RTC_I2C_ADDR),
+    chg_i2c_hw(&BBV2_I2C_CHG_HANDLE, _BlockBoxV2_I2C_Charger_HardwareReset),
+    chg_if(this->chg_i2c_hw, BBV2_CHG_I2C_ADDR, BBV2_CHG_ACOK_PORT, BBV2_CHG_ACOK_PIN, &BBV2_CHG_ADC_HANDLE),
     btrx_if(&BBV2_BTRX_UART_HANDLE),
     bat_if(&BBV2_BMS_UART_HANDLE),
     gui_mgr(*this),
@@ -499,18 +563,24 @@ BlockBoxV2System::BlockBoxV2System() :
 void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c) {
   if (hi2c == &BBV2_I2C_MAIN_HANDLE) {
     bbv2_system.main_i2c_hw.HandleInterrupt(IF_TX_COMPLETE);
+  } else if (hi2c == &BBV2_I2C_CHG_HANDLE) {
+    bbv2_system.chg_i2c_hw.HandleInterrupt(IF_TX_COMPLETE);
   }
 }
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
   if (hi2c == &BBV2_I2C_MAIN_HANDLE) {
     bbv2_system.main_i2c_hw.HandleInterrupt(IF_RX_COMPLETE);
+  } else if (hi2c == &BBV2_I2C_CHG_HANDLE) {
+    bbv2_system.chg_i2c_hw.HandleInterrupt(IF_RX_COMPLETE);
   }
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
   if (hi2c == &BBV2_I2C_MAIN_HANDLE) {
     bbv2_system.main_i2c_hw.HandleInterrupt(IF_ERROR);
+  } else if (hi2c == &BBV2_I2C_CHG_HANDLE) {
+    bbv2_system.chg_i2c_hw.HandleInterrupt(IF_ERROR);
   }
 }
 
@@ -525,6 +595,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       break;
     case BBV2_POWERAMP_INT_PIN:
       bbv2_system.amp_if.HandleInterrupt(IF_EXTI, GPIO_Pin);
+      break;
+    case BBV2_CHG_ACOK_PIN:
+      bbv2_system.chg_if.HandleInterrupt(IF_EXTI, GPIO_Pin);
       break;
     default:
       break;
@@ -555,6 +628,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
     bbv2_system.btrx_if.HandleInterrupt(IF_ERROR, 0);
   } else if (huart == &BBV2_BMS_UART_HANDLE) {
     bbv2_system.bat_if.HandleInterrupt(IF_ERROR, 0);
+  }
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+  if (hadc == &BBV2_CHG_ADC_HANDLE) {
+    bbv2_system.chg_if.HandleInterrupt(IF_ADC, 0);
   }
 }
 
