@@ -1,6 +1,6 @@
 (ExpressProject "LM5123-Q1_PSPICE_TRANS"
   (ProjectVersion "19981106")
-  (SoftwareVersion "23.1 S005 (4202337)  [6/12/2024]-[09/17/24]")
+  (SoftwareVersion "23.1-2024 S001-[08/27/25]")
   (ProjectType "Analog or A/D Mixed Mode")
   (Folder "Design Resources"
     (Folder "Library"
@@ -40,15 +40,20 @@
       (Sort User)))
   (DefaultLibraryBrowseDirectory "library\PSpice")
   (PartMRUSelector
+    (L
+      (FullPartName "L.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\PSPICETI\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (IRF244
+      (FullPartName "IRF244.Normal")
+      (LibraryName
+         "C:\PROGRAM FILES\CADENCE\PSPICETI\TOOLS\CAPTURE\LIBRARY\PSPICE\CDN_PSP_TIPSPICE.OLB")
+      (DeviceIndex "0"))
     (PARAM
       (FullPartName "PARAM.Normal")
       (LibraryName
          "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\SPECIAL.OLB")
-      (DeviceIndex "0"))
-    (L
-      (FullPartName "L.Normal")
-      (LibraryName
-         "C:\PROGRAM FILES\CADENCE\ORCADX_23.1\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
       (DeviceIndex "0"))
     (SUB85N10-10
       (FullPartName "SUB85N10-10.Normal")
@@ -129,14 +134,14 @@
     (Doc
       (Type "COrCapturePMDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -1 -1 0 200 0 873"))
+        (Placement "44 0 1 -1 -1 -1 -1 0 200 0 755"))
       (Tab 0))
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 2 3 -1 -1 5 24 5 1674 24 891")
-        (Scroll "1440 297")
-        (Zoom "112")
+        (Placement "44 0 1 -1 -1 5 24 5 1238 24 773")
+        (Scroll "0 663")
+        (Zoom "124")
         (Occurrence "/"))
       (Path
          "E:\USERS\ALEX\DOCUMENTS\ELECTRONICS PROJECTS\MODULAR AUDIO\DESIGN_SIMULATIONS\LM5123SIM\LM5123-Q1_PSPICE_TRANS\LM5123-Q1_PSPICE_TRANS.DSN")

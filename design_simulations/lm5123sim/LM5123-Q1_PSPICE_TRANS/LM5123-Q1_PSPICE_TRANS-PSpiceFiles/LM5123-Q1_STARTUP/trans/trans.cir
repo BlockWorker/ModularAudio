@@ -7,12 +7,14 @@
 * Profile Libraries :
 * Local Libraries :
 .LIB "../../../lm5123-q1_trans.lib" 
-* From [PSPICE NETLIST] section of C:\Users\Alex\cdssetup\OrCAD_PSpice\23.1.0\PSpice.ini file:
+* From [PSPICE NETLIST] section of C:\cds_spb_home\cdssetup\OrCAD_PSpiceTIPSpice_Install\23.1.0\PSpice.ini file:
+.lib "nom_pspti.lib" 
 .lib "nom.lib" 
 
 *Analysis directives: 
 .TRAN  0 6m 0 20n 
 .OPTIONS ADVCONV
+.OPTIONS FILEMODELSEARCH
 .OPTIONS ITL4= 50
 .PROBE64 V(*) I(*) 
 .INC "..\LM5123-Q1_STARTUP.net" 

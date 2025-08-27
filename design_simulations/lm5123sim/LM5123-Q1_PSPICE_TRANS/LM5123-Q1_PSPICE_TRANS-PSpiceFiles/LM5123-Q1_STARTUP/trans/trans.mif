@@ -1,6 +1,6 @@
  lib="e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_trans.lib", offset=250090, size=319
  lib="e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_trans.lib", offset=1743, size=103524
- lib="C:\Program Files\Cadence\OrCADX_23.1\tools\PSpice\Library\siliconix.lib", offset=1006824, size=1277
+ lib="C:\Program Files\Cadence\PSpiceTI\tools\PSpice\Library\cdn_psp_tipspice.lib", offset=1400661, size=1040
  lib="e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_trans.lib", offset=248807, size=318
  lib="e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_trans.lib", offset=105301, size=634
  lib="e:\users\alex\documents\electronics projects\modular audio\design_simulations\lm5123sim\lm5123-q1_pspice_trans\lm5123-q1_trans.lib", offset=141964, size=776
