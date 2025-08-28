@@ -457,9 +457,6 @@ void BlockBoxV2System::LoopTasks() {
   this->gui_mgr.Update();
 
   static uint32_t loop_count = 0;
-  if (this->chg_if.IsAdapterPresent() && loop_count % 200 == 0) {
-    DEBUG_PRINTF("Adapter current: %.3f A\n", this->chg_if.GetAdapterCurrentA());
-  }
   if (loop_count++ % 1000 == 0) { //TODO temporary printout, trying to catch display shift bug
     uint16_t hoffset;
     this->gui_mgr.driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
@@ -631,10 +628,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
   }
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+/*void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if (hadc == &BBV2_CHG_ADC_HANDLE) {
     bbv2_system.chg_if.HandleInterrupt(IF_ADC, 0);
   }
-}
+}*/
 
 

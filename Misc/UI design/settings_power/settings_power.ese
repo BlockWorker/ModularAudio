@@ -352,7 +352,7 @@
         "CMD_TEXT(106, 181, 26, OPT_CENTERY | OPT_RIGHTX, \"Charge Current\")",
         "CMD_TEXT(106, 214, 26, OPT_CENTERY | OPT_RIGHTX, \"Charge Limit\")",
         "//battery info",
-        "CMD_TEXT(160, 117, 27, OPT_CENTER, \"Connected - Input Current: 12.34 A\")",
+        "CMD_TEXT(160, 117, 27, OPT_CENTER, \"Connected - Not Charging\")",
         "//slider values",
         "//max input current",
         "CMD_TEXT(270, 148, 26, OPT_CENTERY, \"17.3 A\")",

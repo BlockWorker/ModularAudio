@@ -1,15 +1,18 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_10
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,OffsetSignedSaturation-0\#ChannelRegularConversion,NbrOfConversionFlag,master,NbrOfConversion
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,OffsetSignedSaturation-0\#ChannelRegularConversion,NbrOfConversionFlag,master,NbrOfConversion,Resolution,OversamplingMode,Ratio
 ADC1.NbrOfConversion=1
 ADC1.NbrOfConversionFlag=1
 ADC1.OffsetNumber-0\#ChannelRegularConversion=ADC_OFFSET_NONE
 ADC1.OffsetSignedSaturation-0\#ChannelRegularConversion=DISABLE
+ADC1.OversamplingMode=ENABLE
 ADC1.Rank-0\#ChannelRegularConversion=1
-ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_810CYCLES_5
+ADC1.Ratio=256
+ADC1.Resolution=ADC_RESOLUTION_8B
+ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_64CYCLES_5
 ADC1.master=1
-CAD.formats=
-CAD.pinconfig=
+CAD.formats=[]
+CAD.pinconfig=Dual
 CAD.provider=
 CORTEX_M7.AccessPermission-Cortex_Memory_Protection_Unit_Region0_Settings=MPU_REGION_FULL_ACCESS
 CORTEX_M7.AccessPermission-Cortex_Memory_Protection_Unit_Region1_Settings=MPU_REGION_FULL_ACCESS

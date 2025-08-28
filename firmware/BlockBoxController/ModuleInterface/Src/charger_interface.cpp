@@ -8,13 +8,13 @@
 
 #include "charger_interface.h"
 
-//constants for ADC conversion
+/*//constants for ADC conversion
 #define IF_CHG_ADC_VREF 3.3f
 #define IF_CHG_ADC_FULL_SCALE ((float)UINT16_MAX)
 #define IF_CHG_ADC_ISNS_GAIN 20.0f
 #define IF_CHG_ADC_ISNS_R 0.004f
 //ADC conversion factor, from counts to amps
-#define IF_CHG_ADC_CONV_FACTOR (IF_CHG_ADC_VREF / (IF_CHG_ADC_FULL_SCALE * IF_CHG_ADC_ISNS_GAIN * IF_CHG_ADC_ISNS_R))
+#define IF_CHG_ADC_CONV_FACTOR (IF_CHG_ADC_VREF / (IF_CHG_ADC_FULL_SCALE * IF_CHG_ADC_ISNS_GAIN * IF_CHG_ADC_ISNS_R))*/
 
 
 bool ChargerInterface::IsAdapterPresent() const {
@@ -45,7 +45,7 @@ float ChargerInterface::GetMaxAdapterCurrentA() const {
 }
 
 float ChargerInterface::GetAdapterCurrentA() const {
-  return (float)this->adapter_current_raw * IF_CHG_ADC_CONV_FACTOR;
+  return NAN;//(float)this->adapter_current_raw * IF_CHG_ADC_CONV_FACTOR;
 }
 
 
@@ -138,10 +138,11 @@ void ChargerInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uint16
       __set_PRIMASK(primask);
       break;
     }
-    case IF_ADC:
+    /*case IF_ADC:
       this->adapter_current_raw = (uint16_t)HAL_ADC_GetValue(this->current_adc);
       HAL_ADC_Stop_IT(this->current_adc);
-      break;
+      DEBUG_PRINTF("ADC raw: %u\n", this->adapter_current_raw);
+      break;*/
     default:
       //allow base handling
       this->RegI2CModuleInterface::HandleInterrupt(type, extra);
@@ -161,15 +162,15 @@ void ChargerInterface::Init() {
   this->acok_debounce_counter = 0;
   __set_PRIMASK(primask);
 
-  //init ADC
-  HAL_ADCEx_Calibration_Start(this->current_adc, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED);
+  /*//init ADC
+  HAL_ADCEx_Calibration_Start(this->current_adc, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED);*/
 }
 
 
 void ChargerInterface::InitModule(SuccessCallback&& callback) {
   this->initialised = false;
   this->adapter_present = false;
-  this->adapter_current_raw = 0;
+  //this->adapter_current_raw = 0;
 
   if (this->acok_state == GPIO_PIN_RESET) {
     //ACOK signal low: not present, init done at this point (considered "unsuccessful")
@@ -284,8 +285,8 @@ void ChargerInterface::LoopTasks() {
         if (loop_count % 100 == 0) {
           //every 100 cycles (1000ms), read config/status - no callback needed, we're only reading to update the register
           this->ReadRegister16Async(I2CDEF_CHG_CHG_OPTION, ModuleTransferCallback());
-          //also start ADC conversion
-          HAL_ADC_Start_IT(this->current_adc);
+          /*//also start ADC conversion
+          HAL_ADC_Start_IT(this->current_adc);*/
         }
       }
     } else {
@@ -311,7 +312,7 @@ void ChargerInterface::LoopTasks() {
 
 ChargerInterface::ChargerInterface(I2CHardwareInterface& hw_interface, uint8_t i2c_address, GPIO_TypeDef* acok_port, uint16_t acok_pin, ADC_HandleTypeDef* current_adc) :
     RegI2CModuleInterface(hw_interface, i2c_address, I2CDEF_CHG_REG_SIZES, IF_CHG_USE_CRC), acok_port(acok_port), acok_pin(acok_pin), current_adc(current_adc), initialised(false),
-    adapter_present(false), acok_state(GPIO_PIN_RESET), acok_debounce_counter(0), adapter_current_raw(0) {}
+    adapter_present(false), acok_state(GPIO_PIN_RESET), acok_debounce_counter(0)/*, adapter_current_raw(0)*/ {}
 
 
 void ChargerInterface::OnRegisterUpdate(uint8_t address) {

@@ -79,7 +79,7 @@ protected:
   GPIO_PinState acok_state;
   uint32_t acok_debounce_counter;
 
-  uint16_t adapter_current_raw;
+  //uint16_t adapter_current_raw;
 
   void OnRegisterUpdate(uint8_t address) override;
 };
