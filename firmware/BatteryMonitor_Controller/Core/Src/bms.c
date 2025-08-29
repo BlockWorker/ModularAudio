@@ -1049,18 +1049,19 @@ void BMS_LoopUpdate(uint32_t loop_count) {
 
     //only do end-of-discharge check if we're not already expecting a forced shutdown
     if (bms_status.timed_shutdown_type != BMSSHDN_FULL_SHUTDOWN) {
-      //get lowest cell voltage for end-of-discharge check
+      //get lowest cell voltage and current for end-of-discharge check
       int16_t min_cell_voltage = bms_measurements.voltage_cells[0];
       for (i = 1; i < BMS_CELLS_SERIES; i++) {
         if (bms_measurements.voltage_cells[i] < min_cell_voltage) {
           min_cell_voltage = bms_measurements.voltage_cells[i];
         }
       }
+      int32_t current = bms_measurements.current;
 
       if (bms_status.timed_shutdown_type == BMSSHDN_END_OF_DISCHARGE) {
-        //end-of-discharge shutdown already scheduled: check for voltage rise above hysteresis (which would cancel it)
-        if (min_cell_voltage > (BMS_MIN_DSG_VOLTAGE + BMS_MIN_DSG_HYSTERESIS)) {
-          //sufficient voltage rise: cancel end-of-discharge shutdown
+        //end-of-discharge shutdown already scheduled: check for voltage rise above hysteresis or current rise above charging threshold (which would cancel it)
+        if (min_cell_voltage > (BMS_MIN_DSG_VOLTAGE + BMS_MIN_DSG_HYSTERESIS) || current > BMS_CHARGING_CURRENT_THRESHOLD_ON) {
+          //sufficient voltage or current rise: cancel end-of-discharge shutdown
           if (_bms_shutdown_requested_by_host) {
             //go back to host-requested shutdown
             bms_status.timed_shutdown_type = BMSSHDN_HOST_REQUEST;
@@ -1073,9 +1074,9 @@ void BMS_LoopUpdate(uint32_t loop_count) {
           UARTH_ForceCheckChangeNotification();
         }
       } else {
-        //no end-of-discharge shutdown scheduled: check for voltage fall below end-of-discharge threshold
-        if (min_cell_voltage < BMS_MIN_DSG_VOLTAGE) {
-          //voltage fallen below threshold: initiate end-of-discharge shutdown
+        //no end-of-discharge shutdown scheduled: check for voltage fall below end-of-discharge threshold and current below charging threshold
+        if (min_cell_voltage < BMS_MIN_DSG_VOLTAGE && current < BMS_CHARGING_CURRENT_THRESHOLD_OFF) {
+          //voltage and current fallen below threshold: initiate end-of-discharge shutdown
           bms_status.timed_shutdown_type = BMSSHDN_END_OF_DISCHARGE;
           bms_status.timed_shutdown_time = BMS_SHUTDOWN_TIME_EOD;
           UARTH_ForceCheckChangeNotification();

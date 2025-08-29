@@ -64,7 +64,7 @@
 #define BMS_SOC_CELL_VOLTAGE_MIN 2.5f
 #define BMS_SOC_CELL_VOLTAGE_MAX 4.25f
 //voltage above which a cell is considered "fully charged"
-#define BMS_SOC_CELL_FULL_CHARGE_VOLTAGE_MIN 4.17f
+#define BMS_SOC_CELL_FULL_CHARGE_VOLTAGE_MIN 4.15f
 //cell current and voltage smoothing parameter - approx 30s time constant, given measurements once per second
 #define BMS_SOC_SMOOTHING_ALPHA 0.03f
 #define BMS_SOC_SMOOTHING_1MALPHA (1.0f - BMS_SOC_SMOOTHING_ALPHA)
@@ -97,6 +97,10 @@
 #define BMS_SHUTDOWN_TIME_FULL (8500 / MAIN_LOOP_PERIOD_MS)
 #define BMS_SHUTDOWN_TIME_EOD (30100 / MAIN_LOOP_PERIOD_MS)
 #define BMS_SHUTDOWN_TIME_HOST (10100 / MAIN_LOOP_PERIOD_MS)
+
+//minimum current in mA to be considered "charging" (preventing end-of-discharge shutdown) (on/off values for hysteresis)
+#define BMS_CHARGING_CURRENT_THRESHOLD_ON 300
+#define BMS_CHARGING_CURRENT_THRESHOLD_OFF 150
 
 
 //BMS IC mode - shutdown is not an option here, since controller would be unpowered in that mode
