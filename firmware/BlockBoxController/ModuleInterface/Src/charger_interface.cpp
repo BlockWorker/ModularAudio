@@ -101,12 +101,12 @@ void ChargerInterface::SetChargeEndVoltageMV(uint16_t voltage_mV, SuccessCallbac
 
 
 void ChargerInterface::SetMaxAdapterCurrentA(float current_A, SuccessCallback&& callback) {
-  if (isnanf(current_A) || current_A < 0.33f || current_A > 20.16f) {
-    throw std::invalid_argument("ChargerInterface SetMaxAdapterCurrentA given invalid current, must be in [0.33, 20.16]");
+  if (isnanf(current_A) || current_A < IF_CHG_ADAPTER_CURRENT_A_MIN || current_A > IF_CHG_ADAPTER_CURRENT_A_MAX) {
+    throw std::invalid_argument("ChargerInterface SetMaxAdapterCurrentA given invalid current, must be in [0.32, 20.16]");
   }
 
   //convert to 2.5mA steps
-  uint16_t current_steps = (uint16_t)roundf(current_A / 0.0025f);
+  uint16_t current_steps = (uint16_t)floorf(current_A / 0.0025f);
   uint16_t masked_current = current_steps & I2CDEF_CHG_INPUT_CURRENT_MASK;
 
   //write current register

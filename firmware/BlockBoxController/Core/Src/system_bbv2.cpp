@@ -413,19 +413,26 @@ void BlockBoxV2System::Init() {
                       return;
                     }
 
-                    //init done - TODO only because amp controller is dead
-                    this->gui_mgr.SetInitProgress(NULL, false);
+                    //TODO disabled because amp controller is dead
                     /*this->gui_mgr.SetInitProgress("Initialising Amplifier Manager...", false);
                     this->amp_mgr.Init([this](bool success) {
                       if (!success) {
                         this->gui_mgr.SetInitProgress("Failed to initialise Amplifier Manager!", true);
                         return;
-                      }
+                      }*/
 
-                      //init done
-                      this->gui_mgr.SetInitProgress(NULL, false);
-                    });*/
-                  });
+                      this->gui_mgr.SetInitProgress("Initialising Power Manager...", false);
+                      this->power_mgr.Init([this](bool success) {
+                        if (!success) {
+                          this->gui_mgr.SetInitProgress("Failed to initialise Power Manager!", true);
+                          return;
+                        }
+
+                        //init done
+                        this->gui_mgr.SetInitProgress(NULL, false);
+                      });
+                    });
+                  //});
                 });
               });
             });
@@ -453,6 +460,7 @@ void BlockBoxV2System::LoopTasks() {
 
   this->audio_mgr.LoopTasks();
   this->amp_mgr.LoopTasks();
+  this->power_mgr.LoopTasks();
 
   this->gui_mgr.Update();
 
@@ -550,6 +558,7 @@ BlockBoxV2System::BlockBoxV2System() :
     gui_mgr(*this),
     audio_mgr(*this),
     amp_mgr(*this),
+    power_mgr(*this),
     powered_on(false) {}
 
 

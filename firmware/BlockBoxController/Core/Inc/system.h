@@ -25,6 +25,7 @@
 #include "bbv2_gui_manager.h"
 #include "audio_path_manager.h"
 #include "amp_manager.h"
+#include "power_manager.h"
 
 extern "C" {
 #endif
@@ -61,6 +62,7 @@ public:
 
   AudioPathManager audio_mgr;
   AmpManager amp_mgr;
+  PowerManager power_mgr;
 
   void Init() override;
   void LoopTasks() override;

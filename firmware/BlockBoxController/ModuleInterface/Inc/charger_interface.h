@@ -21,6 +21,9 @@
 #define MODIF_CHG_EVENT_PRESENCE_UPDATE (1u << 8)
 #define MODIF_CHG_EVENT_LEARN_UPDATE (1u << 9)
 
+//min and max values for maximum adapter current, in amps
+#define IF_CHG_ADAPTER_CURRENT_A_MIN 0.32f
+#define IF_CHG_ADAPTER_CURRENT_A_MAX 20.16f
 //default "safe" maximum adapter current, in amps
 #define IF_CHG_SAFE_ADAPTER_CURRENT_A 5.12f
 
