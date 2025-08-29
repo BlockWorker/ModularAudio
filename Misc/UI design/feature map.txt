@@ -80,3 +80,6 @@ Debug screen
 - debug speaker calibration modes: Tags 200, 201
 - debug bluetooth OTA upgrade: Tag 202
 - battery full shutdown (long press): Tag 203
+
+Message pop-up
+- dismiss (if supported): Tag 240

@@ -86,8 +86,8 @@ uint32_t BlockBoxV2GUIManager::ColorHCLToRGB(float hue, float chroma, float luma
 
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
     GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), settings_screen_audio(*this),
-    settings_screen_display(*this), test_screen(*this),
-    gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults) {}
+    settings_screen_display(*this),
+    gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults), popup_status(GUI_POPUP_NONE) {}
 
 
 void BlockBoxV2GUIManager::Init() {
@@ -98,7 +98,8 @@ void BlockBoxV2GUIManager::Init() {
   this->main_screen.Init();
   this->settings_screen_audio.Init();
   this->settings_screen_display.Init();
-  this->test_screen.Init();
+
+  this->popup_status = GUI_POPUP_NONE;
 
   //pre-set initial screen
   this->SetScreen(&this->init_screen);
@@ -112,6 +113,16 @@ void BlockBoxV2GUIManager::Init() {
   //apply brightness and sleep delay from NVM
   this->GUIManager::SetDisplayBrightness(this->gui_config.GetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS));
   this->GUIManager::SetDisplaySleepTimeoutMS(this->gui_config.GetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT));
+}
+
+void BlockBoxV2GUIManager::Update() noexcept {
+  //allow base handling
+  this->GUIManager::Update();
+
+  //reset power manager auto-shutdown on any touch event
+  if (this->touch_state.initial || this->touch_state.released) {
+    this->system.power_mgr.ResetAutoShutdownTimer();
+  }
 }
 
 
@@ -196,6 +207,31 @@ void BlockBoxV2GUIManager::SetInitProgress(const char* progress_string, bool err
     this->init_screen.UpdateProgressString(progress_string, error);
   }
 }
+
+
+uint32_t BlockBoxV2GUIManager::GetPopupStatus() const {
+  return this->popup_status;
+}
+
+uint32_t BlockBoxV2GUIManager::GetHighestPopup() const {
+  uint8_t zeros = __CLZ(this->popup_status);
+  if (zeros > 31) {
+    return 0;
+  } else {
+    return 1u << (31 - zeros);
+  }
+}
+
+void BlockBoxV2GUIManager::ActivatePopups(uint32_t bits) {
+  this->popup_status |= bits;
+  this->ForceScreenRedraw();
+}
+
+void BlockBoxV2GUIManager::DeactivatePopups(uint32_t bits) {
+  this->popup_status &= ~bits;
+  this->ForceScreenRedraw();
+}
+
 
 
 void BlockBoxV2GUIManager::LoadConfigDefaults(StorageSection& section) {

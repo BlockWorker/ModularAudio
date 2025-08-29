@@ -20,7 +20,7 @@
 
 
 TouchCalScreen::TouchCalScreen(BlockBoxV2GUIManager& manager) :
-    BlockBoxV2Screen(manager), state(CAL_START), return_screen(&manager.test_screen), touch_lockout_counter(0) {}
+    BlockBoxV2Screen(manager), state(CAL_START), return_screen(&manager.main_screen), touch_lockout_counter(0) {}
 
 
 void TouchCalScreen::DisplayScreen() {

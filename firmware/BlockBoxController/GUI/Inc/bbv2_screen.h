@@ -26,6 +26,8 @@ public:
 
   BlockBoxV2Screen(BlockBoxV2GUIManager& manager);
 
+  void HandleTouch(const GUITouchState& state) noexcept override;
+
   virtual void Init();
 
   //functions like strncpy(dest, src, max_chars), but limits the pixel-width of the text (in the given font) to the given maximum, shortening with "..." if necessary.

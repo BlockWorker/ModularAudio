@@ -75,6 +75,9 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
       }
     });
   }
+
+  //allow base handling
+  this->BlockBoxV2Screen::HandleTouch(state);
 }
 
 

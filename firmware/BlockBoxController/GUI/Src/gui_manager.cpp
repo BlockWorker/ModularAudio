@@ -349,3 +349,10 @@ void GUIManager::SetDisplayForceWake(bool force_wake) noexcept {
   this->display_force_wake = force_wake;
 }
 
+
+void GUIManager::ForceScreenRedraw() noexcept {
+  if (this->current_screen != NULL) {
+    this->current_screen->needs_display_list_rebuild = true;
+  }
+}
+

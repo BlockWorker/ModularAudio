@@ -317,8 +317,10 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
             DEBUG_PRINTF("*** Amplifier fault\n");
             this->prev_amp_fault = true;
           }
+          this->system.gui_mgr.ActivatePopups(GUI_POPUP_AMP_FAULT);
         } else {
           this->prev_amp_fault = false;
+          this->system.gui_mgr.DeactivatePopups(GUI_POPUP_AMP_FAULT);
         }
 
         if (!status.pvdd_valid) {
@@ -407,8 +409,10 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
             DEBUG_PRINTF("*** Amp safety error: 0x%04X\n", err);
             this->prev_safety_error = err;
           }
+          this->system.gui_mgr.ActivatePopups(GUI_POPUP_AMP_SAFETY_ERR);
         } else {
           this->prev_safety_error = 0;
+          this->system.gui_mgr.DeactivatePopups(GUI_POPUP_AMP_SAFETY_ERR);
         }
         break;
       }

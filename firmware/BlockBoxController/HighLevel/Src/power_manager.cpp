@@ -75,13 +75,14 @@ static const float _power_charge_cell_voltage_targets[_PWR_CHG_TARGET_COUNT] = {
 /******************************************************/
 
 PowerManager::PowerManager(BlockBoxV2System& system) :
-    system(system), non_volatile_config(system.eeprom_if, PWR_NVM_TOTAL_BYTES, PowerManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0), charging_active(false),
-    charging_end_condition_cycles(0), auto_shutdown_last_reset(0) {}
+    system(system), non_volatile_config(system.eeprom_if, PWR_NVM_TOTAL_BYTES, PowerManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0), asd_lock_timer(0),
+    charging_active(false), charging_end_condition_cycles(0), auto_shutdown_last_reset(0) {}
 
 
 void PowerManager::Init(SuccessCallback&& callback) {
   this->initialised = false;
   this->lock_timer = 0;
+  this->asd_lock_timer = 0;
   this->charging_active = false;
   this->charging_end_condition_cycles = 0;
   this->auto_shutdown_last_reset = HAL_GetTick();
@@ -123,8 +124,8 @@ void PowerManager::Init(SuccessCallback&& callback) {
 
       this->system.chg_if.SetFastChargeCurrentMA(0, [this, callback = std::move(callback)](bool success) {
         if (success) {
-          /*this->system.chg_if.RegisterCallback(std::bind(&PowerManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
-                                               MODIF_CHG_EVENT_PRESENCE_UPDATE);*/
+          /*this->system.bat_if.RegisterCallback(std::bind(&PowerManager::HandleEvent, this, std::placeholders::_1, std::placeholders::_2),
+                                               MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_STATUS_UPDATE | MODIF_BMS_EVENT_SHUTDOWN_UPDATE);*/
 
           //init done
           this->initialised = true;
@@ -162,6 +163,13 @@ void PowerManager::LoopTasks() {
   //decrement lock timer, under disabled interrupts
   uint32_t primask = __get_PRIMASK();
   __disable_irq();
+  if (this->asd_lock_timer > 0) {
+    if (--this->asd_lock_timer == 0) {
+      //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
+      DEBUG_PRINTF("* PowerManager auto-shutdown lock timed out!\n");
+    }
+  }
+
   if (this->lock_timer > 0) {
     if (--this->lock_timer == 0) {
       //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
@@ -182,6 +190,8 @@ void PowerManager::LoopTasks() {
   __set_PRIMASK(primask);
 
   bool adapter_present = this->system.chg_if.IsAdapterPresent();
+  bool battery_present = this->system.bat_if.IsBatteryPresent();
+  bool charge_fault = battery_present ? this->system.bat_if.GetStatus().chg_fault : false;
 
   //handle adapter logic, if not locked out
   primask = __get_PRIMASK();
@@ -228,15 +238,17 @@ void PowerManager::LoopTasks() {
         //adapter disconnected: just mark as inactive
         this->charging_active = false;
         this->lock_timer = 0;
-      } else if (!this->system.bat_if.IsBatteryPresent() || this->GetChargingTargetCurrentMA() < 128) {
-        //battery disconnected or current target below minimum: mark as inactive and explicitly disable charger
+        this->ExecuteCallbacks(PWR_EVENT_CHARGING_ACTIVE_CHANGE);
+      } else if (!battery_present || this->GetChargingTargetCurrentMA() < 128 || charge_fault) {
+        //battery disconnected, current target below minimum, or charge fault latched: mark as inactive and explicitly disable charger
         this->charging_active = false;
         this->system.chg_if.SetFastChargeCurrentMA(0, [this](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* PowerManager failed to disable charger on battery removal or manual disable\n");
+            DEBUG_PRINTF("* PowerManager failed to disable charger after battery removal, manual disable, or charge fault\n");
           }
           this->lock_timer = 0;
         });
+        this->ExecuteCallbacks(PWR_EVENT_CHARGING_ACTIVE_CHANGE);
       } else {
         //no instant stop required: check normal charging end conditions
         //difference between voltage target and stack voltage (positive difference means battery below target)
@@ -253,6 +265,7 @@ void PowerManager::LoopTasks() {
               } else {
                 DEBUG_PRINTF("PowerManager stopped charging due to end condition\n"); //TODO temp printout
                 this->charging_active = false;
+                this->ExecuteCallbacks(PWR_EVENT_CHARGING_ACTIVE_CHANGE);
               }
               this->lock_timer = 0;
             });
@@ -276,8 +289,8 @@ void PowerManager::LoopTasks() {
         }
       }
     } else {
-      //inactive: check if starting is physically possible (adapter and battery present, current above minimum)
-      if (adapter_present && this->system.bat_if.IsBatteryPresent() && this->GetChargingTargetCurrentMA() >= 128) {
+      //inactive: check if starting is physically possible (adapter and battery present, current above minimum, no charge fault)
+      if (adapter_present && battery_present && this->GetChargingTargetCurrentMA() >= 128 && !charge_fault) {
         //check charge starting condition
         //difference between voltage target and stack voltage (positive difference means battery below target)
         uint16_t target_voltage_mV = this->GetTargetStateVoltageMV(this->GetChargingTargetState());
@@ -301,6 +314,7 @@ void PowerManager::LoopTasks() {
                   charge_refresh_loop_count = 0;
                   this->charging_end_condition_cycles = 0;
                   this->charging_active = true;
+                  this->ExecuteCallbacks(PWR_EVENT_CHARGING_ACTIVE_CHANGE);
                 }
                 this->lock_timer = 0;
               });
@@ -335,7 +349,120 @@ void PowerManager::LoopTasks() {
     PWR_CHG_LED_IDLE_REG = 0;
   }
 
-  //TODO auto-shutdown handling
+  //auto-shutdown handling
+  uint32_t asd_delay = this->GetAutoShutdownDelayMS();
+  uint32_t tick = HAL_GetTick();
+  //check if we're on battery power (i.e. battery present, but no adapter), and auto-shutdown is enabled
+  if (!adapter_present && battery_present && asd_delay != PWR_ASD_DELAY_MS_MAX) {
+    //check no-shutdown conditions (have active input and not muted) TODO: or learn cycle, once implemented
+    if (this->system.audio_mgr.GetActiveInput() != AUDIO_INPUT_NONE && !this->system.audio_mgr.IsMute()) {
+      //no shutdown: reset countdown
+      this->auto_shutdown_last_reset = tick;
+    }
+
+    //if not locked out: check countdown and send shutdown/cancel command to battery if necessary
+    primask = __get_PRIMASK();
+    __disable_irq();
+    if (this->asd_lock_timer == 0) {
+      //lock out
+      this->asd_lock_timer = PWR_ASD_LOCK_TIMEOUT_CYCLES;
+      __set_PRIMASK(primask);
+
+      if (tick - this->auto_shutdown_last_reset > asd_delay) {
+        //should be shut down: apply shutdown to battery, if not already scheduled
+        if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_NONE) {
+          this->system.bat_if.SetShutdownRequest(true, [this](bool success) {
+            if (!success) {
+              DEBUG_PRINTF("* PowerManager failed to initiate auto-shutdown\n");
+            } else {
+              DEBUG_PRINTF("PowerManager initiated auto-shutdown\n"); //TODO temp printout
+            }
+            this->asd_lock_timer = 0;
+          });
+        } else {
+          //already scheduled: just unlock
+          this->asd_lock_timer = 0;
+        }
+      } else {
+        //should not be shut down: cancel shutdown, if scheduled
+        if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_HOST_REQUEST) {
+          this->system.bat_if.SetShutdownRequest(false, [this](bool success) {
+            if (!success) {
+              DEBUG_PRINTF("* PowerManager failed to cancel auto-shutdown\n");
+            } else {
+              DEBUG_PRINTF("PowerManager cancelled auto-shutdown\n"); //TODO temp printout
+            }
+            this->asd_lock_timer = 0;
+          });
+        } else {
+          //already idle: just unlock
+          this->asd_lock_timer = 0;
+        }
+      }
+    } else {
+      __set_PRIMASK(primask);
+    }
+  } else {
+    //reset countdown if shutdown is disabled, just to be sure there's no inadvertent shutdown once it re-enables
+    this->auto_shutdown_last_reset = tick;
+  }
+
+  //if not locked: automatically clear battery charge faults (if present) when charger is removed
+  primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->lock_timer == 0) {
+    //lock out
+    this->lock_timer = PWR_LOCK_TIMEOUT_CYCLES;
+    __set_PRIMASK(primask);
+
+    if (battery_present && !adapter_present && charge_fault) {
+      this->system.bat_if.ClearChargingFaults([this](bool success) {
+        if (success) {
+          DEBUG_PRINTF("PowerManager cleared battery charge faults upon adapter removal\n");
+        } else {
+          DEBUG_PRINTF("* PowerManager failed to clear battery charge faults upon adapter removal\n");
+        }
+        this->lock_timer = 0;
+      });
+    } else {
+      this->lock_timer = 0;
+    }
+  } else {
+    __set_PRIMASK(primask);
+  }
+
+  //update battery-related GUI pop-ups
+  if (battery_present) {
+    //check for charge fault
+    if (charge_fault) {
+      this->system.gui_mgr.ActivatePopups(GUI_POPUP_CHG_FAULT);
+    } else {
+      this->system.gui_mgr.DeactivatePopups(GUI_POPUP_CHG_FAULT);
+    }
+
+    //check for scheduled shutdown: show corresponding pop-up and clear all other shutdown-related pop-ups
+    switch (this->system.bat_if.GetScheduledShutdown()) {
+      case IF_BMS_SHDN_HOST_REQUEST:
+        this->system.gui_mgr.ActivatePopups(GUI_POPUP_AUTO_SHUTDOWN);
+        this->system.gui_mgr.DeactivatePopups(GUI_POPUP_EOD_SHUTDOWN | GUI_POPUP_FULL_SHUTDOWN);
+        break;
+      case IF_BMS_SHDN_END_OF_DISCHARGE:
+        this->system.gui_mgr.ActivatePopups(GUI_POPUP_EOD_SHUTDOWN);
+        this->system.gui_mgr.DeactivatePopups(GUI_POPUP_AUTO_SHUTDOWN | GUI_POPUP_FULL_SHUTDOWN);
+        break;
+      case IF_BMS_SHDN_FULL_SHUTDOWN:
+        this->system.gui_mgr.ActivatePopups(GUI_POPUP_FULL_SHUTDOWN);
+        this->system.gui_mgr.DeactivatePopups(GUI_POPUP_AUTO_SHUTDOWN | GUI_POPUP_EOD_SHUTDOWN);
+        break;
+      default:
+        //no shutdown
+        this->system.gui_mgr.DeactivatePopups(GUI_POPUP_AUTO_SHUTDOWN | GUI_POPUP_EOD_SHUTDOWN | GUI_POPUP_FULL_SHUTDOWN);
+        break;
+    }
+  } else {
+    //battery not present: deactivate all battery-related pop-ups
+    this->system.gui_mgr.DeactivatePopups(GUI_POPUP_CHG_FAULT | GUI_POPUP_AUTO_SHUTDOWN | GUI_POPUP_EOD_SHUTDOWN | GUI_POPUP_FULL_SHUTDOWN);
+  }
 }
 
 
@@ -344,9 +471,9 @@ void PowerManager::LoopTasks() {
 }*/
 
 
-void PowerManager::HandleEvent(EventSource* source, uint32_t event) {
-  //TODO see what's needed, if anything
-}
+/*void PowerManager::HandleEvent(EventSource* source, uint32_t event) {
+
+}*/
 
 
 void PowerManager::LoadNonVolatileConfigDefaults(StorageSection& section) {

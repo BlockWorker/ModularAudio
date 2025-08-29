@@ -17,7 +17,16 @@
 #include "main_screen.h"
 #include "settings_screen_audio.h"
 #include "settings_screen_display.h"
-#include "test_screen.h"
+
+
+//message pop-up reasons (higher bit = higher priority)
+#define GUI_POPUP_NONE 0
+#define GUI_POPUP_CHG_FAULT ((uint32_t)(1u << 4))
+#define GUI_POPUP_AMP_FAULT ((uint32_t)(1u << 8))
+#define GUI_POPUP_AMP_SAFETY_ERR ((uint32_t)(1u << 9))
+#define GUI_POPUP_AUTO_SHUTDOWN ((uint32_t)(1u << 16))
+#define GUI_POPUP_EOD_SHUTDOWN ((uint32_t)(1u << 17))
+#define GUI_POPUP_FULL_SHUTDOWN ((uint32_t)(1u << 18))
 
 
 #ifdef __cplusplus
@@ -52,8 +61,6 @@ public:
   SettingsScreenAudio settings_screen_audio;
   SettingsScreenDisplay settings_screen_display;
 
-  TestScreen test_screen;
-
 
   static uint32_t ColorHCLToRGB(float hue, float chroma, float luma);
 
@@ -61,6 +68,7 @@ public:
   BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept;
 
   void Init() override;
+  void Update() noexcept override;
 
 
   TouchTransformMatrix GetTouchMatrix() const;
@@ -76,8 +84,15 @@ public:
   //updates the init progress message, or proceeds past init if given null pointer
   void SetInitProgress(const char* progress_string, bool error);
 
+  uint32_t GetPopupStatus() const;
+  uint32_t GetHighestPopup() const;
+  void ActivatePopups(uint32_t bits);
+  void DeactivatePopups(uint32_t bits);
+
 protected:
   StorageSection gui_config;
+
+  uint32_t popup_status;
 
   static void LoadConfigDefaults(StorageSection& section);
 

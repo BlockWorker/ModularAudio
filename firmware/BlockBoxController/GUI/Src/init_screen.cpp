@@ -15,11 +15,6 @@ InitScreen::InitScreen(BlockBoxV2GUIManager& manager) :
 }
 
 
-void InitScreen::HandleTouch(const GUITouchState& state) noexcept {
-  //nothing to do
-}
-
-
 void InitScreen::UpdateProgressString(const char* progress_string, bool error) {
   this->init_progress_string = progress_string;
   this->init_error = error;
@@ -43,9 +38,6 @@ void InitScreen::BuildScreenContent() {
     this->driver.CmdColorRGB(0xFF4040);
   }
   this->driver.CmdSpinner(160, 120, 0, 0);
-
-  //popup overlay, if any
-  this->DrawPopupOverlay();
 }
 
 void InitScreen::UpdateExistingScreenContent() {

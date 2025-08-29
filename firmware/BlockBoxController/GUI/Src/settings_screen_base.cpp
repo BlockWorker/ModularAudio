@@ -59,6 +59,9 @@ void SettingsScreenBase::HandleTouch(const GUITouchState& state) noexcept {
         break;
     }
   }
+
+  //allow base handling
+  this->BlockBoxV2Screen::HandleTouch(state);
 }
 
 

@@ -16,6 +16,9 @@
 #define SCREEN_TOPBAR_BT_DEVICE_NAME_MAX_WIDTH 194
 #define SCREEN_TOPBAR_OVERRIDE_TEXT_MAX_WIDTH 206
 
+//touch tags
+#define SCREEN_POPUP_TAG 240
+
 
 //widths of "..." in pixels, for various fonts
 const uint16_t BlockBoxV2Screen::dots_width_20 = EVEDriver::GetTextWidth(20, "...");
@@ -76,6 +79,31 @@ BlockBoxV2Screen::BlockBoxV2Screen(BlockBoxV2GUIManager& manager) :
     currently_drawn_input(AUDIO_INPUT_NONE), currently_drawn_battery_percent(0), currently_drawn_battery_precise(false) {}
 
 
+void BlockBoxV2Screen::HandleTouch(const GUITouchState& state) noexcept {
+  //check for pop-up tap
+  if (state.released && state.tag == SCREEN_POPUP_TAG && state.tag == state.initial_tag) {
+    uint32_t popup = this->bbv2_manager.GetHighestPopup();
+    switch (popup) {
+      case GUI_POPUP_AMP_FAULT:
+      case GUI_POPUP_AMP_SAFETY_ERR:
+        //amp fault or safety error: can dismiss by going back to standby/power-off state
+        this->bbv2_manager.system.SetPowerState(false, [this](bool success) {
+          DEBUG_PRINTF("Pop-up dismissal power-off success %u\n", success);
+          if (success) {
+            //go to power-off screen and clear corresponding pop-up
+            this->GoToScreen(&this->bbv2_manager.power_off_screen);
+            this->bbv2_manager.DeactivatePopups(GUI_POPUP_AMP_FAULT | GUI_POPUP_AMP_SAFETY_ERR);
+          }
+        });
+        break;
+      default:
+        //other pop-ups can't be dismissed manually - ignore
+        break;
+    }
+  }
+}
+
+
 void BlockBoxV2Screen::Init() {
   //rebuild on active input change
   this->bbv2_manager.system.audio_mgr.RegisterCallback([this](EventSource*, uint32_t) {
@@ -91,12 +119,15 @@ void BlockBoxV2Screen::Init() {
     }
   }, MODIF_BTRX_EVENT_DEVICE_UPDATE);
 
-  //rebuild on battery presence or SoC change
+  //rebuild on battery presence or SoC change, or on shutdown update (pop-up update)
   this->bbv2_manager.system.bat_if.RegisterCallback([this](EventSource*, uint32_t) {
     this->needs_display_list_rebuild = true;
-  }, MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_SOC_UPDATE);
+  }, MODIF_BMS_EVENT_PRESENCE_UPDATE | MODIF_BMS_EVENT_SOC_UPDATE | MODIF_BMS_EVENT_SHUTDOWN_UPDATE);
 
-  //TODO register event handler with charger to force list re-build as well
+  //rebuild on adapter presence change
+  this->bbv2_manager.system.chg_if.RegisterCallback([this](EventSource*, uint32_t) {
+    this->needs_display_list_rebuild = true;
+  }, MODIF_CHG_EVENT_PRESENCE_UPDATE);
 }
 
 
@@ -124,7 +155,7 @@ void BlockBoxV2Screen::BuildScreenContent() {
   bool battery_soc_precise = (battery_soc_level == IF_BMS_SOCLVL_MEASURED_REF);
   float battery_soc_fraction = this->bbv2_manager.system.bat_if.GetSoCFraction();
   bool display_battery_soc = battery_present && battery_soc_valid && !isnanf(battery_soc_fraction) && battery_soc_fraction >= 0.0f && battery_soc_fraction <= 1.0f;
-  bool charging = false; //TODO: use actual charging status
+  bool adapter_present = this->bbv2_manager.system.chg_if.IsAdapterPresent();
 
   //battery icon fill
   if (display_battery_soc) {
@@ -148,7 +179,7 @@ void BlockBoxV2Screen::BuildScreenContent() {
   }
   this->driver.CmdDL(DL_END);
 
-  //icons for missing battery or charging
+  //icons for missing battery or adapter
   this->driver.CmdColorRGB(0xFFFFFF);
   if (!battery_present) {
     //battery missing: draw X
@@ -159,8 +190,8 @@ void BlockBoxV2Screen::BuildScreenContent() {
     this->driver.CmdDL(VERTEX2F(16 * 302 + 8, 16 * 7));
     this->driver.CmdDL(VERTEX2F(16 * 295 + 8, 16 * 14));
     this->driver.CmdDL(DL_END);
-  } else if (charging) {
-    //battery charging: lightning icon
+  } else if (adapter_present) {
+    //charger/adapter present: lightning icon
     GUIDraws::LightningIconTiny(this->driver, 296, 6, 0xFFFFFF);
   }
 
@@ -239,7 +270,114 @@ void BlockBoxV2Screen::BuildScreenContent() {
 
 
 void BlockBoxV2Screen::DrawPopupOverlay() {
-  //TODO: on event, draw tagless translucent cover and popup with message
+  uint32_t popup = this->bbv2_manager.GetHighestPopup();
+
+  char popup_title[64] = { 0 };
+  char popup_info[64] = { 0 };;
+  char popup_detail[64] = { 0 };
+
+  switch (popup) {
+    case GUI_POPUP_CHG_FAULT:
+    {
+      strncpy(popup_title, "Charging Fault", 63);
+      strncpy(popup_info, "Please remove charger", 63);
+      BatterySafetyStatus faults = this->bbv2_manager.system.bat_if.GetSafetyFaults();
+      snprintf(popup_detail, 63, "Fault:%s%s%s%s",
+               faults.cell_overvoltage ? " COV" : "",
+               faults.overcurrent_charge ? " OCC" : "",
+               faults.overtemperature_charge ? " OTC" : "",
+               faults.undertemperature_charge ? " UTC" : "");
+      break;
+    }
+    case GUI_POPUP_AMP_FAULT:
+      strncpy(popup_title, "Amplifier Fault", 63);
+      strncpy(popup_info, "Tap to return to standby", 63);
+      strncpy(popup_detail, "(Should clear the fault)", 63);
+      break;
+    case GUI_POPUP_AMP_SAFETY_ERR:
+    {
+      strncpy(popup_title, "Amplifier Safety Error", 63);
+      strncpy(popup_info, "Tap to return to standby", 63);
+      PowerAmpErrWarnSource source = this->bbv2_manager.system.amp_if.GetSafetyErrorSource();
+      snprintf(popup_detail, 63, "Type:%s%s%s%s%s%s%s%s%s, Source:%s%s%s%s%s",
+               source.current_rms_instantaneous ? " Ii" : "",
+               source.current_rms_fast ? " If" : "",
+               source.current_rms_slow ? " Is" : "",
+               source.power_average_instantaneous ? " Pi" : "",
+               source.power_average_fast ? " Pf" : "",
+               source.power_average_slow ? " Ps" : "",
+               source.power_apparent_instantaneous ? " Qi" : "",
+               source.power_apparent_fast ? " Qf" : "",
+               source.power_apparent_slow ? " Qs" : "",
+               source.channel_a ? " A" : "",
+               source.channel_b ? " B" : "",
+               source.channel_c ? " C" : "",
+               source.channel_d ? " D" : "",
+               source.channel_sum ? " S" : "");
+      break;
+    }
+    case GUI_POPUP_AUTO_SHUTDOWN:
+      snprintf(popup_title, 63, "Auto-Shutdown in %us", (this->bbv2_manager.system.bat_if.GetShutdownCountdownMS() + 999) / 1000);
+      strncpy(popup_info, "Tap to cancel", 63);
+      strncpy(popup_detail, "Due to inactivity - configurable in settings", 63);
+      break;
+    case GUI_POPUP_EOD_SHUTDOWN:
+      strncpy(popup_title, "Battery Low", 63);
+      snprintf(popup_info, 63, "Shutting down in %us", (this->bbv2_manager.system.bat_if.GetShutdownCountdownMS() + 999) / 1000);
+      strncpy(popup_detail, "Please charge the battery as soon as possible", 63);
+      break;
+    case GUI_POPUP_FULL_SHUTDOWN:
+      snprintf(popup_title, 63, "Full Shutdown in %us", (this->bbv2_manager.system.bat_if.GetShutdownCountdownMS() + 999) / 1000);
+      strncpy(popup_info, "Cannot be cancelled", 63);
+      strncpy(popup_detail, "Battery will be unavailable until manually restarted", 63);
+      break;
+    default:
+      //no pop-up
+      this->bbv2_manager.SetDisplayForceWake(false);
+      return;
+  }
+  popup_title[63] = 0;
+  popup_info[63] = 0;
+  popup_detail[63] = 0;
+
+  //any pop-up active: force display awake
+  this->bbv2_manager.SetDisplayForceWake(true);
+
+  //draw pop-up
+  this->driver.CmdDL(DL_SAVE_CONTEXT);
+  this->driver.CmdDL(COLOR_MASK(1, 1, 1, 1));
+  this->driver.CmdTagMask(true);
+
+  //background overlay
+  this->driver.CmdTag(SCREEN_POPUP_TAG);
+  this->driver.CmdBeginDraw(EVE_RECTS);
+  this->driver.CmdDL(LINE_WIDTH(16));
+  this->driver.CmdColorRGB(0x000000);
+  this->driver.CmdColorA(160);
+  this->driver.CmdDL(VERTEX2F(0, 0));
+  this->driver.CmdDL(VERTEX2F(16 * 320, 16 * 240));
+
+  //pop-up outline
+  this->driver.CmdDL(LINE_WIDTH(80));
+  this->driver.CmdColorRGB(0xFF0000);
+  this->driver.CmdColorA(255);
+  this->driver.CmdDL(VERTEX2F(16 * 40, 16 * 80));
+  this->driver.CmdDL(VERTEX2F(16 * 279, 16 * 159));
+
+  //pop-up background
+  this->driver.CmdDL(LINE_WIDTH(32));
+  this->driver.CmdColorRGB(0x402020);
+  this->driver.CmdDL(VERTEX2F(16 * 40, 16 * 80));
+  this->driver.CmdDL(VERTEX2F(16 * 279, 16 * 159));
+  this->driver.CmdDL(DL_END);
+
+  //text
+  this->driver.CmdColorRGB(0xFFFFFF);
+  this->driver.CmdText(160, 100, 28, EVE_OPT_CENTER, popup_title);
+  this->driver.CmdText(160, 125, 27, EVE_OPT_CENTER, popup_info);
+  this->driver.CmdText(160, 142, 20, EVE_OPT_CENTER, popup_detail);
+
+  this->driver.CmdDL(DL_RESTORE_CONTEXT);
 }
 
 

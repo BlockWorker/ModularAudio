@@ -16,8 +16,6 @@ class InitScreen : public BlockBoxV2Screen {
 public:
   InitScreen(BlockBoxV2GUIManager& manager);
 
-  void HandleTouch(const GUITouchState& state) noexcept override;
-
   void UpdateProgressString(const char* progress_string, bool error);
 
 protected:

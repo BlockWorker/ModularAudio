@@ -15,11 +15,14 @@
 #include "charger_interface.h"
 
 
-//power system events - TODO add relevant ones?
-#define PWR_EVENT_XYZ (1u << 8)
+//power system events
+#define PWR_EVENT_CHARGING_ACTIVE_CHANGE (1u << 8)
 
 //power setting lock timeout, in main loop cycles
 #define PWR_LOCK_TIMEOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
+
+//auto-shutdown lock timeout, in main loop cycles
+#define PWR_ASD_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
 
 //min and max values for maximum adapter current, in amps
 #define PWR_ADAPTER_CURRENT_A_MIN IF_CHG_ADAPTER_CURRENT_A_MIN
@@ -98,6 +101,8 @@ protected:
   uint32_t lock_timer;
   std::deque<QueuedOperation> queued_operations;
 
+  uint32_t asd_lock_timer;
+
   bool charging_active;
   uint32_t charging_end_condition_cycles;
 
@@ -109,7 +114,7 @@ protected:
 
   uint16_t GetChargingTargetCurrentMA() const;
 
-  void HandleEvent(EventSource* source, uint32_t event);
+  //void HandleEvent(EventSource* source, uint32_t event);
 };
 
 

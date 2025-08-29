@@ -93,6 +93,8 @@ protected:
 
   virtual void InitTouchCalibration();
 
+  void ForceScreenRedraw() noexcept;
+
 };
 
 

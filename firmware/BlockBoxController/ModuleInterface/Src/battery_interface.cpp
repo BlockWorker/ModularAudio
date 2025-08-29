@@ -340,6 +340,21 @@ void BatteryInterface::LoopTasks() {
             //read failed: mark battery as not present, execute callbacks
             this->present = false;
             this->ExecuteCallbacks(MODIF_BMS_EVENT_PRESENCE_UPDATE);
+          } else {
+            //read successful: check for inconsistencies between status bits and other registers
+            BatteryStatus status = this->GetStatus();
+            if (status.shutdown != (this->GetScheduledShutdown() != IF_BMS_SHDN_NONE)) {
+              //shutdown inconsistency detected: re-read shutdown information register
+              this->ReadRegisterAsync(UARTDEF_BMS_SHUTDOWN, bms_scratch, ModuleTransferCallback());
+            }
+            if (status.alert != (this->GetSafetyAlerts().value != 0)) {
+              //alert inconsistency detected: re-read alert information register
+              this->ReadRegister16Async(UARTDEF_BMS_ALERTS, ModuleTransferCallback());
+            }
+            if (status.fault != (this->GetSafetyFaults().value != 0)) {
+              //fault inconsistency detected: re-read fault information register
+              this->ReadRegister16Async(UARTDEF_BMS_FAULTS, ModuleTransferCallback());
+            }
           }
         });
       }
