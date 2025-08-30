@@ -19,7 +19,7 @@
 
 GUIManager::GUIManager(EVEDriver& driver) noexcept :
     driver(driver), initialised(false), current_screen(NULL), cmd_busy_waiting(false), display_brightness(EVE_BACKLIGHT_PWM), display_sleep(false), fade_brightness(EVE_BACKLIGHT_PWM),
-    touch_sleep_locked(false), display_sleep_timeout_ms(30000), last_touched_tick(0), display_force_wake(false) {}
+    touch_sleep_locked(false), display_sleep_timeout_ms(30000), last_touched_tick(0), display_force_wake(false), display_force_wake_internal(false) {}
 
 
 void GUIManager::InitTouchCalibration() {
@@ -70,6 +70,7 @@ void GUIManager::Init() {
   this->display_sleep_timeout_ms = 30000;
   this->last_touched_tick = HAL_GetTick();
   this->display_force_wake = false;
+  this->display_force_wake_internal = false;
 
   this->initialised = true;
 
@@ -172,7 +173,7 @@ void GUIManager::Update() noexcept {
       }
     }
 
-    if (this->display_force_wake || this->touch_state.initial || this->touch_state.released) {
+    if (this->display_force_wake || this->display_force_wake_internal || this->touch_state.initial || this->touch_state.released) {
       //encountered touch event (not just constant touched/not touched), or forced awake: update last touch tick
       this->last_touched_tick = tick;
 

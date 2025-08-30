@@ -36,11 +36,11 @@
 //re-write period, in main loop cycles (to keep charger watchdog happy)
 #define PWR_CHG_REWRITE_CYCLES (60000 / MAIN_LOOP_PERIOD_MS)
 //minimum voltage difference to target to allow charging to start, in volts
-#define PWR_CHG_START_MIN_VOLTAGE_DIFF_V 0.3f
+#define PWR_CHG_START_MIN_VOLTAGE_DIFF_V 0.2f
 //maximum voltage difference to target to allow charging to end (assuming current condition is also met), in volts
-#define PWR_CHG_END_MAX_VOLTAGE_DIFF_V 0.1f
+#define PWR_CHG_END_MAX_VOLTAGE_DIFF_V 0.06f
 //maximum charging current below which charging is allowed to end (assuming voltage condition is also met), in amps
-#define PWR_CHG_END_MAX_CURRENT_A 0.25f
+#define PWR_CHG_END_MAX_CURRENT_A 0.2f
 //time for which the voltage and current conditions above need to be fulfilled to allow charging to end, in main loop cycles
 #define PWR_CHG_END_STABLE_CYCLES (10000 / MAIN_LOOP_PERIOD_MS)
 
@@ -164,10 +164,7 @@ void PowerManager::LoopTasks() {
   uint32_t primask = __get_PRIMASK();
   __disable_irq();
   if (this->asd_lock_timer > 0) {
-    if (--this->asd_lock_timer == 0) {
-      //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
-      DEBUG_PRINTF("* PowerManager auto-shutdown lock timed out!\n");
-    }
+    this->asd_lock_timer--;
   }
 
   if (this->lock_timer > 0) {
@@ -269,6 +266,8 @@ void PowerManager::LoopTasks() {
               }
               this->lock_timer = 0;
             });
+          } else {
+            this->lock_timer = 0;
           }
         } else {
           //end conditions not met: reset counter
@@ -282,10 +281,11 @@ void PowerManager::LoopTasks() {
               } else {
                 DEBUG_PRINTF("PowerManager refreshed charging current: %u\n", this->GetChargingTargetCurrentMA()); //TODO temp printout
               }
+              this->lock_timer = 0;
             });
+          } else {
+            this->lock_timer = 0;
           }
-
-          this->lock_timer = 0;
         }
       }
     } else {
@@ -352,60 +352,52 @@ void PowerManager::LoopTasks() {
   //auto-shutdown handling
   uint32_t asd_delay = this->GetAutoShutdownDelayMS();
   uint32_t tick = HAL_GetTick();
-  //check if we're on battery power (i.e. battery present, but no adapter), and auto-shutdown is enabled
-  if (!adapter_present && battery_present && asd_delay != PWR_ASD_DELAY_MS_MAX) {
-    //check no-shutdown conditions (have active input and not muted) TODO: or learn cycle, once implemented
-    if (this->system.audio_mgr.GetActiveInput() != AUDIO_INPUT_NONE && !this->system.audio_mgr.IsMute()) {
-      //no shutdown: reset countdown
-      this->auto_shutdown_last_reset = tick;
-    }
-
-    //if not locked out: check countdown and send shutdown/cancel command to battery if necessary
-    primask = __get_PRIMASK();
-    __disable_irq();
-    if (this->asd_lock_timer == 0) {
-      //lock out
-      this->asd_lock_timer = PWR_ASD_LOCK_TIMEOUT_CYCLES;
-      __set_PRIMASK(primask);
-
-      if (tick - this->auto_shutdown_last_reset > asd_delay) {
-        //should be shut down: apply shutdown to battery, if not already scheduled
-        if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_NONE) {
-          this->system.bat_if.SetShutdownRequest(true, [this](bool success) {
-            if (!success) {
-              DEBUG_PRINTF("* PowerManager failed to initiate auto-shutdown\n");
-            } else {
-              DEBUG_PRINTF("PowerManager initiated auto-shutdown\n"); //TODO temp printout
-            }
-            this->asd_lock_timer = 0;
-          });
-        } else {
-          //already scheduled: just unlock
-          this->asd_lock_timer = 0;
-        }
-      } else {
-        //should not be shut down: cancel shutdown, if scheduled
-        if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_HOST_REQUEST) {
-          this->system.bat_if.SetShutdownRequest(false, [this](bool success) {
-            if (!success) {
-              DEBUG_PRINTF("* PowerManager failed to cancel auto-shutdown\n");
-            } else {
-              DEBUG_PRINTF("PowerManager cancelled auto-shutdown\n"); //TODO temp printout
-            }
-            this->asd_lock_timer = 0;
-          });
-        } else {
-          //already idle: just unlock
-          this->asd_lock_timer = 0;
-        }
-      }
-    } else {
-      __set_PRIMASK(primask);
-    }
-  } else {
-    //reset countdown if shutdown is disabled, just to be sure there's no inadvertent shutdown once it re-enables
+  //check no-shutdown conditions (adapter present, or battery not present, or shutdown disabled, or have active input and not muted) TODO: or learn cycle, once implemented
+  if (adapter_present || !battery_present || asd_delay == PWR_ASD_DELAY_MS_MAX || (this->system.audio_mgr.GetActiveInput() != AUDIO_INPUT_NONE && !this->system.audio_mgr.IsMute())) {
+    //no shutdown: reset countdown
     this->auto_shutdown_last_reset = tick;
   }
+  //if not locked out: check countdown and send shutdown/cancel command to battery if necessary
+  primask = __get_PRIMASK();
+  __disable_irq();
+  if (this->asd_lock_timer == 0) {
+    //lock out
+    this->asd_lock_timer = PWR_ASD_LOCK_TIMEOUT_CYCLES;
+    __set_PRIMASK(primask);
+
+    if (tick - this->auto_shutdown_last_reset > asd_delay) {
+      //should be shut down: apply shutdown to battery, if not already scheduled
+      if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_NONE) {
+        this->system.bat_if.SetShutdownRequest(true, [this](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* PowerManager failed to initiate auto-shutdown\n");
+          } else {
+            DEBUG_PRINTF("PowerManager initiated auto-shutdown\n"); //TODO temp printout
+          }
+        });
+      } else {
+        //already scheduled: just unlock
+        this->asd_lock_timer = 0;
+      }
+    } else {
+      //should not be shut down: cancel shutdown, if scheduled
+      if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_HOST_REQUEST) {
+        this->system.bat_if.SetShutdownRequest(false, [this](bool success) {
+          if (!success) {
+            DEBUG_PRINTF("* PowerManager failed to cancel auto-shutdown\n");
+          } else {
+            DEBUG_PRINTF("PowerManager cancelled auto-shutdown\n"); //TODO temp printout
+          }
+        });
+      } else {
+        //already idle: just unlock
+        this->asd_lock_timer = 0;
+      }
+    }
+  } else {
+    __set_PRIMASK(primask);
+  }
+
 
   //if not locked: automatically clear battery charge faults (if present) when charger is removed
   primask = __get_PRIMASK();

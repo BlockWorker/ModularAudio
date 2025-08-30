@@ -463,13 +463,6 @@ void BlockBoxV2System::LoopTasks() {
   this->power_mgr.LoopTasks();
 
   this->gui_mgr.Update();
-
-  static uint32_t loop_count = 0;
-  if (loop_count++ % 1000 == 0) { //TODO temporary printout, trying to catch display shift bug
-    uint16_t hoffset;
-    this->gui_mgr.driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
-    DEBUG_PRINTF("HOFFSET = %u\n", hoffset);
-  }
 }
 
 

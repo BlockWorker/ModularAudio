@@ -333,15 +333,11 @@ void BlockBoxV2Screen::DrawPopupOverlay() {
       break;
     default:
       //no pop-up
-      this->bbv2_manager.SetDisplayForceWake(false);
       return;
   }
   popup_title[63] = 0;
   popup_info[63] = 0;
   popup_detail[63] = 0;
-
-  //any pop-up active: force display awake
-  this->bbv2_manager.SetDisplayForceWake(true);
 
   //draw pop-up
   this->driver.CmdDL(DL_SAVE_CONTEXT);

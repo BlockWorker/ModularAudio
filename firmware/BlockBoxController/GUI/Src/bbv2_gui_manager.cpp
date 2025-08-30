@@ -86,7 +86,7 @@ uint32_t BlockBoxV2GUIManager::ColorHCLToRGB(float hue, float chroma, float luma
 
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
     GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), settings_screen_audio(*this),
-    settings_screen_display(*this),
+    settings_screen_display(*this), settings_screen_power(*this),
     gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults), popup_status(GUI_POPUP_NONE) {}
 
 
@@ -98,6 +98,7 @@ void BlockBoxV2GUIManager::Init() {
   this->main_screen.Init();
   this->settings_screen_audio.Init();
   this->settings_screen_display.Init();
+  this->settings_screen_power.Init();
 
   this->popup_status = GUI_POPUP_NONE;
 
@@ -116,12 +117,31 @@ void BlockBoxV2GUIManager::Init() {
 }
 
 void BlockBoxV2GUIManager::Update() noexcept {
+  static uint32_t loop_count = 0;
+
   //allow base handling
   this->GUIManager::Update();
 
   //reset power manager auto-shutdown on any touch event
   if (this->touch_state.initial || this->touch_state.released) {
     this->system.power_mgr.ResetAutoShutdownTimer();
+  }
+
+  //catch and correct HOFFSET bug
+  if (++loop_count % 50 == 0) {
+    uint16_t hoffset;
+    this->driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
+
+    if (hoffset != EVE_HOFFSET) {
+      DEBUG_PRINTF("* BlockBoxV2GUIManager detected incorrect HOFFSET (%u instead of %u), correcting\n", hoffset, (uint16_t)EVE_HOFFSET);
+      try {
+        this->driver.phy.DirectWrite16(REG_HOFFSET, EVE_HOFFSET);
+      } catch (const std::exception& exc) {
+        DEBUG_PRINTF("*** BlockBoxV2GUIManager HOFFSET correction failed: %s\n", exc.what());
+      } catch (...) {
+        DEBUG_PRINTF("*** BlockBoxV2GUIManager HOFFSET correction failed with unknown exception\n");
+      }
+    }
   }
 }
 
@@ -225,11 +245,13 @@ uint32_t BlockBoxV2GUIManager::GetHighestPopup() const {
 void BlockBoxV2GUIManager::ActivatePopups(uint32_t bits) {
   this->popup_status |= bits;
   this->ForceScreenRedraw();
+  this->display_force_wake_internal = (this->popup_status != 0);
 }
 
 void BlockBoxV2GUIManager::DeactivatePopups(uint32_t bits) {
   this->popup_status &= ~bits;
   this->ForceScreenRedraw();
+  this->display_force_wake_internal = (this->popup_status != 0);
 }
 
 

@@ -38,7 +38,7 @@ void SettingsScreenBase::HandleTouch(const GUITouchState& state) noexcept {
         break;
       case SCREEN_SETTINGS_TAG_TAB_3:
         if (this->tab_index != 3) {
-          //TODO: goto tab 3 (power)
+          this->GoToScreen(&this->bbv2_manager.settings_screen_power);
         }
         break;
       /*case SCREEN_SETTINGS_TAG_TAB_4:

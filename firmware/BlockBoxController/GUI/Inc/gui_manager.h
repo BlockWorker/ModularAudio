@@ -90,6 +90,7 @@ protected:
   uint32_t display_sleep_timeout_ms;
   uint32_t last_touched_tick;
   bool display_force_wake;
+  bool display_force_wake_internal;
 
   virtual void InitTouchCalibration();
 

@@ -22,7 +22,7 @@
 #define PWR_LOCK_TIMEOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)
 
 //auto-shutdown lock timeout, in main loop cycles
-#define PWR_ASD_LOCK_TIMEOUT_CYCLES (500 / MAIN_LOOP_PERIOD_MS)
+#define PWR_ASD_LOCK_TIMEOUT_CYCLES (300 / MAIN_LOOP_PERIOD_MS)
 
 //min and max values for maximum adapter current, in amps
 #define PWR_ADAPTER_CURRENT_A_MIN IF_CHG_ADAPTER_CURRENT_A_MIN
