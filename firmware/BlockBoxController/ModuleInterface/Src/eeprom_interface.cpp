@@ -61,7 +61,7 @@ void EEPROMInterface::ReadAllSections(SuccessCallback&& callback) {
     throw std::logic_error("EEPROMInterface ReadAllSections called with no sections registered");
   }
 
-  //clear data array (zero out) - TODO see if this is even needed
+  //clear data array (zero out)
   memset(this->data.data(), 0, this->data.size());
 
   //do actual read, starting at first section

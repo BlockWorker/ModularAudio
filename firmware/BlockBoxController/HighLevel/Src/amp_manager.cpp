@@ -349,6 +349,7 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
                 this->warn_lock_timer = 0;
               }
             });
+            this->ExecuteCallbacks(AMP_EVENT_SAFETY_WARNING);
             //don't do anything else for now
             return;
           } else {
@@ -408,6 +409,7 @@ void AmpManager::HandleEvent(EventSource* source, uint32_t event) {
             //log error
             DEBUG_PRINTF("*** Amp safety error: 0x%04X\n", err);
             this->prev_safety_error = err;
+            this->ExecuteCallbacks(AMP_EVENT_SAFETY_ERROR);
           }
           this->system.gui_mgr.ActivatePopups(GUI_POPUP_AMP_SAFETY_ERR);
         } else {
@@ -500,8 +502,6 @@ void AmpManager::UpdateWarningLimits(float factor, SuccessCallback&& callback) {
   //scale threshold sets with factor
   _AmpManager_ScaleThresholdSet(&this->warning_limits_irms, factor);
   _AmpManager_ScaleThresholdSet(&this->warning_limits_pavg, factor);
-
-  //TODO: shutdown amp if it's active
 
   //apply current set
   this->system.amp_if.SetSafetyThresholds(IF_POWERAMP_THR_IRMS_WARNING, &this->warning_limits_irms, [this, factor, callback = std::move(callback)](bool success) {
@@ -658,7 +658,7 @@ void AmpManager::HandleClipping(SuccessCallback&& callback) {
     }
     this->ApplyNewPVDDTarget(new_target, std::move(callback));
   }/* else {
-    //voltage already at limit, still clipping: reduce volume - TODO disabled this for now, may not be desired
+    //voltage already at limit, still clipping: reduce volume - TODO disabled this for now, not quite desired - instead implement pre-amp clipping detection in DAP?
     this->ReduceVolume(std::move(callback));
   }*/
 }

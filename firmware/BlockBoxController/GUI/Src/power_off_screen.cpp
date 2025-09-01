@@ -104,7 +104,7 @@ void PowerOffScreen::BuildScreenContent() {
 
   char text_buf[64];
 
-  //main text, or auto-calibration warning) TODO: auto-shutdown warning too
+  //main text, or auto-calibration warning
   uint32_t auto_cal_tick_difference = this->auto_calibration_tick - HAL_GetTick();
   if (this->auto_calibration_scheduled && auto_cal_tick_difference <= SCREEN_POWEROFF_AUTO_CAL_WARNING_MS) {
     //show auto-calibration warning

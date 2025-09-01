@@ -108,7 +108,6 @@ void UARTModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uin
       } catch (const std::exception& exc) {
         DEBUG_PRINTF("*** UARTModuleInterface interrupt handler exception: %s\n", exc.what());
         this->interrupt_error = true;
-        //TODO: log event, in both "catch" cases
       } catch (...) {
         DEBUG_PRINTF("*** UARTModuleInterface interrupt handler unknown exception\n");
         this->interrupt_error = true;
@@ -406,7 +405,7 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
             //error: non-reserved byte escaped: reset parse buffer, skip to next start
             this->parse_buffer.clear();
             this->rx_skip_to_start = true;
-            //TODO: maybe log event or something
+            DEBUG_PRINTF("* UARTModuleInterface found escaped non-reserved byte while parsing\n");
           }
           this->rx_escape_active = false;
         } else {
@@ -426,13 +425,13 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
             if (rx_byte == MODIF_UART_START_BYTE) {
               //error: unexpected start byte: reset parse buffer, receive new command starting with this byte
               this->parse_buffer.clear();
-              //TODO: maybe log event or something
+              DEBUG_PRINTF("* UARTModuleInterface found unexpected start byte while parsing\n");
             } else if (rx_byte == MODIF_UART_END_BYTE) {
               //end byte found: parse buffer is done
               if (this->parse_buffer.size() < 3) {
                 //error: parse buffer empty or too short (must have 1B type + 2B crc at least): skip to next start
                 this->rx_skip_to_start = true;
-                //TODO: maybe log event or something
+                DEBUG_PRINTF("* UARTModuleInterface found too short notification while parsing\n");
               } else {
                 //parse buffer has data: parse command, then reset parse buffer and skip to next start
                 this->ParseRawNotification();
@@ -456,7 +455,6 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
       this->parse_buffer.clear();
       this->parse_buffer.shrink_to_fit();
       this->rx_skip_to_start = true;
-      //TODO: maybe log event or something
     }
 
     //handle circular receive buffer
@@ -515,13 +513,13 @@ void UARTModuleInterface::ParseRawNotification() {
         }
         switch (this->parse_buffer[1]) {
           case IF_UART_EVENT_MCU_RESET:
-            //TODO handle mcu resets if necessary
+            //MCU resets are handled by subclasses on a case-by-case basis
             transfer_related = false;
             error = false;
             break;
           case IF_UART_EVENT_WRITE_ACK:
             if (transfer == NULL) {
-              //write acknowledgment despite no active transfer - nothing to do, but also not really an error? TODO: check if this should be an error after all
+              //write acknowledgment despite no active transfer - nothing to do, but also not really an error
               transfer_related = false;
               error = false;
               break;
@@ -567,7 +565,7 @@ void UARTModuleInterface::ParseRawNotification() {
         break;
       case IF_UART_TYPE_READ_DATA:
         if (transfer == NULL) {
-          //read data despite no active transfer - nothing to do, but also not really an error? TODO: check if this should be an error after all, or treated as a change notification
+          //read data despite no active transfer - nothing to do, but also not really an error
           transfer_related = false;
           error = false;
           break;
@@ -643,7 +641,6 @@ void UARTModuleInterface::ParseRawNotification() {
       } catch (...) {
         //list operation failed: force a retry (should be a very unlikely case)
         DEBUG_PRINTF("*** UARTModuleInterface retry forced due to exception when trying to finish a transfer!\n");
-        //TODO: log event or something
       }
     }
 
@@ -666,8 +663,6 @@ void UARTModuleInterface::HandleNotificationData(bool error, bool unsolicited) {
   //nothing to do in base class implementation
   UNUSED(error);
   UNUSED(unsolicited);
-  //testing printout for debug - TODO: remove later
-  //DEBUG_PRINTF("UART notif: unsolicited %u, type %u, sub %u, length %u\n", unsolicited, this->parse_buffer[0], this->parse_buffer[1], this->parse_buffer.size());
 }
 
 //return value: whether the current error is attributable to a command
@@ -849,8 +844,6 @@ void RegUARTModuleInterface::OnRegisterUpdate(uint8_t address) {
   UNUSED(address);
   //execute callbacks
   this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
-  //TODO temporary debug printout
-  //DEBUG_PRINTF("UART register 0x%02X updated\n", address);
 }
 
 

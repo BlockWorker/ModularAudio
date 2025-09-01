@@ -36,8 +36,6 @@
 //number of internal retries for failed I2C transfers
 #define I2C_INTERNAL_RETRIES 3
 
-//TODO: potential transfer-specific timeout as well?
-
 
 //async transfer queue item, extended for I2C-specific information
 class I2CModuleTransferQueueItem : public ModuleTransferQueueItem {
@@ -1215,8 +1213,6 @@ void RegI2CModuleInterface::OnRegisterUpdate(uint8_t address) {
   UNUSED(address);
   //execute callbacks
   this->ExecuteCallbacks(MODIF_EVENT_REGISTER_UPDATE);
-  //TODO temporary debug printout
-  //DEBUG_PRINTF("I2C register 0x%02X updated\n", address);
 }
 
 
@@ -1342,8 +1338,11 @@ void IntRegI2CModuleInterface::LoopTasks() {
 
   //check for interrupt or interrupt timeout
   if (this->current_interrupt_timer > 0) {
-    //currently handling interrupt: decrement timer - TODO check if we need any additional logic/logging on interrupt handling timeout
-    this->current_interrupt_timer--;
+    //currently handling interrupt: decrement timer
+    if (--this->current_interrupt_timer == 0) {
+      //timed out: shouldn't happen, log warning
+      DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt handling timed out\n");
+    }
   } else {
     //currently not handling any interrupt: check for undetected interrupt condition (pin)
     if (HAL_GPIO_ReadPin(this->int_port, this->int_pin) == GPIO_PIN_RESET) {
@@ -1384,7 +1383,5 @@ IntRegI2CModuleInterface::IntRegI2CModuleInterface(I2CHardwareInterface& hw_inte
 void IntRegI2CModuleInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
   //nothing to do in base implementation
   UNUSED(interrupt_flags);
-  //TODO temporary debug printout
-  //DEBUG_PRINTF("I2C interrupt 0x%04X\n", interrupt_flags);
 }
 

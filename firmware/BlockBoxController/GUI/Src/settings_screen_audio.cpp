@@ -314,8 +314,6 @@ void SettingsScreenAudio::Init() {
       this->needs_display_list_rebuild = true;
     }
   }, MODIF_POWERAMP_EVENT_PVDD_UPDATE | MODIF_POWERAMP_EVENT_MEASUREMENT_UPDATE);
-
-  //TODO register update handlers
 }
 
 

@@ -14,8 +14,9 @@
 #include "power_amp_interface.h"
 
 
-//amplifier events - TODO add relevant ones?
-#define AMP_EVENT_XYZ (1u << 8)
+//amplifier events
+#define AMP_EVENT_SAFETY_WARNING (1u << 8)
+#define AMP_EVENT_SAFETY_ERROR (1u << 9)
 
 //amp setting lock timeout, in main loop cycles
 #define AMP_LOCK_TIMEOUT_CYCLES (200 / MAIN_LOOP_PERIOD_MS)

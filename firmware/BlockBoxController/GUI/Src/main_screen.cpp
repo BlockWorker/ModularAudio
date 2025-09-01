@@ -63,14 +63,6 @@ MainScreen::MainScreen(BlockBoxV2GUIManager& manager) :
 }
 
 
-void MainScreen::DisplayScreen() {
-  //TODO update handling
-
-  //base handling
-  this->BlockBoxV2Screen::DisplayScreen();
-}
-
-
 void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
   //potential button press
   if (state.released && state.tag == state.initial_tag) {
@@ -372,8 +364,6 @@ void MainScreen::Init() {
       }
     }
   }, MODIF_DAP_EVENT_STATUS_UPDATE | MODIF_DAP_EVENT_INPUT_RATE_UPDATE);
-
-  //TODO: register update handlers for RTC, as well as maybe others if needed?
 }
 
 
@@ -835,6 +825,6 @@ void MainScreen::BuildScreenContent() {
 
 
 void MainScreen::UpdateExistingScreenContent() {
-  //TODO non-redraw updates
+  //non-redraw updates, currently none necessary
 }
 

@@ -218,14 +218,14 @@ void _I2C_ProcessWriteData() {
       //get channel
       temp8 = reg_addr - I2CDEF_DAP_BIQUAD_COEFFS_CH1;
       //copy to corresponding buffer
-      memcpy(sp_biquad_coeffs[temp8], write_buf, SP_MAX_BIQUADS * 5 * sizeof(q31_t)); //TODO: actual written size?
+      memcpy(sp_biquad_coeffs[temp8], write_buf, SP_MAX_BIQUADS * 5 * sizeof(q31_t));
       break;
     case I2CDEF_DAP_FIR_COEFFS_CH1:
     case I2CDEF_DAP_FIR_COEFFS_CH2:
       //get channel
       temp8 = reg_addr - I2CDEF_DAP_FIR_COEFFS_CH1;
       //copy to corresponding buffer
-      memcpy(sp_fir_coeffs[temp8], write_buf, SP_MAX_FIR_LENGTH * sizeof(q31_t)); //TODO: actual written size?
+      memcpy(sp_fir_coeffs[temp8], write_buf, SP_MAX_FIR_LENGTH * sizeof(q31_t));
       break;
     default:
       DEBUG_PRINTF("I2C write error: attempted write to non-writable register 0x%02X\n", reg_addr);

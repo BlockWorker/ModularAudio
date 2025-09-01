@@ -574,9 +574,9 @@ static uint8_t USBD_AUDIO_SOF(USBD_HandleTypeDef* pdev) {
     DbgSofCounter++;
 #endif
     // Update audio read pointer
-    //haudio->rd_ptr = AUDIO_TOTAL_BUF_SIZE - (LL_DMA_ReadReg(BDMA_Channel0, CNDTR) & 0xFFFF); //TODO: needs correct DMA stream if used
+    //haudio->rd_ptr = AUDIO_TOTAL_BUF_SIZE - (LL_DMA_ReadReg(BDMA_Channel0, CNDTR) & 0xFFFF);
 
-    // Calculate remaining writable buffer samples - TODO: fixed to ideal count for now, either make this work sensibly or switch to synchronous
+    // Calculate remaining writable buffer samples
     uint32_t audio_buf_writable_samples = AUDIO_TOTAL_BUF_SIZE/(2*6);/*haudio->rd_ptr < haudio->wr_ptr ?
     		  (haudio->rd_ptr + AUDIO_TOTAL_BUF_SIZE - haudio->wr_ptr)/6 : (haudio->rd_ptr - haudio->wr_ptr)/6;*/
 

@@ -383,7 +383,7 @@ void BlockBoxV2Screen::GoToScreen(GUIScreen* screen) {
 }
 
 void BlockBoxV2Screen::OnScreenExit() {
-  //TODO I think nothing to do in the base version, but double-check this
+  //nothing to do in the base version
 }
 
 

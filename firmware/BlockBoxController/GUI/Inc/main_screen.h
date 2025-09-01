@@ -18,8 +18,6 @@ class MainScreen : public BlockBoxV2Screen {
 public:
   MainScreen(BlockBoxV2GUIManager& manager);
 
-  void DisplayScreen() override;
-
   void HandleTouch(const GUITouchState& state) noexcept override;
 
   void Init() override;

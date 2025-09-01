@@ -89,10 +89,7 @@ public:
   void SetAutoShutdownDelayMS(uint32_t delay_ms);
   void ResetAutoShutdownTimer();
 
-  //charging: voltage target config, current target config, writing+rewriting to charger, reporting+display(LED) of charging state, charge cut-off monitoring (based on voltage and consistently low charge current),
-  //no starting charge if SoC or voltage too close to target
-  //time-based auto-shutdown of battery, learn mode handling for health measurement (?)(maybe not initially?)
-  //TODO: NVM storage of config, probably including max input current
+  //TODO: battery learn mode?
 
 protected:
   StorageSection non_volatile_config;

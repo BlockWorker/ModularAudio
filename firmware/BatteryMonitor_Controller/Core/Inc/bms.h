@@ -74,9 +74,9 @@
 #define BMS_SOC_CHARGE_DIFFERENCE_MAX 0.15f
 
 //cell balancing configuration
-//minimum voltage difference between two cells to be considered "unbalanced", in mV - TODO maybe higher in production? might also be fine like this? not sure
+//minimum voltage difference between two cells to be considered "unbalanced", in mV
 #define BMS_BAL_DIFF_START 10
-//voltage difference between two cells at/below which balancing should be stopped, in mV - TODO test whether this is too low
+//voltage difference between two cells at/below which balancing should be stopped, in mV
 #define BMS_BAL_DIFF_STOP 2
 
 //maximum cell charge voltage in mV
