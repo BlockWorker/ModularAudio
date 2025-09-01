@@ -26,7 +26,7 @@
 #define MODIF_BTRX_EVENT_CODEC_UPDATE (1u << 13)
 
 //init timeout, in main loop cycles
-#define IF_BTRX_INIT_TIMEOUT (4000 / MAIN_LOOP_PERIOD_MS)
+#define IF_BTRX_INIT_TIMEOUT (8000 / MAIN_LOOP_PERIOD_MS)
 //reset timeout, in main loop cycles
 #define IF_BTRX_RESET_TIMEOUT (500 / MAIN_LOOP_PERIOD_MS)
 

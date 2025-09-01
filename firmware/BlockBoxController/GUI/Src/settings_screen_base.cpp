@@ -48,7 +48,7 @@ void SettingsScreenBase::HandleTouch(const GUITouchState& state) noexcept {
         break;*/
       case SCREEN_SETTINGS_TAG_TAB_5:
         if (this->tab_index != 5 && state.long_press) {
-          //TODO: goto tab 5 (debug) if long pressed
+          this->GoToScreen(&this->bbv2_manager.settings_screen_debug);
         }
         break;
       case SCREEN_SETTINGS_TAG_CLOSE:

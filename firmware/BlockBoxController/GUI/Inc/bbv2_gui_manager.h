@@ -18,6 +18,7 @@
 #include "settings_screen_audio.h"
 #include "settings_screen_display.h"
 #include "settings_screen_power.h"
+#include "settings_screen_debug.h"
 
 
 //message pop-up reasons (higher bit = higher priority)
@@ -62,6 +63,7 @@ public:
   SettingsScreenAudio settings_screen_audio;
   SettingsScreenDisplay settings_screen_display;
   SettingsScreenPower settings_screen_power;
+  SettingsScreenDebug settings_screen_debug;
 
 
   static uint32_t ColorHCLToRGB(float hue, float chroma, float luma);
