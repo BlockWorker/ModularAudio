@@ -123,14 +123,17 @@ void HAL_RAMECC_DetectErrorCallback(RAMECC_HandleTypeDef *hramecc) {
 
   uintptr_t base_address;
   uintptr_t addr_step;
+  uintptr_t data_size = 4;
   switch ((uintptr_t)hramecc->Instance) {
     case RAMECC1_Monitor1_BASE:
       base_address = 0x24000000U;
       addr_step = 8;
+      data_size = 8;
       break;
     case RAMECC1_Monitor2_BASE:
       base_address = 0x00000000U;
       addr_step = 8;
+      data_size = 8;
       break;
     case RAMECC1_Monitor3_BASE:
       base_address = 0x20000000U;
@@ -167,7 +170,26 @@ void HAL_RAMECC_DetectErrorCallback(RAMECC_HandleTypeDef *hramecc) {
     double_err_count++;
   } else if ((hramecc->RAMECCErrorCode & HAL_RAMECC_SINGLEERROR_DETECTED) != 0) {
     DEBUG_PRINTF("*** ECC Single Error %p\n", (void*)address);
-    single_err_count++; //TODO: write back corrected value
+    single_err_count++;
+
+    //write back corrected value, if possible
+    if (address >= 0x20000000) {
+      switch (data_size) {
+        case 4:
+        default:
+        {
+          uint32_t read_data = *(uint32_t*)address;
+          *(uint32_t volatile*)address = read_data;
+          break;
+        }
+        case 8:
+        {
+          uint64_t read_data = *(uint64_t*)address;
+          *(uint64_t volatile*)address = read_data;
+          break;
+        }
+      }
+    }
   }
 
   hramecc->RAMECCErrorCode = HAL_RAMECC_NO_ERROR;

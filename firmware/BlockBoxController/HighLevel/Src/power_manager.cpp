@@ -51,6 +51,14 @@
 #define PWR_CHG_LED_CHARGING_REG PWR_CHG_LED_TIMER.Instance->CCR1
 #define PWR_CHG_LED_IDLE_REG PWR_CHG_LED_TIMER.Instance->CCR2
 
+//battery time estimation exponential moving average coefficients - currently selected for 60s time constant given 10ms main loop period
+#define PWR_BAT_TIME_EMA_1MALPHA 0.999833f
+#define PWR_BAT_TIME_EMA_ALPHA (1.0f - PWR_BAT_TIME_EMA_1MALPHA)
+//maximum relative ratio between instantaneous and average power for valid estimate
+#define PWR_BAT_TIME_MAX_PWR_RATIO 1.5f
+//minimum relative ratio between instantaneous and average power for EMA re-init
+#define PWR_BAT_TIME_REINIT_PWR_RATIO 3.0f
+
 
 static_assert(PWR_ADAPTER_CURRENT_A_DEFAULT >= PWR_ADAPTER_CURRENT_A_MIN && PWR_ADAPTER_CURRENT_A_DEFAULT <= PWR_ADAPTER_CURRENT_A_MAX);
 static_assert(PWR_CHG_TARGET_STATE_DEFAULT < _PWR_CHG_TARGET_COUNT);
@@ -76,7 +84,7 @@ static const float _power_charge_cell_voltage_targets[_PWR_CHG_TARGET_COUNT] = {
 
 PowerManager::PowerManager(BlockBoxV2System& system) :
     system(system), non_volatile_config(system.eeprom_if, PWR_NVM_TOTAL_BYTES, PowerManager::LoadNonVolatileConfigDefaults), initialised(false), lock_timer(0), asd_lock_timer(0),
-    charging_active(false), charging_end_condition_cycles(0), auto_shutdown_last_reset(0) {}
+    charging_active(false), charging_end_condition_cycles(0), auto_shutdown_last_reset(0), inst_discharge_power_W(0.0f), avg_discharge_power_W(0.0f) {}
 
 
 void PowerManager::Init(SuccessCallback&& callback) {
@@ -86,6 +94,8 @@ void PowerManager::Init(SuccessCallback&& callback) {
   this->charging_active = false;
   this->charging_end_condition_cycles = 0;
   this->auto_shutdown_last_reset = HAL_GetTick();
+  this->inst_discharge_power_W = 0.0f;
+  this->avg_discharge_power_W = 0.0f;
 
   //set up status LED timer
   if (HAL_TIM_Base_Start(&PWR_CHG_LED_TIMER) != HAL_OK) {
@@ -455,6 +465,35 @@ void PowerManager::LoopTasks() {
     //battery not present: deactivate all battery-related pop-ups
     this->system.gui_mgr.DeactivatePopups(GUI_POPUP_CHG_FAULT | GUI_POPUP_AUTO_SHUTDOWN | GUI_POPUP_EOD_SHUTDOWN | GUI_POPUP_FULL_SHUTDOWN);
   }
+
+  //update average battery power
+  if (battery_present) {
+    float discharge_current_A = (float)this->system.bat_if.GetCurrentMA() / -1000.0f; //negated to get (positive) discharge current
+    if (discharge_current_A >= 0.0f) {
+      float voltage_V = (float)this->system.bat_if.GetStackVoltageMV() / 1000.0f;
+      float power_W = voltage_V * discharge_current_A;
+      if (!isnanf(power_W) && power_W >= 0.0f && power_W < 1000.0f) {
+        //power is within reasonable limits: update
+        this->inst_discharge_power_W = power_W;
+
+        float ratio = power_W / this->avg_discharge_power_W;
+        if (isnanf(ratio) || ratio > PWR_BAT_TIME_REINIT_PWR_RATIO || ratio < (1.0f / PWR_BAT_TIME_REINIT_PWR_RATIO)) {
+          //measurement very far off of average: re-init EMA
+          this->avg_discharge_power_W = power_W;
+        } else {
+          //within reasonable range: update EMA
+          this->avg_discharge_power_W = PWR_BAT_TIME_EMA_ALPHA * power_W + PWR_BAT_TIME_EMA_1MALPHA * this->avg_discharge_power_W;
+        }
+      }
+    } else {
+      //not discharging
+      this->inst_discharge_power_W = 0.0f;
+      this->avg_discharge_power_W = 0.0f;
+    }
+  } else {
+    this->inst_discharge_power_W = 0.0f;
+    this->avg_discharge_power_W = 0.0f;
+  }
 }
 
 
@@ -806,5 +845,32 @@ void PowerManager::SetAutoShutdownDelayMS(uint32_t delay_ms) {
 
 void PowerManager::ResetAutoShutdownTimer() {
   this->auto_shutdown_last_reset = HAL_GetTick();
+}
+
+
+/******************************************************/
+/*               Battery Time Estimation              */
+/******************************************************/
+
+uint32_t PowerManager::GetEstimatedBatteryTimeSeconds() const {
+  if (!this->system.bat_if.IsBatteryPresent() || this->system.bat_if.GetSoCConfidenceLevel() == IF_BMS_SOCLVL_INVALID) {
+    return 0;
+  }
+
+  float ratio = this->avg_discharge_power_W / this->inst_discharge_power_W;
+  if (isnanf(ratio) || ratio > PWR_BAT_TIME_MAX_PWR_RATIO || ratio < (1.0f / PWR_BAT_TIME_MAX_PWR_RATIO)) {
+    //average too far from last measurement: invalid estimate
+    return 0;
+  }
+
+  float time_sec = roundf(3600.0f * this->system.bat_if.GetSoCEnergyWh() / this->avg_discharge_power_W);
+
+  if (isnanf(time_sec) || time_sec > (float)UINT32_MAX) {
+    return UINT32_MAX;
+  } else if (time_sec < 0.0f) {
+    return 0;
+  } else {
+    return (uint32_t)time_sec;
+  }
 }
 

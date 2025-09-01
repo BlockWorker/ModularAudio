@@ -270,9 +270,9 @@ void SettingsScreenPower::BuildScreenContent() {
         float power_W = voltage_V * current_A;
         BatterySoCLevel soc_lvl = this->bbv2_manager.system.bat_if.GetSoCConfidenceLevel();
         float soc_Wh = (float)this->bbv2_manager.system.bat_if.GetSoCEnergyWh();
-        uint32_t time_sec = 36720; //TODO: actual time estimate - maybe implemented in PowerManager or BatteryInterface or something?
+        uint32_t time_sec = this->bbv2_manager.system.power_mgr.GetEstimatedBatteryTimeSeconds();
         uint32_t time_hours = time_sec / 3600;
-        uint32_t time_mins = (time_sec % 3600) / 60;
+        uint32_t time_mins = ((time_sec % 3600) / 600) * 10; //rounded down to nearest 10min
         const int16_t* cell_voltages_mV = this->bbv2_manager.system.bat_if.GetCellVoltagesMV();
         float health = this->bbv2_manager.system.bat_if.GetBatteryHealth();
         int16_t temp = this->bbv2_manager.system.bat_if.GetBatteryTemperatureC();
@@ -298,7 +298,16 @@ void SettingsScreenPower::BuildScreenContent() {
         }
         this->driver.CmdText(80, 142, 28, EVE_OPT_CENTER, format_buf);
         //remaining time estimate
-        snprintf(format_buf, 64, "~%lu h %lu min", time_hours, time_mins);
+        if (this->bbv2_manager.system.chg_if.IsAdapterPresent()) {
+          //adapter connected - no discharge, show charging state
+          snprintf(format_buf, 64, this->bbv2_manager.system.power_mgr.IsCharging() ? "Charging" : "Idle");
+        } else if (time_sec < 60 || time_hours > 99) {
+          //outside of reasonable range: state as "unknown"
+          snprintf(format_buf, 64, "Time unknown");
+        } else {
+          //show valid estimate
+          snprintf(format_buf, 64, "~%lu h %lu min", time_hours, time_mins);
+        }
         this->driver.CmdText(239, 142, 28, EVE_OPT_CENTER, format_buf);
         //cell voltages
         snprintf(format_buf, 64, "Cells: %.3f V | %.3f V | %.3f V | %.3f V", // @suppress("Float formatting support")

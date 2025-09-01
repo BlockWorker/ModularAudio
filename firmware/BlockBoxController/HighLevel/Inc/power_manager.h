@@ -89,6 +89,9 @@ public:
   void SetAutoShutdownDelayMS(uint32_t delay_ms);
   void ResetAutoShutdownTimer();
 
+  //battery time estimation functions
+  uint32_t GetEstimatedBatteryTimeSeconds() const;
+
   //TODO: battery learn mode?
 
 protected:
@@ -104,6 +107,10 @@ protected:
   uint32_t charging_end_condition_cycles;
 
   uint32_t auto_shutdown_last_reset;
+
+  float inst_discharge_power_W;
+  float avg_discharge_power_W;
+
 
   static void LoadNonVolatileConfigDefaults(StorageSection& section);
 
