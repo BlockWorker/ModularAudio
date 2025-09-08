@@ -26,6 +26,11 @@
 #include "audio_path_manager.h"
 #include "amp_manager.h"
 #include "power_manager.h"
+#include "debug_log.h"
+
+
+#define DEBUG_LOG(level, ...) do { DebugLog::instance.LogEntry(level, bbv2_system.rtc_if.GetDateTime(), __VA_ARGS__); } while (0)
+
 
 extern "C" {
 #endif

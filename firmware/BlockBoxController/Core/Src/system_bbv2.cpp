@@ -349,33 +349,35 @@ void BlockBoxV2System::Init() {
     }
 
     this->gui_mgr.Init();
-
-    this->gui_mgr.SetInitProgress("Initialising Power Amplifier...", false);
-    this->InitPowerAmp([this](bool success) {
+    this->gui_mgr.SetInitProgress("Initialising Real-Time Clock...", false);
+    this->rtc_if.InitModule([this](bool success) {
       if (!success) {
-        this->gui_mgr.SetInitProgress("Failed to initialise Power Amplifier!", true);
-        return;
+        //ignore failure, RTC is non-critical
+        DEBUG_PRINTF("* System failed to initialise RTC!");
       }
 
-      this->gui_mgr.SetInitProgress("Initialising HiFi DAC...", false);
-      this->InitHiFiDAC([this](bool success) {
+      //enable logger
+      DebugLog::instance.SetEnabled(true);
+
+      this->gui_mgr.SetInitProgress("Initialising Power Amplifier...", false);
+      this->InitPowerAmp([this](bool success) {
         if (!success) {
-          this->gui_mgr.SetInitProgress("Failed to initialise HiFi DAC!", true);
+          this->gui_mgr.SetInitProgress("Failed to initialise Power Amplifier!", true);
           return;
         }
 
-        this->gui_mgr.SetInitProgress("Initialising Digital Audio Processor...", false);
-        this->InitDAP([this](bool success) {
+        this->gui_mgr.SetInitProgress("Initialising HiFi DAC...", false);
+        this->InitHiFiDAC([this](bool success) {
           if (!success) {
-            this->gui_mgr.SetInitProgress("Failed to init Digital Audio Processor!", true);
+            this->gui_mgr.SetInitProgress("Failed to initialise HiFi DAC!", true);
             return;
           }
 
-          this->gui_mgr.SetInitProgress("Initialising Real-Time Clock...", false);
-          this->rtc_if.InitModule([this](bool success) {
+          this->gui_mgr.SetInitProgress("Initialising Digital Audio Processor...", false);
+          this->InitDAP([this](bool success) {
             if (!success) {
-              //ignore failure, RTC is non-critical
-              DEBUG_PRINTF("* System failed to initialise RTC!");
+              this->gui_mgr.SetInitProgress("Failed to init Digital Audio Processor!", true);
+              return;
             }
 
             this->gui_mgr.SetInitProgress("Initialising Bluetooth Receiver...", false);
@@ -457,6 +459,14 @@ void BlockBoxV2System::LoopTasks() {
   this->power_mgr.LoopTasks();
 
   this->gui_mgr.Update();
+
+  //TODO temporary logging testing code
+  static uint32_t loop_count = 0;
+  static uint8_t sev = 0;
+  if (loop_count++ % 200 == 0) {
+    DEBUG_LOG((DebugLevel)sev++, "Log %lu with long message contents to test some of the additional functionality like multi-line messages, as should be supported", loop_count);
+    sev %= 4;
+  }
 }
 
 

@@ -131,8 +131,91 @@ void SettingsScreenDebug::BuildScreenContent() {
   switch (this->page_index) {
     case 0:
     {
-      //event log page - TODO once logging is implemented
-      this->driver.CmdText(160, 145, 28, EVE_OPT_CENTER, "Events NYI");
+      //event log page
+      //frame
+      this->driver.CmdBeginDraw(EVE_LINE_STRIP);
+      this->driver.CmdDL(LINE_WIDTH(8));
+      this->driver.CmdDL(VERTEX2F(16 * 4, 16 * 76));
+      this->driver.CmdDL(VERTEX2F(16 * 4, 16 * 235));
+      this->driver.CmdDL(VERTEX2F(16 * 315, 16 * 235));
+      this->driver.CmdDL(VERTEX2F(16 * 315, 16 * 76));
+      this->driver.CmdDL(VERTEX2F(16 * 4, 16 * 76));
+      this->driver.CmdDL(DL_END);
+
+      //content scissor
+      this->driver.CmdDL(DL_SAVE_CONTEXT);
+      this->driver.CmdScissor(5, 77, 310, 158);
+
+      //expanded index - TODO dynamic
+      int32_t expanded_index = 15;
+
+      //offsets - TODO dynamic
+      uint32_t scroll_offset = 0;
+      uint32_t item_offset = scroll_offset / 13;
+      uint16_t pixel_offset = scroll_offset % 13;
+
+      this->driver.CmdDL(VERTEX_TRANSLATE_Y(16 * (64 + pixel_offset)));
+      this->driver.CmdDL(LINE_WIDTH(16));
+
+      //draw items - TODO expansion of items
+      char item_buffer[128] = { 0 };
+      int32_t first_entry = (int32_t)(DebugLog::instance.GetEntryCount() - item_offset) - 13;
+      int32_t first_valid_entry = (int32_t)DebugLog::instance.GetEntryMinValid();
+      for (int i = 12; i >= 0; i--) {
+        int32_t index = first_entry + i;
+        if (index < first_valid_entry) {
+          break;
+        }
+
+        DebugScreenMessage msg = DebugLog::PrepareMessage(DebugLog::instance.GetEntry(index));
+
+        bool expanded = (index == expanded_index);
+
+        //background rect for non-info levels
+        if (msg.level < DEBUG_INFO) {
+          switch (msg.level) {
+            case DEBUG_WARNING:
+              this->driver.CmdColorRGB(0x505000);
+              break;
+            case DEBUG_ERROR:
+              this->driver.CmdColorRGB(0x804000);
+              break;
+            case DEBUG_CRITICAL:
+            default:
+              this->driver.CmdColorRGB(0x800000);
+              break;
+          }
+          this->driver.CmdBeginDraw(EVE_RECTS);
+          this->driver.CmdDL(VERTEX2F(16 * 5, 16 * (13 * (i - (expanded ? msg.line_count - 1 : 0)) + 1)));
+          this->driver.CmdDL(VERTEX2F(16 * 315, 16 * (13 * (i + 1))));
+          this->driver.CmdDL(DL_END);
+          this->driver.CmdColorRGB(0xFFFFFF);
+        }
+
+        if (expanded) {
+          //expanded message text
+          for (int j = msg.line_count - 1; j >= 0; j--) {
+            uint32_t len = MIN(msg.line_lengths[j], 127);
+            strncpy(item_buffer, msg.text + msg.line_starts[j], len);
+            item_buffer[len] = 0;
+            this->driver.CmdText((j == 0 ? 7 : 15), 13 * i--, 20, 0, item_buffer);
+          }
+          i++;
+          first_entry += (msg.line_count - 1);
+        } else {
+          //short message text
+          if (msg.short_length == 0) {
+            strncpy(item_buffer, msg.text, 127);
+          } else {
+            uint32_t len = MIN(msg.short_length, 124);
+            strncpy(item_buffer, msg.text, len);
+            strncpy(item_buffer + len, "...", 127 - len);
+          }
+          item_buffer[127] = 0;
+          this->driver.CmdText(7, 13 * i, 20, 0, item_buffer);
+        }
+      }
+      this->driver.CmdDL(DL_RESTORE_CONTEXT);
       break;
     }
     case 1:

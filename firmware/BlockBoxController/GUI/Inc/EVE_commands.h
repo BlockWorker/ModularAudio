@@ -313,6 +313,39 @@ public:
     return count;
   }
 
+  //calculates the maximum number of characters of the given text (from the start) would fit in the given maximum width (in pixels), clamped to the last word
+  static constexpr uint16_t GetMaxFittingTextLengthWords(uint8_t font, uint16_t max_width, const char* text) {
+    if (font < 20 || font > 34 || text == NULL) {
+      throw std::invalid_argument("EVEDriver GetMaxFittingLengthWords given invalid font or null pointer");
+    }
+
+    //non-constant-width font: calculate from corresponding character widths
+    const uint8_t* char_widths = eve_font_char_widths[font - 20];
+    uint16_t width = 0;
+    uint16_t count = 0;
+    uint16_t last_word_end = 0;
+    //iterate through characters until null termination or max width is hit
+    const char* c_ptr = text;
+    while (*c_ptr != 0) {
+      char c = *c_ptr;
+      //only ASCII 32-127 are printable
+      if (c >= 32 && c < 128) {
+        width += char_widths[c - 32];
+      }
+      //space designates end of word
+      if (c == ' ') {
+        last_word_end = count;
+      }
+      if (width > max_width) {
+        return last_word_end;
+      }
+      c_ptr++;
+      count++;
+    }
+    //entire text fits
+    return count;
+  }
+
 private:
   uint8_t fault_recovered;
   std::vector<uint32_t> dl_cmd_buffer;
