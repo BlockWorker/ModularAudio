@@ -41,6 +41,9 @@ typedef struct {
   uint8_t tag;
   uint16_t tracker_value;
 
+  int16_t x;
+  int16_t y;
+
   uint32_t _next_tick_at;
   uint32_t _debounce_tick;
 } GUITouchState;

@@ -15,21 +15,105 @@
 #define SCREEN_DEBUG_TAB_INDEX 5
 
 //touch tags
+//log scrolling area
+#define SCREEN_DEBUG_TAG_LOG_SCROLL 200
+//log first item (12 more after this)
+#define SCREEN_DEBUG_TAG_LOG_FIRST_ITEM 201
 //speaker calibration channel 1 (tweeter)
-#define SCREEN_DEBUG_TAG_CAL_CH1 210
+#define SCREEN_DEBUG_TAG_CAL_CH1 220
 //speaker calibration channel 2 (woofer)
-#define SCREEN_DEBUG_TAG_CAL_CH2 211
+#define SCREEN_DEBUG_TAG_CAL_CH2 221
 //bluetooth OTA upgrade
-#define SCREEN_DEBUG_TAG_BT_OTA 212
+#define SCREEN_DEBUG_TAG_BT_OTA 222
 //battery learn mode
-#define SCREEN_DEBUG_TAG_BAT_LEARN 213
+#define SCREEN_DEBUG_TAG_BAT_LEARN 223
 //battery full shutdown
-#define SCREEN_DEBUG_TAG_BAT_FULL_SD 214
+#define SCREEN_DEBUG_TAG_BAT_FULL_SD 224
+
+//scroll velocity EMA coefficients
+#define SCREEN_DEBUG_SCROLL_EMA_ALPHA 0.125f
+#define SCREEN_DEBUG_SCROLL_EMA_1MALPHA (1.0f - SCREEN_DEBUG_SCROLL_EMA_ALPHA)
+//scroll velocity slowing factor
+#define SCREEN_DEBUG_SCROLL_SLOW_FACTOR 0.95f;
 
 
 SettingsScreenDebug::SettingsScreenDebug(BlockBoxV2GUIManager& manager) :
-    SettingsScreenBase(manager, SCREEN_DEBUG_TAB_INDEX), page_index(0) {}
+    SettingsScreenBase(manager, SCREEN_DEBUG_TAB_INDEX), page_index(0), scroll_last_y(0), scroll_velocity(0.0f), scroll_velocity_active(false), log_start_index(INT32_MAX),
+    log_pixel_offset(0), log_expanded_index(-1) {}
 
+
+void SettingsScreenDebug::DisplayScreen() {
+  if (this->page_index == 0) {
+    //log page: check for invalid indices
+    int32_t min_valid_index = (int32_t)DebugLog::instance.GetEntryMinValid();
+    if (this->log_start_index < min_valid_index) {
+      this->log_start_index = min_valid_index;
+      this->log_pixel_offset = 13;
+    }
+    if (this->log_expanded_index < min_valid_index) {
+      this->log_expanded_index = -1;
+    }
+    //process scrolling velocity
+    if (this->scroll_velocity_active) {
+      int16_t int_velocity = (int16_t)roundf(this->scroll_velocity);
+      if (int_velocity == 0) {
+        //slowed down enough: stop
+        this->scroll_velocity_active = false;
+        this->scroll_velocity = 0.0f;
+      } else {
+        //active: scroll and slow down
+        this->ApplyScrollDelta(int_velocity);
+        this->scroll_velocity *= SCREEN_DEBUG_SCROLL_SLOW_FACTOR;
+      }
+    }
+  }
+
+  //allow base handling
+  this->SettingsScreenBase::DisplayScreen();
+}
+
+
+void SettingsScreenDebug::ApplyScrollDelta(int16_t delta) {
+  int16_t new_pixel_offset = this->log_pixel_offset + delta;
+  int32_t log_end_index = (int32_t)DebugLog::instance.GetEntryCount() - 13;
+  if (new_pixel_offset >= 13) {
+    //scrolled up beyond item boundary: decrease log start index
+    int32_t item_count = new_pixel_offset / 13;
+    if (this->log_start_index >= log_end_index) {
+      //was at end of log - scroll from actual end
+      this->log_start_index = log_end_index - item_count;
+      new_pixel_offset %= 13;
+    } else if (this->log_start_index - item_count < (int32_t)DebugLog::instance.GetEntryMinValid()) {
+      //reached start of log - can't scroll further
+      this->log_start_index = DebugLog::instance.GetEntryMinValid();
+      new_pixel_offset = 13;
+    } else {
+      //not at end or start of log - just decrement
+      this->log_start_index -= item_count;
+      new_pixel_offset %= 13;
+    }
+  } else if (new_pixel_offset < 0) {
+    //scrolled down beyond item boundary: increase log start index
+    int32_t item_count = 1 + (new_pixel_offset / -13);
+    if (this->log_start_index + item_count >= log_end_index) {
+      //reached end of log: enable auto-scrolling
+      this->log_start_index = INT32_MAX;
+      new_pixel_offset = 0;
+    } else if (this->log_start_index < log_end_index) {
+      //not reached end of log - just increment
+      this->log_start_index += item_count;
+      new_pixel_offset %= 13;
+      if (new_pixel_offset < 0) {
+        new_pixel_offset += 13;
+      }
+    } else {
+      //at end of log: fix offset
+      new_pixel_offset = 0;
+    }
+  }
+  this->log_pixel_offset = new_pixel_offset;
+  this->needs_display_list_rebuild = true;
+}
 
 void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
   switch (state.initial_tag) {
@@ -37,7 +121,35 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag) {
         //go to next page
         this->page_index = (this->page_index + 1) % 2;
+        //reset log scrolling and expanded message
+        this->scroll_velocity = 0.0f;
+        this->scroll_velocity_active = false;
+        this->log_start_index = INT32_MAX;
+        this->log_pixel_offset = 0;
+        this->log_expanded_index = -1;
         this->needs_display_list_rebuild = true;
+      }
+      return;
+    case SCREEN_DEBUG_TAG_LOG_SCROLL:
+      if (state.y < 0 || state.y > 240) {
+        return;
+      }
+      if (state.initial) {
+        //start scrolling: remember initial y position
+        this->scroll_last_y = state.y;
+        this->scroll_velocity_active = false;
+      } else if (state.touched) {
+        //scroll: change values accordingly
+        this->scroll_velocity_active = false;
+        int16_t diff = state.y - this->scroll_last_y;
+        this->scroll_last_y = state.y;
+        if (diff != 0) {
+          this->ApplyScrollDelta(diff);
+        }
+        this->scroll_velocity = SCREEN_DEBUG_SCROLL_EMA_ALPHA * (float)diff + SCREEN_DEBUG_SCROLL_EMA_1MALPHA * this->scroll_velocity;
+      } else if (state.released) {
+        //activate velocity-based scroll
+        this->scroll_velocity_active = true;
       }
       return;
     case SCREEN_DEBUG_TAG_CAL_CH1:
@@ -104,6 +216,30 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
       break;
   }
 
+  if (state.initial_tag >= SCREEN_DEBUG_TAG_LOG_FIRST_ITEM && state.initial_tag < SCREEN_DEBUG_TAG_LOG_FIRST_ITEM + 13) {
+    if (state.released && state.tag == state.initial_tag) {
+      int32_t index_offset = state.initial_tag - SCREEN_DEBUG_TAG_LOG_FIRST_ITEM;
+      int32_t index;
+      int32_t log_end_index = (int32_t)DebugLog::instance.GetEntryCount() - 13;
+      if (this->log_start_index >= log_end_index) {
+        //at end of log: base on log end
+        index = log_end_index + index_offset;
+      } else {
+        //not at end: base on offset
+        index = this->log_start_index + index_offset;
+      }
+      if (this->log_expanded_index == index) {
+        //unexpand
+        this->log_expanded_index = -1;
+      } else {
+        //expand
+        this->log_expanded_index = index;
+      }
+      this->needs_display_list_rebuild = true;
+    }
+    return;
+  }
+
   //base handling: tab switching etc
   this->SettingsScreenBase::HandleTouch(state);
 }
@@ -143,23 +279,20 @@ void SettingsScreenDebug::BuildScreenContent() {
       this->driver.CmdDL(DL_END);
 
       //content scissor
+      this->driver.CmdTagMask(true);
       this->driver.CmdDL(DL_SAVE_CONTEXT);
       this->driver.CmdScissor(5, 77, 310, 158);
 
-      //expanded index - TODO dynamic
-      int32_t expanded_index = 15;
-
-      //offsets - TODO dynamic
-      uint32_t scroll_offset = 0;
-      uint32_t item_offset = scroll_offset / 13;
-      uint16_t pixel_offset = scroll_offset % 13;
-
-      this->driver.CmdDL(VERTEX_TRANSLATE_Y(16 * (64 + pixel_offset)));
+      this->driver.CmdDL(VERTEX_TRANSLATE_Y(16 * (64 + this->log_pixel_offset)));
       this->driver.CmdDL(LINE_WIDTH(16));
 
-      //draw items - TODO expansion of items
+      //draw items
       char item_buffer[128] = { 0 };
-      int32_t first_entry = (int32_t)(DebugLog::instance.GetEntryCount() - item_offset) - 13;
+      int32_t first_entry = (int32_t)DebugLog::instance.GetEntryCount() - 13; //default to end of log
+      if (this->log_start_index < INT32_MAX && this->log_start_index < first_entry) {
+        //fixed log point
+        first_entry = this->log_start_index;
+      }
       int32_t first_valid_entry = (int32_t)DebugLog::instance.GetEntryMinValid();
       for (int i = 12; i >= 0; i--) {
         int32_t index = first_entry + i;
@@ -169,28 +302,30 @@ void SettingsScreenDebug::BuildScreenContent() {
 
         DebugScreenMessage msg = DebugLog::PrepareMessage(DebugLog::instance.GetEntry(index));
 
-        bool expanded = (index == expanded_index);
+        bool expanded = (index == this->log_expanded_index);
 
-        //background rect for non-info levels
-        if (msg.level < DEBUG_INFO) {
-          switch (msg.level) {
-            case DEBUG_WARNING:
-              this->driver.CmdColorRGB(0x505000);
-              break;
-            case DEBUG_ERROR:
-              this->driver.CmdColorRGB(0x804000);
-              break;
-            case DEBUG_CRITICAL:
-            default:
-              this->driver.CmdColorRGB(0x800000);
-              break;
-          }
-          this->driver.CmdBeginDraw(EVE_RECTS);
-          this->driver.CmdDL(VERTEX2F(16 * 5, 16 * (13 * (i - (expanded ? msg.line_count - 1 : 0)) + 1)));
-          this->driver.CmdDL(VERTEX2F(16 * 315, 16 * (13 * (i + 1))));
-          this->driver.CmdDL(DL_END);
-          this->driver.CmdColorRGB(0xFFFFFF);
+        //background rect
+        switch (msg.level) {
+          case DEBUG_CRITICAL:
+            this->driver.CmdColorRGB(0x800000);
+            break;
+          case DEBUG_ERROR:
+            this->driver.CmdColorRGB(0x804000);
+            break;
+          case DEBUG_WARNING:
+            this->driver.CmdColorRGB(0x505000);
+            break;
+          case DEBUG_INFO:
+          default:
+            this->driver.CmdColorRGB(0x101020);
+            break;
         }
+        this->driver.CmdTag(SCREEN_DEBUG_TAG_LOG_FIRST_ITEM + i);
+        this->driver.CmdBeginDraw(EVE_RECTS);
+        this->driver.CmdDL(VERTEX2F(16 * 5, 16 * (13 * (i - (expanded ? msg.line_count - 1 : 0)) + 1)));
+        this->driver.CmdDL(VERTEX2F(16 * 315, 16 * (13 * (i + 1))));
+        this->driver.CmdDL(DL_END);
+        this->driver.CmdColorRGB(0xFFFFFF);
 
         if (expanded) {
           //expanded message text
@@ -216,6 +351,17 @@ void SettingsScreenDebug::BuildScreenContent() {
         }
       }
       this->driver.CmdDL(DL_RESTORE_CONTEXT);
+
+      //invisible scroll touch area
+      this->driver.CmdTagMask(true);
+      this->driver.CmdTag(SCREEN_DEBUG_TAG_LOG_SCROLL);
+      this->driver.CmdBeginDraw(EVE_RECTS);
+      this->driver.CmdDL(LINE_WIDTH(16));
+      this->driver.CmdDL(COLOR_MASK(0, 0, 0, 0));
+      this->driver.CmdDL(VERTEX2F(16 * 160, 16 * 77));
+      this->driver.CmdDL(VERTEX2F(16 * 315, 16 * 235));
+      this->driver.CmdDL(DL_END);
+      this->driver.CmdDL(COLOR_MASK(1, 1, 1, 1));
       break;
     }
     case 1:
@@ -295,6 +441,12 @@ void SettingsScreenDebug::UpdateExistingScreenContent() {
 void SettingsScreenDebug::OnScreenExit() {
   //reset to first page
   this->page_index = 0;
+  //reset log scrolling and expanded message
+  this->scroll_velocity = 0.0f;
+  this->scroll_velocity_active = false;
+  this->log_start_index = INT32_MAX;
+  this->log_pixel_offset = 0;
+  this->log_expanded_index = -1;
 }
 
 

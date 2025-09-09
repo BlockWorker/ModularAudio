@@ -463,8 +463,8 @@ void BlockBoxV2System::LoopTasks() {
   //TODO temporary logging testing code
   static uint32_t loop_count = 0;
   static uint8_t sev = 0;
-  if (loop_count++ % 200 == 0) {
-    DEBUG_LOG((DebugLevel)sev++, "Log %lu with long message contents to test some of the additional functionality like multi-line messages, as should be supported", loop_count);
+  if (loop_count++ % 100 == 0) {
+    DEBUG_LOG((DebugLevel)sev++, "Log %lu", loop_count);
     sev %= 4;
   }
 }

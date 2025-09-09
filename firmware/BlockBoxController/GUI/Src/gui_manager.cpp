@@ -131,6 +131,12 @@ void GUIManager::Update() noexcept {
       this->driver.phy.DirectRead32(REG_TRACKER, &touch_read_buf);
       tracker_tag = (uint16_t)touch_read_buf;
       tracker_value = (uint16_t)(touch_read_buf >> 16);
+
+      //get x,y
+      uint32_t xy;
+      this->driver.phy.DirectRead32(REG_TOUCH_SCREEN_XY, &xy);
+      this->touch_state.y = (int16_t)xy;
+      this->touch_state.x = (int16_t)(xy >> 16);
     }
 
     //clear initial, release, and tick flags - only set for one update if applicable

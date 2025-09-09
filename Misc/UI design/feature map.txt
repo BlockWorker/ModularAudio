@@ -76,11 +76,12 @@ Power config screen
 - battery charge level/voltage limit: Tag 103
 
 Debug screen
-- debug events (NYI)
-- debug speaker calibration modes: Tags 210, 211
-- debug bluetooth OTA upgrade: Tag 212
-- battery learn mode: Tag 213
-- battery full shutdown (long press): Tag 214
+- debug log scroll: Tag 200
+- debug log items: Tags 201 - 213
+- debug speaker calibration modes: Tags 220, 221
+- debug bluetooth OTA upgrade: Tag 222
+- battery learn mode: Tag 223
+- battery full shutdown (long press): Tag 224
 
 Message pop-up
 - dismiss (if supported): Tag 240

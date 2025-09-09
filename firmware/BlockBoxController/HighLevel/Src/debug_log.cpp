@@ -10,9 +10,9 @@
 #include <cstdarg>
 
 
-const uint16_t DebugLog::max_firstline_width = DEBUG_WIN_WIDTH - 1;
+const uint16_t DebugLog::max_firstline_width = DEBUG_WIN_WIDTH - 2;
 const uint16_t DebugLog::max_short_width = DebugLog::max_firstline_width - EVEDriver::GetTextWidth(20, "...");
-const uint16_t DebugLog::max_extraline_width = DEBUG_WIN_WIDTH - 1 - 8;
+const uint16_t DebugLog::max_extraline_width = DEBUG_WIN_WIDTH - 2 - 8;
 
 DebugLog DebugLog::instance;
 
@@ -42,14 +42,14 @@ void DebugLog::LogEntry(DebugLevel level, const RTCDateTime& datetime, const cha
   va_list vargs;
   va_start(vargs, fmt);
 
-  char fmt_buffer[128];
+  char fmt_buffer[256];
   char entry_buffer[512];
   uint32_t length;
 
   if (!this->enabled) {
     //logging disabled: just print to UART simply and return
 #ifdef DEBUG
-    snprintf(fmt_buffer, 128, "%s %s\n", _debug_level_strings[level], fmt);
+    snprintf(fmt_buffer, 256, "%s %s\n", _debug_level_strings[level], fmt);
     vprintf(fmt_buffer, vargs);
 #endif
     va_end(vargs);
@@ -57,11 +57,11 @@ void DebugLog::LogEntry(DebugLevel level, const RTCDateTime& datetime, const cha
   }
 
   //prepare message
-  snprintf(fmt_buffer, 128, "%.2s %02u:%02u:%02u %s", RTCInterface::GetWeekdayName(datetime.weekday), datetime.hours, datetime.minutes, datetime.seconds, fmt);
+  snprintf(fmt_buffer, 256, "%.2s %02u:%02u:%02u %s", RTCInterface::GetWeekdayName(datetime.weekday), datetime.hours, datetime.minutes, datetime.seconds, fmt);
   int32_t print_chars = vsnprintf(entry_buffer, 512, fmt_buffer, vargs);
   if (print_chars < 0) {
 #ifdef DEBUG
-    snprintf(fmt_buffer, 128, "* Debug log error: %s %s\n", _debug_level_strings[level], fmt);
+    snprintf(fmt_buffer, 256, "* Debug log error: %s %s\n", _debug_level_strings[level], fmt);
     vprintf(fmt_buffer, vargs);
 #endif
     va_end(vargs);
