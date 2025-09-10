@@ -388,7 +388,7 @@ void SettingsScreenDebug::BuildScreenContent() {
       //bluetooth OTA FW toggle
       this->driver.CmdTag(SCREEN_DEBUG_TAG_BT_OTA);
       if (ota_enabled) {
-        this->driver.CmdFGColor(0x808080);
+        this->driver.CmdFGColor(0x606060);
       }
       this->driver.CmdToggle(252, 142, 29, 26, 0, ota_enabled ? 0xFFFF : 0, "Off\xFFOn ");
       if (ota_enabled) {
@@ -396,7 +396,7 @@ void SettingsScreenDebug::BuildScreenContent() {
       }
       //battery learn mode toggle - TODO use true state once implemented
       this->driver.CmdTag(SCREEN_DEBUG_TAG_BAT_LEARN);
-      this->driver.CmdFGColor(0x808080);
+      this->driver.CmdFGColor(0x606060);
       this->driver.CmdToggle(252, 172, 29, 26, 0, 0, "Off\xFFOn ");
       //battery full shutdown button
       this->driver.CmdTag(SCREEN_DEBUG_TAG_BAT_FULL_SD);

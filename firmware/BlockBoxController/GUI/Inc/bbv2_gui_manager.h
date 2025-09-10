@@ -17,6 +17,7 @@
 #include "main_screen.h"
 #include "settings_screen_audio.h"
 #include "settings_screen_display.h"
+#include "settings_screen_led.h"
 #include "settings_screen_power.h"
 #include "settings_screen_debug.h"
 
@@ -62,6 +63,7 @@ public:
 
   SettingsScreenAudio settings_screen_audio;
   SettingsScreenDisplay settings_screen_display;
+  SettingsScreenLED settings_screen_led;
   SettingsScreenPower settings_screen_power;
   SettingsScreenDebug settings_screen_debug;
 

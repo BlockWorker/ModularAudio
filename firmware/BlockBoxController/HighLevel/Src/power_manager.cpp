@@ -346,7 +346,7 @@ void PowerManager::LoopTasks() {
     if (this->charging_active) {
       //charging: charging LED pulsing, idle LED off
       float brightness_wave = cosf(2.0f * M_PI * (float)(HAL_GetTick() % 5000) / 5000.0f);
-      PWR_CHG_LED_CHARGING_REG = 0x8FFF + (int32_t)roundf(brightness_wave * (float)0x7000);
+      PWR_CHG_LED_CHARGING_REG = 0x87FF + (int32_t)roundf(brightness_wave * (float)0x7800);
       PWR_CHG_LED_IDLE_REG = 0;
     } else {
       //not charging: charging LED off, idle LED on

@@ -424,8 +424,16 @@ void BlockBoxV2System::Init() {
                           return;
                         }
 
-                        //init done
-                        this->gui_mgr.SetInitProgress(NULL, false);
+                        this->gui_mgr.SetInitProgress("Initialising LED Manager...", false);
+                        this->led_mgr.Init([this](bool success) {
+                          if (!success) {
+                            this->gui_mgr.SetInitProgress("Failed to initialise LED Manager!", true);
+                            return;
+                          }
+
+                          //init done
+                          this->gui_mgr.SetInitProgress(NULL, false);
+                        });
                       });
                     });
                   });
@@ -457,16 +465,17 @@ void BlockBoxV2System::LoopTasks() {
   this->audio_mgr.LoopTasks();
   this->amp_mgr.LoopTasks();
   this->power_mgr.LoopTasks();
+  this->led_mgr.LoopTasks();
 
   this->gui_mgr.Update();
 
   //TODO temporary logging testing code
-  static uint32_t loop_count = 0;
+  /*static uint32_t loop_count = 0;
   static uint8_t sev = 0;
   if (loop_count++ % 100 == 0) {
     DEBUG_LOG((DebugLevel)sev++, "Log %lu", loop_count);
     sev %= 4;
-  }
+  }*/
 }
 
 
@@ -518,6 +527,9 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
       }
 
       if (success) {
+        //propagate new state to LED manager - disabled for now, may not be desired
+        //this->led_mgr.HandlePowerStateChange(on);
+
         //save new power state
         this->powered_on = on;
       }
@@ -546,6 +558,7 @@ BlockBoxV2System::BlockBoxV2System() :
     audio_mgr(*this),
     amp_mgr(*this),
     power_mgr(*this),
+    led_mgr(*this),
     powered_on(false) {}
 
 

@@ -52,10 +52,6 @@
 #define SCREEN_MAIN_TAG_DROPDOWN_SPDIF_SELECT 254
 
 
-//TODO temporary bool
-static bool _temp_light_on = false;
-
-
 MainScreen::MainScreen(BlockBoxV2GUIManager& manager) :
     BlockBoxV2Screen(manager), currently_drawn_input(AUDIO_INPUT_NONE), currently_drawn_streaming(false), currently_drawn_input_rate(0),
     currently_drawn_mute(true), currently_drawn_volume_dB(0), dropdown_open(false) {
@@ -231,8 +227,8 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           }
           break;
         case SCREEN_MAIN_TAG_LIGHT:
-          //TODO manage actual light
-          _temp_light_on = !_temp_light_on;
+          //toggle LEDs on/off
+          this->bbv2_manager.system.led_mgr.SetOn(!this->bbv2_manager.system.led_mgr.IsOn());
           this->needs_display_list_rebuild = true;
           break;
         case SCREEN_MAIN_TAG_SETTINGS:
@@ -567,7 +563,7 @@ void MainScreen::BuildScreenContent() {
 
   //remaining button icons
   GUIDraws::BluetoothIconMedium(this->driver, 133, 191, this->currently_drawn_bt_status.connected ? theme_colour_main : 0xFFFFFF, this->currently_drawn_bt_status.discoverable);
-  GUIDraws::BulbIconMedium(this->driver, 180, 191, 0xFFFFFF, 0x000000, _temp_light_on); //TODO rays based on actual light status
+  GUIDraws::BulbIconMedium(this->driver, 180, 191, 0xFFFFFF, 0x000000, this->bbv2_manager.system.led_mgr.IsOn());
   GUIDraws::CogIconMedium(this->driver, 227, 191, 0xFFFFFF, 0x000000);
   GUIDraws::PowerIconMedium(this->driver, 274, 191, 0xFFFFFF, 0x000000);
 

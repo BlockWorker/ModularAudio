@@ -86,7 +86,7 @@ uint32_t BlockBoxV2GUIManager::ColorHCLToRGB(float hue, float chroma, float luma
 
 BlockBoxV2GUIManager::BlockBoxV2GUIManager(BlockBoxV2System& system) noexcept :
     GUIManager(system.eve_drv), system(system), touch_cal_screen(*this), init_screen(*this), power_off_screen(*this), main_screen(*this), settings_screen_audio(*this),
-    settings_screen_display(*this), settings_screen_power(*this), settings_screen_debug(*this),
+    settings_screen_display(*this), settings_screen_led(*this), settings_screen_power(*this), settings_screen_debug(*this),
     gui_config(system.eeprom_if, GUI_CONFIG_SIZE_BYTES, BlockBoxV2GUIManager::LoadConfigDefaults), popup_status(GUI_POPUP_NONE) {}
 
 
@@ -98,7 +98,9 @@ void BlockBoxV2GUIManager::Init() {
   this->main_screen.Init();
   this->settings_screen_audio.Init();
   this->settings_screen_display.Init();
+  this->settings_screen_led.Init();
   this->settings_screen_power.Init();
+  this->settings_screen_debug.Init();
 
   this->popup_status = GUI_POPUP_NONE;
 

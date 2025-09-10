@@ -26,6 +26,7 @@
 #include "audio_path_manager.h"
 #include "amp_manager.h"
 #include "power_manager.h"
+#include "led_manager.h"
 #include "debug_log.h"
 
 
@@ -68,6 +69,7 @@ public:
   AudioPathManager audio_mgr;
   AmpManager amp_mgr;
   PowerManager power_mgr;
+  LEDManager led_mgr;
 
   void Init() override;
   void LoopTasks() override;

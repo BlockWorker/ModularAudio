@@ -34,7 +34,7 @@
 #define IF_EEPROM_SIZE_STORAGE (IF_EEPROM_SIZE_TOTAL - IF_EEPROM_STORAGE_START)
 
 //EEPROM storage version number - change this whenever breaking changes to EEPROM data layout are made!
-#define IF_EEPROM_VERSION_NUMBER 5
+#define IF_EEPROM_VERSION_NUMBER 6
 
 
 #ifdef __cplusplus
