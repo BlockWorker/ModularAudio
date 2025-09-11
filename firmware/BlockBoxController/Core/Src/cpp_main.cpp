@@ -77,9 +77,9 @@ int cpp_main() {
     try {
       main_system.LoopTasks();
     } catch (const std::exception& err) {
-      DEBUG_PRINTF("* Exception in main loop: %s\n", err.what());
+      DEBUG_LOG(DEBUG_ERROR, "Exception in main loop: %s", err.what());
     } catch (...) {
-      DEBUG_PRINTF("* Unknown exception in main loop\n");
+      DEBUG_LOG(DEBUG_ERROR, "Unknown exception in main loop");
     }
 
 
@@ -101,7 +101,7 @@ int cpp_main() {
 
     if (loop_count % 100 == 0) {
       if (single_err_count > 0 || double_err_count > 0) {
-        DEBUG_PRINTF("*** ECC errors detected: single %lu double %lu\n", single_err_count, double_err_count);
+        DEBUG_LOG(DEBUG_ERROR, "ECC errors detected: single %lu double %lu", single_err_count, double_err_count);
         single_err_count = 0;
         double_err_count = 0;
       }
@@ -169,7 +169,7 @@ void HAL_RAMECC_DetectErrorCallback(RAMECC_HandleTypeDef *hramecc) {
     DEBUG_PRINTF("***** ECC Double Error %p\n", (void*)address);
     double_err_count++;
   } else if ((hramecc->RAMECCErrorCode & HAL_RAMECC_SINGLEERROR_DETECTED) != 0) {
-    DEBUG_PRINTF("*** ECC Single Error %p\n", (void*)address);
+    //DEBUG_PRINTF("*** ECC Single Error %p\n", (void*)address);
     single_err_count++;
 
     //write back corrected value, if possible

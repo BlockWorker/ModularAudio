@@ -318,7 +318,7 @@ void BlockBoxV2System::Init() {
     }
   }, MODIF_CHG_EVENT_PRESENCE_UPDATE | MODIF_CHG_EVENT_LEARN_UPDATE);
 
-  this->audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
+  /*this->audio_mgr.RegisterCallback([this](EventSource*, uint32_t event) {
     static AudioPathInput last_input = AUDIO_INPUT_SPDIF;
     switch (event) {
       case AUDIO_EVENT_INPUT_UPDATE:
@@ -337,7 +337,7 @@ void BlockBoxV2System::Init() {
         DEBUG_PRINTF("Audio mute update: %u\n", this->audio_mgr.IsMute());
         break;
     }
-  }, AUDIO_EVENT_INPUT_UPDATE | AUDIO_EVENT_VOLUME_UPDATE | AUDIO_EVENT_MUTE_UPDATE);
+  }, AUDIO_EVENT_INPUT_UPDATE | AUDIO_EVENT_VOLUME_UPDATE | AUDIO_EVENT_MUTE_UPDATE);*/
 
 
   //module init process
@@ -353,7 +353,7 @@ void BlockBoxV2System::Init() {
     this->rtc_if.InitModule([this](bool success) {
       if (!success) {
         //ignore failure, RTC is non-critical
-        DEBUG_PRINTF("* System failed to initialise RTC!");
+        DEBUG_PRINTF("* System failed to initialise RTC!\n");
       }
 
       //enable logger
@@ -468,14 +468,6 @@ void BlockBoxV2System::LoopTasks() {
   this->led_mgr.LoopTasks();
 
   this->gui_mgr.Update();
-
-  //TODO temporary logging testing code
-  /*static uint32_t loop_count = 0;
-  static uint8_t sev = 0;
-  if (loop_count++ % 100 == 0) {
-    DEBUG_LOG((DebugLevel)sev++, "Log %lu", loop_count);
-    sev %= 4;
-  }*/
 }
 
 
@@ -487,11 +479,11 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
   //apply state to audio manager first (mute, volume reset etc)
   this->audio_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
     if (!success) {
-      DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AudioManager power state\n");
+      DEBUG_LOG(DEBUG_ERROR, "BlockBoxV2System SetPowerState failed to set AudioManager power state");
       //attempt reset
       this->audio_mgr.HandlePowerStateChange(!on, [callback = std::move(callback)](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AudioManager power state, then failed to reset it!\n");
+          DEBUG_LOG(DEBUG_CRITICAL, "BlockBoxV2System SetPowerState failed to set AudioManager power state, then failed to reset it!");
         }
 
         //propagate failure to external callback
@@ -505,16 +497,16 @@ void BlockBoxV2System::SetPowerState(bool on, SuccessCallback&& callback) {
     //apply state to amplifier manager next (amp shutdown state, PVDD update etc)
     this->amp_mgr.HandlePowerStateChange(on, [this, on, callback = std::move(callback)](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state\n");
+        DEBUG_LOG(DEBUG_ERROR, "BlockBoxV2System SetPowerState failed to set AmpManager power state");
         //attempt reset
         this->audio_mgr.HandlePowerStateChange(!on, [this, on, callback = std::move(callback)](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state, then failed to reset AudioManager!\n");
+            DEBUG_LOG(DEBUG_CRITICAL, "BlockBoxV2System SetPowerState failed to set AmpManager power state, then failed to reset AudioManager!");
           }
 
           this->amp_mgr.HandlePowerStateChange(!on, [callback = std::move(callback)](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* BlockBoxV2System SetPowerState failed to set AmpManager power state, then failed to reset it!\n");
+              DEBUG_LOG(DEBUG_CRITICAL, "BlockBoxV2System SetPowerState failed to set AmpManager power state, then failed to reset it!");
             }
 
             //propagate failure to external callback

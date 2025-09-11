@@ -7,6 +7,7 @@
 
 #include "gui_manager.h"
 #include "gui_screen.h"
+#include "system.h"
 
 
 //minimum timeout for display sleep (in ms) while touched - to avoid annoying sleep while adjusting sliders etc
@@ -213,9 +214,9 @@ void GUIManager::Update() noexcept {
       this->current_screen->HandleTouch(touch_state);
     }
   } catch (const std::exception& exc) {
-    DEBUG_PRINTF("* GUI manager touch update failed: %s\n", exc.what());
+    DEBUG_LOG(DEBUG_ERROR, "GUI manager touch update failed: %s", exc.what());
   } catch (...) {
-    DEBUG_PRINTF("* GUI manager touch update failed with unknown exception\n");
+    DEBUG_LOG(DEBUG_ERROR, "GUI manager touch update failed with unknown exception");
   }
 
   //process fade-in/fade-out for sleep/wake
@@ -230,9 +231,9 @@ void GUIManager::Update() noexcept {
       this->fade_brightness = new_brightness;
     }
   } catch (const std::exception& exc) {
-    DEBUG_PRINTF("* GUI manager fade brightness update failed: %s\n", exc.what());
+    DEBUG_LOG(DEBUG_ERROR, "GUI manager fade brightness update failed: %s", exc.what());
   } catch (...) {
-    DEBUG_PRINTF("* GUI manager fade brightness update failed with unknown exception\n");
+    DEBUG_LOG(DEBUG_ERROR, "GUI manager fade brightness update failed with unknown exception");
   }
 
   //perform screen update and redraw, if coprocessor is not busy and we're not fully faded out
@@ -240,9 +241,9 @@ void GUIManager::Update() noexcept {
     try {
       this->current_screen->DisplayScreen();
     } catch (const std::exception& exc) {
-      DEBUG_PRINTF("* GUI manager screen update failed: %s\n", exc.what());
+      DEBUG_LOG(DEBUG_ERROR, "GUI manager screen update failed: %s", exc.what());
     } catch (...) {
-      DEBUG_PRINTF("* GUI manager screen update failed with unknown exception\n");
+      DEBUG_LOG(DEBUG_ERROR, "GUI manager screen update failed with unknown exception");
     }
   }
 }
@@ -323,9 +324,9 @@ void GUIManager::SetDisplayBrightness(uint8_t brightness) noexcept {
       this->driver.phy.DirectWrite8(REG_PWM_DUTY, this->display_brightness);
       this->fade_brightness = this->display_brightness;
     } catch (const std::exception& exc) {
-      DEBUG_PRINTF("* GUI manager brightness apply failed: %s\n", exc.what());
+      DEBUG_LOG(DEBUG_ERROR, "GUI manager brightness apply failed: %s", exc.what());
     } catch (...) {
-      DEBUG_PRINTF("* GUI manager brightness apply failed with unknown exception\n");
+      DEBUG_LOG(DEBUG_ERROR, "GUI manager brightness apply failed with unknown exception");
     }
   }
 }

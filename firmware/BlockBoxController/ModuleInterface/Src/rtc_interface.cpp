@@ -7,6 +7,7 @@
 
 
 #include "rtc_interface.h"
+#include "system.h"
 
 
 static const char* const rtc_month_names[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
@@ -208,7 +209,7 @@ void RTCInterface::LoopTasks() {
   if (this->write_lock_timer > 0) {
     if (--this->write_lock_timer == 0) {
       //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
-      DEBUG_PRINTF("* RTCInterface write lock timed out!\n");
+      DEBUG_LOG(DEBUG_WARNING, "RTCInterface write lock timed out!");
     }
   }
   __set_PRIMASK(primask);
@@ -323,7 +324,7 @@ void RTCInterface::OnRegisterUpdate(uint8_t address) {
     }
     case I2CDEF_RTC_STATUS_CTL:
       if (this->GetStatus().oscillator_stopped) {
-        DEBUG_PRINTF("* RTC detected oscillator stop!\n");
+        DEBUG_LOG(DEBUG_WARNING, "RTC detected oscillator stop!");
         //clear stopped flag
         this->WriteRegister8Async(I2CDEF_RTC_STATUS_CTL, 0, ModuleTransferCallback());
       }

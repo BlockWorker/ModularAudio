@@ -6,6 +6,7 @@
  */
 
 #include "module_interface.h"
+#include "system.h"
 
 
 uint8_t ModuleInterface::ReadRegister8(uint16_t reg_addr) {
@@ -169,9 +170,9 @@ void ModuleInterface::LoopTasks() {
       try {
         transfer->callback(transfer->success, transfer->value_buffer, transfer->length);
       } catch (const std::exception& exc) {
-        DEBUG_PRINTF("* Exception in ModuleInterface transfer callback: %s\n", exc.what());
+        DEBUG_LOG(DEBUG_ERROR, "Exception in ModuleInterface transfer callback: %s", exc.what());
       } catch (...) {
-        DEBUG_PRINTF("* Unknown exception in ModuleInterface transfer callback!\n");
+        DEBUG_LOG(DEBUG_ERROR, "Unknown exception in ModuleInterface transfer callback!");
       }
     }
 

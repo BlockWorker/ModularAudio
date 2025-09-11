@@ -88,7 +88,7 @@ void BlockBoxV2Screen::HandleTouch(const GUITouchState& state) noexcept {
       case GUI_POPUP_AMP_SAFETY_ERR:
         //amp fault or safety error: can dismiss by going back to standby/power-off state
         this->bbv2_manager.system.SetPowerState(false, [this](bool success) {
-          DEBUG_PRINTF("Pop-up dismissal power-off success %u\n", success);
+          DEBUG_LOG(DEBUG_INFO, "Pop-up dismissal power-off success %u", success);
           if (success) {
             //go to power-off screen and clear corresponding pop-up
             this->GoToScreen(&this->bbv2_manager.power_off_screen);

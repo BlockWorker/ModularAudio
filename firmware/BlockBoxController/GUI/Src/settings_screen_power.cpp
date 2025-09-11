@@ -136,7 +136,9 @@ void SettingsScreenPower::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_in_current != this->bbv2_manager.system.power_mgr.GetAdapterMaxCurrentA()) {
           //changed: apply value globally
           this->bbv2_manager.system.power_mgr.SetAdapterMaxCurrentA(this->local_in_current, [this](bool success) {
-            DEBUG_PRINTF("Max input current apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Max input current apply failed");
+            }
             //update local slider value to true values
             this->local_in_current = this->bbv2_manager.system.power_mgr.GetAdapterMaxCurrentA();
             this->needs_existing_list_update = true;
@@ -164,7 +166,9 @@ void SettingsScreenPower::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_chg_current != this->bbv2_manager.system.power_mgr.GetChargingTargetCurrentA()) {
           //changed: apply value globally
           this->bbv2_manager.system.power_mgr.SetChargingTargetCurrentA(this->local_chg_current, [this](bool success) {
-            DEBUG_PRINTF("Charging current apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Charging current apply failed");
+            }
             //update local slider value to true values
             this->local_chg_current = this->bbv2_manager.system.power_mgr.GetChargingTargetCurrentA();
             this->needs_existing_list_update = true;
@@ -187,7 +191,9 @@ void SettingsScreenPower::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_chg_target != this->bbv2_manager.system.power_mgr.GetChargingTargetState()) {
           //changed: apply value globally
           this->bbv2_manager.system.power_mgr.SetChargingTargetState(this->local_chg_target, [this](bool success) {
-            DEBUG_PRINTF("Charging voltage target state apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Charging voltage target state apply failed");
+            }
             //update local slider value to true values
             this->local_chg_target = this->bbv2_manager.system.power_mgr.GetChargingTargetState();
             this->needs_existing_list_update = true;

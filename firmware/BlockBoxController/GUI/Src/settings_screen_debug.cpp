@@ -157,13 +157,17 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
         if (this->bbv2_manager.system.audio_mgr.GetCalibrationMode() == AUDIO_CAL_CH1) {
           //disable calibration mode
           this->bbv2_manager.system.audio_mgr.SetCalibrationMode(AUDIO_CAL_NONE, [this](bool success) {
-            DEBUG_PRINTF("Calibration mode disable success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Calibration mode disable failed");
+            }
             this->needs_display_list_rebuild = true;
           });
         } else {
           //set to ch1 calibration mode
           this->bbv2_manager.system.audio_mgr.SetCalibrationMode(AUDIO_CAL_CH1, [this](bool success) {
-            DEBUG_PRINTF("Calibration mode set to ch1 success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Calibration mode set to ch1 failed");
+            }
             this->needs_display_list_rebuild = true;
           });
         }
@@ -174,13 +178,17 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
         if (this->bbv2_manager.system.audio_mgr.GetCalibrationMode() == AUDIO_CAL_CH2) {
           //disable calibration mode
           this->bbv2_manager.system.audio_mgr.SetCalibrationMode(AUDIO_CAL_NONE, [this](bool success) {
-            DEBUG_PRINTF("Calibration mode disable success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Calibration mode disable failed");
+            }
             this->needs_display_list_rebuild = true;
           });
         } else {
           //set to ch2 calibration mode
           this->bbv2_manager.system.audio_mgr.SetCalibrationMode(AUDIO_CAL_CH2, [this](bool success) {
-            DEBUG_PRINTF("Calibration mode set to ch2 success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Calibration mode set to ch2 failed");
+            }
             this->needs_display_list_rebuild = true;
           });
         }
@@ -192,7 +200,9 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
         if (!this->bbv2_manager.system.btrx_if.GetStatus().ota_upgrade_enabled) {
           //enable OTA FW upgrade
           this->bbv2_manager.system.btrx_if.EnableOTAUpgrade([this](bool success) {
-            DEBUG_PRINTF("OTA FW upgrade enable success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "OTA FW upgrade enable failed");
+            }
             this->needs_display_list_rebuild = true;
           });
         }
@@ -207,7 +217,9 @@ void SettingsScreenDebug::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag && state.long_press) {
         //on long press: initiate battery full shutdown
         this->bbv2_manager.system.bat_if.TriggerFullShutdown([this](bool success) {
-          DEBUG_PRINTF("Battery full shutdown trigger success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "Battery full shutdown trigger failed");
+          }
           this->needs_display_list_rebuild = true;
         });
       }

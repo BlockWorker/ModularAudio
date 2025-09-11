@@ -8,6 +8,7 @@
 
 #include "dap_interface.h"
 #include <math.h>
+#include "system.h"
 
 
 static_assert(MODIF_I2C_INT_RESET_FLAG == I2CDEF_DAP_INT_FLAGS_INT_RESET_Msk);
@@ -393,7 +394,7 @@ void DAPInterface::InitModule(SuccessCallback&& callback) {
 
     //check correctness of module ID
     if ((uint8_t)value != I2CDEF_DAP_MODULE_ID_VALUE) {
-      DEBUG_PRINTF("* DAP module ID incorrect: 0x%02X instead of 0x%02X\n", (uint8_t)value, I2CDEF_DAP_MODULE_ID_VALUE);
+      DEBUG_LOG(DEBUG_ERROR, "DAP module ID incorrect: 0x%02X instead of 0x%02X", (uint8_t)value, I2CDEF_DAP_MODULE_ID_VALUE);
       //report failure to external callback
       if (callback) {
         callback(false);
@@ -518,7 +519,7 @@ void DAPInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
       if (this->reset_wait_timer == 0) {
-        DEBUG_PRINTF("DAP module spurious reset detected\n");
+        DEBUG_LOG(DEBUG_WARNING, "DAP module spurious reset detected");
       }
       //perform module re-init
       this->InitModule([this](bool success) {

@@ -8,6 +8,7 @@
 
 #include "power_amp_interface.h"
 #include "math.h"
+#include "system.h"
 
 
 static_assert(MODIF_I2C_INT_RESET_FLAG == I2CDEF_POWERAMP_INT_FLAGS_INT_RESET_Msk);
@@ -210,7 +211,7 @@ void PowerAmpInterface::InitModule(SuccessCallback&& callback) {
 
     //check correctness of module ID
     if ((uint8_t)value != I2CDEF_POWERAMP_MODULE_ID_VALUE) {
-      DEBUG_PRINTF("* PowerAmp module ID incorrect: 0x%02X instead of 0x%02X\n", (uint8_t)value, I2CDEF_POWERAMP_MODULE_ID_VALUE);
+      DEBUG_LOG(DEBUG_ERROR, "PowerAmp module ID incorrect: 0x%02X instead of 0x%02X", (uint8_t)value, I2CDEF_POWERAMP_MODULE_ID_VALUE);
       //report failure to external callback
       if (callback) {
         callback(false);
@@ -347,7 +348,7 @@ void PowerAmpInterface::OnI2CInterrupt(uint16_t interrupt_flags) {
     //reset condition: only re-initialise if already initialised, or reset is pending
     if (this->initialised || this->reset_wait_timer > 0) {
       if (this->reset_wait_timer == 0) {
-        DEBUG_PRINTF("PowerAmp module spurious reset detected\n");
+        DEBUG_LOG(DEBUG_WARNING, "PowerAmp module spurious reset detected");
       }
       //perform module re-init
       this->InitModule([this](bool success) {

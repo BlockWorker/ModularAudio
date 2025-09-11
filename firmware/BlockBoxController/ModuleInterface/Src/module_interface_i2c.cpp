@@ -7,6 +7,7 @@
 
 
 #include "module_interface_i2c.h"
+#include "system.h"
 
 
 //timeouts for clock extension and low clock, in units of 2048 I2CCLK cycles (not to be confused with SCL cycles!)
@@ -197,7 +198,7 @@ void I2CHardwareInterface::HandleInterrupt(ModuleInterfaceInterruptType type) no
 
   switch (type) {
     case IF_ERROR:
-      DEBUG_PRINTF("* I2C error interrupt, code %lu\n", HAL_I2C_GetError(this->i2c_handle));
+      DEBUG_LOG(DEBUG_WARNING, "I2C error interrupt, code %lu", HAL_I2C_GetError(this->i2c_handle));
 
       if (this->active_async_interface != NULL) {
         //we have an active async transfer: pass interrupt to target interface
@@ -244,7 +245,7 @@ void I2CHardwareInterface::LoopTasks() {
 
   if (!this->IsBusy() && __HAL_I2C_GET_FLAG(this->i2c_handle, I2C_FLAG_BUSY) == SET) { //driver idle but peripheral busy: check timeout
     if (++this->idle_busy_count > I2C_PERIPHERAL_BUSY_TIMEOUT) { //peripheral busy for too long, reset
-      DEBUG_PRINTF("* I2C Error: Peripheral busy in idle state timeout\n");
+      DEBUG_LOG(DEBUG_ERROR, "I2C Error: Peripheral busy in idle state timeout");
       this->Reset();
       __set_PRIMASK(primask);
       return;
@@ -258,7 +259,7 @@ void I2CHardwareInterface::LoopTasks() {
       this->non_idle_timeout = 0;
     } else {
       if (--this->non_idle_timeout == 0) { //timed out: error
-        DEBUG_PRINTF("* I2C Error: Non-idle state timed out\n");
+        DEBUG_LOG(DEBUG_ERROR, "I2C Error: Non-idle state timed out");
         this->Reset();
         __set_PRIMASK(primask);
         return;
@@ -727,7 +728,7 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
       //CRC mode: derive success from CRC check and copy data
       if (transfer->data_ptr == NULL || transfer->add_buffer == NULL) {
         //no target or receive buffer: should never be possible!
-        DEBUG_PRINTF("* I2C async receive completed, but data_ptr and/or add_buffer is null!\n");
+        DEBUG_LOG(DEBUG_ERROR, "I2C async receive completed, but data_ptr and/or add_buffer is null!");
         transfer->success = false;
         retry = false;
       } else if (transfer->reg_sizes == NULL) {
@@ -787,7 +788,7 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
     if (transfer->retry_count++ >= I2C_INTERNAL_RETRIES) {
       //out of retries: don't retry again
       retry = false;
-      DEBUG_PRINTF("* I2CModuleInterface async transfer failed to complete too many times to retry!\n");
+      DEBUG_LOG(DEBUG_WARNING, "I2CModuleInterface async transfer failed to complete too many times to retry!");
     } /*else {
       DEBUG_PRINTF("I2CModuleInterface async transfer retrying on completion\n");
     }*/
@@ -800,7 +801,7 @@ void I2CModuleInterface::HandleAsyncTransferDone(ModuleInterfaceInterruptType it
       this->queued_transfers.pop_front();
     } catch (...) {
       //list operation failed: force a retry (should be a very unlikely case)
-      DEBUG_PRINTF("*** I2CModuleInterface retry forced due to exception when trying to finish a transfer!\n");
+      DEBUG_LOG(DEBUG_ERROR, "I2CModuleInterface retry forced due to exception when trying to finish a transfer!");
     }
   }
 
@@ -914,7 +915,7 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
       this->async_transfer_active = true;
     } catch (const std::exception& exc) {
       //encountered "readable" exception: just print the message and rethrow for the outer handler
-      DEBUG_PRINTF("* I2CModuleInterface async transfer start exception: %s\n", exc.what());
+      DEBUG_LOG(DEBUG_ERROR, "I2CModuleInterface async transfer start exception: %s", exc.what());
       throw;
     }
   } catch (...) {
@@ -928,14 +929,14 @@ void I2CModuleInterface::StartQueuedAsyncTransfer() noexcept {
 
     if (!retry) {
       //failed without retry: put transfer into the completed list and remove it from the queue
-      DEBUG_PRINTF("* I2CModuleInterface async transfer failed to start too many times to retry!\n");
+      DEBUG_LOG(DEBUG_ERROR, "I2CModuleInterface async transfer failed to start too many times to retry!");
       transfer->success = false;
       try {
         this->completed_transfers.push_back(transfer);
         this->queued_transfers.pop_front();
       } catch (...) {
         //list operation failed: force another retry (should be a very unlikely case)
-        DEBUG_PRINTF("*** Retry forced due to exception when trying to mark the failed transfer as done!\n");
+        DEBUG_LOG(DEBUG_ERROR, "Retry forced due to exception when trying to mark the failed transfer as done!");
       }
     } /*else {
       DEBUG_PRINTF("I2CModuleInterface async transfer retrying on start\n");
@@ -1204,7 +1205,7 @@ void RegI2CModuleInterface::HandleDataUpdate(uint16_t reg_addr, const uint8_t* b
     this->OnRegisterUpdate(reg_addr_8);
   } else {
     //invalid register or length mismatch
-    DEBUG_PRINTF("* I2C register notification for address 0x%02X length %u, expected %u\n", reg_addr_8, length, this->_registers.reg_sizes[reg_addr_8]);
+    DEBUG_LOG(DEBUG_WARNING, "I2C register notification for address 0x%02X length %u, expected %u", reg_addr_8, length, this->_registers.reg_sizes[reg_addr_8]);
   }
 }
 
@@ -1281,7 +1282,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
           this->ReadRegister8Async(MODIF_I2C_INT_FLAGS_REG, [this](bool success, uint32_t value, uint16_t) {
             if (!success) {
               //handle read failure
-              DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
+              DEBUG_LOG(DEBUG_ERROR, "IntRegI2CModuleInterface interrupt flags read failed");
               this->current_interrupt_timer = 0;
               return;
             }
@@ -1301,7 +1302,7 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
           this->ReadRegister16Async(MODIF_I2C_INT_FLAGS_REG, [this](bool success, uint32_t value, uint16_t) {
             if (!success) {
               //handle read failure
-              DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt flags read failed\n");
+              DEBUG_LOG(DEBUG_ERROR, "IntRegI2CModuleInterface interrupt flags read failed");
               this->current_interrupt_timer = 0;
               return;
             }
@@ -1322,9 +1323,9 @@ void IntRegI2CModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type
           throw std::logic_error("IntRegI2CModuleInterface invalid state: Bad int_reg_size");
       }
     } catch (std::exception& exc) {
-      DEBUG_PRINTF("* IntRegI2CModuleInterface exception when handling interrupt: %s\n", exc.what());
+      DEBUG_LOG(DEBUG_ERROR, "IntRegI2CModuleInterface exception when handling interrupt: %s", exc.what());
     } catch (...) {
-      DEBUG_PRINTF("* IntRegI2CModuleInterface unknown exception when handling interrupt\n");
+      DEBUG_LOG(DEBUG_ERROR, "IntRegI2CModuleInterface unknown exception when handling interrupt");
     }
   }
 
@@ -1341,7 +1342,7 @@ void IntRegI2CModuleInterface::LoopTasks() {
     //currently handling interrupt: decrement timer
     if (--this->current_interrupt_timer == 0) {
       //timed out: shouldn't happen, log warning
-      DEBUG_PRINTF("* IntRegI2CModuleInterface interrupt handling timed out\n");
+      DEBUG_LOG(DEBUG_INFO, "IntRegI2CModuleInterface interrupt handling timed out");
     }
   } else {
     //currently not handling any interrupt: check for undetected interrupt condition (pin)

@@ -7,6 +7,7 @@
 
 
 #include "charger_interface.h"
+#include "system.h"
 
 /*//constants for ADC conversion
 #define IF_CHG_ADC_VREF 3.3f
@@ -193,7 +194,7 @@ void ChargerInterface::InitModule(SuccessCallback&& callback) {
 
       //check correctness of device ID
       if ((uint16_t)value != I2CDEF_CHG_DEV_ID_VALUE) {
-        DEBUG_PRINTF("* Charger device ID incorrect: 0x%04X instead of 0x%04X\n", (uint16_t)value, I2CDEF_CHG_DEV_ID_VALUE);
+        DEBUG_LOG(DEBUG_ERROR, "Charger device ID incorrect: 0x%04X instead of 0x%04X", (uint16_t)value, I2CDEF_CHG_DEV_ID_VALUE);
         //report failure to external callback, init can be regarded as complete with non-present charger
         this->initialised = true;
         if (callback) {

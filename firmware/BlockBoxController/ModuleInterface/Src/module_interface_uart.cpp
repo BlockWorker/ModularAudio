@@ -6,6 +6,7 @@
  */
 
 #include "module_interface_uart.h"
+#include "system.h"
 
 
 //timeout for async UART commands, in main loop cycles
@@ -106,10 +107,10 @@ void UARTModuleInterface::HandleInterrupt(ModuleInterfaceInterruptType type, uin
       try {
         this->Reset();
       } catch (const std::exception& exc) {
-        DEBUG_PRINTF("*** UARTModuleInterface interrupt handler exception: %s\n", exc.what());
+        DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface interrupt handler exception: %s", exc.what());
         this->interrupt_error = true;
       } catch (...) {
-        DEBUG_PRINTF("*** UARTModuleInterface interrupt handler unknown exception\n");
+        DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface interrupt handler unknown exception");
         this->interrupt_error = true;
       }
       __set_PRIMASK(primask);
@@ -142,9 +143,9 @@ void UARTModuleInterface::LoopTasks() {
   __disable_irq();
   if ((this->uart_handle->RxState & HAL_UART_STATE_BUSY_RX) != HAL_UART_STATE_BUSY_RX) {
     //not busy (when it should be): restart reception
-    DEBUG_PRINTF("* UARTModuleInterface receiver found in idle state, restarting receive...\n");
+    DEBUG_LOG(DEBUG_WARNING, "UARTModuleInterface receiver found in idle state, restarting receive...");
     if (HAL_UARTEx_ReceiveToIdle_IT(this->uart_handle, this->rx_buffer + this->rx_buffer_write_offset, MODIF_UART_RXBUF_SIZE - this->rx_buffer_write_offset) != HAL_OK) {
-      DEBUG_PRINTF("*** UARTModuleInterface receiver failed to restart after found in idle state!\n");
+      DEBUG_LOG(DEBUG_CRITICAL, "UARTModuleInterface receiver failed to restart after found in idle state!");
       __set_PRIMASK(primask);
       this->Reset();
     } else {
@@ -341,7 +342,7 @@ void UARTModuleInterface::StartQueuedAsyncTransfer() noexcept {
       this->async_transfer_active = true;
     } catch (const std::exception& exc) {
       //encountered "readable" exception: just print the message and rethrow for the outer handler
-      DEBUG_PRINTF("* UARTModuleInterface async transfer start exception: %s\n", exc.what());
+      DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface async transfer start exception: %s", exc.what());
       throw;
     }
   } catch (...) {
@@ -355,26 +356,26 @@ void UARTModuleInterface::StartQueuedAsyncTransfer() noexcept {
 
     if (!retry) {
       //failed without retry: put transfer into the completed list and remove it from the queue
-      DEBUG_PRINTF("* UARTModuleInterface async transfer failed to start too many times to retry!\n");
+      DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface async transfer failed to start too many times to retry!");
       transfer->success = false;
       try {
         this->completed_transfers.push_back(transfer);
         this->queued_transfers.pop_front();
       } catch (...) {
         //list operation failed: force another retry (should be a very unlikely case)
-        DEBUG_PRINTF("*** Retry forced due to exception when trying to mark the failed transfer as done!\n");
+        DEBUG_LOG(DEBUG_ERROR, "Retry forced due to exception when trying to mark the failed transfer as done!");
       }
-    } else {
+    } /*else {
       DEBUG_PRINTF("UARTModuleInterface async transfer retrying on start\n");
-    }
+    }*/
 
     if (reset_on_fail) {
       try {
         this->Reset();
       } catch (const std::exception& exc) {
-        DEBUG_PRINTF("*** UARTModuleInterface failed to reset after fail: %s\n", exc.what());
+        DEBUG_LOG(DEBUG_CRITICAL, "UARTModuleInterface failed to reset after fail: %s", exc.what());
       } catch (...) {
-        DEBUG_PRINTF("*** UARTModuleInterface failed to reset after fail with unknown exception!\n");
+        DEBUG_LOG(DEBUG_CRITICAL, "UARTModuleInterface failed to reset after fail with unknown exception!");
       }
     }
   }
@@ -405,7 +406,7 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
             //error: non-reserved byte escaped: reset parse buffer, skip to next start
             this->parse_buffer.clear();
             this->rx_skip_to_start = true;
-            DEBUG_PRINTF("* UARTModuleInterface found escaped non-reserved byte while parsing\n");
+            DEBUG_LOG(DEBUG_WARNING, "UARTModuleInterface found escaped non-reserved byte while parsing");
           }
           this->rx_escape_active = false;
         } else {
@@ -425,13 +426,13 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
             if (rx_byte == MODIF_UART_START_BYTE) {
               //error: unexpected start byte: reset parse buffer, receive new command starting with this byte
               this->parse_buffer.clear();
-              DEBUG_PRINTF("* UARTModuleInterface found unexpected start byte while parsing\n");
+              DEBUG_LOG(DEBUG_WARNING, "UARTModuleInterface found unexpected start byte while parsing");
             } else if (rx_byte == MODIF_UART_END_BYTE) {
               //end byte found: parse buffer is done
               if (this->parse_buffer.size() < 3) {
                 //error: parse buffer empty or too short (must have 1B type + 2B crc at least): skip to next start
                 this->rx_skip_to_start = true;
-                DEBUG_PRINTF("* UARTModuleInterface found too short notification while parsing\n");
+                DEBUG_LOG(DEBUG_WARNING, "UARTModuleInterface found too short notification while parsing");
               } else {
                 //parse buffer has data: parse command, then reset parse buffer and skip to next start
                 this->ParseRawNotification();
@@ -447,7 +448,7 @@ void UARTModuleInterface::ProcessRawReceivedData() noexcept {
         }
       } catch (const std::exception& exc) {
         //print message and rethrow to outer handler
-        DEBUG_PRINTF("* UARTModuleInterface data reception processing exception: %s\n", exc.what());
+        DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface data reception processing exception: %s", exc.what());
         throw;
       }
     } catch (...) {
@@ -627,10 +628,10 @@ void UARTModuleInterface::ParseRawNotification() {
       if (transfer->retry_count++ >= UART_INTERNAL_RETRIES) {
         //out of retries: don't retry again
         retry_on_fail = false;
-        DEBUG_PRINTF("* UARTModuleInterface async transfer failed to complete too many times to retry!\n");
-      } else {
+        DEBUG_LOG(DEBUG_WARNING, "UARTModuleInterface async transfer failed to complete too many times to retry!");
+      } /*else {
         DEBUG_PRINTF("UARTModuleInterface async transfer retrying on completion\n");
-      }
+      }*/
     }
 
     if (transfer->success || !retry_on_fail) {
@@ -640,7 +641,7 @@ void UARTModuleInterface::ParseRawNotification() {
         this->queued_transfers.pop_front();
       } catch (...) {
         //list operation failed: force a retry (should be a very unlikely case)
-        DEBUG_PRINTF("*** UARTModuleInterface retry forced due to exception when trying to finish a transfer!\n");
+        DEBUG_LOG(DEBUG_ERROR, "UARTModuleInterface retry forced due to exception when trying to finish a transfer!");
       }
     }
 
@@ -835,7 +836,7 @@ void RegUARTModuleInterface::HandleNotificationData(bool error, bool unsolicited
     this->OnRegisterUpdate(address);
   } else {
     //invalid register
-    DEBUG_PRINTF("* UART register notification for invalid address 0x%02X\n", address);
+    DEBUG_LOG(DEBUG_WARNING, "UART register notification for invalid address 0x%02X", address);
   }
 }
 

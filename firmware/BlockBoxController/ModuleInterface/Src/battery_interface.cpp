@@ -7,6 +7,7 @@
 
 
 #include "battery_interface.h"
+#include "system.h"
 
 
 //scratch space for register discard-reads
@@ -205,7 +206,7 @@ void BatteryInterface::InitModule(SuccessCallback&& callback) {
 
     //check correctness of module ID
     if ((uint8_t)value != UARTDEF_BMS_MODULE_ID_VALUE) {
-      DEBUG_PRINTF("* Battery module ID incorrect: 0x%02X instead of 0x%02X\n", (uint8_t)value, UARTDEF_BMS_MODULE_ID_VALUE);
+      DEBUG_LOG(DEBUG_ERROR, "Battery module ID incorrect: 0x%02X instead of 0x%02X", (uint8_t)value, UARTDEF_BMS_MODULE_ID_VALUE);
       //report failure to external callback, init can be regarded as complete with non-present battery
       this->initialised = true;
       if (callback) {
@@ -415,7 +416,7 @@ void BatteryInterface::HandleNotificationData(bool error, bool unsolicited) {
           //only re-initialise if already initialised, or reset is pending
           if (this->initialised || this->reset_wait_timer > 0) {
             if (this->reset_wait_timer == 0) {
-              DEBUG_PRINTF("BMS module spurious reset detected\n");
+              DEBUG_LOG(DEBUG_WARNING, "BMS module spurious reset detected");
             }
             //perform module re-init
             this->InitModule([this](bool success) {

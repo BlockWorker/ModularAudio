@@ -127,7 +127,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag) {
         //toggle positive gain allowed
         this->bbv2_manager.system.audio_mgr.SetPositiveGainAllowed(!this->bbv2_manager.system.audio_mgr.IsPositiveGainAllowed(), [this](bool success) {
-          DEBUG_PRINTF("Pos gain allowed toggle success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "Pos gain allowed toggle failed");
+          }
           this->needs_display_list_rebuild = true;
         });
       }
@@ -137,7 +139,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //toggle mixer mode
         AudioPathMixerMode mode = (this->bbv2_manager.system.audio_mgr.GetMixerMode() == AUDIO_MIXER_AVG) ? AUDIO_MIXER_LEFT : AUDIO_MIXER_AVG;
         this->bbv2_manager.system.audio_mgr.SetMixerMode(mode, [this](bool success) {
-          DEBUG_PRINTF("Mixer mode toggle success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "Mixer mode toggle failed");
+          }
           this->needs_display_list_rebuild = true;
         });
       }
@@ -162,7 +166,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_min_volume != this->bbv2_manager.system.audio_mgr.GetMinVolumeDB()) {
           //changed: apply value globally
           this->bbv2_manager.system.audio_mgr.SetMinVolumeDB(this->local_min_volume, [this](bool success) {
-            DEBUG_PRINTF("Min volume apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Min volume apply failed");
+            }
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
             this->local_max_volume = this->bbv2_manager.system.audio_mgr.GetMaxVolumeDB();
@@ -193,7 +199,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_max_volume != this->bbv2_manager.system.audio_mgr.GetMaxVolumeDB()) {
           //changed: apply value globally
           this->bbv2_manager.system.audio_mgr.SetMaxVolumeDB(this->local_max_volume, [this](bool success) {
-            DEBUG_PRINTF("Max volume apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Max volume apply failed");
+            }
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
             this->local_max_volume = this->bbv2_manager.system.audio_mgr.GetMaxVolumeDB();
@@ -214,7 +222,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_volume_step != this->bbv2_manager.system.audio_mgr.GetVolumeStepDB()) {
           //changed: apply value globally
           this->bbv2_manager.system.audio_mgr.SetVolumeStepDB(this->local_volume_step, [this](bool success) {
-            DEBUG_PRINTF("Volume step apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Volume step apply failed");
+            }
             //update local slider values to true values
             this->local_min_volume = this->bbv2_manager.system.audio_mgr.GetMinVolumeDB();
             this->local_max_volume = this->bbv2_manager.system.audio_mgr.GetMaxVolumeDB();
@@ -229,7 +239,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         //toggle EQ mode
         AudioPathEQMode mode = (this->bbv2_manager.system.audio_mgr.GetEQMode() == AUDIO_EQ_HIFI) ? AUDIO_EQ_POWER : AUDIO_EQ_HIFI;
         this->bbv2_manager.system.audio_mgr.SetEQMode(mode, [this](bool success) {
-          DEBUG_PRINTF("EQ mode toggle success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "EQ mode toggle failed");
+          }
           this->needs_display_list_rebuild = true;
         });
       }
@@ -238,7 +250,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
       if (state.released && state.tag == state.initial_tag) {
         //toggle loudness track max volume
         this->bbv2_manager.system.audio_mgr.SetLoudnessTrackingMaxVolume(!this->bbv2_manager.system.audio_mgr.IsLoudnessTrackingMaxVolume(), [this](bool success) {
-          DEBUG_PRINTF("Loudness track max vol toggle success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "Loudness track max vol toggle failed");
+          }
           this->needs_display_list_rebuild = true;
         });
       }
@@ -261,7 +275,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
           if (this->local_loudness != this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB()) {
             //changed: apply value globally
             this->bbv2_manager.system.audio_mgr.SetLoudnessGainDB(this->local_loudness, [this](bool success) {
-              DEBUG_PRINTF("Loudness gain apply success %u\n", success);
+              if (!success) {
+                DEBUG_LOG(DEBUG_WARNING, "Loudness gain apply failed");
+              }
               //update local slider values to true values
               this->local_loudness = this->bbv2_manager.system.audio_mgr.GetLoudnessGainDB();
               this->needs_existing_list_update = true;
@@ -280,7 +296,9 @@ void SettingsScreenAudio::HandleTouch(const GUITouchState& state) noexcept {
         if (this->local_power_target != this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor()) {
           //changed: apply value globally
           this->bbv2_manager.system.amp_mgr.SetWarningLimitFactor(this->local_power_target, [this](bool success) {
-            DEBUG_PRINTF("Power target apply success %u\n", success);
+            if (!success) {
+              DEBUG_LOG(DEBUG_WARNING, "Power target apply failed");
+            }
             //update local slider values to true values
             this->local_power_target = this->bbv2_manager.system.amp_mgr.GetWarningLimitFactor();
             this->needs_existing_list_update = true;

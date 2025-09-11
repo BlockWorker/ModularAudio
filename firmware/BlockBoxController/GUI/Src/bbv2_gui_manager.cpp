@@ -135,13 +135,13 @@ void BlockBoxV2GUIManager::Update() noexcept {
     this->driver.phy.DirectRead16(REG_HOFFSET, &hoffset);
 
     if (hoffset != EVE_HOFFSET) {
-      DEBUG_PRINTF("* BlockBoxV2GUIManager detected incorrect HOFFSET (%u instead of %u), correcting\n", hoffset, (uint16_t)EVE_HOFFSET);
+      DEBUG_LOG(DEBUG_WARNING, "BlockBoxV2GUIManager detected incorrect HOFFSET (%u instead of %u), correcting", hoffset, (uint16_t)EVE_HOFFSET);
       try {
         this->driver.phy.DirectWrite16(REG_HOFFSET, EVE_HOFFSET);
       } catch (const std::exception& exc) {
-        DEBUG_PRINTF("*** BlockBoxV2GUIManager HOFFSET correction failed: %s\n", exc.what());
+        DEBUG_LOG(DEBUG_ERROR, "BlockBoxV2GUIManager HOFFSET correction failed: %s", exc.what());
       } catch (...) {
-        DEBUG_PRINTF("*** BlockBoxV2GUIManager HOFFSET correction failed with unknown exception\n");
+        DEBUG_LOG(DEBUG_ERROR, "BlockBoxV2GUIManager HOFFSET correction failed with unknown exception");
       }
     }
   }
@@ -181,7 +181,7 @@ void BlockBoxV2GUIManager::SetDisplayBrightness(uint8_t brightness) noexcept {
   try {
     this->gui_config.SetValue8(GUI_CONFIG_DISPLAY_BRIGHTNESS, this->display_brightness);
   } catch (...) {
-    DEBUG_PRINTF("* BlockBoxV2GUIManager SetDisplayBrightness failed to write to NVM\n");
+    DEBUG_LOG(DEBUG_WARNING, "BlockBoxV2GUIManager SetDisplayBrightness failed to write to NVM");
   }
 }
 
@@ -193,7 +193,7 @@ void BlockBoxV2GUIManager::SetDisplaySleepTimeoutMS(uint32_t timeout_ms) noexcep
   try {
     this->gui_config.SetValue32(GUI_CONFIG_DISPLAY_SLEEP_TIMEOUT, this->display_sleep_timeout_ms);
   } catch (...) {
-    DEBUG_PRINTF("* BlockBoxV2GUIManager SetDisplaySleepTimeoutMS failed to write to NVM\n");
+    DEBUG_LOG(DEBUG_WARNING, "BlockBoxV2GUIManager SetDisplaySleepTimeoutMS failed to write to NVM");
   }
 }
 

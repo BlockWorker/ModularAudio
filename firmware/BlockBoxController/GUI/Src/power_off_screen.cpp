@@ -68,7 +68,7 @@ void PowerOffScreen::HandleTouch(const GUITouchState& state) noexcept {
   if (state.released && state.tag == SCREEN_POWEROFF_TAG_PWRON && state.initial_tag == SCREEN_POWEROFF_TAG_PWRON) {
     //power on system
     this->bbv2_manager.system.SetPowerState(true, [this](bool success) {
-      DEBUG_PRINTF("PowerOffScreen power-on success %u\n", success);
+      DEBUG_LOG(DEBUG_INFO, "PowerOffScreen power-on success %u", success);
       if (success) {
         //reset this screen and go to main screen
         this->GoToScreen(&this->bbv2_manager.main_screen);

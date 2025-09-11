@@ -77,7 +77,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (this->bbv2_manager.system.audio_mgr.IsInputAvailable(AUDIO_INPUT_BLUETOOTH) && active_input != AUDIO_INPUT_BLUETOOTH) {
             this->bbv2_manager.system.audio_mgr.SetActiveInput(AUDIO_INPUT_BLUETOOTH, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("MainScreen dropdown Bluetooth select failed, might be unavailable\n");
+                DEBUG_LOG(DEBUG_INFO, "MainScreen dropdown Bluetooth select failed, might be unavailable");
               }
             });
           }
@@ -87,7 +87,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             //disconnect active connection
             this->bbv2_manager.system.btrx_if.DisconnectBluetooth([](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen dropdown Bluetooth disconnect failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen dropdown Bluetooth disconnect failed");
               }
             });
 
@@ -95,14 +95,14 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             //cancel active pairing
             this->bbv2_manager.system.btrx_if.SetDiscoverable(false, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen dropdown Bluetooth pairing cancel failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen dropdown Bluetooth pairing cancel failed");
               }
             });
           } else {
             //start pairing
             this->bbv2_manager.system.btrx_if.SetDiscoverable(true, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen dropdown Bluetooth pairing start failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen dropdown Bluetooth pairing start failed");
               }
             });
           }
@@ -112,7 +112,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (this->bbv2_manager.system.audio_mgr.IsInputAvailable(AUDIO_INPUT_USB) && active_input != AUDIO_INPUT_USB) {
             this->bbv2_manager.system.audio_mgr.SetActiveInput(AUDIO_INPUT_USB, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("MainScreen dropdown USB select failed, might be unavailable\n");
+                DEBUG_LOG(DEBUG_INFO, "MainScreen dropdown USB select failed, might be unavailable");
               }
             });
           }
@@ -122,7 +122,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (this->bbv2_manager.system.audio_mgr.IsInputAvailable(AUDIO_INPUT_SPDIF) && active_input != AUDIO_INPUT_SPDIF) {
             this->bbv2_manager.system.audio_mgr.SetActiveInput(AUDIO_INPUT_SPDIF, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("MainScreen dropdown SPDIF select failed, might be unavailable\n");
+                DEBUG_LOG(DEBUG_INFO, "MainScreen dropdown SPDIF select failed, might be unavailable");
               }
             });
           }
@@ -139,7 +139,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (bt_status.avrcp_link) {
             this->bbv2_manager.system.btrx_if.SendMediaControl(IF_BTRX_MEDIA_BACKWARD, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen media back action failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen media back action failed");
               }
             });
           }
@@ -150,13 +150,13 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             if (bt_status.avrcp_playing) {
               this->bbv2_manager.system.btrx_if.SendMediaControl(IF_BTRX_MEDIA_PAUSE, [](bool success) {
                 if (!success) {
-                  DEBUG_PRINTF("* MainScreen media pause action failed\n");
+                  DEBUG_LOG(DEBUG_WARNING, "MainScreen media pause action failed");
                 }
               });
             } else {
               this->bbv2_manager.system.btrx_if.SendMediaControl(IF_BTRX_MEDIA_PLAY, [](bool success) {
                 if (!success) {
-                  DEBUG_PRINTF("* MainScreen media play action failed\n");
+                  DEBUG_LOG(DEBUG_WARNING, "MainScreen media play action failed");
                 }
               });
             }
@@ -167,7 +167,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (bt_status.avrcp_link) {
             this->bbv2_manager.system.btrx_if.SendMediaControl(IF_BTRX_MEDIA_FORWARD, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen media forward action failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen media forward action failed");
               }
             });
           }
@@ -177,7 +177,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (!audio_mute && !state.long_press) {
             this->bbv2_manager.system.audio_mgr.StepCurrentVolumeDB(false, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen volume decrease failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen volume decrease failed");
               }
             });
           }
@@ -186,7 +186,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           //toggle mute status
           this->bbv2_manager.system.audio_mgr.SetMute(!audio_mute, [](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* MainScreen mute toggle failed\n");
+              DEBUG_LOG(DEBUG_WARNING, "MainScreen mute toggle failed");
             }
           });
           break;
@@ -195,7 +195,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
           if (!audio_mute && !state.long_press) {
             this->bbv2_manager.system.audio_mgr.StepCurrentVolumeDB(true, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen volume increase failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen volume increase failed");
               }
             });
           }
@@ -205,7 +205,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             //cancel active pairing
             this->bbv2_manager.system.btrx_if.SetDiscoverable(false, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen Bluetooth pairing cancel failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen Bluetooth pairing cancel failed");
               }
             });
           } else if (bt_status.connected) {
@@ -213,7 +213,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             if (state.long_press) {
               this->bbv2_manager.system.btrx_if.DisconnectBluetooth([](bool success) {
                 if (!success) {
-                  DEBUG_PRINTF("* MainScreen Bluetooth disconnect failed\n");
+                  DEBUG_LOG(DEBUG_WARNING, "MainScreen Bluetooth disconnect failed");
                 }
               });
             }
@@ -221,7 +221,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
             //start pairing
             this->bbv2_manager.system.btrx_if.SetDiscoverable(true, [](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* MainScreen Bluetooth pairing start failed\n");
+                DEBUG_LOG(DEBUG_WARNING, "MainScreen Bluetooth pairing start failed");
               }
             });
           }
@@ -238,7 +238,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
         case SCREEN_MAIN_TAG_POWER_OFF:
           //power off system
           this->bbv2_manager.system.SetPowerState(false, [this](bool success) {
-            DEBUG_PRINTF("MainScreen power-off success %u\n", success);
+            DEBUG_LOG(DEBUG_INFO, "MainScreen power-off success %u", success);
             if (success) {
               //reset this screen and go to power-off screen
               this->GoToScreen(&this->bbv2_manager.power_off_screen);
@@ -263,7 +263,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
         //step volume down
         this->bbv2_manager.system.audio_mgr.StepCurrentVolumeDB(false, [](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* MainScreen volume hold decrease failed\n");
+            DEBUG_LOG(DEBUG_WARNING, "MainScreen volume hold decrease failed");
           }
         });
         break;
@@ -271,7 +271,7 @@ void MainScreen::HandleTouch(const GUITouchState& state) noexcept {
         //step volume up
         this->bbv2_manager.system.audio_mgr.StepCurrentVolumeDB(true, [](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* MainScreen volume hold increase failed\n");
+            DEBUG_LOG(DEBUG_WARNING, "MainScreen volume hold increase failed");
           }
         });
         break;

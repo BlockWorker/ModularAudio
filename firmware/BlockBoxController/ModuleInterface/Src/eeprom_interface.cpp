@@ -7,6 +7,7 @@
 
 
 #include "eeprom_interface.h"
+#include "system.h"
 
 
 //EEPROM CRC data - polynomial: 0x32C00699 (HD 6 up to ~32Kbit length)
@@ -159,7 +160,7 @@ void EEPROMInterface::ReadNextSection(uint32_t section_index, SuccessCallback&& 
                           [this, section_index, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* EEPROM read failed at section %lu\n", section_index);
+      DEBUG_LOG(DEBUG_ERROR, "EEPROM read failed at section %lu", section_index);
       if (callback) {
         callback(false);
       }
@@ -210,7 +211,7 @@ void EEPROMInterface::WriteNextSectionPageIfDirty(uint32_t section_index, uint32
                            [this, section_index, page_index, sec_size = section->size_bytes, callback = std::move(callback)](bool success, uint32_t, uint16_t) mutable {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* EEPROM write failed at section %lu page %lu\n", section_index, page_index);
+      DEBUG_LOG(DEBUG_ERROR, "EEPROM write failed at section %lu page %lu", section_index, page_index);
       if (callback) {
         callback(false);
       }
@@ -240,7 +241,7 @@ void EEPROMInterface::ReadAndCheckHeader(SuccessCallback&& callback) {
   this->ReadRegisterAsync(0, this->header_data, IF_EEPROM_STORAGE_START, [this, callback = std::move(callback)](bool success, uint32_t, uint16_t) {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* EEPROM header read failed\n");
+      DEBUG_LOG(DEBUG_ERROR, "EEPROM header read failed");
       if (callback) {
         callback(false);
       }
@@ -258,7 +259,7 @@ void EEPROMInterface::ReadAndCheckHeader(SuccessCallback&& callback) {
     //finish CRC calculation with stored CRC value, check if result is 0
     if (_EEPROM_CRC_Accumulate(this->header_data + IF_EEPROM_HEADER_CRC, 4, crc) != 0) {
       //CRC mismatch: failure, propagate to external callback
-      DEBUG_PRINTF("* EEPROM read CRC mismatch\n");
+      DEBUG_LOG(DEBUG_WARNING, "EEPROM read CRC mismatch");
       if (callback) {
         callback(false);
       }
@@ -267,7 +268,10 @@ void EEPROMInterface::ReadAndCheckHeader(SuccessCallback&& callback) {
 
     //CRC matches: success depends on version number match
     uint32_t stored_version = *(uint32_t*)(this->header_data + IF_EEPROM_HEADER_VERSION);
-    if (stored_version != IF_EEPROM_VERSION_NUMBER) DEBUG_PRINTF("* EEPROM version mismatch (read %lu, current %u)\n", stored_version, IF_EEPROM_VERSION_NUMBER);
+    if (stored_version != IF_EEPROM_VERSION_NUMBER) {
+      DEBUG_LOG(DEBUG_WARNING, "EEPROM version mismatch (read %lu, current %u)", stored_version, IF_EEPROM_VERSION_NUMBER);
+    }
+
     if (callback) {
       callback(stored_version == IF_EEPROM_VERSION_NUMBER);
     }

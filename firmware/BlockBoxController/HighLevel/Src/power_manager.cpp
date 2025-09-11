@@ -125,7 +125,7 @@ void PowerManager::Init(SuccessCallback&& callback) {
     this->system.chg_if.SetChargeEndVoltageMV(0, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //propagate failure to external callback
-        DEBUG_PRINTF("* PowerManager Init failed to clear charger voltage\n");
+        DEBUG_LOG(DEBUG_ERROR, "PowerManager Init failed to clear charger voltage");
         if (callback) {
           callback(false);
         }
@@ -140,7 +140,7 @@ void PowerManager::Init(SuccessCallback&& callback) {
           //init done
           this->initialised = true;
         } else {
-          DEBUG_PRINTF("* PowerManager Init failed to clear charger current\n");
+          DEBUG_LOG(DEBUG_ERROR, "PowerManager Init failed to clear charger current");
         }
 
         //propagate success to external callback
@@ -180,7 +180,7 @@ void PowerManager::LoopTasks() {
   if (this->lock_timer > 0) {
     if (--this->lock_timer == 0) {
       //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
-      DEBUG_PRINTF("* PowerManager lock timed out!\n");
+      DEBUG_LOG(DEBUG_WARNING, "PowerManager lock timed out!");
     }
   }
 
@@ -213,14 +213,14 @@ void PowerManager::LoopTasks() {
       if (adapter_present && this->system.chg_if.GetMaxAdapterCurrentA() != max_current) {
         this->system.chg_if.SetMaxAdapterCurrentA(max_current, [this](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* PowerManager failed to write max adapter current after detecting setting difference\n");
+            DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to write max adapter current after detecting setting difference");
           } else {
             float actual_max_current = this->system.chg_if.GetMaxAdapterCurrentA();
             if (actual_max_current != this->GetAdapterMaxCurrentA()) {
               //if true value is different from current config: overwrite NVM value
               this->non_volatile_config.SetValue32(PWR_NVM_MAX_ADAPTER_CURRENT, *(uint32_t*)&actual_max_current);
             }
-            DEBUG_PRINTF("PowerManager wrote max adapter current after detecting setting difference: %.3f\n", actual_max_current); //TODO: temp printout
+            //DEBUG_PRINTF("PowerManager wrote max adapter current after detecting setting difference: %.3f\n", actual_max_current);
           }
           this->lock_timer = 0;
         });
@@ -251,7 +251,7 @@ void PowerManager::LoopTasks() {
         this->charging_active = false;
         this->system.chg_if.SetFastChargeCurrentMA(0, [this](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* PowerManager failed to disable charger after battery removal, manual disable, or charge fault\n");
+            DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to disable charger after battery removal, manual disable, or charge fault");
           }
           this->lock_timer = 0;
         });
@@ -268,9 +268,9 @@ void PowerManager::LoopTasks() {
             //end conditions stable for long enough: stop charging
             this->system.chg_if.SetFastChargeCurrentMA(0, [this](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* PowerManager failed to disable charger upon reaching end condition\n");
+                DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to disable charger upon reaching end condition");
               } else {
-                DEBUG_PRINTF("PowerManager stopped charging due to end condition\n"); //TODO temp printout
+                DEBUG_LOG(DEBUG_INFO, "PowerManager stopped charging due to end condition");
                 this->charging_active = false;
                 this->ExecuteCallbacks(PWR_EVENT_CHARGING_ACTIVE_CHANGE);
               }
@@ -287,10 +287,10 @@ void PowerManager::LoopTasks() {
             //periodically rewrite charging current if we're still charging
             this->system.chg_if.SetFastChargeCurrentMA(this->GetChargingTargetCurrentMA(), [this](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* PowerManager failed to refresh charging current\n");
-              } else {
-                DEBUG_PRINTF("PowerManager refreshed charging current: %u\n", this->GetChargingTargetCurrentMA()); //TODO temp printout
-              }
+                DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to refresh charging current");
+              } /*else {
+                DEBUG_PRINTF("PowerManager refreshed charging current: %u\n", this->GetChargingTargetCurrentMA());
+              }*/
               this->lock_timer = 0;
             });
           } else {
@@ -310,16 +310,16 @@ void PowerManager::LoopTasks() {
           //write voltage target
           this->system.chg_if.SetChargeEndVoltageMV(target_voltage_mV, [this, target_voltage_mV](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* PowerManager failed to write voltage on charge start\n");
+              DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to write voltage on charge start");
               this->lock_timer = 0;
             } else {
-              DEBUG_PRINTF("PowerManager wrote voltage on charge start: %u\n", target_voltage_mV); //TODO: temp printout
+              //DEBUG_PRINTF("PowerManager wrote voltage on charge start: %u\n", target_voltage_mV);
               //write charge current
               this->system.chg_if.SetFastChargeCurrentMA(this->GetChargingTargetCurrentMA(), [this](bool success) {
                 if (!success) {
-                  DEBUG_PRINTF("* PowerManager failed to write current on charge start\n");
+                  DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to write current on charge start");
                 } else {
-                  DEBUG_PRINTF("PowerManager wrote current on charge start: %u\n", this->GetChargingTargetCurrentMA()); //TODO: temp printout
+                  //DEBUG_PRINTF("PowerManager wrote current on charge start: %u\n", this->GetChargingTargetCurrentMA());
                   //mark as charging
                   charge_refresh_loop_count = 0;
                   this->charging_end_condition_cycles = 0;
@@ -380,9 +380,9 @@ void PowerManager::LoopTasks() {
       if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_NONE) {
         this->system.bat_if.SetShutdownRequest(true, [this](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* PowerManager failed to initiate auto-shutdown\n");
+            DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to initiate auto-shutdown");
           } else {
-            DEBUG_PRINTF("PowerManager initiated auto-shutdown\n"); //TODO temp printout
+            DEBUG_LOG(DEBUG_INFO, "PowerManager initiated auto-shutdown");
           }
         });
       } else {
@@ -394,9 +394,9 @@ void PowerManager::LoopTasks() {
       if (this->system.bat_if.GetScheduledShutdown() == IF_BMS_SHDN_HOST_REQUEST) {
         this->system.bat_if.SetShutdownRequest(false, [this](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* PowerManager failed to cancel auto-shutdown\n");
+            DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to cancel auto-shutdown");
           } else {
-            DEBUG_PRINTF("PowerManager cancelled auto-shutdown\n"); //TODO temp printout
+            DEBUG_LOG(DEBUG_INFO, "PowerManager cancelled auto-shutdown");
           }
         });
       } else {
@@ -420,9 +420,9 @@ void PowerManager::LoopTasks() {
     if (battery_present && !adapter_present && charge_fault) {
       this->system.bat_if.ClearChargingFaults([this](bool success) {
         if (success) {
-          DEBUG_PRINTF("PowerManager cleared battery charge faults upon adapter removal\n");
+          DEBUG_LOG(DEBUG_INFO, "PowerManager cleared battery charge faults upon adapter removal");
         } else {
-          DEBUG_PRINTF("* PowerManager failed to clear battery charge faults upon adapter removal\n");
+          DEBUG_LOG(DEBUG_ERROR, "PowerManager failed to clear battery charge faults upon adapter removal");
         }
         this->lock_timer = 0;
       });
@@ -581,12 +581,12 @@ void PowerManager::SetAdapterMaxCurrentA(float current_A, SuccessCallback&& call
       //adapter present: apply to the charger directly
       this->system.chg_if.SetMaxAdapterCurrentA(current_A, [this, callback = std::move(callback)](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* PowerManager SetAdapterMaxCurrentA failed to write current\n");
+          DEBUG_LOG(DEBUG_ERROR, "PowerManager SetAdapterMaxCurrentA failed to write current");
         } else {
           //save new state on success
           float actual_max_current = this->system.chg_if.GetMaxAdapterCurrentA();
           this->non_volatile_config.SetValue32(PWR_NVM_MAX_ADAPTER_CURRENT, *(uint32_t*)&actual_max_current);
-          DEBUG_PRINTF("PowerManager SetAdapterMaxCurrentA wrote current: %.3f\n", actual_max_current); //TODO: temp printout
+          //DEBUG_PRINTF("PowerManager SetAdapterMaxCurrentA wrote current: %.3f\n", actual_max_current);
         }
 
         //unlock and propagate success to external callback
@@ -698,7 +698,7 @@ void PowerManager::SetChargingTargetState(PowerChargingTargetState target, Succe
       uint16_t target_voltage_mV = this->GetTargetStateVoltageMV(target);
       if (target_voltage_mV < 10000) {
         //shouldn't be possible - abort
-        DEBUG_PRINTF("* PowerManager SetChargingTargetState encountered invalid internal target voltage\n");
+        DEBUG_LOG(DEBUG_ERROR, "PowerManager SetChargingTargetState encountered invalid internal target voltage");
         this->lock_timer = 0;
         if (callback) {
           callback(false);
@@ -708,9 +708,9 @@ void PowerManager::SetChargingTargetState(PowerChargingTargetState target, Succe
 
       this->system.chg_if.SetChargeEndVoltageMV(target_voltage_mV, [this, target, target_voltage_mV, callback = std::move(callback)](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* PowerManager SetChargingTargetState failed to write voltage\n");
+          DEBUG_LOG(DEBUG_ERROR, "PowerManager SetChargingTargetState failed to write voltage");
         } else {
-          DEBUG_PRINTF("PowerManager SetChargingTargetState wrote voltage: %u\n", target_voltage_mV); //TODO: temp printout
+          //DEBUG_PRINTF("PowerManager SetChargingTargetState wrote voltage: %u\n", target_voltage_mV);
           //save new state on success
           this->non_volatile_config.SetValue8(PWR_NVM_CHARGE_TARGET_STATE, (uint8_t)target);
         }
@@ -795,7 +795,7 @@ void PowerManager::SetChargingTargetCurrentA(float current_A, SuccessCallback&& 
       //adapter and battery present, and charging: apply to the charger directly
       this->system.chg_if.SetFastChargeCurrentMA(target_current_mA, [this, target_current_mA, callback = std::move(callback)](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* PowerManager SetChargingTargetCurrentA failed to write current\n");
+          DEBUG_LOG(DEBUG_ERROR, "PowerManager SetChargingTargetCurrentA failed to write current");
         } else {
           //save new current on success
           this->non_volatile_config.SetValue16(PWR_NVM_CHARGE_CURRENT, target_current_mA);

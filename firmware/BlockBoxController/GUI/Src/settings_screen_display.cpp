@@ -332,7 +332,9 @@ void SettingsScreenDisplay::HandleTouch(const GUITouchState& state) noexcept {
         this->editing_datetime = false;
         //apply new date+time
         this->bbv2_manager.system.rtc_if.SetDateTime(this->edit_dt, [this](bool success) {
-          DEBUG_PRINTF("RTC settings date+time apply success %u\n", success);
+          if (!success) {
+            DEBUG_LOG(DEBUG_WARNING, "RTC settings date+time apply failed");
+          }
           //once done: refresh screen
           this->needs_display_list_rebuild = true;
         });

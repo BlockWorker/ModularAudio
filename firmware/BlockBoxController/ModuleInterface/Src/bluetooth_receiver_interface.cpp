@@ -7,6 +7,7 @@
 
 
 #include "bluetooth_receiver_interface.h"
+#include "system.h"
 
 
 //scratch space for register discard-reads
@@ -162,7 +163,7 @@ void BluetoothReceiverInterface::InitModule(SuccessCallback&& callback) {
 
     //check correctness of module ID
     if ((uint8_t)value != UARTDEF_BTRX_MODULE_ID_VALUE) {
-      DEBUG_PRINTF("* BluetoothReceiver module ID incorrect: 0x%02X instead of 0x%02X\n", (uint8_t)value, UARTDEF_BTRX_MODULE_ID_VALUE);
+      DEBUG_LOG(DEBUG_ERROR, "BluetoothReceiver module ID incorrect: 0x%02X instead of 0x%02X", (uint8_t)value, UARTDEF_BTRX_MODULE_ID_VALUE);
       //report failure to external callback
       if (callback) {
         callback(false);
@@ -282,7 +283,7 @@ void BluetoothReceiverInterface::HandleNotificationData(bool error, bool unsolic
           //only re-initialise if already initialised, or reset is pending
           if (this->initialised || this->reset_wait_timer > 0) {
             if (this->reset_wait_timer == 0) {
-              DEBUG_PRINTF("BluetoothReceiver module spurious reset detected\n");
+              DEBUG_LOG(DEBUG_WARNING, "BluetoothReceiver module spurious reset detected");
             }
             //perform module re-init
             this->InitModule([this](bool success) {

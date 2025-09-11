@@ -18,7 +18,7 @@ DebugLog DebugLog::instance;
 
 
 //debug level strings for UART printouts
-static const char* const _debug_level_strings[] = { "*** (C)", "*** (E)", "* (W)", "(I)" };
+static const char* const _debug_level_strings[] = { "*** (C)", "** (E)", "* (W)", "(I)" };
 
 
 uint32_t DebugLog::GetEntryMinValid() const noexcept {

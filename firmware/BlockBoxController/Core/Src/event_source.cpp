@@ -7,6 +7,7 @@
 
 
 #include "event_source.h"
+#include "system.h"
 
 
 //registers the given callback with the given event mask and identifier. identifier 0 is "unidentifiable". if the given (non-zero) identifier already exists, the old callback is replaced.
@@ -64,9 +65,9 @@ void EventSource::ExecuteCallbacks(uint32_t event) noexcept {
       try {
         reg.func(this, event);
       } catch (const std::exception& err) {
-        DEBUG_PRINTF("* EventSource callback exception: %s\n", err.what());
+        DEBUG_LOG(DEBUG_ERROR, "EventSource callback exception: %s", err.what());
       } catch (...) {
-        DEBUG_PRINTF("* Unknown EventSource callback exception\n");
+        DEBUG_LOG(DEBUG_ERROR, "Unknown EventSource callback exception");
       }
     }
   }

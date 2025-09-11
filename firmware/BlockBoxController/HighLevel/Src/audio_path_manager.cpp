@@ -149,7 +149,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
   this->system.dac_if.SetConfig(cfg, [this, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to write basic config\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to write basic config");
       if (callback) {
         callback(false);
       }
@@ -167,7 +167,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
     this->system.dac_if.SetSignalPathSetup(setup, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //propagate failure to external callback
-        DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to set up signal path\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to set up signal path");
         if (callback) {
           callback(false);
         }
@@ -180,7 +180,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
       this->system.dac_if.SetInternalClockConfig(clock_cfg, [this, callback = std::move(callback)](bool success) {
         if (!success) {
           //propagate failure to external callback
-          DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure internal clock\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure internal clock");
           if (callback) {
             callback(false);
           }
@@ -191,7 +191,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
         this->system.dac_if.SetTDMSlotCount(AUDIO_DAC_TDM_SLOT_COUNT, [this, callback = std::move(callback)](bool success) {
           if (!success) {
             //propagate failure to external callback
-            DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure TDM slot count\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure TDM slot count");
             if (callback) {
               callback(false);
             }
@@ -202,7 +202,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
           this->system.dac_if.SetChannelTDMSlots(AUDIO_DAC_TDM_SLOT_CH1, AUDIO_DAC_TDM_SLOT_CH2, [this, callback = std::move(callback)](bool success) {
             if (!success) {
               //propagate failure to external callback
-              DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure channel TDM slots\n");
+              DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure channel TDM slots");
               if (callback) {
                 callback(false);
               }
@@ -213,7 +213,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
             this->system.dac_if.SetInterpolationFilterShape(AUDIO_DAC_FILTER_SHAPE, [this, callback = std::move(callback)](bool success) {
               if (!success) {
                 //propagate failure to external callback
-                DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure filter shape\n");
+                DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure filter shape");
                 if (callback) {
                   callback(false);
                 }
@@ -224,7 +224,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
               this->system.dac_if.SetSecondHarmonicCorrectionCoefficients(AUDIO_DAC_THD_C2_CH1, AUDIO_DAC_THD_C2_CH2, [this, callback = std::move(callback)](bool success) {
                 if (!success) {
                   //propagate failure to external callback
-                  DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure second harmonic correction\n");
+                  DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure second harmonic correction");
                   if (callback) {
                     callback(false);
                   }
@@ -234,7 +234,7 @@ void AudioPathManager::InitDACSetup(SuccessCallback&& callback) {
                 //configure third harmonic correction
                 this->system.dac_if.SetThirdHarmonicCorrectionCoefficients(AUDIO_DAC_THD_C3_CH1, AUDIO_DAC_THD_C3_CH2, [this, callback = std::move(callback)](bool success) {
                   if (!success) {
-                    DEBUG_PRINTF("* AudioPathManager InitDACSetup failed to configure third harmonic correction\n");
+                    DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDACSetup failed to configure third harmonic correction");
                   }
 
                   //propagate success to external callback
@@ -256,7 +256,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
   this->system.dap_if.SetConfig(false, false, [this, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to disable signal processor\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to disable signal processor");
       if (callback) {
         callback(false);
       }
@@ -267,7 +267,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
     this->system.dap_if.SetI2SInputSampleRate(IF_DAP_INPUT_I2S1, AUDIO_DAP_I2S1_SAMPLE_RATE, [this, callback = std::move(callback)](bool success) {
       if (!success) {
         //propagate failure to external callback
-        DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to configure I2S1 input sample rate\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to configure I2S1 input sample rate");
         if (callback) {
           callback(false);
         }
@@ -289,7 +289,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
       this->system.dap_if.SetLoudnessGains(loudness_gains, [this, callback = std::move(callback)](bool success) {
         if (!success) {
           //propagate failure to external callback
-          DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to configure initial loudness gains\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to configure initial loudness gains");
           if (callback) {
             callback(false);
           }
@@ -300,7 +300,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
         this->system.dap_if.SetFIRCoefficients(IF_DAP_CH1, _audio_dap_fir_coeffs_ch1, [this, callback = std::move(callback)](bool success) {
           if (!success) {
             //propagate failure to external callback
-            DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 1\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 1");
             if (callback) {
               callback(false);
             }
@@ -311,7 +311,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
           this->system.dap_if.SetFIRCoefficients(IF_DAP_CH2, _audio_dap_fir_coeffs_ch2, [this, callback = std::move(callback)](bool success) {
             if (!success) {
               //propagate failure to external callback
-              DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 2\n");
+              DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to write FIR coefficients for channel 2");
               if (callback) {
                 callback(false);
               }
@@ -322,7 +322,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
             this->system.dap_if.SetFIRSetup(_audio_dap_fir_setup, [this, callback = std::move(callback)](bool success) {
               if (!success) {
                 //propagate failure to external callback
-                DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up FIRs\n");
+                DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to set up FIRs");
                 if (callback) {
                   callback(false);
                 }
@@ -340,7 +340,7 @@ void AudioPathManager::InitDAPSetup(SuccessCallback&& callback) {
               //set up mixer, EQ and calibration (no cal) - includes re-enabling the signal processor
               this->UpdateMixerAndEQParams(mixer_mode, AUDIO_EQ_HIFI, AUDIO_CAL_NONE, [this, callback = std::move(callback)](bool success) {
                 if (!success) {
-                  DEBUG_PRINTF("* AudioPathManager InitDAPSetup failed to set up mixer and EQ\n");
+                  DEBUG_LOG(DEBUG_ERROR, "AudioPathManager InitDAPSetup failed to set up mixer and EQ");
                 }
 
                 //propagate success to external callback
@@ -368,7 +368,7 @@ void AudioPathManager::Init(SuccessCallback&& callback) {
   this->HandlePowerStateChange(false, [this, callback = std::move(callback)](bool success) {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* AudioPathManager Init failed to enter power-off state\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager Init failed to enter power-off state");
       if (callback) {
         callback(false);
       }
@@ -434,7 +434,7 @@ void AudioPathManager::LoopTasks() {
   if (this->lock_timer > 0) {
     if (--this->lock_timer == 0) {
       //shouldn't really ever happen, it means an unlock somewhere was missed or delayed excessively
-      DEBUG_PRINTF("* AudioPathManager lock timed out!\n");
+      DEBUG_LOG(DEBUG_WARNING, "AudioPathManager lock timed out!");
     }
   }
 
@@ -503,7 +503,7 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
   //first thing in all cases: mute DAC
   this->system.dac_if.SetMutes(true, true, [this, on, callback = std::move(callback)](bool success) {
     if (!success) {
-      DEBUG_PRINTF("* AudioPathManager HandlePowerStateChange failed to mute DAC\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager HandlePowerStateChange failed to mute DAC");
     }
 
     //continue regardless of success: reset min/max and current volume to safe defaults
@@ -511,7 +511,7 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
     this->max_volume_dB = AUDIO_DEFAULT_MAX_VOLUME_DB;
     this->ClampAndApplyVolumeGain(AUDIO_DEFAULT_VOLUME_DB, [this, on, callback = std::move(callback), prev_success = success](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* AudioPathManager HandlePowerStateChange failed to apply default volume\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager HandlePowerStateChange failed to apply default volume");
       }
 
       //continue regardless of success: disable positive gain
@@ -519,7 +519,7 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
       this->system.dap_if.GetConfig(sp_en, pos_gain_allowed);
       this->system.dap_if.SetConfig(sp_en, false, [this, on, callback = std::move(callback), prev_success = prev_success && success](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* AudioPathManager HandlePowerStateChange failed to disable positive gain\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager HandlePowerStateChange failed to disable positive gain");
         }
 
         //continue regardless of success: configure bluetooth according to state
@@ -527,7 +527,7 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
           //turning on: set bluetooth connectable
           this->system.btrx_if.SetConnectable(true, [this, callback = std::move(callback), prev_success = prev_success && success](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* AudioPathManager HandlePowerStateChange failed to enable Bluetooth connections\n");
+              DEBUG_LOG(DEBUG_ERROR, "AudioPathManager HandlePowerStateChange failed to enable Bluetooth connections");
             }
 
             //once done: unlock operations and propagate success (true = all succeeded, false otherwise) to external callback
@@ -540,7 +540,7 @@ void AudioPathManager::HandlePowerStateChange(bool on, SuccessCallback&& callbac
           //turning off: cut and disable bluetooth connections
           this->system.btrx_if.CutAndDisableConnections([this, callback = std::move(callback), prev_success = prev_success && success](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* AudioPathManager HandlePowerStateChange failed to cut and disable Bluetooth connections\n");
+              DEBUG_LOG(DEBUG_ERROR, "AudioPathManager HandlePowerStateChange failed to cut and disable Bluetooth connections");
             }
 
             //once done: unlock operations and propagate success (true = all succeeded, false otherwise) to external callback
@@ -575,7 +575,7 @@ void AudioPathManager::HandleDACDAPReset(bool dac) {
   //DAC/DAP module reset: start by muting DAC
   this->system.dac_if.SetMutes(true, true, [this, dac](bool success) {
     if (!success) {
-      DEBUG_PRINTF("*** AudioPathManager failed to mute DAC after DAC/DAP module reset!\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager failed to mute DAC after DAC/DAP module reset!");
     }
 
     //callback for after re-init
@@ -583,7 +583,7 @@ void AudioPathManager::HandleDACDAPReset(bool dac) {
       //reconfigure DAC and DAP for the correct power state
       this->HandlePowerStateChange(this->system.IsPoweredOn(), [this](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* AudioPathManager failed to reconfigure power state after DAC/DAP module reset\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager failed to reconfigure power state after DAC/DAP module reset");
         }
       });
     };
@@ -595,7 +595,7 @@ void AudioPathManager::HandleDACDAPReset(bool dac) {
         if (success) {
           cb();
         } else {
-          DEBUG_PRINTF("*** AudioPathManager failed to re-init DAC after DAC module reset!\n");
+          DEBUG_LOG(DEBUG_CRITICAL, "AudioPathManager failed to re-init DAC after DAC module reset!");
         }
       });
     } else {
@@ -604,7 +604,7 @@ void AudioPathManager::HandleDACDAPReset(bool dac) {
         if (success) {
           cb();
         } else {
-          DEBUG_PRINTF("*** AudioPathManager failed to re-init DAP after DAP module reset!\n");
+          DEBUG_LOG(DEBUG_CRITICAL, "AudioPathManager failed to re-init DAP after DAP module reset!");
         }
       });
     }
@@ -620,13 +620,13 @@ void AudioPathManager::HandleEvent(EventSource* source, uint32_t event) {
       if (this->system.IsPoweredOn()) {
         this->system.btrx_if.SetConnectable(true, [](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* AudioPathManager failed to set Bluetooth connectable after Bluetooth module reset\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager failed to set Bluetooth connectable after Bluetooth module reset");
           }
         });
       } else {
         this->system.btrx_if.CutAndDisableConnections([](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* AudioPathManager failed to cut and disable Bluetooth connections after Bluetooth module reset\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager failed to cut and disable Bluetooth connections after Bluetooth module reset");
           }
         });
       }
@@ -826,20 +826,20 @@ void AudioPathManager::CheckAndFixVolumeLimits() {
   if (isnanf(this->min_volume_dB) || this->min_volume_dB < AUDIO_LIMIT_MIN_VOLUME_MIN || this->min_volume_dB > AUDIO_LIMIT_MIN_VOLUME_MAX ||
       isnanf(this->max_volume_dB) || this->max_volume_dB < AUDIO_LIMIT_MAX_VOLUME_MIN || this->max_volume_dB > AUDIO_LIMIT_MAX_VOLUME_MAX) {
     //invalid minimum and/or maximum: reset to defaults
-    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeLimits found invalid volume limits %.1f %.1f\n", this->min_volume_dB, this->max_volume_dB);
+    DEBUG_LOG(DEBUG_WARNING, "AudioPathManager CheckAndFixVolumeLimits found invalid volume limits %.1f %.1f", this->min_volume_dB, this->max_volume_dB);
     this->min_volume_dB = AUDIO_DEFAULT_MIN_VOLUME_DB;
     this->max_volume_dB = AUDIO_DEFAULT_MAX_VOLUME_DB;
   }
 
   if (this->max_volume_dB > 0.0f && !this->IsPositiveGainAllowed()) {
     //positive gain when not allowed: clamp to zero
-    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeLimits found disallowed positive gain limit %.1f\n", this->max_volume_dB);
+    DEBUG_LOG(DEBUG_WARNING, "AudioPathManager CheckAndFixVolumeLimits found disallowed positive gain limit %.1f", this->max_volume_dB);
     this->max_volume_dB = 0.0f;
   }
 
   if (this->max_volume_dB - this->min_volume_dB < AUDIO_LIMIT_VOLUME_RANGE_MIN) {
     //range between minimum and maximum volume is too small: decrease minimum to extend range
-    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeLimits found volume limits %.1f %.1f with insufficient range\n", this->min_volume_dB, this->max_volume_dB);
+    DEBUG_LOG(DEBUG_WARNING, "AudioPathManager CheckAndFixVolumeLimits found volume limits %.1f %.1f with insufficient range", this->min_volume_dB, this->max_volume_dB);
     this->min_volume_dB = this->max_volume_dB - AUDIO_LIMIT_VOLUME_RANGE_MIN;
   }
 }
@@ -848,7 +848,7 @@ void AudioPathManager::CheckAndFixVolumeStep() {
   float vol_step = this->GetVolumeStepDB();
   if (isnanf(vol_step) || vol_step < AUDIO_LIMIT_VOLUME_STEP_MIN || vol_step > AUDIO_LIMIT_VOLUME_STEP_MAX) {
     //invalid step: reset to default
-    DEBUG_PRINTF("* AudioPathManager CheckAndFixVolumeStep found invalid volume step %.1f\n", vol_step);
+    DEBUG_LOG(DEBUG_WARNING, "AudioPathManager CheckAndFixVolumeStep found invalid volume step %.1f", vol_step);
     vol_step = AUDIO_DEFAULT_VOLUME_STEP_DB;
     this->non_volatile_config.SetValue32(AUDIO_NVM_VOLUME_STEP, *(uint32_t*)&vol_step);
   }
@@ -922,11 +922,11 @@ void AudioPathManager::ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCal
     }
 
     //DAP needs adjustment: send new gains, then go to completion callback
-    DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2); //TODO temporary testing printout, remove later
+    //DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2);
     this->system.dap_if.SetVolumeGains(new_dap_gains, std::move(completion_cb));
   } else if (new_dap_gains.ch1 == current_dap_gains.ch1 && new_dap_gains.ch2 == current_dap_gains.ch2) {
     //DAP is already correct: only adjust DAC, then go to completion callback
-    DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2); //TODO temporary testing printout, remove later
+    //DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2);
     this->system.dac_if.SetVolumesFromGains(new_dac_gain_ch1, new_dac_gain_ch2, std::move(completion_cb));
   } else {
     //we need to adjust both DAC and DAP: calculate max gain differences for each, to apply smallest ("least positive") change first
@@ -935,27 +935,27 @@ void AudioPathManager::ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCal
 
     if (dac_gain_diff > dap_gain_diff) {
       //DAC difference is larger, so apply DAP first
-      DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2); //TODO temporary testing printout, remove later
+      //DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2);
       this->system.dap_if.SetVolumeGains(new_dap_gains, [this, completion_cb = std::move(completion_cb), new_dac_gain_ch1, new_dac_gain_ch2, current_dap_gains](bool success) {
         if (!success) {
           //propagate failure to completion callback
-          DEBUG_PRINTF("* AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed at DAP\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed at DAP");
           completion_cb(false);
           return;
         }
 
         //apply DAC afterwards
-        DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2); //TODO temporary testing printout, remove later
+        //DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2);
         this->system.dac_if.SetVolumesFromGains(new_dac_gain_ch1, new_dac_gain_ch2, [this, completion_cb = std::move(completion_cb), current_dap_gains](bool success) {
           if (success) {
             //all good: propagate success to completion callback
             completion_cb(true);
           } else {
             //DAP gain application succeeded, but DAC application failed: attempt to reset DAP gains to what they were
-            DEBUG_PRINTF("* AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed at DAC, attempting DAP restore\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed at DAC, attempting DAP restore");
             this->system.dap_if.SetVolumeGains(current_dap_gains, [this, completion_cb = std::move(completion_cb)](bool success) {
               if (!success) {
-                DEBUG_PRINTF("*** AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed to restore DAP after DAC write failure!\n");
+                DEBUG_LOG(DEBUG_CRITICAL, "AudioPathManager ClampAndApplyVolumeGain DAP-DAC write failed to restore DAP after DAC write failure!");
               }
 
               //report failure to completion callback (regardless of restore success)
@@ -966,27 +966,27 @@ void AudioPathManager::ClampAndApplyVolumeGain(float desired_gain_dB, SuccessCal
       });
     } else {
       //DAP difference is larger (or equal), so apply DAC first
-      DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2); //TODO temporary testing printout, remove later
+      //DEBUG_PRINTF("Changing DAC gains to %.1f %.1f\n", new_dac_gain_ch1, new_dac_gain_ch2);
       this->system.dac_if.SetVolumesFromGains(new_dac_gain_ch1, new_dac_gain_ch2, [this, completion_cb = std::move(completion_cb), new_dap_gains, current_dac_gain_ch1, current_dac_gain_ch2](bool success) {
         if (!success) {
           //propagate failure to completion callback
-          DEBUG_PRINTF("* AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed at DAC\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed at DAC");
           completion_cb(false);
           return;
         }
 
         //apply DAP afterwards
-        DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2); //TODO temporary testing printout, remove later
+        //DEBUG_PRINTF("Changing DAP gains to %.1f %.1f\n", new_dap_gains.ch1, new_dap_gains.ch2);
         this->system.dap_if.SetVolumeGains(new_dap_gains, [this, completion_cb = std::move(completion_cb), current_dac_gain_ch1, current_dac_gain_ch2](bool success) {
           if (success) {
             //all good: propagate success to completion callback
             completion_cb(true);
           } else {
             //DAC gain application succeeded, but DAP application failed: attempt to reset DAC gains to what they were
-            DEBUG_PRINTF("* AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed at DAP, attempting DAC restore\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed at DAP, attempting DAC restore");
             this->system.dac_if.SetVolumesFromGains(current_dac_gain_ch1, current_dac_gain_ch2, [this, completion_cb = std::move(completion_cb)](bool success) {
               if (!success) {
-                DEBUG_PRINTF("*** AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed to restore DAC after DAP write failure!\n");
+                DEBUG_LOG(DEBUG_CRITICAL, "AudioPathManager ClampAndApplyVolumeGain DAC-DAP write failed to restore DAC after DAP write failure!");
               }
 
               //report failure to completion callback (regardless of restore success)
@@ -1075,7 +1075,7 @@ float AudioPathManager::GetCurrentRelativeVolume() const {
   if (isnanf(this->current_volume_dB) || isnanf(this->min_volume_dB) || isnanf(this->max_volume_dB) ||
       this->current_volume_dB < this->min_volume_dB || this->current_volume_dB > this->max_volume_dB) {
     //something's wrong, return 0
-    DEBUG_PRINTF("* AudioPathManager GetCurrentRelativeVolume found invalid volume %.1f or invalid limits\n", this->current_volume_dB);
+    DEBUG_LOG(DEBUG_WARNING, "AudioPathManager GetCurrentRelativeVolume found invalid volume %.1f or invalid limits", this->current_volume_dB);
     return 0.0f;
   }
 
@@ -1177,7 +1177,7 @@ void AudioPathManager::SetMinVolumeDB(float min_volume_dB, SuccessCallback&& cal
     this->min_volume_dB = clamped_min_volume;
     this->ClampAndApplyVolumeGain(this->current_volume_dB, [this, callback = std::move(callback)](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* AudioPathManager SetMinVolumeDB failed to re-apply current volume\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager SetMinVolumeDB failed to re-apply current volume");
       }
 
       //update Bluetooth volume due to new range
@@ -1254,7 +1254,7 @@ void AudioPathManager::SetMaxVolumeDB(float max_volume_dB, SuccessCallback&& cal
     this->max_volume_dB = clamped_max_volume;
     this->ClampAndApplyVolumeGain(this->current_volume_dB, [this, callback = std::move(callback)](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* AudioPathManager SetMaxVolumeDB failed to re-apply current volume\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager SetMaxVolumeDB failed to re-apply current volume");
       }
 
       //update Bluetooth volume due to new range
@@ -1334,7 +1334,7 @@ void AudioPathManager::SetVolumeStepDB(float volume_step_dB, SuccessCallback&& c
       //not aligned and not at limit: apply new aligned volume
       this->ClampAndApplyVolumeGain(aligned_volume, [this, callback = std::move(callback)](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* AudioPathManager SetVolumeStepDB failed to apply re-aligned volume\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager SetVolumeStepDB failed to apply re-aligned volume");
         }
 
         //once done: unlock operations and report to external callback (volume step application is successful, regardless of current volume re-application success)
@@ -1409,7 +1409,7 @@ void AudioPathManager::SetPositiveGainAllowed(bool pos_gain_allowed, SuccessCall
       this->max_volume_dB = 0.0f;
       this->ClampAndApplyVolumeGain(this->current_volume_dB, [this, callback = std::move(callback), sp_enabled, pos_gain_allowed](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* AudioPathManager SetPositiveGainAllowed failed to re-apply current volume after clamping max volume to 0\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager SetPositiveGainAllowed failed to re-apply current volume after clamping max volume to 0");
         }
 
         //afterwards, set the corresponding DAP config (regardless of current volume re-application success)
@@ -1491,10 +1491,10 @@ void AudioPathManager::UpdateBluetoothVolume() {
   this->bluetooth_volume_lock_timer = AUDIO_BLUETOOTH_LOCK_TIMEOUT_CYCLES;
 
   //write volume to bluetooth (we don't really care about whether this succeeds or not - it's just for synchronisation)
-  DEBUG_PRINTF("Setting Bluetooth absolute volume to %u\n", bt_volume); //TODO temporary testing printout, remove later
+  //DEBUG_PRINTF("Setting Bluetooth absolute volume to %u\n", bt_volume);
   this->system.btrx_if.SetAbsoluteVolume(bt_volume, [](bool success) {
     if (!success) {
-      DEBUG_PRINTF("* Failed to set Bluetooth absolute volume\n");
+      DEBUG_LOG(DEBUG_ERROR, "Failed to set Bluetooth absolute volume");
     }
   });
 }
@@ -1517,20 +1517,20 @@ void AudioPathManager::UpdateVolumeFromBluetooth() {
     //set relative volume, queue if busy
     this->SetCurrentRelativeVolume(relative_volume, [this](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* Volume update from Bluetooth failed\n");
-      } else {
-        DEBUG_PRINTF("Volume updated from Bluetooth, now %.1f\n", this->current_volume_dB); //TODO temporary testing printout, remove later
-      }
+        DEBUG_LOG(DEBUG_ERROR, "Volume update from Bluetooth failed");
+      } /*else {
+        DEBUG_PRINTF("Volume updated from Bluetooth, now %.1f\n", this->current_volume_dB);
+      }*/
     }, true);
   }
 
   //ensure correct mute state, queue if busy
   this->SetMute(bt_volume < AUDIO_BLUETOOTH_VOL_OFFSET, [this](bool success) {
     if (!success) {
-      DEBUG_PRINTF("* Mute update from Bluetooth failed\n");
-    } else {
-      DEBUG_PRINTF("Mute updated from Bluetooth, now %u\n", this->IsMute()); //TODO temporary testing printout, remove later
-    }
+      DEBUG_LOG(DEBUG_ERROR, "Mute update from Bluetooth failed");
+    } /*else {
+      DEBUG_PRINTF("Mute updated from Bluetooth, now %u\n", this->IsMute());
+    }*/
   }, true);
 }
 
@@ -1733,7 +1733,7 @@ void AudioPathManager::SetLoudnessTrackingMaxVolume(bool track_max_volume, Succe
     this->non_volatile_config.SetValue8(AUDIO_NVM_LOUDNESS_TRACK_MAX_VOL, track_max_volume ? 1 : 0);
     this->ClampAndApplyVolumeGain(this->current_volume_dB, [this, callback = std::move(callback)](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* AudioPathManager SetLoudnessTrackingMaxVolume failed to re-apply current volume\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager SetLoudnessTrackingMaxVolume failed to re-apply current volume");
       }
 
       //once done: unlock operations and report to external callback (tracking state application is successful, regardless of current volume re-application success)
@@ -1805,7 +1805,7 @@ void AudioPathManager::UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPat
   this->system.dap_if.SetConfig(false, false, [this, callback = std::move(callback), update_params](bool success) {
     if (!success) {
       //propagate failure to external callback
-      DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to disable signal processor\n");
+      DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to disable signal processor");
       if (callback) {
         callback(false);
       }
@@ -1815,25 +1815,25 @@ void AudioPathManager::UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPat
     //callback for further processing after mixer is configured
     auto post_mixer_cb = [this, callback = std::move(callback), update_params](bool success) {
       if (!success) {
-        DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure mixer\n");
+        DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to configure mixer");
       }
 
       //callback for further processing after biquad ch1 is configured
       auto post_ch1_cb = [this, callback = std::move(callback), update_params, prev_success = success](bool success) {
         if (!success) {
-          DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch1\n");
+          DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch1");
         }
 
         //callback for further processing after biquad ch2 is configured
         auto post_ch2_cb = [this, callback = std::move(callback), update_params, prev_success = prev_success && success](bool success) {
           if (!success) {
-            DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch2\n");
+            DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to configure biquad ch2");
           }
 
           //callback for further processing after biquad setup is configured
           auto post_setup_cb = [this, callback = std::move(callback), update_params, prev_success = prev_success && success](bool success) {
             if (!success) {
-              DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to configure biquad setup\n");
+              DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to configure biquad setup");
             }
 
             //if successful to this point: save new mixer/eq/cal params
@@ -1846,7 +1846,7 @@ void AudioPathManager::UpdateMixerAndEQParams(AudioPathMixerMode mixer, AudioPat
             //re-enable signal processor (in all cases)
             this->system.dap_if.SetConfig(true, false, [this, callback = std::move(callback), prev_success = prev_success && success](bool success) {
               if (!success) {
-                DEBUG_PRINTF("* AudioPathManager UpdateMixerAndEQParams failed to re-enable signal processor\n");
+                DEBUG_LOG(DEBUG_ERROR, "AudioPathManager UpdateMixerAndEQParams failed to re-enable signal processor");
               }
 
               //propagate overall success to callback
