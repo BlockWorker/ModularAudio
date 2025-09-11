@@ -36,7 +36,7 @@ static uint32_t double_err_count = 0;
 
 
 static inline void _RefreshWatchdogs() {
-
+  HAL_IWDG_Refresh(&hiwdg1);
 }
 
 
@@ -45,13 +45,22 @@ int cpp_main() {
   try {
     RetargetInit(&huart2);
 
-    HAL_Delay(1000);
+    _RefreshWatchdogs();
 
+    HAL_Delay(500);
+    _RefreshWatchdogs();
+    HAL_Delay(500);
+
+    _RefreshWatchdogs();
     DEBUG_PRINTF("Controller started\n");
 
     HAL_Delay(100);
 
+    _RefreshWatchdogs();
+
     main_system.Init();
+
+    _RefreshWatchdogs();
 
   } catch (const std::exception& err) {
     DEBUG_PRINTF("*** Init failed with exception: %s\n", err.what());

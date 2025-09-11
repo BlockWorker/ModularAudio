@@ -49,6 +49,8 @@ extern I2C_HandleTypeDef hi2c5;
 
 extern I2S_HandleTypeDef hi2s6;
 
+extern IWDG_HandleTypeDef hiwdg1;
+
 extern OSPI_HandleTypeDef hospi1;
 
 extern RAMECC_HandleTypeDef hramecc1_m1;
