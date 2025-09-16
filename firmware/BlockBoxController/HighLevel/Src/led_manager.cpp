@@ -160,7 +160,8 @@ void LEDManager::LoopTasks() {
     return;
   }
 
-  if (this->led_on && this->system.IsPoweredOn()) {
+  //TODO disabled due to LED driver damage (recurring; pointing to some deeper issue)
+  /*if (this->led_on && this->system.IsPoweredOn()) {
     //LEDs on: calculate hue shift, and resulting hue clamped to [0, 360)
     float hue_shift = LED_HUE_SHIFT_AMPLITUDE * sinf(2.0f * M_PI * (float)(HAL_GetTick() % LED_HUE_SHIFT_PERIOD) / (float)LED_HUE_SHIFT_PERIOD);
     float hue = fmodf(this->GetHueDegrees() + hue_shift, 360.0f);
@@ -174,13 +175,13 @@ void LEDManager::LoopTasks() {
     LED_GREEN_REG = (uint32_t)roundf((1.0f - color.green) * (float)LED_PWM_MAX_VALUE);
     LED_BLUEN_REG = (uint32_t)roundf(0.5f * (1.0f - color.blue) * (float)LED_PWM_MAX_VALUE);
     LED_BLUEP_REG = (uint32_t)roundf(0.5f * (1.0f + color.blue) * (float)LED_PWM_MAX_VALUE);
-  } else {
+  } else {*/
     //LEDs off
     LED_RED_REG = 0;
     LED_GREEN_REG = LED_PWM_MAX_VALUE;
     LED_BLUEN_REG = LED_PWM_MAX_VALUE;
     LED_BLUEP_REG = 0;
-  }
+  //}
 }
 
 
