@@ -100,7 +100,7 @@ static const uint32_t _audio_dap_biquad_power_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_
 static const uint32_t _audio_dap_biquad_power_coeffs_ch2[I2CDEF_DAP_REG_SIZE_SP_BIQUAD / sizeof(uint32_t)] = {
 #include "../Data/biquad_coeffs_power_woofer.txt"
 };
-static const DAPBiquadSetup _audio_dap_biquad_power_setup = { 0, 0, 1, 1 };
+static const DAPBiquadSetup _audio_dap_biquad_power_setup = { 1, 1, 1, 1 };
 
 //DAP FIR configs, per channel
 static const q31_t _audio_dap_fir_coeffs_ch1[I2CDEF_DAP_REG_SIZE_SP_FIR / sizeof(q31_t)] = {
